@@ -11,7 +11,7 @@
  *        Variant, Function, Mutex and their associated type aliases.
  * 
  * @details
- * This header centralizes aliases for wrapper types used by NexSuite, including optional values, smart pointers,
+ * This header centralizes aliases for wrapper types used by Nex-ecosystem, including optional values, smart pointers,
  * variant types, type information, function wrappers, and mutex types. It establishes a uniform naming convention 
  * for wrapper-centric structures so interfaces can communicate behavior clearly and consistently.
  * Wrapper types are foundational in representing optional values, managing object lifetimes, encapsulating variant
@@ -50,10 +50,10 @@
 #include <mutex>
 #include <shared_mutex>
 
-#include "common/macros.h"
-#include "common/types.h"
+#include "nex/base/namespace.h"
+#include "nex/base/types.h"
 
-NEXSUITE_NAMESPACE_BEGIN
+NEX_NAMESPACE_BEGIN
 
 /**
  * @brief A type-safe wrapper for values that may or may not exist.
@@ -62,7 +62,7 @@ NEXSUITE_NAMESPACE_BEGIN
  * Use this to avoid "magic values" (like null or -1) in API return types.
  */
 template <typename T>
-using Optional = NEXSUITE_STD optional<T>;
+using Optional = NEX_STD optional<T>;
 
 /**
  * @brief Shared ownership smart pointer.
@@ -71,7 +71,7 @@ using Optional = NEXSUITE_STD optional<T>;
  * is destroyed only when the last SharedPtr is destroyed or reset.
  */
 template <typename T>
-using SharedPtr = NEXSUITE_STD shared_ptr<T>;
+using SharedPtr = NEX_STD shared_ptr<T>;
 
 /**
  * @brief Exclusive ownership smart pointer.
@@ -80,7 +80,7 @@ using SharedPtr = NEXSUITE_STD shared_ptr<T>;
  * Cannot be copied, only moved. This is the preferred default for resource management.
  */
 template <typename T>
-using UniquePtr = NEXSUITE_STD unique_ptr<T>;
+using UniquePtr = NEX_STD unique_ptr<T>;
 
 /**
  * @brief Non-owning reference to a SharedPtr-managed object.
@@ -89,19 +89,19 @@ using UniquePtr = NEXSUITE_STD unique_ptr<T>;
  * the data. Used to break circular dependencies or observe managed objects.
  */
 template <typename T>
-using WeakPtr = NEXSUITE_STD weak_ptr<T>;
+using WeakPtr = NEX_STD weak_ptr<T>;
 
 /**
  * @brief Semantic alias for UniquePtr, emphasizing automatic lifecycle management.
  */
 template <typename T>
-using AutoPtr = NEXSUITE_STD unique_ptr<T>;
+using AutoPtr = NEX_STD unique_ptr<T>;
 
 /**
  * @brief Semantic alias for WeakPtr, emphasizing a non-owning relationship.
  */
 template <typename T>
-using NonOwningPtr = NEXSUITE_STD weak_ptr<T>;
+using NonOwningPtr = NEX_STD weak_ptr<T>;
 
 /**
  * @brief A raw pointer alias representing a "borrowed" reference.
@@ -119,7 +119,7 @@ using ObserverPtr = T*;
  * Use this for high-level polymorphism or plugin systems where the set of 
  * possible types is not known at compile time.
  */
-using Any = NEXSUITE_STD any;
+using Any = NEX_STD any;
 
 /**
  * @brief Type-safe union for a fixed set of alternative types.
@@ -129,7 +129,7 @@ using Any = NEXSUITE_STD any;
  * type checking for access.
  */
 template <typename... Args>
-using Variant = NEXSUITE_STD variant<Args...>;
+using Variant = NEX_STD variant<Args...>;
 
 /**
  * @brief A wrapper for type_info to allow usage in associative containers.
@@ -137,7 +137,7 @@ using Variant = NEXSUITE_STD variant<Args...>;
  * Provides a copyable and comparable representation of a type. 
  * Commonly used as a key in Maps or HashMaps to associate data with specific types.
  */
-using TypeIndex = NEXSUITE_STD type_index;
+using TypeIndex = NEX_STD type_index;
 
 /**
  * @brief Metadata representing a type at runtime.
@@ -145,7 +145,7 @@ using TypeIndex = NEXSUITE_STD type_index;
  * Provides access to type names and comparison logic. Use this 
  * primarily through the 'typeid' operator for low-level RTTI operations.
  */
-using TypeInfo = NEXSUITE_STD type_info;
+using TypeInfo = NEX_STD type_info;
 
 /**
  * @brief Template for thread-safe, atomic operations on a value.
@@ -155,7 +155,7 @@ using TypeInfo = NEXSUITE_STD type_info;
  * data races in multi-threaded environments.
  */
 template <typename T>
-using Atomic = NEXSUITE_STD atomic<T>;
+using Atomic = NEX_STD atomic<T>;
 
 /**
  * @brief A lock-free atomic boolean flag.
@@ -164,7 +164,7 @@ using Atomic = NEXSUITE_STD atomic<T>;
  * supported platforms. Ideal for building low-level synchronization 
  * primitives like spinlocks or simple "stop" signals.
  */
-using AtomicFlag = NEXSUITE_STD atomic_flag;
+using AtomicFlag = NEX_STD atomic_flag;
 
 /**
  * @brief A general-purpose polymorphic function wrapper.
@@ -174,7 +174,7 @@ using AtomicFlag = NEXSUITE_STD atomic_flag;
  * event-handling systems where the specific callable type is erased.
  */
 template <typename T>
-using Function = NEXSUITE_STD function<T>;
+using Function = NEX_STD function<T>;
 
 /**
  * @brief A wrapper that makes references "assignable" and "copyable".
@@ -184,7 +184,7 @@ using Function = NEXSUITE_STD function<T>;
  * a non-nullable pointer with reference semantics.
  */
 template <typename T>
-using Reference = NEXSUITE_STD reference_wrapper<T>;
+using Reference = NEX_STD reference_wrapper<T>;
 
 /**
  * @brief A wrapper for constant references, ensuring read-only access.
@@ -193,7 +193,7 @@ using Reference = NEXSUITE_STD reference_wrapper<T>;
  * collections of read-only observers without the overhead of pointers.
  */
 template <typename T>
-using ConstReference = NEXSUITE_STD reference_wrapper<const T>;
+using ConstReference = NEX_STD reference_wrapper<const T>;
 
 /**
  * @brief Standard mutual exclusion primitive.
@@ -201,7 +201,7 @@ using ConstReference = NEXSUITE_STD reference_wrapper<const T>;
  * Basic synchronization object used to protect shared data from 
  * concurrent access. Only one thread can own the mutex at any given time.
  */
-using Mutex = NEXSUITE_STD mutex;
+using Mutex = NEX_STD mutex;
 
 /**
  * @brief Shared mutex for Reader-Writer scenarios.
@@ -210,7 +210,7 @@ using Mutex = NEXSUITE_STD mutex;
  * simultaneously) and 'exclusive' (only one thread can write). Optimized for 
  * workloads where reads are more frequent than writes.
  */
-using SharedMutex = NEXSUITE_STD shared_mutex;
+using SharedMutex = NEX_STD shared_mutex;
 
 /**
  * @brief Mutex that can be locked multiple times by the same thread.
@@ -219,7 +219,7 @@ using SharedMutex = NEXSUITE_STD shared_mutex;
  * that each require locking the same mutex. Use sparingly as it often 
  * indicates a need for refactoring.
  */
-using RecursiveMutex = NEXSUITE_STD recursive_mutex;
+using RecursiveMutex = NEX_STD recursive_mutex;
 
 /**
  * @brief Strict RAII wrapper for a single mutex.
@@ -228,7 +228,7 @@ using RecursiveMutex = NEXSUITE_STD recursive_mutex;
  * It is non-copyable and has the least overhead among lock wrappers.
  */
 template <typename T>
-using LockGuard = NEXSUITE_STD lock_guard<T>;
+using LockGuard = NEX_STD lock_guard<T>;
 
 /**
  * @brief Flexible RAII wrapper with manual control.
@@ -238,7 +238,7 @@ using LockGuard = NEXSUITE_STD lock_guard<T>;
  * use with Condition Variables.
  */
 template <typename T>
-using UniqueLock = NEXSUITE_STD unique_lock<T>;
+using UniqueLock = NEX_STD unique_lock<T>;
 
 /**
  * @brief RAII wrapper for shared ownership (Reading).
@@ -247,7 +247,7 @@ using UniqueLock = NEXSUITE_STD unique_lock<T>;
  * access. Multiple SharedLocks can coexist for the same SharedMutex.
  */
 template <typename T>
-using SharedLock = NEXSUITE_STD shared_lock<T>;
+using SharedLock = NEX_STD shared_lock<T>;
 
 /**
  * @brief Deadlock-avoiding wrapper for multiple mutexes.
@@ -257,7 +257,7 @@ using SharedLock = NEXSUITE_STD shared_lock<T>;
  * managing multiple resources.
  */
 template <typename... Args>
-using ScopedLock = NEXSUITE_STD scoped_lock<Args...>;
+using ScopedLock = NEX_STD scoped_lock<Args...>;
 
 /**
  * @brief Common wrapper type aliases
@@ -316,4 +316,4 @@ using AtomicUInt64 = Atomic<uint64>;
 
 using AtomicBool = Atomic<bool>;
 
-NEXSUITE_NAMESPACE_END
+NEX_NAMESPACE_END

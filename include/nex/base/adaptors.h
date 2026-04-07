@@ -13,7 +13,7 @@
  * @details
  * This header defines aliases for container adaptors that model constrained access strategies rather than
  * general-purpose traversal. It provides a shared naming layer for LIFO, FIFO, and priority-based processing
- * patterns used in NexSuite workflows.
+ * patterns used in Nex-ecosystem workflows.
  *
  * Adaptor containers are commonly used in command processing, staged execution, buffering, and scheduling
  * logic, where the retrieval policy is part of the business intent. Using these aliases makes that policy
@@ -41,10 +41,10 @@
 #include <stack>
 #include <queue>
 
-#include "common/macros.h"
-#include "common/types.h"
+#include "nex/base/namespace.h"
+#include "nex/base/types.h"
 
-NEXSUITE_NAMESPACE_BEGIN
+NEX_NAMESPACE_BEGIN
 
 /**
  * @brief Stack (LIFO data structure) type aliases
@@ -52,8 +52,8 @@ NEXSUITE_NAMESPACE_BEGIN
  * The Stack container is a Last-In-First-Out (LIFO) data structure that allows elements to be added and removed 
  * from the top of the stack, commonly used for storing and manipulating collections of data that require LIFO behavior.
  */
-template <typename T, typename Container = NEXSUITE_STD deque<T>>
-using Stack = NEXSUITE_STD stack<T, Container>;
+template <typename T, typename Container = NEX_STD deque<T>>
+using Stack = NEX_STD stack<T, Container>;
 
 /**
  * @brief Queue (FIFO data structure) type aliases
@@ -62,8 +62,8 @@ using Stack = NEXSUITE_STD stack<T, Container>;
  * of the queue and removed from the front of the queue, commonly used for storing and manipulating collections 
  * of data that require FIFO behavior.
  */
-template <typename T, typename Container = NEXSUITE_STD deque<T>>
-using Queue = NEXSUITE_STD queue<T, Container>;
+template <typename T, typename Container = NEX_STD deque<T>>
+using Queue = NEX_STD queue<T, Container>;
 
 /**
  * @brief Priority Queue (heap-based data structure) type aliases
@@ -72,7 +72,7 @@ using Queue = NEXSUITE_STD queue<T, Container>;
  * removed based on their priority, commonly used for storing and manipulating collections of data that require 
  * priority-based behavior.
  */
-template <typename T, typename Container = NEXSUITE_STD vector<T>>
-using PriorityQueue = NEXSUITE_STD priority_queue<T, Container>;
+template <typename T, typename Container = NEX_STD vector<T>>
+using PriorityQueue = NEX_STD priority_queue<T, Container>;
 
-NEXSUITE_NAMESPACE_END
+NEX_NAMESPACE_END

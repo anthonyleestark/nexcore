@@ -8,14 +8,14 @@
 #include <utility>
 #include <type_traits>
 
-#include "common/macros.h"
-#include "common/types.h"
+#include "nex/base/namespace.h"
+#include "nex/base/types.h"
 
-#if NEXSUITE_USE_STD_SOURCE_LOCATION
+#if NEX_USE_STD_SOURCE_LOCATION
     #include <source_location>
 #endif
 
-NEXSUITE_NAMESPACE_BEGIN
+NEX_NAMESPACE_BEGIN
 
 /**
  * @namespace utility
@@ -47,7 +47,7 @@ namespace utility {
     // implementing container_of and other utilities that require knowledge of the layout of a struct/class.
     template <typename T, typename MemberT>
     constexpr isize offsetOf(MemberT T::*member) noexcept {
-        static_assert(NEXSUITE_STD is_standard_layout_v<T>, "offsetOf only safe for standard-layout types");
+        static_assert(NEX_STD is_standard_layout_v<T>, "offsetOf only safe for standard-layout types");
         return reinterpret_cast<isize>(&reinterpret_cast<T*>(0)->*member);
     }
 
@@ -55,8 +55,8 @@ namespace utility {
     // implementing container_of and other utilities that require knowledge of the layout of a struct/class.
     template <typename T, auto MemberPtr>
     constexpr T* containerOf(decltype(MemberPtr) ptr) noexcept {
-        using MemberT = NEXSUITE_STD remove_reference_t<decltype(NEXSUITE_STD declval<T>().*MemberPtr)>;
-        static_assert(NEXSUITE_STD is_standard_layout_v<T>, "containerOf only safe for standard-layout types");
+        using MemberT = NEX_STD remove_reference_t<decltype(NEX_STD declval<T>().*MemberPtr)>;
+        static_assert(NEX_STD is_standard_layout_v<T>, "containerOf only safe for standard-layout types");
         
         return reinterpret_cast<T*>(
             reinterpret_cast<char*>(ptr) - offsetOf<T, MemberT, MemberPtr>()
@@ -75,15 +75,15 @@ namespace utility {
 
     // Reference to member
     template <typename T, auto MemberPtr>
-    using member_reference_t = decltype(NEXSUITE_STD declval<T&>().*MemberPtr);
+    using member_reference_t = decltype(NEX_STD declval<T&>().*MemberPtr);
 
     // Const version
     template <typename T, auto MemberPtr>
-    using const_member_reference_t = decltype(NEXSUITE_STD declval<const T&>().*MemberPtr);
+    using const_member_reference_t = decltype(NEX_STD declval<const T&>().*MemberPtr);
 
     // Rvalue reference
     template <typename T, auto MemberPtr>
-    using member_rvalue_ref_t = decltype(NEXSUITE_STD declval<T&&>().*MemberPtr);
+    using member_rvalue_ref_t = decltype(NEX_STD declval<T&&>().*MemberPtr);
 
     ////// Helper functions for safe downcast and dereference -------------------------------
 
@@ -105,7 +105,7 @@ namespace utility {
     // relationship at compile time, ensuring that the pointer type matches the class type.
     template <typename Derived, typename Base>
     constexpr Derived* safeDowncast(Base* base) noexcept {
-        static_assert(NEXSUITE_STD is_base_of_v<Base, Derived>);
+        static_assert(NEX_STD is_base_of_v<Base, Derived>);
         return dynamic_cast<Derived*>(base);
     }
 
@@ -176,7 +176,7 @@ namespace utility {
     // the underlying integer value of the enum.
     template <typename Enum>
     constexpr int64 enumKeyValue(Enum key) noexcept {
-        static_assert(NEXSUITE_STD is_enum_v<Enum>, "enumKeyValue only works for enum types");
+        static_assert(NEX_STD is_enum_v<Enum>, "enumKeyValue only works for enum types");
         return static_cast<int64>(key);
     }
 
@@ -185,8 +185,8 @@ namespace utility {
     // the underlying integer value of the enum.
     template <typename Enum>
     constexpr auto toUnderlying(Enum key) noexcept {
-        static_assert(NEXSUITE_STD is_enum_v<Enum>, "toUnderlying only works for enum types");
-        return static_cast<NEXSUITE_STD underlying_type_t<Enum>>(key);
+        static_assert(NEX_STD is_enum_v<Enum>, "toUnderlying only works for enum types");
+        return static_cast<NEX_STD underlying_type_t<Enum>>(key);
     }
 
     // Get a hash value for an enum class key, which can be used for various purposes such as implementing
@@ -195,7 +195,7 @@ namespace utility {
     // to reduce the likelihood of hash collisions and improve the performance of lookups in hash-based containers.
     template <typename Enum>
     constexpr int64 enumKeyHash(Enum key) noexcept {
-        static_assert(NEXSUITE_STD is_enum_v<Enum>, "enumKeyHash only works for enum types");
+        static_assert(NEX_STD is_enum_v<Enum>, "enumKeyHash only works for enum types");
         return typeid(Enum).hash_code() ^ enumKeyValue(key);
     }
 
@@ -204,9 +204,9 @@ namespace utility {
     // of lookups in hash-based containers.
     template <typename Enum>
     constexpr int64 enumKeyHashCombined(Enum key) noexcept {
-        static_assert(NEXSUITE_STD is_enum_v<Enum>, "enumKeyHashCombined only works for enum types");
-        int64 h1 = NEXSUITE_STD hash<usize>{}(typeid(Enum).hash_code());
-        int64 h2 = NEXSUITE_STD hash<int64>{}(enumKeyValue(key));
+        static_assert(NEX_STD is_enum_v<Enum>, "enumKeyHashCombined only works for enum types");
+        int64 h1 = NEX_STD hash<usize>{}(typeid(Enum).hash_code());
+        int64 h2 = NEX_STD hash<int64>{}(enumKeyValue(key));
         return combineHash(h1, h2);
     }
 
@@ -220,39 +220,39 @@ namespace utility {
 
     // Bitwise OR operator for enum classes with bitmask operators enabled
     template <typename Enum>
-    constexpr NEXSUITE_STD enable_if_t<enable_bitmask_operators<Enum>::enable, Enum>
+    constexpr NEX_STD enable_if_t<enable_bitmask_operators<Enum>::enable, Enum>
     operator|(Enum lhs, Enum rhs) {
-        using T = NEXSUITE_STD underlying_type_t<Enum>;
+        using T = NEX_STD underlying_type_t<Enum>;
         return static_cast<Enum>(static_cast<T>(lhs) | static_cast<T>(rhs));
     }
 
     // Bitwise AND operator for enum classes with bitmask operators enabled
     template <typename Enum>
-    constexpr NEXSUITE_STD enable_if_t<enable_bitmask_operators<Enum>::enable, Enum>
+    constexpr NEX_STD enable_if_t<enable_bitmask_operators<Enum>::enable, Enum>
     operator&(Enum lhs, Enum rhs) {
-        using T = NEXSUITE_STD underlying_type_t<Enum>;
+        using T = NEX_STD underlying_type_t<Enum>;
         return static_cast<Enum>(static_cast<T>(lhs) & static_cast<T>(rhs));
     }
 
     // Bitwise XOR operator for enum classes with bitmask operators enabled
     template <typename Enum>
-    constexpr NEXSUITE_STD enable_if_t<enable_bitmask_operators<Enum>::enable, Enum>
+    constexpr NEX_STD enable_if_t<enable_bitmask_operators<Enum>::enable, Enum>
     operator^(Enum lhs, Enum rhs) {
-        using T = NEXSUITE_STD underlying_type_t<Enum>;
+        using T = NEX_STD underlying_type_t<Enum>;
         return static_cast<Enum>(static_cast<T>(lhs) ^ static_cast<T>(rhs));
     }
 
     // Bitwise NOT operator for enum classes with bitmask operators enabled
     template <typename Enum>
-    constexpr NEXSUITE_STD enable_if_t<enable_bitmask_operators<Enum>::enable, Enum>
+    constexpr NEX_STD enable_if_t<enable_bitmask_operators<Enum>::enable, Enum>
     operator~(Enum key) {
-        using T = NEXSUITE_STD underlying_type_t<Enum>;
+        using T = NEX_STD underlying_type_t<Enum>;
         return static_cast<Enum>(~static_cast<T>(key));
     }
 
     // Bitwise OR assignment operator for enum classes with bitmask operators enabled
     template <typename Enum>
-    constexpr NEXSUITE_STD enable_if_t<enable_bitmask_operators<Enum>::enable, Enum&>
+    constexpr NEX_STD enable_if_t<enable_bitmask_operators<Enum>::enable, Enum&>
     operator|=(Enum& lhs, Enum rhs) {
         lhs = lhs | rhs;
         return lhs;
@@ -260,7 +260,7 @@ namespace utility {
 
     // Bitwise AND assignment operator for enum classes with bitmask operators enabled
     template <typename Enum>
-    constexpr NEXSUITE_STD enable_if_t<enable_bitmask_operators<Enum>::enable, Enum&>
+    constexpr NEX_STD enable_if_t<enable_bitmask_operators<Enum>::enable, Enum&>
     operator&=(Enum& lhs, Enum rhs) {
         lhs = lhs & rhs;
         return lhs;
@@ -268,7 +268,7 @@ namespace utility {
 
     // Bitwise XOR assignment operator for enum classes with bitmask operators enabled
     template <typename Enum>
-    constexpr NEXSUITE_STD enable_if_t<enable_bitmask_operators<Enum>::enable, Enum&>
+    constexpr NEX_STD enable_if_t<enable_bitmask_operators<Enum>::enable, Enum&>
     operator^=(Enum& lhs, Enum rhs) {
         lhs = lhs ^ rhs;
         return lhs;
@@ -354,7 +354,7 @@ namespace utility {
 
         // Constructor: sets the variable to new value and saves the original
         AutoReset(T& var, T newValue)
-            : ptrScopedVar_(&var), originalVal_(NEXSUITE_STD exchange(var, NEXSUITE_STD move(newValue))) {}
+            : ptrScopedVar_(&var), originalVal_(NEX_STD exchange(var, NEX_STD move(newValue))) {}
 
         // Factory method for handling nullable pointers (saves original value)
         static AutoReset maybe(T* ptr) {
@@ -363,20 +363,20 @@ namespace utility {
 
         // Factory method for handling nullable pointers (sets new value if not null)
         static AutoReset maybe(T* ptr, T newValue) {
-            return ptr ? AutoReset(*ptr, NEXSUITE_STD move(newValue)) : AutoReset();
+            return ptr ? AutoReset(*ptr, NEX_STD move(newValue)) : AutoReset();
         }
 
         // Move constructor: transfers ownership from another AutoReset instance
         AutoReset(AutoReset&& other) noexcept
-            : ptrScopedVar_(NEXSUITE_STD exchange(other.ptrScopedVar_, nullptr)),
-            originalVal_(NEXSUITE_STD move(other.originalVal_)) {}
+            : ptrScopedVar_(NEX_STD exchange(other.ptrScopedVar_, nullptr)),
+            originalVal_(NEX_STD move(other.originalVal_)) {}
 
         // Move assignment operator: transfers ownership from another AutoReset instance
         AutoReset& operator=(AutoReset&& rhs) noexcept {
             if (this != &rhs) {
                 reset();
-                ptrScopedVar_ = NEXSUITE_STD exchange(rhs.ptrScopedVar_, nullptr);
-                originalVal_ = NEXSUITE_STD move(rhs.originalVal_);
+                ptrScopedVar_ = NEX_STD exchange(rhs.ptrScopedVar_, nullptr);
+                originalVal_ = NEX_STD move(rhs.originalVal_);
             }
             return *this;
         }
@@ -387,7 +387,7 @@ namespace utility {
         }
 
         // --- Disable copy ---
-        NEXSUITE_DISALLOW_COPY(AutoReset);
+        NEX_DISALLOW_COPY(AutoReset);
 
     private:
         // Null object state
@@ -396,7 +396,7 @@ namespace utility {
         // Reset the scoped variable to its original value
         void reset() noexcept {
             if (ptrScopedVar_) {
-                *ptrScopedVar_ = NEXSUITE_STD move(originalVal_);
+                *ptrScopedVar_ = NEX_STD move(originalVal_);
                 ptrScopedVar_ = nullptr;
             }
         }
@@ -448,7 +448,7 @@ namespace utility {
     public:
         // Constructor: Takes a callable object (e.g., lambda) to be called on scope exit
         explicit ScopeGuard(FuncType f) 
-            : func_(NEXSUITE_STD move(f)) {}
+            : func_(NEX_STD move(f)) {}
 
         // Destructor: Calls the stored callable object if not dismissed
         // The destructor is marked noexcept to ensure that it does not throw exceptions, 
@@ -464,17 +464,17 @@ namespace utility {
         
         // Disable copy semantics for ScopeGuard to prevent accidental copying 
         // which could lead to multiple calls of the callable object
-        NEXSUITE_DISALLOW_COPY(ScopeGuard);
+        NEX_DISALLOW_COPY(ScopeGuard);
         
         // Enable move semantics for ScopeGuard to allow transferring ownership of the callable object
         ScopeGuard(ScopeGuard&& other) noexcept
-            : func_(NEXSUITE_STD move(other.func_)), dismissed_(other.dismissed_) {
+            : func_(NEX_STD move(other.func_)), dismissed_(other.dismissed_) {
             other.dismissed_ = true; // Prevent the moved-from object from calling the callable
         }
         ScopeGuard& operator=(ScopeGuard&& rhs) noexcept {
             if (this != &rhs) {
                 if (!dismissed_) func_(); // Call the current callable if not dismissed
-                func_ = NEXSUITE_STD move(rhs.func_);
+                func_ = NEX_STD move(rhs.func_);
                 dismissed_ = rhs.dismissed_;
                 rhs.dismissed_ = true; // Prevent the moved-from object from calling the callable
             }
@@ -509,15 +509,15 @@ namespace utility {
         // Constructor: Takes a callable object (e.g., lambda) to be called on scope exit 
         // if no exceptions were thrown
         explicit OnScopeSuccess(FuncType f)
-            : func_(NEXSUITE_STD move(f))
-            , exceptionsAtConstruction_(NEXSUITE_STD uncaught_exceptions()) {}
+            : func_(NEX_STD move(f))
+            , exceptionsAtConstruction_(NEX_STD uncaught_exceptions()) {}
 
         // Destructor: Calls the stored callable object if no exceptions were thrown 
         // during the lifetime of this object
         ~OnScopeSuccess() noexcept {
             // Only call the function if no exceptions were thrown during the lifetime of this object, 
             // indicating that the scope was exited successfully without an exception
-            if (NEXSUITE_STD uncaught_exceptions() == exceptionsAtConstruction_ && !dismissed_)
+            if (NEX_STD uncaught_exceptions() == exceptionsAtConstruction_ && !dismissed_)
                 func_();
         }
 
@@ -526,11 +526,11 @@ namespace utility {
 
         // Disable copy semantics for OnScopeSuccess to prevent accidental copying
         // which could lead to multiple calls of the callable object
-        NEXSUITE_DISALLOW_COPY(OnScopeSuccess);
+        NEX_DISALLOW_COPY(OnScopeSuccess);
 
         // Enable move semantics for OnScopeSuccess to allow transferring ownership of the callable object
         OnScopeSuccess(OnScopeSuccess&& other) noexcept
-            : func_(NEXSUITE_STD move(other.func_))
+            : func_(NEX_STD move(other.func_))
             , exceptionsAtConstruction_(other.exceptionsAtConstruction_)
             , dismissed_(other.dismissed_)
         {
@@ -538,9 +538,9 @@ namespace utility {
         }
         OnScopeSuccess& operator=(OnScopeSuccess&& rhs) noexcept {
             if (this != &rhs) {
-                if (NEXSUITE_STD uncaught_exceptions() == exceptionsAtConstruction_ && !dismissed_)
+                if (NEX_STD uncaught_exceptions() == exceptionsAtConstruction_ && !dismissed_)
                     func_(); // Call the current callable if not dismissed and no exceptions were thrown
-                func_ = NEXSUITE_STD move(rhs.func_);
+                func_ = NEX_STD move(rhs.func_);
                 exceptionsAtConstruction_ = rhs.exceptionsAtConstruction_;
                 dismissed_ = rhs.dismissed_;
                 rhs.dismissed_ = true; // Prevent the moved-from object from calling the callable
@@ -576,14 +576,14 @@ namespace utility {
     public:
         // Constructor: Takes a callable object (e.g., lambda) to be called on scope exit if an exception was thrown
         explicit OnScopeFailure(FuncType f)
-            : func_(NEXSUITE_STD move(f))
-            , exceptionsAtConstruction_(NEXSUITE_STD uncaught_exceptions()) {}
+            : func_(NEX_STD move(f))
+            , exceptionsAtConstruction_(NEX_STD uncaught_exceptions()) {}
 
         // Destructor: Calls the stored callable object if an exception was thrown during the lifetime of this object
         ~OnScopeFailure() noexcept {
             // Only call the function if an exception was thrown during the lifetime of this object,
             // indicating that the scope was exited due to an exception
-            if (NEXSUITE_STD uncaught_exceptions() > exceptionsAtConstruction_ && !dismissed_)
+            if (NEX_STD uncaught_exceptions() > exceptionsAtConstruction_ && !dismissed_)
                 func_();
         }
 
@@ -592,11 +592,11 @@ namespace utility {
 
         // Disable copy semantics for OnScopeFailure to prevent accidental copying
         // which could lead to multiple calls of the callable object
-        NEXSUITE_DISALLOW_COPY(OnScopeFailure);
+        NEX_DISALLOW_COPY(OnScopeFailure);
 
         // Enable move semantics for OnScopeFailure to allow transferring ownership of the callable object
         OnScopeFailure(OnScopeFailure&& other) noexcept
-            : func_(NEXSUITE_STD move(other.func_))
+            : func_(NEX_STD move(other.func_))
             , exceptionsAtConstruction_(other.exceptionsAtConstruction_)
             , dismissed_(other.dismissed_)
         {
@@ -604,9 +604,9 @@ namespace utility {
         }
         OnScopeFailure& operator=(OnScopeFailure&& rhs) noexcept {
             if (this != &rhs) {
-                if (NEXSUITE_STD uncaught_exceptions() > exceptionsAtConstruction_ && !dismissed_)
+                if (NEX_STD uncaught_exceptions() > exceptionsAtConstruction_ && !dismissed_)
                     func_(); // Call the current callable if not dismissed and an exception was thrown
-                func_ = NEXSUITE_STD move(rhs.func_);
+                func_ = NEX_STD move(rhs.func_);
                 exceptionsAtConstruction_ = rhs.exceptionsAtConstruction_;
                 dismissed_ = rhs.dismissed_;
                 rhs.dismissed_ = true; // Prevent the moved-from object from calling the callable
@@ -625,33 +625,33 @@ namespace utility {
     // without having to explicitly specify the type of the callable object.
     template <typename FuncType>
     NEX_NODISCARD auto makeScopeGuard(FuncType&& f) {
-        return ScopeGuard<NEXSUITE_STD decay_t<FuncType>>(NEXSUITE_STD forward<FuncType>(f));
+        return ScopeGuard<NEX_STD decay_t<FuncType>>(NEX_STD forward<FuncType>(f));
     }
 
     // DEFER macro for scope-based excution of code blocks, similar to the DEFER statement in languages like Go
-    #define NEXSUITE_DEFER(...) \
+    #define NEX_DEFER(...) \
         auto ANONYMOUS_DEFER_##__LINE__ = \
-            NEXSUITE_PREPEND_NAMESPACE(utility::ScopeGuard)([&]() { __VA_ARGS__; })
+            NEX_PREPEND_NAMESPACE(utility::ScopeGuard)([&]() { __VA_ARGS__; })
 
     // SCOPE_EXIT macro for scope-based excution of code blocks, similar to the SCOPE_EXIT statement 
     // in libraries like Boost.Scope or llvm::scope_exit or std::scope_exit in C++23
-    #define NEXSUITE_SCOPE_EXIT(...) \
+    #define NEX_SCOPE_EXIT(...) \
         auto ANONYMOUS_SCOPE_EXIT_##__LINE__ = \
-            NEXSUITE_PREPEND_NAMESPACE(utility::ScopeGuard)([&]() { __VA_ARGS__; })
+            NEX_PREPEND_NAMESPACE(utility::ScopeGuard)([&]() { __VA_ARGS__; })
 
     // SCOPE_SUCCESS macro for scope-based excution of code blocks only if the scope is exited successfully 
     // without an exception, similar to the SCOPE_SUCCESS statement in libraries like Boost.Scope or Folly, 
     // or languages like D with its scope(success) statement
-    #define NEXSUITE_SCOPE_SUCCESS(...) \
+    #define NEX_SCOPE_SUCCESS(...) \
         auto ANONYMOUS_SCOPE_SUCCESS_##__LINE__ = \
-            NEXSUITE_PREPEND_NAMESPACE(utility::OnScopeSuccess)([&]() { __VA_ARGS__; })
+            NEX_PREPEND_NAMESPACE(utility::OnScopeSuccess)([&]() { __VA_ARGS__; })
 
     // SCOPE_FAILURE macro for scope-based excution of code blocks only if the scope is exited due to an exception,
     // similar to the SCOPE_FAILURE statement in libraries like Boost.Scope or Folly, or languages like D with 
     // its scope(failure) statement
-    #define NEXSUITE_SCOPE_FAILURE(...) \
+    #define NEX_SCOPE_FAILURE(...) \
         auto ANONYMOUS_SCOPE_FAILURE_##__LINE__ = \
-            NEXSUITE_PREPEND_NAMESPACE(utility::OnScopeFailure)([&]() { __VA_ARGS__; })
+            NEX_PREPEND_NAMESPACE(utility::OnScopeFailure)([&]() { __VA_ARGS__; })
 
     /**
      * @struct SourceLocation
@@ -667,8 +667,8 @@ namespace utility {
         const char* function;   // The function name where the SourceLocation was created
 
         // Create a SourceLocation object representing the current source location using compiler built-ins
-#if NEXSUITE_USE_STD_SOURCE_LOCATION
-        static SourceLocation current(NEXSUITE_STD source_location loc = NEXSUITE_STD source_location::current()) {
+#if NEX_USE_STD_SOURCE_LOCATION
+        static SourceLocation current(NEX_STD source_location loc = NEX_STD source_location::current()) {
             return { 
                 stripPath(loc.file_name()), 
                 static_cast<int>(loc.line()), 
@@ -678,9 +678,9 @@ namespace utility {
 #else
         static SourceLocation current() {
             return { 
-                stripPath(NEXSUITE_SOURCE_FILE_PATH), 
-                NEXSUITE_SOURCE_LINE_NUMBER, 
-                NEXSUITE_SOURCE_FUNCTION_NAME 
+                stripPath(NEX_SOURCE_FILE_PATH), 
+                NEX_SOURCE_LINE_NUMBER, 
+                NEX_SOURCE_FUNCTION_NAME 
             };
         }
 #endif
@@ -688,8 +688,8 @@ namespace utility {
 
     // Define macro for capturing the current source location, which can be used for logging, error reporting, 
     // debugging, and other purposes where information about the source location is valuable.
-    #define NEXSUITE_SOURCE_LOCATION \
-        NEXSUITE_PREPEND_NAMESPACE(utility::SourceLocation::current())
+    #define NEX_SOURCE_LOCATION \
+        NEX_PREPEND_NAMESPACE(utility::SourceLocation::current())
 
     /**
      * @class Comparable
@@ -784,7 +784,7 @@ namespace utility {
      */
     struct NonCopyable {
         NonCopyable() = default;
-        NEXSUITE_DISALLOW_COPY(NonCopyable);
+        NEX_DISALLOW_COPY(NonCopyable);
     };
 
     /**
@@ -793,7 +793,7 @@ namespace utility {
      */
     struct NonMovable {
         NonMovable() = default;
-        NEXSUITE_DISALLOW_MOVE(NonMovable);
+        NEX_DISALLOW_MOVE(NonMovable);
     };
 
     /**
@@ -802,8 +802,8 @@ namespace utility {
      */
     struct Immobile {
         Immobile() = default;
-        NEXSUITE_DISALLOW_COPY(Immobile);
-        NEXSUITE_DISALLOW_MOVE(Immobile);
+        NEX_DISALLOW_COPY(Immobile);
+        NEX_DISALLOW_MOVE(Immobile);
     };
 
     /**
@@ -890,8 +890,8 @@ namespace utility {
 
         // Construction
         explicit NamedType(const T& value) : value_(value) {}
-        explicit NamedType(T&& value) noexcept(NEXSUITE_STD is_nothrow_move_constructible_v<T>)
-            : value_(NEXSUITE_STD move(value)) {}
+        explicit NamedType(T&& value) noexcept(NEX_STD is_nothrow_move_constructible_v<T>)
+            : value_(NEX_STD move(value)) {}
 
         // Accessors
         NEX_NODISCARD const T& get() const noexcept { return value_; }
@@ -912,4 +912,4 @@ namespace utility {
 
 } // namespace utility
 
-NEXSUITE_NAMESPACE_END
+NEX_NAMESPACE_END

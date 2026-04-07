@@ -5,13 +5,16 @@
 
 #pragma once
 
-#include "common/macros.h"
+#include "nex/base/platform.h"
+#include "nex/base/compiler.h"
+#include "nex/base/build.h"
+#include "nex/base/namespace.h"
 
 // Get function name for assertion and fatal handlers
-#define NEXSUITE_ASSERT_FUNCTION_NAME \
-    NEXSUITE_SOURCE_FUNCTION_NAME
+#define NEX_ASSERT_FUNCTION_NAME \
+    NEX_SOURCE_FUNCTION_NAME
 
-NEXSUITE_NAMESPACE_BEGIN
+NEX_NAMESPACE_BEGIN
 
 /**
  * @brief Fatal handler function pointer type
@@ -28,7 +31,7 @@ NEXSUITE_NAMESPACE_BEGIN
  * void myFatalHandler(const char* reason, const char* file, int line, const char* function) {
  *     // Custom fatal handling logic
  * }
- * ::NEXSUITE_PREPEND_NAMESPACE(setFatalHandler)(myFatalHandler);
+ * ::NEX_PREPEND_NAMESPACE(setFatalHandler)(myFatalHandler);
  * ```
  */
 using FatalHandler = void(*)(
@@ -71,7 +74,7 @@ FatalHandler getFatalHandler();
  * ```
  */
 [[noreturn]] inline void immediateCrash() {
-#if NEXSUITE_COMPILER_IS_MSVC && !defined(__clang__)
+#if NEX_COMPILER_IS_MSVC && !defined(__clang__)
     // MSVC: __fastfail is a low-level intrinsic that triggers a fast fail, 
     // which is a special kind of crash that is designed to be fatal, unique, and non-allocating. 
     // It does not generate any code on its own, so we also need to trigger a trap or abort 
@@ -124,7 +127,7 @@ FatalHandler getFatalHandler();
     // Uses compiler specific extensions if possible.
     // Even if no extension is used, undefined behavior is still raised by
     // an empty function body and the noreturn attribute.
-#if NEXSUITE_COMPILER_IS_MSVC && !defined(__clang__) // MSVC
+#if NEX_COMPILER_IS_MSVC && !defined(__clang__) // MSVC
     // __assume is a hint to the optimizer that the code path is unreachable.
     // It does not generate any code on its own, so we also need to trigger a trap 
     // or abort to ensure the program does not continue executing.
@@ -173,10 +176,10 @@ void setAssertHandler(AssertHandler handler);
  */
 AssertHandler getAssertHandler();
 
-NEXSUITE_NAMESPACE_END
+NEX_NAMESPACE_END
 
 /**
- * @def NEXSUITE_IMMEDIATE_CRASH()
+ * @def NEX_IMMEDIATE_CRASH()
  * @brief Immediately crash the program
  * 
  * This macro triggers an immediate crash using a low-level trap instruction.
@@ -186,17 +189,17 @@ NEXSUITE_NAMESPACE_END
  * Example usage:
  * ```
  * if (unexpected_condition) {
- *     NEXSUITE_IMMEDIATE_CRASH();
+ *     NEX_IMMEDIATE_CRASH();
  * }
  * ```
  */
-#define NEXSUITE_IMMEDIATE_CRASH() \
+#define NEX_IMMEDIATE_CRASH() \
     do { \
-        NEXSUITE_PREPEND_NAMESPACE(immediateCrash)(); \
+        NEX_PREPEND_NAMESPACE(immediateCrash)(); \
     } while (0)
 
 /**
- * @def NEXSUITE_FATAL(reason)
+ * @def NEX_FATAL(reason)
  * @brief Immediately crash the program with a specified reason
  * 
  * This macro triggers an immediate crash using a low-level trap instruction,
@@ -209,21 +212,21 @@ NEXSUITE_NAMESPACE_END
  * Example usage:
  * ```
  * if (unexpected_condition) {
- *    NEXSUITE_FATAL("Unexpected condition encountered");
+ *    NEX_FATAL("Unexpected condition encountered");
  * }
  * ```
  */
-#define NEXSUITE_FATAL(reason) \
+#define NEX_FATAL(reason) \
     do { \
-        NEXSUITE_PREPEND_NAMESPACE(getFatalHandler())(reason, \
-            NEXSUITE_SOURCE_FILE_PATH, \
-            NEXSUITE_SOURCE_LINE_NUMBER, \
-            NEXSUITE_ASSERT_FUNCTION_NAME); \
-        NEXSUITE_IMMEDIATE_CRASH(); \
+        NEX_PREPEND_NAMESPACE(getFatalHandler())(reason, \
+            NEX_SOURCE_FILE_PATH, \
+            NEX_SOURCE_LINE_NUMBER, \
+            NEX_ASSERT_FUNCTION_NAME); \
+        NEX_IMMEDIATE_CRASH(); \
     } while (0)
 
 /**
- * @def NEXSUITE_UNREACHABLE()
+ * @def NEX_UNREACHABLE()
  * @brief Indicate that a code path is unreachable
  * 
  * This macro marks a code path as unreachable, allowing the compiler
@@ -240,17 +243,17 @@ NEXSUITE_NAMESPACE_END
  *         // Handle case 2
  *         break;
  *     default:
- *         NEXSUITE_UNREACHABLE(); // Indicate that other cases are impossible
+ *         NEX_UNREACHABLE(); // Indicate that other cases are impossible
  * }
  * ```
  */
-#define NEXSUITE_UNREACHABLE() \
+#define NEX_UNREACHABLE() \
     do { \
-        NEXSUITE_PREPEND_NAMESPACE(unreachable)(); \
+        NEX_PREPEND_NAMESPACE(unreachable)(); \
     } while (0)
 
 /**
- * @def NEXSUITE_ASSERT(expr)
+ * @def NEX_ASSERT(expr)
  * @brief Assert that an expression evaluates to true
  * 
  * If the expression is false, the assert handler is called with file, line, and function information.
@@ -261,32 +264,32 @@ NEXSUITE_NAMESPACE_END
  * 
  * @example
  * ```
- * NEXSUITE_ASSERT(ptr != nullptr);
- * NEXSUITE_ASSERT(index >= 0 && index < count);
+ * NEX_ASSERT(ptr != nullptr);
+ * NEX_ASSERT(index >= 0 && index < count);
  * ```
  */
-#if defined(NEXSUITE_BUILD_DEBUG)
-    #define NEXSUITE_ASSERT(expr) \
+#if defined(NEX_BUILD_DEBUG)
+    #define NEX_ASSERT(expr) \
         do { \
             if (!(expr)) { \
-                NEXSUITE_PREPEND_NAMESPACE(getAssertHandler())( \
-                    NEXSUITE_SOURCE_FILE_PATH, \
-                    NEXSUITE_SOURCE_LINE_NUMBER, \
-                    NEXSUITE_ASSERT_FUNCTION_NAME, \
+                NEX_PREPEND_NAMESPACE(getAssertHandler())( \
+                    NEX_SOURCE_FILE_PATH, \
+                    NEX_SOURCE_LINE_NUMBER, \
+                    NEX_ASSERT_FUNCTION_NAME, \
                     #expr, \
                     ""); \
-                NEXSUITE_IMMEDIATE_CRASH(); \
+                NEX_IMMEDIATE_CRASH(); \
             } \
         } while (0)
 #else
-    #define NEXSUITE_ASSERT(expr) (void(0))
+    #define NEX_ASSERT(expr) (void(0))
 #endif
 
 /**
- * @def NEXSUITE_ASSERT_MSG(expr, msg)
+ * @def NEX_ASSERT_MSG(expr, msg)
  * @brief Assert that an expression evaluates to true with a custom message
  * 
- * Similar to NEXSUITE_ASSERT, but includes a user-provided message that will be
+ * Similar to NEX_ASSERT, but includes a user-provided message that will be
  * passed to the assert handler.
  * 
  * @param expr Expression to check (must be convertible to bool)
@@ -294,83 +297,83 @@ NEXSUITE_NAMESPACE_END
  * 
  * @example
  * ```
- * NEXSUITE_ASSERT_MSG(value > 0, "Value must be positive");
- * NEXSUITE_ASSERT_MSG(buffer != nullptr, "Buffer allocation failed");
+ * NEX_ASSERT_MSG(value > 0, "Value must be positive");
+ * NEX_ASSERT_MSG(buffer != nullptr, "Buffer allocation failed");
  * ```
  */
-#if defined(NEXSUITE_BUILD_DEBUG)
-    #define NEXSUITE_ASSERT_MSG(expr, msg) \
+#if defined(NEX_BUILD_DEBUG)
+    #define NEX_ASSERT_MSG(expr, msg) \
         do { \
             if (!(expr)) { \
-                NEXSUITE_PREPEND_NAMESPACE(getAssertHandler())( \
-                    NEXSUITE_SOURCE_FILE_PATH, \
-                    NEXSUITE_SOURCE_LINE_NUMBER, \
-                    NEXSUITE_ASSERT_FUNCTION_NAME, \
+                NEX_PREPEND_NAMESPACE(getAssertHandler())( \
+                    NEX_SOURCE_FILE_PATH, \
+                    NEX_SOURCE_LINE_NUMBER, \
+                    NEX_ASSERT_FUNCTION_NAME, \
                     #expr, \
                     msg); \
-                NEXSUITE_IMMEDIATE_CRASH(); \
+                NEX_IMMEDIATE_CRASH(); \
             } \
         } while (0)
 #else
-    #define NEXSUITE_ASSERT_MSG(expr, msg) (void(0))
+    #define NEX_ASSERT_MSG(expr, msg) (void(0))
 #endif
 
 /**
- * @def NEXSUITE_VERIFY(expr)
+ * @def NEX_VERIFY(expr)
  * @brief Verify an expression (always checked, even in release builds)
  * 
- * Similar to NEXSUITE_ASSERT, but is never compiled out, even in release builds.
+ * Similar to NEX_ASSERT, but is never compiled out, even in release builds.
  * Use this for critical checks that must always be performed.
  * 
  * @param expr Expression to check (must be convertible to bool)
  * 
  * Example usage:
  * ```
- * NEXSUITE_VERIFY(InitializeSystem());  // Must always check
+ * NEX_VERIFY(InitializeSystem());  // Must always check
  * ```
  */
-#define NEXSUITE_VERIFY(expr) \
+#define NEX_VERIFY(expr) \
     do { \
         if (!(expr)) { \
-            NEXSUITE_PREPEND_NAMESPACE(getAssertHandler())( \
-                NEXSUITE_SOURCE_FILE_PATH, \
-                NEXSUITE_SOURCE_LINE_NUMBER, \
-                NEXSUITE_ASSERT_FUNCTION_NAME, \
+            NEX_PREPEND_NAMESPACE(getAssertHandler())( \
+                NEX_SOURCE_FILE_PATH, \
+                NEX_SOURCE_LINE_NUMBER, \
+                NEX_ASSERT_FUNCTION_NAME, \
                 #expr, \
                 ""); \
-            NEXSUITE_IMMEDIATE_CRASH(); \
+            NEX_IMMEDIATE_CRASH(); \
         } \
     } while (0)
 
 /**
- * @def NEXSUITE_VERIFY_MSG(expr, msg)
+ * @def NEX_VERIFY_MSG(expr, msg)
  * @brief Verify an expression with a custom message (always checked)
  * 
- * Similar to NEXSUITE_VERIFY, but includes a user-provided message.
+ * Similar to NEX_VERIFY, but includes a user-provided message.
  * 
  * @param expr Expression to check (must be convertible to bool)
  * @param msg User message (StringView or convertible to StringView)
  * 
  * Example usage:
  * ```
- * NEXSUITE_VERIFY_MSG(LoadConfiguration(configPath), "Failed to load configuration");
+ * NEX_VERIFY_MSG(LoadConfiguration(configPath), "Failed to load configuration");
  * ```
  */
-#define NEXSUITE_VERIFY_MSG(expr, msg) \
+#define NEX_VERIFY_MSG(expr, msg) \
     do { \
         if (!(expr)) { \
-            NEXSUITE_PREPEND_NAMESPACE(getAssertHandler())( \
-                NEXSUITE_SOURCE_FILE_PATH, \
-                NEXSUITE_SOURCE_LINE_NUMBER, \
-                NEXSUITE_ASSERT_FUNCTION_NAME, \
+            NEX_PREPEND_NAMESPACE(getAssertHandler())( \
+                NEX_SOURCE_FILE_PATH, \
+                NEX_SOURCE_LINE_NUMBER, \
+                NEX_ASSERT_FUNCTION_NAME, \
                 #expr, \
                 msg); \
-            NEXSUITE_IMMEDIATE_CRASH(); \
+            NEX_IMMEDIATE_CRASH(); \
         } \
     } while (0)
 
 /** 
- * @def NEXSUITE_NOT_IMPLEMENTED()
+ * @def NEX_NOT_IMPLEMENTED()
  * @brief Indicate that a code path is not yet implemented
  * 
  * This macro triggers an assertion failure indicating that the code path
@@ -379,17 +382,17 @@ NEXSUITE_NAMESPACE_END
  * Example usage:
  * ```
  * void myFunction() {
- *     NEXSUITE_NOT_IMPLEMENTED();
+ *     NEX_NOT_IMPLEMENTED();
  * }
  * ```
  */
-#define NEXSUITE_NOT_IMPLEMENTED() \
+#define NEX_NOT_IMPLEMENTED() \
     do { \
-        NEXSUITE_PREPEND_NAMESPACE(getAssertHandler())( \
-            NEXSUITE_SOURCE_FILE_PATH, \
-            NEXSUITE_SOURCE_LINE_NUMBER, \
-            NEXSUITE_ASSERT_FUNCTION_NAME, \
+        NEX_PREPEND_NAMESPACE(getAssertHandler())( \
+            NEX_SOURCE_FILE_PATH, \
+            NEX_SOURCE_LINE_NUMBER, \
+            NEX_ASSERT_FUNCTION_NAME, \
             "Not implemented", \
             "This code path is not yet implemented."); \
-        NEXSUITE_IMMEDIATE_CRASH(); \
+        NEX_IMMEDIATE_CRASH(); \
     } while (0)

@@ -5,8 +5,6 @@
 
 #pragma once
 
-#include "nex/base/compiler.h"
-
 /**
  * @file      build_config.h
  * @defgroup  build_config_detection Build Configuration Detection
@@ -14,6 +12,8 @@
  *            based on the build configuration; also defines helper macros for source location, which can be used for 
  *            logging, error reporting, and debugging purposes.
  */
+
+#include "nex/base/compiler.h"
 
 // Check if we are in a debug build and define a macro accordingly
 // The logic for detecting a debug build is based on common macros defined by compilers and build systems, 

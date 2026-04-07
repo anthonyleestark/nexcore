@@ -11,7 +11,7 @@
  *        and their associated type aliases.
  * 
  * @details
- * This header defines aliases for node-based linked containers used in NexSuite. It provides a consistent
+ * This header defines aliases for node-based linked containers used in Nex-ecosystem. It provides a consistent
  * naming layer for doubly linked and singly linked list types so modules can communicate traversal and
  * mutation characteristics directly through their type choices.
  *
@@ -39,10 +39,10 @@
 #include <list>
 #include <forward_list>
 
-#include "common/macros.h"
-#include "common/types.h"
+#include "nex/base/namespace.h"
+#include "nex/base/types.h"
 
-NEXSUITE_NAMESPACE_BEGIN
+NEX_NAMESPACE_BEGIN
 
 /**
  * @brief List (Doubly linked list)
@@ -52,7 +52,7 @@ NEXSUITE_NAMESPACE_BEGIN
  * invalidating pointers to other elements.
  */
 template <typename T>
-using List = NEXSUITE_STD list<T>;
+using List = NEX_STD list<T>;
 
 /**
  * @brief ForwardList (Singly linked list)
@@ -62,6 +62,6 @@ using List = NEXSUITE_STD list<T>;
  * as it only stores a single next-pointer per node.
  */
 template <typename T>
-using ForwardList = NEXSUITE_STD forward_list<T>;
+using ForwardList = NEX_STD forward_list<T>;
 
-NEXSUITE_NAMESPACE_END
+NEX_NAMESPACE_END

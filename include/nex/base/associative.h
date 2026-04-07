@@ -11,7 +11,7 @@
  *        such as Map, Set, HashMap, HashSet, and their associated type aliases.
  * 
  * @details
- * This header centralizes aliases for associative containers used by NexSuite, including ordered/unordered maps, 
+ * This header centralizes aliases for associative containers used by Nex-ecosystem, including ordered/unordered maps, 
  * sets, and their multi-entry variants. It establishes a uniform naming convention to ensure that interface 
  * signatures communicate their behavior clearly and consistently across the codebase.
  *
@@ -48,10 +48,10 @@
 #include <unordered_set>
 #include <utility>
 
-#include "common/macros.h"
-#include "common/types.h"
+#include "nex/base/namespace.h"
+#include "nex/base/types.h"
 
-NEXSUITE_NAMESPACE_BEGIN
+NEX_NAMESPACE_BEGIN
 
 /**
  * @brief Map (key-value associative container) type aliases
@@ -60,7 +60,7 @@ NEXSUITE_NAMESPACE_BEGIN
  * for storing and manipulating collections of data that have a key-value relationship.
  */
 template <typename Key, typename Value>
-using Map = NEXSUITE_STD map<Key, Value>;
+using Map = NEX_STD map<Key, Value>;
 
 /**
  * @brief Set (collection of unique elements) type aliases
@@ -69,7 +69,7 @@ using Map = NEXSUITE_STD map<Key, Value>;
  * for storing and manipulating collections of data that require uniqueness.
  */
 template <typename T>
-using Set = NEXSUITE_STD set<T>;
+using Set = NEX_STD set<T>;
 
 /**
  * @brief MultiMap (key-value associative container that allows duplicate keys) type aliases
@@ -78,7 +78,7 @@ using Set = NEXSUITE_STD set<T>;
  * Unlike Map, multiple elements can have equivalent keys. Elements are typically ordered by key.
  */
 template <typename Key, typename Value>
-using MultiMap = NEXSUITE_STD multimap<Key, Value>;
+using MultiMap = NEX_STD multimap<Key, Value>;
 
 /**
  * @brief MultiSet (collection of unique elements that allows duplicate values) type aliases
@@ -87,7 +87,7 @@ using MultiMap = NEXSUITE_STD multimap<Key, Value>;
  * equivalent values.
  */
 template <typename T>
-using MultiSet = NEXSUITE_STD multiset<T>;
+using MultiSet = NEX_STD multiset<T>;
 
 /**
  * @brief Hash Map (hash table based key-value associative container) type aliases
@@ -96,10 +96,10 @@ using MultiSet = NEXSUITE_STD multiset<T>;
  * constant-time complexity for insertions and lookups using hashing.
  */
 template <typename Key, typename Value, 
-    typename Hasher = NEXSUITE_STD hash<Key>, 
-    typename KeyEqual = NEXSUITE_STD equal_to<Key>,
-    typename Allocator = NEXSUITE_STD allocator<NEXSUITE_STD pair<const Key, Value>>>
-using HashMap = NEXSUITE_STD unordered_map<Key, Value, Hasher, KeyEqual, Allocator>;
+    typename Hasher = NEX_STD hash<Key>, 
+    typename KeyEqual = NEX_STD equal_to<Key>,
+    typename Allocator = NEX_STD allocator<NEX_STD pair<const Key, Value>>>
+using HashMap = NEX_STD unordered_map<Key, Value, Hasher, KeyEqual, Allocator>;
 
 /**
  * @brief Hash Set (hash table based collection of unique elements) type aliases
@@ -108,10 +108,10 @@ using HashMap = NEXSUITE_STD unordered_map<Key, Value, Hasher, KeyEqual, Allocat
  * through hashing, and no particular order is guaranteed for the stored elements.
  */
 template <typename T, 
-          typename Hasher = NEXSUITE_STD hash<T>, 
-          typename KeyEqual = NEXSUITE_STD equal_to<T>, 
-          typename Allocator = NEXSUITE_STD allocator<T>>
-using HashSet = NEXSUITE_STD unordered_set<T, Hasher, KeyEqual, Allocator>;
+          typename Hasher = NEX_STD hash<T>, 
+          typename KeyEqual = NEX_STD equal_to<T>, 
+          typename Allocator = NEX_STD allocator<T>>
+using HashSet = NEX_STD unordered_set<T, Hasher, KeyEqual, Allocator>;
 
 /**
  * @brief Hash MultiMap (hash table based key-value associative container that allows duplicate keys) type aliases
@@ -120,10 +120,10 @@ using HashSet = NEXSUITE_STD unordered_set<T, Hasher, KeyEqual, Allocator>;
  * Unlike a standard Map, it allows for duplicate keys and does not guarantee any specific element ordering.
  */
 template <typename Key, typename Value, 
-          typename Hasher = NEXSUITE_STD hash<Key>, 
-          typename KeyEqual = NEXSUITE_STD equal_to<Key>, 
-          typename Allocator = NEXSUITE_STD allocator<NEXSUITE_STD pair<const Key, Value>>>
-using HashMultiMap = NEXSUITE_STD unordered_multimap<Key, Value, Hasher, KeyEqual, Allocator>;
+          typename Hasher = NEX_STD hash<Key>, 
+          typename KeyEqual = NEX_STD equal_to<Key>, 
+          typename Allocator = NEX_STD allocator<NEX_STD pair<const Key, Value>>>
+using HashMultiMap = NEX_STD unordered_multimap<Key, Value, Hasher, KeyEqual, Allocator>;
 
 /**
  * @brief Hash MultiSet (hash table based collection of unique elements that allows duplicate values) type aliases
@@ -133,10 +133,10 @@ using HashMultiMap = NEXSUITE_STD unordered_multimap<Key, Value, Hasher, KeyEqua
  * average constant-time complexity for operations.
  */
 template <typename T, 
-          typename Hasher = NEXSUITE_STD hash<T>, 
-          typename KeyEqual = NEXSUITE_STD equal_to<T>, 
-          typename Allocator = NEXSUITE_STD allocator<T>>
-using HashMultiSet = NEXSUITE_STD unordered_multiset<T, Hasher, KeyEqual, Allocator>;
+          typename Hasher = NEX_STD hash<T>, 
+          typename KeyEqual = NEX_STD equal_to<T>, 
+          typename Allocator = NEX_STD allocator<T>>
+using HashMultiSet = NEX_STD unordered_multiset<T, Hasher, KeyEqual, Allocator>;
 
 /**
  * @section Common container type aliases
@@ -196,4 +196,4 @@ using UInt64Set = HashSet<uint64>;
  */
 using StringSet = Set<String>;
 
-NEXSUITE_NAMESPACE_END
+NEX_NAMESPACE_END

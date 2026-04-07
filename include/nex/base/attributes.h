@@ -5,8 +5,6 @@
 
 #pragma once
 
-#include "nex/base/compiler.h"
-
 /**
  * @file      attributes.h
  * @defgroup  attributes Attributes and Annotations
@@ -23,6 +21,8 @@
  * @note When using the NEX_DEPRECATED macro, it is recommended to provide a message that explains why 
  *       the function or class is deprecated and what should be used instead.
  */
+
+#include "nex/base/compiler.h"
 
 ////// Exported macros for shared library support =========================================================
 

@@ -11,7 +11,7 @@
  *        and their associated type aliases.
  * 
  * @details
- * This header centralizes aliases for sequence-oriented containers used by NexSuite, including fixed-size
+ * This header centralizes aliases for sequence-oriented containers used by Nex-ecosystem, including fixed-size
  * arrays, dynamic arrays, and double-ended queues. The goal is to provide a single, stable vocabulary for
  * linear data structures so APIs and internal implementations remain readable and consistent across modules.
  *
@@ -46,10 +46,10 @@
 #include <array>
 #include <deque>
 
-#include "common/macros.h"
-#include "common/types.h"
+#include "nex/base/namespace.h"
+#include "nex/base/types.h"
 
-NEXSUITE_NAMESPACE_BEGIN
+NEX_NAMESPACE_BEGIN
 
 /**
  * @brief Array (fixed-size array) type aliases
@@ -57,23 +57,23 @@ NEXSUITE_NAMESPACE_BEGIN
  * Use this when the number of elements is known at compile-time to avoid dynamic allocation.
  */
 template <typename T, usize Size>
-using Array = NEXSUITE_STD array<T, Size>;
+using Array = NEX_STD array<T, Size>;
 
 /**
  * @brief ArrayList (dynamic array) type aliases
  * @details A dynamic array that provides fast indexed access and efficient insertion/deletion at the end. 
  * Elements are stored contiguously in memory.
  */
-template <typename T, typename Allocator = NEXSUITE_STD allocator<T>>
-using ArrayList = NEXSUITE_STD vector<T, Allocator>;
+template <typename T, typename Allocator = NEX_STD allocator<T>>
+using ArrayList = NEX_STD vector<T, Allocator>;
 
 /**
  * @brief Deque (double-ended queue) type aliases
  * @details An indexed sequence container that allows fast insertion and deletion at both its beginning and its end. 
  * Unlike ArrayList, storage is not guaranteed to be contiguous.
  */
-template <typename T, typename Allocator = NEXSUITE_STD allocator<T>>
-using Deque = NEXSUITE_STD deque<T, Allocator>;
+template <typename T, typename Allocator = NEX_STD allocator<T>>
+using Deque = NEX_STD deque<T, Allocator>;
 
 /**
  * @section Common container type aliases
@@ -130,4 +130,4 @@ using DoubleList = ArrayList<float64>;
 
 using StringList = ArrayList<String>;
 
-NEXSUITE_NAMESPACE_END
+NEX_NAMESPACE_END

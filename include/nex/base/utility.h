@@ -1,0 +1,915 @@
+/**
+ * SPDX-License-Identifier: BSD-3-Clause
+ * Copyright (c) 2026 Anthony Lee Stark. All rights reserved.
+ */
+
+#pragma once
+
+#include <utility>
+#include <type_traits>
+
+#include "common/macros.h"
+#include "common/types.h"
+
+#if NEXSUITE_USE_STD_SOURCE_LOCATION
+    #include <source_location>
+#endif
+
+NEXSUITE_NAMESPACE_BEGIN
+
+/**
+ * @namespace utility
+ * @brief   Contains utility functions and classes that provide common functionality and services
+ *          across the NexSuite system, such as helper functions, common data structures, and other
+ *          utilities that can be used by various components of the system.
+ * 
+ * @details
+ * The `utility` namespace is intended to contain utility functions and classes that provide common
+ * functionality and services across the NexSuite system, such as helper functions, common data structures,
+ * and other utilities that can be used by various components of the system. The utilities in this
+ * namespace are designed to be reusable and can be used by different layers and components of the system
+ * without introducing dependencies on specific layers or components. The `utility` namespace is intended to
+ * provide a centralized location for common utilities that can be used throughout the codebase, improving
+ * code reuse and reducing duplication of common functionality.
+ */
+namespace utility {
+
+    ////// Helpers functions array/struct/class processing -------------------------------
+
+    // Get the size of a statically sized array, which can be used for various purposes such as
+    // implementing container_of and other utilities that require knowledge of the size of an array.
+    template <typename T, usize N>
+    constexpr usize arraySize(T (&)[N]) noexcept {
+        return N;
+    }
+
+    // Get the offset of a member within a struct/class, which can be used for various purposes such as
+    // implementing container_of and other utilities that require knowledge of the layout of a struct/class.
+    template <typename T, typename MemberT>
+    constexpr isize offsetOf(MemberT T::*member) noexcept {
+        static_assert(NEXSUITE_STD is_standard_layout_v<T>, "offsetOf only safe for standard-layout types");
+        return reinterpret_cast<isize>(&reinterpret_cast<T*>(0)->*member);
+    }
+
+    // Get the containing struct/class from a pointer to a member, which can be used for various purposes such as
+    // implementing container_of and other utilities that require knowledge of the layout of a struct/class.
+    template <typename T, auto MemberPtr>
+    constexpr T* containerOf(decltype(MemberPtr) ptr) noexcept {
+        using MemberT = NEXSUITE_STD remove_reference_t<decltype(NEXSUITE_STD declval<T>().*MemberPtr)>;
+        static_assert(NEXSUITE_STD is_standard_layout_v<T>, "containerOf only safe for standard-layout types");
+        
+        return reinterpret_cast<T*>(
+            reinterpret_cast<char*>(ptr) - offsetOf<T, MemberT, MemberPtr>()
+        );
+    }
+
+    ////// Type-traits for struct/class member types --------------------------------
+
+    // Member type
+    template <typename T, typename MemberT>
+    using member_type_t = MemberT;
+
+    // Pointer to member type
+    template <typename T, typename MemberT>
+    using member_pointer_t = MemberT T::*;
+
+    // Reference to member
+    template <typename T, auto MemberPtr>
+    using member_reference_t = decltype(NEXSUITE_STD declval<T&>().*MemberPtr);
+
+    // Const version
+    template <typename T, auto MemberPtr>
+    using const_member_reference_t = decltype(NEXSUITE_STD declval<const T&>().*MemberPtr);
+
+    // Rvalue reference
+    template <typename T, auto MemberPtr>
+    using member_rvalue_ref_t = decltype(NEXSUITE_STD declval<T&&>().*MemberPtr);
+
+    ////// Helper functions for safe downcast and dereference -------------------------------
+
+    // Safely dereference a member pointer, ensuring that the pointer type matches the member type, 
+    // and returning a reference to the containing struct/class.
+    template <typename T, typename MemberT>
+    constexpr T& derefMember(MemberT* memberPtr, MemberT T::*member) noexcept {
+        return *containerOf(memberPtr, member);
+    }
+
+    // Safe downcast of a pointer to a member to a pointer to the containing struct/class, 
+    // ensuring that the pointer type matches the member type.
+    template <typename T, typename MemberT>
+    constexpr T* downcastMember(MemberT* memberPtr, MemberT T::*member) noexcept {
+        return containerOf(memberPtr, member);
+    }
+    
+    // Safe downcast of a pointer to a base class to a pointer to a derived class with checking for inheritance 
+    // relationship at compile time, ensuring that the pointer type matches the class type.
+    template <typename Derived, typename Base>
+    constexpr Derived* safeDowncast(Base* base) noexcept {
+        static_assert(NEXSUITE_STD is_base_of_v<Base, Derived>);
+        return dynamic_cast<Derived*>(base);
+    }
+
+    ////// Helper function for safe deletion --------------------------------
+
+    // Safely delete a pointer to a struct/class, ensuring that the pointer type matches the struct/class type.
+    template <typename T>
+    void deleteObject(T* objPtr) noexcept {
+        if (objPtr) {
+            delete objPtr;
+            (objPtr) = nullptr; // Set the pointer to nullptr after deletion to prevent dangling pointer
+        }
+    }
+
+    // Safely delete an array pointer to a struct/class, ensuring that the pointer type matches the struct/class type.
+    template <typename T>
+    void deleteObjectArray(T* objPtr) noexcept {
+        if (objPtr) {
+            delete[] objPtr;
+            (objPtr) = nullptr; // Set the pointer to nullptr after deletion to prevent dangling pointer
+        }
+    }
+
+    // Safely delete a pointer to a member, ensuring that the pointer type matches the member type,
+    // and deleting the containing struct/class.
+    template <typename T, typename MemberT>
+    void deleteMember(MemberT* memberPtr, MemberT T::*member) noexcept {
+        if (memberPtr) {
+            delete containerOf(memberPtr, member);
+        }
+    }
+
+    // Safely delete a pointer to a member and set it to nullptr, ensuring that the pointer type matches 
+    // the member type, and deleting the containing struct/class.
+    template <typename T, typename MemberT>
+    void deleteMemberAndNull(MemberT*& memberPtr, MemberT T::*member) noexcept {
+        if (memberPtr) {
+            delete containerOf(memberPtr, member);
+            memberPtr = nullptr;
+        }
+    }
+
+    // Safely delete an array pointer to a member and set it to nullptr, ensuring that the pointer type matches 
+    // the member type, and deleting the containing struct/class.
+    template <typename T, typename MemberT>
+    void deleteMemberArrayAndNull(MemberT*& memberPtr, MemberT T::*member) noexcept {
+        if (memberPtr) {
+            delete[] containerOf(memberPtr, member);
+            memberPtr = nullptr;
+        }
+    }
+
+    ////// Helper functions for hashing and combining hash values ---------------------------------
+
+    // Combine two hash values into a single hash value, which can be used for various purposes such as implementing 
+    // hash-based containers that use composite keys, and improving the performance of lookups by providing a way to combine 
+    // hash values of multiple components of a composite key. The hash combination function uses a common technique to 
+    // combine hash values, which helps to reduce the likelihood of hash collisions and improve the performance of lookups 
+    // in hash-based containers.
+    constexpr int64 combineHash(int64 h1, int64 h2) noexcept {
+        return h1 ^ (h2 + 0x9e3779b9 + (h1 << 6) + (h1 >> 2));
+    }
+
+    ////// Helper functions for enum class keys ---------------------------------
+
+    // Get the underlying integer value of an enum class key, which can be used for various purposes such as
+    // implementing mapping of enum keys to configuration entries and other utilities that require knowledge of 
+    // the underlying integer value of the enum.
+    template <typename Enum>
+    constexpr int64 enumKeyValue(Enum key) noexcept {
+        static_assert(NEXSUITE_STD is_enum_v<Enum>, "enumKeyValue only works for enum types");
+        return static_cast<int64>(key);
+    }
+
+    // Get the underlying integer value of an enum class key, which can be used for various purposes such as
+    // implementing mapping of enum keys to configuration entries and other utilities that require knowledge of 
+    // the underlying integer value of the enum.
+    template <typename Enum>
+    constexpr auto toUnderlying(Enum key) noexcept {
+        static_assert(NEXSUITE_STD is_enum_v<Enum>, "toUnderlying only works for enum types");
+        return static_cast<NEXSUITE_STD underlying_type_t<Enum>>(key);
+    }
+
+    // Get a hash value for an enum class key, which can be used for various purposes such as implementing
+    // hash-based containers that use enum keys, and improving the performance of lookups by providing a hash function 
+    // for enum keys. The hash function combines the hash of the enum type and the integer value of the enum key 
+    // to reduce the likelihood of hash collisions and improve the performance of lookups in hash-based containers.
+    template <typename Enum>
+    constexpr int64 enumKeyHash(Enum key) noexcept {
+        static_assert(NEXSUITE_STD is_enum_v<Enum>, "enumKeyHash only works for enum types");
+        return typeid(Enum).hash_code() ^ enumKeyValue(key);
+    }
+
+    // Combine the hash of the enum type and the integer value of the enum key to produce a unique hash value for each 
+    // unique combination of enum type and value, reducing the likelihood of hash collisions and improving the performance 
+    // of lookups in hash-based containers.
+    template <typename Enum>
+    constexpr int64 enumKeyHashCombined(Enum key) noexcept {
+        static_assert(NEXSUITE_STD is_enum_v<Enum>, "enumKeyHashCombined only works for enum types");
+        int64 h1 = NEXSUITE_STD hash<usize>{}(typeid(Enum).hash_code());
+        int64 h2 = NEXSUITE_STD hash<int64>{}(enumKeyValue(key));
+        return combineHash(h1, h2);
+    }
+
+    // Enable/disable bitmask operators for an enum class, which can be used for various purposes such as implementing
+    // configuration flags and other utilities that require bitmask operations on enum keys. By default, bitmask operators 
+    // are disabled for all enum classes, and can be enabled for specific enum classes by specializing
+    template <typename Enum>
+    struct enable_bitmask_operators {
+        static constexpr bool enable = false;
+    };
+
+    // Bitwise OR operator for enum classes with bitmask operators enabled
+    template <typename Enum>
+    constexpr NEXSUITE_STD enable_if_t<enable_bitmask_operators<Enum>::enable, Enum>
+    operator|(Enum lhs, Enum rhs) {
+        using T = NEXSUITE_STD underlying_type_t<Enum>;
+        return static_cast<Enum>(static_cast<T>(lhs) | static_cast<T>(rhs));
+    }
+
+    // Bitwise AND operator for enum classes with bitmask operators enabled
+    template <typename Enum>
+    constexpr NEXSUITE_STD enable_if_t<enable_bitmask_operators<Enum>::enable, Enum>
+    operator&(Enum lhs, Enum rhs) {
+        using T = NEXSUITE_STD underlying_type_t<Enum>;
+        return static_cast<Enum>(static_cast<T>(lhs) & static_cast<T>(rhs));
+    }
+
+    // Bitwise XOR operator for enum classes with bitmask operators enabled
+    template <typename Enum>
+    constexpr NEXSUITE_STD enable_if_t<enable_bitmask_operators<Enum>::enable, Enum>
+    operator^(Enum lhs, Enum rhs) {
+        using T = NEXSUITE_STD underlying_type_t<Enum>;
+        return static_cast<Enum>(static_cast<T>(lhs) ^ static_cast<T>(rhs));
+    }
+
+    // Bitwise NOT operator for enum classes with bitmask operators enabled
+    template <typename Enum>
+    constexpr NEXSUITE_STD enable_if_t<enable_bitmask_operators<Enum>::enable, Enum>
+    operator~(Enum key) {
+        using T = NEXSUITE_STD underlying_type_t<Enum>;
+        return static_cast<Enum>(~static_cast<T>(key));
+    }
+
+    // Bitwise OR assignment operator for enum classes with bitmask operators enabled
+    template <typename Enum>
+    constexpr NEXSUITE_STD enable_if_t<enable_bitmask_operators<Enum>::enable, Enum&>
+    operator|=(Enum& lhs, Enum rhs) {
+        lhs = lhs | rhs;
+        return lhs;
+    }
+
+    // Bitwise AND assignment operator for enum classes with bitmask operators enabled
+    template <typename Enum>
+    constexpr NEXSUITE_STD enable_if_t<enable_bitmask_operators<Enum>::enable, Enum&>
+    operator&=(Enum& lhs, Enum rhs) {
+        lhs = lhs & rhs;
+        return lhs;
+    }
+
+    // Bitwise XOR assignment operator for enum classes with bitmask operators enabled
+    template <typename Enum>
+    constexpr NEXSUITE_STD enable_if_t<enable_bitmask_operators<Enum>::enable, Enum&>
+    operator^=(Enum& lhs, Enum rhs) {
+        lhs = lhs ^ rhs;
+        return lhs;
+    }
+
+    ////// Helper functions for source location and debugging ---------------------------------
+
+    // Strip the path from a file path, returning only the file name, which can be used for various purposes 
+    // such as improving the readability of error messages and logs by showing only the file name instead of 
+    // the full file path.
+    constexpr const char* stripPath(const char* path) {
+        if (!path) return "";
+        const char* last = path;
+        for (const char* p = path; *p; ++p) {
+            if (*p == '/' || *p == '\\') {
+                last = p + 1;
+            }
+        }
+        return last;
+    }
+
+    // Get the function name from a function signature, which can be used for various purposes such as improving the 
+    // readability of error messages and logs by showing only the function name instead of the full function signature.
+    constexpr const char* stripFunctionSignature(const char* signature) {
+        if (!signature) return "";
+        const char* last = signature;
+        for (const char* p = signature; *p; ++p) {
+            if (*p == '(') {
+                last = p;
+                break;
+            }
+        }
+        for (const char* p = last; p > signature; --p) {
+            if (*p == ' ' || *p == ':') {
+                last = p + 1;
+                break;
+            }
+        }
+        return last;
+    }
+
+    ////// Utility classes for RAII and generic patterns -------------------------------
+
+    /**
+     * @class AutoReset
+     * @brief RAII utility class for automatically resetting a variable to its original value
+     * 
+     * This template class provides a convenient way to temporarily set a variable to a new value
+     * within a particular scope. The variable is automatically reset to its original value when
+     * the AutoReset object is destroyed, eliminating the need to manually reset the variable
+     * at all exit points of a block.
+     * 
+     * AutoReset supports:
+     * - Construction from a reference to a variable (saves original value)
+     * - Construction from a reference and a new value (sets new value immediately)
+     * - Factory methods (maybe) for handling nullable pointers
+     * - Automatic restoration of the original value upon destruction (RAII pattern)
+     * - Move semantics for transferring ownership
+     * - Template type support for any assignable type
+     * 
+     * @note The AutoReset instance must have a shorter lifetime than the scoped variable
+     *       to prevent invalid memory writes when the AutoReset object is destroyed.
+     * 
+     * Example usage:
+     * @code
+     * bool flag = false;
+     * {
+     *     AutoReset<bool> reset(flag, true);  // flag is now true
+     *     // ... do work with flag == true ...
+     * }  // flag is automatically reset to false when reset goes out of scope
+     * 
+     * // With nullable pointer:
+     * bool* pFlag = getFlagPointer();
+     * auto reset = AutoReset<bool>::maybe(pFlag, true);  // Safe if pFlag is null
+     * @endcode
+     */
+    template <typename T>
+    class NEX_EXPORT AutoReset {
+    public:
+        // Constructor: saves the original value of the variable
+        explicit AutoReset(T& var)
+            : ptrScopedVar_(&var), originalVal_(var) {}
+
+        // Constructor: sets the variable to new value and saves the original
+        AutoReset(T& var, T newValue)
+            : ptrScopedVar_(&var), originalVal_(NEXSUITE_STD exchange(var, NEXSUITE_STD move(newValue))) {}
+
+        // Factory method for handling nullable pointers (saves original value)
+        static AutoReset maybe(T* ptr) {
+            return ptr ? AutoReset(*ptr) : AutoReset();
+        }
+
+        // Factory method for handling nullable pointers (sets new value if not null)
+        static AutoReset maybe(T* ptr, T newValue) {
+            return ptr ? AutoReset(*ptr, NEXSUITE_STD move(newValue)) : AutoReset();
+        }
+
+        // Move constructor: transfers ownership from another AutoReset instance
+        AutoReset(AutoReset&& other) noexcept
+            : ptrScopedVar_(NEXSUITE_STD exchange(other.ptrScopedVar_, nullptr)),
+            originalVal_(NEXSUITE_STD move(other.originalVal_)) {}
+
+        // Move assignment operator: transfers ownership from another AutoReset instance
+        AutoReset& operator=(AutoReset&& rhs) noexcept {
+            if (this != &rhs) {
+                reset();
+                ptrScopedVar_ = NEXSUITE_STD exchange(rhs.ptrScopedVar_, nullptr);
+                originalVal_ = NEXSUITE_STD move(rhs.originalVal_);
+            }
+            return *this;
+        }
+
+        // Destructor: resets the scoped variable to its original value
+        ~AutoReset() {
+            reset();
+        }
+
+        // --- Disable copy ---
+        NEXSUITE_DISALLOW_COPY(AutoReset);
+
+    private:
+        // Null object state
+        AutoReset() : ptrScopedVar_(nullptr) {}
+
+        // Reset the scoped variable to its original value
+        void reset() noexcept {
+            if (ptrScopedVar_) {
+                *ptrScopedVar_ = NEXSUITE_STD move(originalVal_);
+                ptrScopedVar_ = nullptr;
+            }
+        }
+
+        // The scoped variable pointer
+        T* ptrScopedVar_;
+
+        // The original value of the scoped variable
+        T originalVal_;
+    };
+
+    /**
+     * @class AutoFlag
+     * @brief A template for setting a flag on a variable as long as the
+     * object that set it is in scope. Flag resets when object goes
+     * out of scope. Works on anything that looks like bool.
+     */
+    template <class T = bool>
+    class NEX_EXPORT AutoFlag {
+    public:
+        // Constructor: Sets referent to true.
+        AutoFlag(T& ref) : referent_(ref) {
+            referent_ = true;
+        }
+
+        // Destructor: Sets referent passed to constructor to false.
+        ~AutoFlag() {
+            referent_ = false;
+        }
+
+    private:
+        T& referent_;
+    };
+
+    /**
+     * @class ScopeGuard
+     * @brief A template for executing a callable object when the ScopeGuard goes out of scope
+     * 
+     * @details
+     * This template class provides a convenient way to execute a callable object (e.g., a lambda function) 
+     * when the ScopeGuard object goes out of scope. This is useful for ensuring that certain cleanup or finalization 
+     * code is executed regardless of how the scope is exited (e.g., normal return, exception, etc.). The callable 
+     * object is executed in the destructor of the ScopeGuard, following the RAII pattern.
+     * 
+     * @tparam FuncType The type of the callable object (e.g., lambda) to be executed on scope exit.
+     */
+    template <typename FuncType>
+    class NEX_EXPORT ScopeGuard {
+    public:
+        // Constructor: Takes a callable object (e.g., lambda) to be called on scope exit
+        explicit ScopeGuard(FuncType f) 
+            : func_(NEXSUITE_STD move(f)) {}
+
+        // Destructor: Calls the stored callable object if not dismissed
+        // The destructor is marked noexcept to ensure that it does not throw exceptions, 
+        // as throwing exceptions from a destructor can lead to std::terminate if another exception is active. 
+        // The callable object is only called if the ScopeGuard has not been dismissed, allowing for 
+        // conditional execution of the cleanup code.
+        ~ScopeGuard() noexcept { 
+            if (!dismissed_) func_(); 
+        }
+
+        // Dismiss the scope guard, preventing the callable from being called on scope exit
+        void dismiss() noexcept { dismissed_ = true; }
+        
+        // Disable copy semantics for ScopeGuard to prevent accidental copying 
+        // which could lead to multiple calls of the callable object
+        NEXSUITE_DISALLOW_COPY(ScopeGuard);
+        
+        // Enable move semantics for ScopeGuard to allow transferring ownership of the callable object
+        ScopeGuard(ScopeGuard&& other) noexcept
+            : func_(NEXSUITE_STD move(other.func_)), dismissed_(other.dismissed_) {
+            other.dismissed_ = true; // Prevent the moved-from object from calling the callable
+        }
+        ScopeGuard& operator=(ScopeGuard&& rhs) noexcept {
+            if (this != &rhs) {
+                if (!dismissed_) func_(); // Call the current callable if not dismissed
+                func_ = NEXSUITE_STD move(rhs.func_);
+                dismissed_ = rhs.dismissed_;
+                rhs.dismissed_ = true; // Prevent the moved-from object from calling the callable
+            }
+            return *this;
+        }
+
+    private:
+        FuncType func_;
+        bool dismissed_ = false;
+    };
+
+    /**
+     * @class   OnScopeSuccess
+     * @brief   Scope guard that only executes the callable if the scope is exited successfully without an exception
+     * 
+     * @details
+     * This template class provides a convenient way to execute a callable object (e.g., a lambda function) when 
+     * the scope is exited successfully without an exception. The callable object is executed in the destructor 
+     * of the OnScopeSuccess, following the RAII pattern. The destructor checks if any exceptions were thrown 
+     * during the lifetime of the OnScopeSuccess object, and only calls the callable if no exceptions were thrown, 
+     * allowing for conditional execution of the cleanup code based on whether the scope was exited successfully 
+     * or due to an exception.
+     * 
+     * @tparam FuncType The type of the callable object (e.g., lambda) to be executed on successful scope exit.
+     * 
+     * @note The OnScopeSuccess object must have a shorter lifetime than the scope it is guarding to ensure that 
+     *       it can correctly detect whether the scope was exited successfully or due to an exception.
+     */
+    template <typename FuncType>
+    class NEX_EXPORT OnScopeSuccess {
+    public:
+        // Constructor: Takes a callable object (e.g., lambda) to be called on scope exit 
+        // if no exceptions were thrown
+        explicit OnScopeSuccess(FuncType f)
+            : func_(NEXSUITE_STD move(f))
+            , exceptionsAtConstruction_(NEXSUITE_STD uncaught_exceptions()) {}
+
+        // Destructor: Calls the stored callable object if no exceptions were thrown 
+        // during the lifetime of this object
+        ~OnScopeSuccess() noexcept {
+            // Only call the function if no exceptions were thrown during the lifetime of this object, 
+            // indicating that the scope was exited successfully without an exception
+            if (NEXSUITE_STD uncaught_exceptions() == exceptionsAtConstruction_ && !dismissed_)
+                func_();
+        }
+
+        // Dismiss the scope guard, preventing the callable from being called on scope exit
+        void dismiss() noexcept { dismissed_ = true; }
+
+        // Disable copy semantics for OnScopeSuccess to prevent accidental copying
+        // which could lead to multiple calls of the callable object
+        NEXSUITE_DISALLOW_COPY(OnScopeSuccess);
+
+        // Enable move semantics for OnScopeSuccess to allow transferring ownership of the callable object
+        OnScopeSuccess(OnScopeSuccess&& other) noexcept
+            : func_(NEXSUITE_STD move(other.func_))
+            , exceptionsAtConstruction_(other.exceptionsAtConstruction_)
+            , dismissed_(other.dismissed_)
+        {
+            other.dismissed_ = true;
+        }
+        OnScopeSuccess& operator=(OnScopeSuccess&& rhs) noexcept {
+            if (this != &rhs) {
+                if (NEXSUITE_STD uncaught_exceptions() == exceptionsAtConstruction_ && !dismissed_)
+                    func_(); // Call the current callable if not dismissed and no exceptions were thrown
+                func_ = NEXSUITE_STD move(rhs.func_);
+                exceptionsAtConstruction_ = rhs.exceptionsAtConstruction_;
+                dismissed_ = rhs.dismissed_;
+                rhs.dismissed_ = true; // Prevent the moved-from object from calling the callable
+            }
+            return *this;
+        }
+
+    private:
+        FuncType func_;
+        int      exceptionsAtConstruction_;
+        bool     dismissed_ = false;
+    };
+
+    /**
+     * @class   OnScopeFailure
+     * @brief   Scope guard that only executes the callable if the scope is exited due to an exception
+     * 
+     * @details
+     * This template class provides a convenient way to execute a callable object (e.g., a lambda function) 
+     * when the scope is exited due to an exception. The callable object is executed in the destructor of the 
+     * OnScopeFailure, following the RAII pattern. The destructor checks if any exceptions were thrown during 
+     * the lifetime of the OnScopeFailure object, and only calls the callable if an exception was thrown, 
+     * allowing for conditional execution of the cleanup code based on whether the scope was exited successfully 
+     * or due to an exception.
+     * 
+     * @tparam FuncType The type of the callable object (e.g., lambda) to be executed on exceptional scope exit.
+     * 
+     * @note The OnScopeFailure object must have a shorter lifetime than the scope it is guarding to ensure that 
+     *       it can correctly detect whether the scope was exited successfully or due to an exception.
+     */
+    template <typename FuncType>
+    class NEX_EXPORT OnScopeFailure {
+    public:
+        // Constructor: Takes a callable object (e.g., lambda) to be called on scope exit if an exception was thrown
+        explicit OnScopeFailure(FuncType f)
+            : func_(NEXSUITE_STD move(f))
+            , exceptionsAtConstruction_(NEXSUITE_STD uncaught_exceptions()) {}
+
+        // Destructor: Calls the stored callable object if an exception was thrown during the lifetime of this object
+        ~OnScopeFailure() noexcept {
+            // Only call the function if an exception was thrown during the lifetime of this object,
+            // indicating that the scope was exited due to an exception
+            if (NEXSUITE_STD uncaught_exceptions() > exceptionsAtConstruction_ && !dismissed_)
+                func_();
+        }
+
+        // Dismiss the scope guard, preventing the callable from being called on scope exit
+        void dismiss() noexcept { dismissed_ = true; }
+
+        // Disable copy semantics for OnScopeFailure to prevent accidental copying
+        // which could lead to multiple calls of the callable object
+        NEXSUITE_DISALLOW_COPY(OnScopeFailure);
+
+        // Enable move semantics for OnScopeFailure to allow transferring ownership of the callable object
+        OnScopeFailure(OnScopeFailure&& other) noexcept
+            : func_(NEXSUITE_STD move(other.func_))
+            , exceptionsAtConstruction_(other.exceptionsAtConstruction_)
+            , dismissed_(other.dismissed_)
+        {
+            other.dismissed_ = true;
+        }
+        OnScopeFailure& operator=(OnScopeFailure&& rhs) noexcept {
+            if (this != &rhs) {
+                if (NEXSUITE_STD uncaught_exceptions() > exceptionsAtConstruction_ && !dismissed_)
+                    func_(); // Call the current callable if not dismissed and an exception was thrown
+                func_ = NEXSUITE_STD move(rhs.func_);
+                exceptionsAtConstruction_ = rhs.exceptionsAtConstruction_;
+                dismissed_ = rhs.dismissed_;
+                rhs.dismissed_ = true; // Prevent the moved-from object from calling the callable
+            }
+            return *this;
+        }
+
+    private:
+        FuncType func_;
+        int      exceptionsAtConstruction_;
+        bool     dismissed_ = false;
+    };
+
+    // Helper function for quickly creating a ScopeGuard with type deduction for the callable object, 
+    // similar to fbfolly::makeGuard and llvm::make_scope_exit, allowing for convenient creation of ScopeGuard objects 
+    // without having to explicitly specify the type of the callable object.
+    template <typename FuncType>
+    NEX_NODISCARD auto makeScopeGuard(FuncType&& f) {
+        return ScopeGuard<NEXSUITE_STD decay_t<FuncType>>(NEXSUITE_STD forward<FuncType>(f));
+    }
+
+    // DEFER macro for scope-based excution of code blocks, similar to the DEFER statement in languages like Go
+    #define NEXSUITE_DEFER(...) \
+        auto ANONYMOUS_DEFER_##__LINE__ = \
+            NEXSUITE_PREPEND_NAMESPACE(utility::ScopeGuard)([&]() { __VA_ARGS__; })
+
+    // SCOPE_EXIT macro for scope-based excution of code blocks, similar to the SCOPE_EXIT statement 
+    // in libraries like Boost.Scope or llvm::scope_exit or std::scope_exit in C++23
+    #define NEXSUITE_SCOPE_EXIT(...) \
+        auto ANONYMOUS_SCOPE_EXIT_##__LINE__ = \
+            NEXSUITE_PREPEND_NAMESPACE(utility::ScopeGuard)([&]() { __VA_ARGS__; })
+
+    // SCOPE_SUCCESS macro for scope-based excution of code blocks only if the scope is exited successfully 
+    // without an exception, similar to the SCOPE_SUCCESS statement in libraries like Boost.Scope or Folly, 
+    // or languages like D with its scope(success) statement
+    #define NEXSUITE_SCOPE_SUCCESS(...) \
+        auto ANONYMOUS_SCOPE_SUCCESS_##__LINE__ = \
+            NEXSUITE_PREPEND_NAMESPACE(utility::OnScopeSuccess)([&]() { __VA_ARGS__; })
+
+    // SCOPE_FAILURE macro for scope-based excution of code blocks only if the scope is exited due to an exception,
+    // similar to the SCOPE_FAILURE statement in libraries like Boost.Scope or Folly, or languages like D with 
+    // its scope(failure) statement
+    #define NEXSUITE_SCOPE_FAILURE(...) \
+        auto ANONYMOUS_SCOPE_FAILURE_##__LINE__ = \
+            NEXSUITE_PREPEND_NAMESPACE(utility::OnScopeFailure)([&]() { __VA_ARGS__; })
+
+    /**
+     * @struct SourceLocation
+     * @brief A struct representing a source code location (file, line, function)
+     * 
+     * This struct is used to capture and represent a specific location in the source code, including 
+     * the file name, line number, and function name. It can be used for logging, error reporting, 
+     * debugging, and other purposes where information about the source location is valuable.
+     */
+    struct SourceLocation {
+        const char* file;       // The source file name where the SourceLocation was created
+        int line;               // The line number in the source file where the SourceLocation was created
+        const char* function;   // The function name where the SourceLocation was created
+
+        // Create a SourceLocation object representing the current source location using compiler built-ins
+#if NEXSUITE_USE_STD_SOURCE_LOCATION
+        static SourceLocation current(NEXSUITE_STD source_location loc = NEXSUITE_STD source_location::current()) {
+            return { 
+                stripPath(loc.file_name()), 
+                static_cast<int>(loc.line()), 
+                loc.function_name() 
+            };
+        }
+#else
+        static SourceLocation current() {
+            return { 
+                stripPath(NEXSUITE_SOURCE_FILE_PATH), 
+                NEXSUITE_SOURCE_LINE_NUMBER, 
+                NEXSUITE_SOURCE_FUNCTION_NAME 
+            };
+        }
+#endif
+    };
+
+    // Define macro for capturing the current source location, which can be used for logging, error reporting, 
+    // debugging, and other purposes where information about the source location is valuable.
+    #define NEXSUITE_SOURCE_LOCATION \
+        NEXSUITE_PREPEND_NAMESPACE(utility::SourceLocation::current())
+
+    /**
+     * @class Comparable
+     * @brief Mix-in class that provides a full set of comparison operators
+     * 
+     * This template class is a mix-in that provides a complete set of comparison
+     * operators (==, !=, <, <=, >, >=) based on a single compare() method.
+     * 
+     * By inheriting publicly from Comparable and implementing the pure virtual
+     * compare() method, a subclass automatically gains all comparison operators,
+     * as they are all implemented in terms of compare().
+     * 
+     * Comparable supports:
+     * - Equality operators (==, !=)
+     * - Relational operators (<, <=, >, >=)
+     * - Single method implementation (only compare() needs to be implemented)
+     * - CRTP pattern (Curiously Recurring Template Pattern)
+     * 
+     * @note The destructor is protected and virtual to prevent deletion through
+     *       base class pointers, as this class is designed as a mix-in, not for
+     *       polymorphism.
+     * 
+     * @note This class uses the CRTP pattern where T is the derived class type.
+     * 
+     * Example usage:
+     * @code
+     * class MyClass : public Comparable<MyClass> {
+     * protected:
+     *     int compare(const MyClass& other) const override {
+     *         if (value < other.value) return -1;
+     *         if (value > other.value) return 1;
+     *         return 0;
+     *     }
+     * public:
+     *     int value;
+     * };
+     * 
+     * MyClass a{5}, b{10};
+     * if (a < b) {  // Works automatically!
+     *     // ...
+     * }
+     * @endcode
+     */
+    template <class T>
+    class NEX_EXPORT Comparable {
+    public:
+        // Equality operator: returns true if objects are equal
+        bool operator==(const T& other) const {
+            return !compare(other);
+        }
+
+        // Inequality operator: returns true if objects are not equal
+        bool operator!=(const T& other) const {
+            return compare(other);
+        }
+
+        // Less-than operator: returns true if this object is less than other
+        bool operator<(const T& other) const {
+            return compare(other) < 0;
+        }
+
+        // Less-than-or-equal operator: returns true if this object is less than or equal to other
+        bool operator<=(const T& other) const {
+            return compare(other) <= 0;
+        }
+
+        // Greater-than operator: returns true if this object is greater than other
+        bool operator>(const T& other) const {
+            return compare(other) > 0;
+        }
+
+        // Greater-than-or-equal operator: returns true if this object is greater than or equal to other
+        bool operator>=(const T& other) const {
+            return compare(other) >= 0;
+        }
+
+    protected:
+        // Destructor: protected and virtual to prevent deletion through base class pointers
+        // This class is designed as a mix-in, not for polymorphism
+        virtual ~Comparable() = default;
+
+        // Compare this object to another of the same type
+        // Returns -1 if this object is "before" the other,
+        //         0 if they are equal,
+        //         1 if this object is "after" the other
+        virtual int compare(const T& other) const = 0;
+    };
+
+    /**
+     * @struct NonCopyable
+     * @brief A base class that disables copy semantics for derived classes
+     */
+    struct NonCopyable {
+        NonCopyable() = default;
+        NEXSUITE_DISALLOW_COPY(NonCopyable);
+    };
+
+    /**
+     * @struct NonMovable
+     * @brief A base class that disables move semantics for derived classes
+     */
+    struct NonMovable {
+        NonMovable() = default;
+        NEXSUITE_DISALLOW_MOVE(NonMovable);
+    };
+
+    /**
+     * @struct Immobile
+     * @brief A base class that disables both copy and move semantics for derived classes
+     */
+    struct Immobile {
+        Immobile() = default;
+        NEXSUITE_DISALLOW_COPY(Immobile);
+        NEXSUITE_DISALLOW_MOVE(Immobile);
+    };
+
+    /**
+     * @class Singleton
+     * @brief A template for implementing the singleton design pattern
+     * 
+     * This template class provides a convenient way to implement the singleton design pattern, which ensures that 
+     * a class has only one instance and provides a global point of access to it. By inheriting from Singleton and 
+     * specifying the derived class type, a class can easily become a singleton with thread-safe lazy initialization.
+     * 
+     * @note
+     * The derived class must have a default constructor (which can be private or protected) for the singleton 
+     * instance to be created.
+     * The singleton instance is created on first access in a thread-safe manner, and will be destroyed automatically 
+     * when the program exits.
+     * 
+     * Example usage:
+     * @code
+     * class MySingleton : public Singleton<MySingleton> {
+     *     friend class Singleton<MySingleton>; // Allow Singleton to access the private constructor
+     * private:
+     *     MySingleton() = default; // Private constructor to prevent direct instantiation
+     * public:
+     *     void doSomething() {
+     *         // ...
+     *     }
+     * };
+     * 
+     * // Access the singleton instance and call a method
+     * MySingleton::instance().doSomething();
+     * @endcode
+     */
+    template <typename Derived>
+    class NEX_EXPORT Singleton : private NonCopyable, private NonMovable {
+    protected:
+        // Protected constructor to prevent direct instantiation while allowing construction by derived classes. 
+        // The default constructor is sufficient for most cases, but can be customized if needed by the derived class.
+        Singleton() = default;
+
+    public:
+        // Get the singleton instance of the derived class
+        // Using Meyers' singleton pattern, which is thread-safe in C++11 and later
+        static Derived& instance() {
+            static Derived instance;
+            return instance;
+        }
+    };
+
+    /**
+     * @class NamedType
+     * @brief A template for creating strong typedefs with unique types and no implicit conversions
+     * 
+     * This template class provides a convenient way to create strong typedefs, which are distinct types 
+     * that wrap an underlying type (e.g., int, std::string) and provide type safety without implicit conversions. 
+     * By specifying a unique Tag type for each NamedType, you can create multiple strong typedefs that wrap 
+     * the same underlying type but are treated as distinct types by the compiler, preventing accidental misuse 
+     * and improving code clarity.
+     * 
+     * @tparam T The underlying type that the NamedType will wrap (e.g., int, std::string)
+     * @tparam Tag A unique type used to distinguish this NamedType from other NamedTypes that wrap 
+     *         the same underlying type. This can be an empty struct or any unique type.
+     * 
+     * @note
+     * The NamedType class provides explicit constructors and accessors to prevent implicit conversions,
+     * ensuring that the strong typedef is used correctly and intentionally. Comparison operators are disabled
+     * between different NamedType instances to prevent accidental misuse, but can be implemented if desired.
+     * 
+     * Example usage:
+     * @code
+     * using Width = utility::NamedType<int, struct WidthTag>;
+     * using Height = utility::NamedType<int, struct HeightTag>;
+     * 
+     * void setDimensions(Width width, Height height) {
+     *     // ...
+     * }
+     * setDimensions(Width(800), Height(600)); // Works, and prevents accidental misuse
+     * setDimensions(Width(800), Width(600)); // Compile-time error, prevents misuse
+     * @endcode
+     */
+    template <typename T, typename Tag>
+    class NamedType : private NonCopyable, private NonMovable {
+    public:
+        using UnderlyingType = T;
+
+        // Construction
+        explicit NamedType(const T& value) : value_(value) {}
+        explicit NamedType(T&& value) noexcept(NEXSUITE_STD is_nothrow_move_constructible_v<T>)
+            : value_(NEXSUITE_STD move(value)) {}
+
+        // Accessors
+        NEX_NODISCARD const T& get() const noexcept { return value_; }
+        NEX_NODISCARD T& get() noexcept { return value_; }
+
+        // Explicit conversion
+        explicit operator const T&() const noexcept { return value_; }
+        explicit operator T&() noexcept { return value_; }
+
+        // Comparison (if desired)
+        // By default, disable comparison between different NamedType instances to prevent accidental misuse
+        template <typename OtherTag>
+        bool operator==(const NamedType<T, OtherTag>&) const = delete;
+
+    private:
+        T value_;
+    };
+
+} // namespace utility
+
+NEXSUITE_NAMESPACE_END

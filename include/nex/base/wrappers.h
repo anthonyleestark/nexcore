@@ -1,0 +1,319 @@
+/**
+ * SPDX-License-Identifier: BSD-3-Clause
+ * Copyright (c) 2026 Anthony Lee Stark. All rights reserved.
+ */
+
+#pragma once
+
+/**
+ * @file  wrappers.h
+ * @brief Defines common wrapper types used throughout the codebase, such as Optional, Smart Pointers, 
+ *        Variant, Function, Mutex and their associated type aliases.
+ * 
+ * @details
+ * This header centralizes aliases for wrapper types used by NexSuite, including optional values, smart pointers,
+ * variant types, type information, function wrappers, and mutex types. It establishes a uniform naming convention 
+ * for wrapper-centric structures so interfaces can communicate behavior clearly and consistently.
+ * Wrapper types are foundational in representing optional values, managing object lifetimes, encapsulating variant
+ * types, managing type information, and synchronizing access to shared resources. Grouping these aliases in one 
+ * place reduces repetitive template spelling and helps preserve readable API signatures across infrastructure, 
+ * platform, and service layers.
+ * 
+ * @note
+ * The wrapper types defined in this file are implemented using the corresponding classes from the C++ Standard Library,
+ * and the type aliases provide a convenient way to use these wrapper types with different types of values, objects,
+ * and functions.
+ * 
+ * @see https://en.cppreference.com/w/cpp/utility/optional for more information on std::optional.
+ * @see https://en.cppreference.com/w/cpp/memory/shared_ptr for more information on std::shared_ptr.
+ * @see https://en.cppreference.com/w/cpp/memory/unique_ptr for more information on std::unique_ptr.
+ * @see https://en.cppreference.com/w/cpp/memory/weak_ptr for more information on std::weak_ptr.
+ * @see https://en.cppreference.com/w/cpp/utility/any for more information on std::any.
+ * @see https://en.cppreference.com/w/cpp/utility/variant for more information on std::variant.
+ * @see https://en.cppreference.com/w/cpp/types/type_index for more information on std::type_index.
+ * @see https://en.cppreference.com/w/cpp/types/type_info for more information on std::type_info.
+ * @see https://en.cppreference.com/w/cpp/atomic for more information on std::atomic.
+ * @see https://en.cppreference.com/w/cpp/utility/functional for more information on std::function.
+ * @see https://en.cppreference.com/w/cpp/utility/functional/reference_wrapper for more information on std::reference_wrapper.
+ * @see https://en.cppreference.com/w/cpp/thread/mutex for more information on std::mutex.
+ * @see https://en.cppreference.com/w/cpp/thread/shared_mutex for more information on std::shared_mutex.
+ */
+
+#include <optional>
+#include <memory>
+#include <any>
+#include <variant>
+#include <typeindex>
+#include <typeinfo>
+#include <atomic>
+#include <functional>
+#include <mutex>
+#include <shared_mutex>
+
+#include "common/macros.h"
+#include "common/types.h"
+
+NEXSUITE_NAMESPACE_BEGIN
+
+/**
+ * @brief A type-safe wrapper for values that may or may not exist.
+ * @details 
+ * Efficiently represents an optional value without dynamic allocation. 
+ * Use this to avoid "magic values" (like null or -1) in API return types.
+ */
+template <typename T>
+using Optional = NEXSUITE_STD optional<T>;
+
+/**
+ * @brief Shared ownership smart pointer.
+ * @details 
+ * Uses reference counting to manage an object's lifetime. The object 
+ * is destroyed only when the last SharedPtr is destroyed or reset.
+ */
+template <typename T>
+using SharedPtr = NEXSUITE_STD shared_ptr<T>;
+
+/**
+ * @brief Exclusive ownership smart pointer.
+ * @details 
+ * Manages a dynamically allocated object with sole responsibility. 
+ * Cannot be copied, only moved. This is the preferred default for resource management.
+ */
+template <typename T>
+using UniquePtr = NEXSUITE_STD unique_ptr<T>;
+
+/**
+ * @brief Non-owning reference to a SharedPtr-managed object.
+ * @details 
+ * Holds a weak reference that must be "locked" into a SharedPtr to access 
+ * the data. Used to break circular dependencies or observe managed objects.
+ */
+template <typename T>
+using WeakPtr = NEXSUITE_STD weak_ptr<T>;
+
+/**
+ * @brief Semantic alias for UniquePtr, emphasizing automatic lifecycle management.
+ */
+template <typename T>
+using AutoPtr = NEXSUITE_STD unique_ptr<T>;
+
+/**
+ * @brief Semantic alias for WeakPtr, emphasizing a non-owning relationship.
+ */
+template <typename T>
+using NonOwningPtr = NEXSUITE_STD weak_ptr<T>;
+
+/**
+ * @brief A raw pointer alias representing a "borrowed" reference.
+ * @details 
+ * Indicates that the pointer is used for observation only and 
+ * the caller is NOT responsible for its deletion.
+ */
+template <typename T>
+using ObserverPtr = T*;
+
+/**
+ * @brief Type-erased container for any CopyConstructible type.
+ * @details 
+ * A flexible container that can hold a single value of any type at runtime. 
+ * Use this for high-level polymorphism or plugin systems where the set of 
+ * possible types is not known at compile time.
+ */
+using Any = NEXSUITE_STD any;
+
+/**
+ * @brief Type-safe union for a fixed set of alternative types.
+ * @details 
+ * A modern, safer alternative to 'union'. It ensures that only one 
+ * of the specified types is active at a time and provides compile-time 
+ * type checking for access.
+ */
+template <typename... Args>
+using Variant = NEXSUITE_STD variant<Args...>;
+
+/**
+ * @brief A wrapper for type_info to allow usage in associative containers.
+ * @details 
+ * Provides a copyable and comparable representation of a type. 
+ * Commonly used as a key in Maps or HashMaps to associate data with specific types.
+ */
+using TypeIndex = NEXSUITE_STD type_index;
+
+/**
+ * @brief Metadata representing a type at runtime.
+ * @details 
+ * Provides access to type names and comparison logic. Use this 
+ * primarily through the 'typeid' operator for low-level RTTI operations.
+ */
+using TypeInfo = NEXSUITE_STD type_info;
+
+/**
+ * @brief Template for thread-safe, atomic operations on a value.
+ * @details 
+ * Provides atomic access to a shared variable without the overhead 
+ * of a mutex. It guarantees that operations are indivisible and prevents 
+ * data races in multi-threaded environments.
+ */
+template <typename T>
+using Atomic = NEXSUITE_STD atomic<T>;
+
+/**
+ * @brief A lock-free atomic boolean flag.
+ * @details 
+ * The simplest atomic type, guaranteed to be lock-free on all 
+ * supported platforms. Ideal for building low-level synchronization 
+ * primitives like spinlocks or simple "stop" signals.
+ */
+using AtomicFlag = NEXSUITE_STD atomic_flag;
+
+/**
+ * @brief A general-purpose polymorphic function wrapper.
+ * @details 
+ * Can store, copy, and invoke any callable target—such as functions, 
+ * lambda expressions, or bind expressions. Use this for callbacks or 
+ * event-handling systems where the specific callable type is erased.
+ */
+template <typename T>
+using Function = NEXSUITE_STD function<T>;
+
+/**
+ * @brief A wrapper that makes references "assignable" and "copyable".
+ * @details 
+ * Enables storing references in standard containers (like ArrayList) 
+ * which otherwise require elements to be erasable/assignable. It acts as 
+ * a non-nullable pointer with reference semantics.
+ */
+template <typename T>
+using Reference = NEXSUITE_STD reference_wrapper<T>;
+
+/**
+ * @brief A wrapper for constant references, ensuring read-only access.
+ * @details 
+ * Similar to Reference, but holds a 'const T&'. Useful for storing 
+ * collections of read-only observers without the overhead of pointers.
+ */
+template <typename T>
+using ConstReference = NEXSUITE_STD reference_wrapper<const T>;
+
+/**
+ * @brief Standard mutual exclusion primitive.
+ * @details 
+ * Basic synchronization object used to protect shared data from 
+ * concurrent access. Only one thread can own the mutex at any given time.
+ */
+using Mutex = NEXSUITE_STD mutex;
+
+/**
+ * @brief Shared mutex for Reader-Writer scenarios.
+ * @details 
+ * Supports two levels of access: 'shared' (multiple threads can read 
+ * simultaneously) and 'exclusive' (only one thread can write). Optimized for 
+ * workloads where reads are more frequent than writes.
+ */
+using SharedMutex = NEXSUITE_STD shared_mutex;
+
+/**
+ * @brief Mutex that can be locked multiple times by the same thread.
+ * @details 
+ * Prevents deadlocks when a thread calls a sequence of functions 
+ * that each require locking the same mutex. Use sparingly as it often 
+ * indicates a need for refactoring.
+ */
+using RecursiveMutex = NEXSUITE_STD recursive_mutex;
+
+/**
+ * @brief Strict RAII wrapper for a single mutex.
+ * @details 
+ * Automatically locks the mutex on construction and unlocks on destruction. 
+ * It is non-copyable and has the least overhead among lock wrappers.
+ */
+template <typename T>
+using LockGuard = NEXSUITE_STD lock_guard<T>;
+
+/**
+ * @brief Flexible RAII wrapper with manual control.
+ * @details 
+ * Unlike LockGuard, it supports deferred locking, timed attempts, 
+ * and manual unlocking before the object goes out of scope. Required for 
+ * use with Condition Variables.
+ */
+template <typename T>
+using UniqueLock = NEXSUITE_STD unique_lock<T>;
+
+/**
+ * @brief RAII wrapper for shared ownership (Reading).
+ * @details 
+ * Used in conjunction with SharedMutex to acquire shared (read) 
+ * access. Multiple SharedLocks can coexist for the same SharedMutex.
+ */
+template <typename T>
+using SharedLock = NEXSUITE_STD shared_lock<T>;
+
+/**
+ * @brief Deadlock-avoiding wrapper for multiple mutexes.
+ * @details 
+ * Uses a deadlock-avoidance algorithm to lock multiple mutexes 
+ * simultaneously. This is the modern replacement for std::lock when 
+ * managing multiple resources.
+ */
+template <typename... Args>
+using ScopedLock = NEXSUITE_STD scoped_lock<Args...>;
+
+/**
+ * @brief Common wrapper type aliases
+ * @details
+ * These type aliases provide convenient names for commonly used wrapper types with specific types of values, 
+ * objects, and functions. The type aliases can help to improve code readability and maintainability by providing 
+ * consistent type names for commonly used wrapper types with specific types of values, objects, and functions.
+ */
+
+/**
+ * @brief Optional integer and numeric aliases.
+ * @details Represents values that may or may not be present, effectively 
+ * replacing nullable pointers or "magic number" error codes (e.g., -1).
+ */
+using MaybeInt = Optional<int32>;
+using MaybeUInt = Optional<uint32>;
+
+using MaybeInt64 = Optional<int64>;
+using MaybeUInt64 = Optional<uint64>;
+
+using MaybeFloat = Optional<float32>;
+using MaybeDouble = Optional<float64>;
+
+/**
+ * @brief Tri-state boolean representation.
+ * @details Useful for configurations where a setting can be true, false, 
+ * or "not set / default".
+ */
+using MaybeBool = Optional<bool>;
+
+/**
+ * @brief Optional string alias.
+ * @details Represents a string value that may or may not be present, allowing 
+ * for efficient handling of optional text data without resorting to empty strings or null pointers.
+ */
+using MaybeString = Optional<String>;
+
+/**
+ * @brief Semantic alias for search operations.
+ * @details A value of 'nullopt' explicitly indicates that a search failed 
+ * to find a match, providing better clarity than returning an out-of-bounds index.
+ */
+using SearchResult = Optional<usize>;
+
+/**
+ * @brief Thread-safe integer aliases for concurrent counters and flags.
+ * @details Provides atomic primitives for common integer types. These ensure 
+ * that modifications (like increments or exchanges) are safe across multiple 
+ * threads without requiring a Mutex.
+ */
+using AtomicInt = Atomic<int32>;
+using AtomicUInt = Atomic<uint32>;
+
+using AtomicInt64 = Atomic<int64>;
+using AtomicUInt64 = Atomic<uint64>;
+
+using AtomicBool = Atomic<bool>;
+
+NEXSUITE_NAMESPACE_END

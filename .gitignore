@@ -1,0 +1,85 @@
+# Build directories
+build/
+out/
+bin/
+lib/
+*.exe
+*.dll
+*.lib
+*.a
+*.so
+*.dylib
+
+# CMake
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+*.cmake
+!cmake/*.cmake
+!CMakeLists.txt
+Makefile
+*.vcxproj.user
+
+# Visual Studio
+.vs/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.VC.db
+*.VC.VC.opendb
+UpgradeLog*.htm
+
+# Visual Studio Code
+.vscode/
+*.code-workspace
+
+# IDE
+.idea/
+*.swp
+*.swo
+*~
+
+# Compiled files
+*.o
+*.obj
+*.pch
+*.pdb
+*.ilk
+*.exp
+*.idb
+*.ipdb
+
+# Debug files
+*.log
+*.tlog
+*.dmp
+
+# Test results
+Testing/
+test_results.xml
+
+# Dependencies
+third_party/
+vcpkg_installed/
+conan/
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.swp
+
+# Reference code (preserved but not tracked in detail)
+# Note: reference/ directory is kept for Phase 1, but large binary files excluded
+reference/**/*.exe
+reference/**/*.dll
+reference/**/*.obj
+reference/**/*.pdb
+reference/**/build/
+reference/**/.vs/

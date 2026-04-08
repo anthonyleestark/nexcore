@@ -7,12 +7,12 @@
 
 #include <chrono>
 
-#include "common/macros.h"
-#include "common/types.h"
-#include "common/string.h"
-#include "common/assert_crash.h"
+#include "nex/base/macros.h"
+#include "nex/base/types.h"
+#include "nex/core/string.h"
+#include "nex/base/assert_crash.h"
 
-NEXSUITE_NAMESPACE_BEGIN
+NEX_NAMESPACE_BEGIN
 
 /**
  * @namespace time
@@ -33,22 +33,22 @@ NEXSUITE_NAMESPACE_BEGIN
 namespace time {
 	////// Type aliases for chrono components ------------------------
 
-	using TimePoint     = NEXSUITE_STD chrono::system_clock::time_point;
-	using Duration      = NEXSUITE_STD chrono::system_clock::duration;
-	using Date          = NEXSUITE_STD chrono::year_month_day;
-	using Year          = NEXSUITE_STD chrono::year;
-	using Years         = NEXSUITE_STD chrono::years;
-	using Month         = NEXSUITE_STD chrono::month;
-	using Months        = NEXSUITE_STD chrono::months;
-	using Day           = NEXSUITE_STD chrono::day;
-	using Days          = NEXSUITE_STD chrono::days;
-	using Weekday       = NEXSUITE_STD chrono::weekday;
-	using Hours         = NEXSUITE_STD chrono::hours;
-	using Minutes       = NEXSUITE_STD chrono::minutes;
-	using Seconds       = NEXSUITE_STD chrono::seconds;
-	using Milliseconds  = NEXSUITE_STD chrono::milliseconds;
-	using SysTime       = NEXSUITE_STD chrono::sys_time<Duration>;
-	using SysDays       = NEXSUITE_STD chrono::sys_days;
+	using TimePoint     = NEX_STD chrono::system_clock::time_point;
+	using Duration      = NEX_STD chrono::system_clock::duration;
+	using Date          = NEX_STD chrono::year_month_day;
+	using Year          = NEX_STD chrono::year;
+	using Years         = NEX_STD chrono::years;
+	using Month         = NEX_STD chrono::month;
+	using Months        = NEX_STD chrono::months;
+	using Day           = NEX_STD chrono::day;
+	using Days          = NEX_STD chrono::days;
+	using Weekday       = NEX_STD chrono::weekday;
+	using Hours         = NEX_STD chrono::hours;
+	using Minutes       = NEX_STD chrono::minutes;
+	using Seconds       = NEX_STD chrono::seconds;
+	using Milliseconds  = NEX_STD chrono::milliseconds;
+	using SysTime       = NEX_STD chrono::sys_time<Duration>;
+	using SysDays       = NEX_STD chrono::sys_days;
 
 	////// Helper functions for time validation ------------------------
 
@@ -128,10 +128,10 @@ public:
 	explicit TimeSpan() = default;
 
 	// Copy constructor and assignment
-	NEXSUITE_DEFAULT_COPY(TimeSpan);
+	NEX_DEFAULT_COPY(TimeSpan);
 
 	// Move constructor and assignment
-	NEXSUITE_DEFAULT_MOVE(TimeSpan);
+	NEX_DEFAULT_MOVE(TimeSpan);
 
 	// Conversion constructor from Duration
 	explicit TimeSpan(Duration duration) : duration_(duration) {}
@@ -276,26 +276,26 @@ public:
 	
 	// Get total hours
 	constexpr int64 totalHours() const noexcept {
-		return NEXSUITE_STD chrono::duration_cast<Hours>(duration_).count();
+		return NEX_STD chrono::duration_cast<Hours>(duration_).count();
 	}
 	// Get total minutes
 	constexpr int64 totalMinutes() const noexcept {
-		return NEXSUITE_STD chrono::duration_cast<Minutes>(duration_).count();
+		return NEX_STD chrono::duration_cast<Minutes>(duration_).count();
 	}
 	// Get total seconds
 	constexpr int64 totalSeconds() const noexcept {
-		return NEXSUITE_STD chrono::duration_cast<Seconds>(duration_).count();
+		return NEX_STD chrono::duration_cast<Seconds>(duration_).count();
 	}
 	// Get total milliseconds
 	constexpr int64 totalMilliseconds() const noexcept {
-		return NEXSUITE_STD chrono::duration_cast<Milliseconds>(duration_).count();
+		return NEX_STD chrono::duration_cast<Milliseconds>(duration_).count();
 	}
 
 	////// Individual component accessors ------------------------
 	
 	// Get the number of days
 	constexpr int days() const noexcept {
-		return static_cast<int>(NEXSUITE_STD chrono::duration_cast<Days>(duration_).count());
+		return static_cast<int>(NEX_STD chrono::duration_cast<Days>(duration_).count());
 	}
 	// Get hours (0-23)
 	constexpr int hours() const noexcept {
@@ -456,16 +456,16 @@ public:
 	explicit ClockTime() = default;
 
 	// Copy constructor and assignment
-	NEXSUITE_DEFAULT_COPY(ClockTime);
+	NEX_DEFAULT_COPY(ClockTime);
 
 	// Move constructor and assignment
-	NEXSUITE_DEFAULT_MOVE(ClockTime);
+	NEX_DEFAULT_MOVE(ClockTime);
 
 	////// Conversion constructors -----------------------------
 
 	// Construct from a time point (extracting time portion)
 	ClockTime(TimePoint timepoint) {
-		sinceMidnight_ = timepoint - NEXSUITE_STD chrono::floor<Days>(timepoint);
+		sinceMidnight_ = timepoint - NEX_STD chrono::floor<Days>(timepoint);
 		wrapAround();
 	}
 	// Construct from a duration since midnight
@@ -474,7 +474,7 @@ public:
 	}
 	// Construct from individual time components
 	ClockTime(int hour, int min, int sec, int millisec = 0) noexcept {
-		NEXSUITE_ASSERT(isValidTime(hour, min, sec, millisec));
+		NEX_ASSERT(isValidTime(hour, min, sec, millisec));
 		auto _timeVal = Hours(hour) + Minutes(min) + Seconds(sec) + Milliseconds(millisec);
 		sinceMidnight_ = _timeVal;
 		wrapAround();
@@ -500,35 +500,35 @@ private:
 
 	// Get the number of hours (0-23)
 	constexpr Hours getHours() const noexcept {
-		return NEXSUITE_STD chrono::duration_cast<Hours>(sinceMidnight_ % Days(1));
+		return NEX_STD chrono::duration_cast<Hours>(sinceMidnight_ % Days(1));
 	}
 	// Get the number of minutes (0-59)
 	constexpr Minutes getMinutes() const noexcept {
-		return NEXSUITE_STD chrono::duration_cast<Minutes>(sinceMidnight_ % Hours(1));
+		return NEX_STD chrono::duration_cast<Minutes>(sinceMidnight_ % Hours(1));
 	}
 	// Get the number of seconds (0-59)
 	constexpr Seconds getSeconds() const noexcept {
-		return NEXSUITE_STD chrono::duration_cast<Seconds>(sinceMidnight_ % Minutes(1));
+		return NEX_STD chrono::duration_cast<Seconds>(sinceMidnight_ % Minutes(1));
 	}
 	// Get the number of milliseconds (0-999)
 	constexpr Milliseconds getMillisecs() const noexcept {
-		return NEXSUITE_STD chrono::duration_cast<Milliseconds>(sinceMidnight_ % Seconds(1));
+		return NEX_STD chrono::duration_cast<Milliseconds>(sinceMidnight_ % Seconds(1));
 	}
 	// Convert the entire time to hours
 	constexpr Hours toHours() const noexcept {
-		return NEXSUITE_STD chrono::duration_cast<Hours>(sinceMidnight_);
+		return NEX_STD chrono::duration_cast<Hours>(sinceMidnight_);
 	}
 	// Convert the entire time to minutes
 	constexpr Minutes toMinutes() const noexcept {
-		return NEXSUITE_STD chrono::duration_cast<Minutes>(sinceMidnight_);
+		return NEX_STD chrono::duration_cast<Minutes>(sinceMidnight_);
 	}
 	// Convert the entire time to seconds
 	constexpr Seconds toSeconds() const noexcept {
-		return NEXSUITE_STD chrono::duration_cast<Seconds>(sinceMidnight_);
+		return NEX_STD chrono::duration_cast<Seconds>(sinceMidnight_);
 	}
 	// Convert the entire time to milliseconds
 	constexpr Milliseconds toMillisecs() const noexcept {
-		return NEXSUITE_STD chrono::duration_cast<Milliseconds>(sinceMidnight_);
+		return NEX_STD chrono::duration_cast<Milliseconds>(sinceMidnight_);
 	}
 
 	// Wrap time around 24 hours (for addition/subtraction)
@@ -705,7 +705,7 @@ public:
 
 	// Set the hour value (0-23)
 	void setHour(int hour) noexcept {
-		NEXSUITE_ASSERT(isValidHour(hour));
+		NEX_ASSERT(isValidHour(hour));
 		ClockTime original = *this;
 		sinceMidnight_ = Hours(hour) + original.getMinutes()
 						+ original.getSeconds() + original.getMillisecs();
@@ -713,7 +713,7 @@ public:
 	}
 	// Set the minute value (0-59)
 	void setMinute(int minute) noexcept {
-		NEXSUITE_ASSERT(isValidMinute(minute));
+		NEX_ASSERT(isValidMinute(minute));
 		ClockTime original = *this;
 		sinceMidnight_ = original.getHours() + Minutes(minute)
 						+ original.getSeconds() + original.getMillisecs();
@@ -721,7 +721,7 @@ public:
 	}
 	// Set the second value (0-59)
 	void setSecond(int second) noexcept {
-		NEXSUITE_ASSERT(isValidSecond(second));
+		NEX_ASSERT(isValidSecond(second));
 		ClockTime original = *this;
 		sinceMidnight_ = original.getHours() + original.getMinutes()
 						+ Seconds(second) + original.getMillisecs();
@@ -729,7 +729,7 @@ public:
 	}
 	// Set the millisecond value (0-999)
 	void setMillisecs(int millisecs) noexcept {
-		NEXSUITE_ASSERT(isValidMillisecs(millisecs));
+		NEX_ASSERT(isValidMillisecs(millisecs));
 		ClockTime original = *this;
 		sinceMidnight_ = original.getHours() + original.getMinutes()
 						+ original.getSeconds() + Milliseconds(millisecs);
@@ -859,7 +859,7 @@ enum class DayOfWeek : uint8 {
  * 
  * DateTime represents a complete point in time, including both calendar date
  * (year, month, day) and clock time (hour, minute, second, millisecond) components.
- * It is the most comprehensive time representation in NexSuite and serves as the
+ * It is the most comprehensive time representation in NEX and serves as the
  * primary type for timestamps, scheduling, and date/time calculations.
  * 
  * @details
@@ -929,10 +929,10 @@ public:
 	explicit DateTime() = default;
 
 	// Copy constructor and assignment
-	NEXSUITE_DEFAULT_COPY(DateTime);
+	NEX_DEFAULT_COPY(DateTime);
 
 	// Move constructor and assignment
-	NEXSUITE_DEFAULT_MOVE(DateTime);
+	NEX_DEFAULT_MOVE(DateTime);
 
 	////// Conversion constructors -----------------------------
 
@@ -941,8 +941,8 @@ public:
 
 	// Construct from individual date and time components
 	DateTime(int year, unsigned int month, unsigned int day, int hour, int min, int sec, int millisec = 0) noexcept {
-		NEXSUITE_ASSERT(isValidDate(year, month, day));
-		NEXSUITE_ASSERT(isValidTime(hour, min, sec, millisec));
+		NEX_ASSERT(isValidDate(year, month, day));
+		NEX_ASSERT(isValidTime(hour, min, sec, millisec));
 		auto dateVal = Date{ Year{ year }, Month{ month }, Day{ day } };
 		auto timeVal = Hours(hour) + Minutes(min) + Seconds(sec) + Milliseconds(millisec);
 		timePoint_ = SysDays{ dateVal } + timeVal;
@@ -1065,42 +1065,42 @@ private:
 
 	// Get the date portion as a Date object
 	constexpr Date dateVal() const noexcept {
-		return Date{ NEXSUITE_STD chrono::floor<Days>(timePoint_) };
+		return Date{ NEX_STD chrono::floor<Days>(timePoint_) };
 	}
 	// Get the month value (1-12)
 	constexpr Month monthVal() const noexcept {
-		return Date{ NEXSUITE_STD chrono::floor<Days>(timePoint_) }.month();
+		return Date{ NEX_STD chrono::floor<Days>(timePoint_) }.month();
 	}
 	// Get the day value (1-31)
 	constexpr Day dayVal() const noexcept {
-		return Date{ NEXSUITE_STD chrono::floor<Days>(timePoint_) }.day();
+		return Date{ NEX_STD chrono::floor<Days>(timePoint_) }.day();
 	}
 	// Get the year value
 	constexpr Year yearVal() const noexcept {
-		return Date{ NEXSUITE_STD chrono::floor<Days>(timePoint_) }.year();
+		return Date{ NEX_STD chrono::floor<Days>(timePoint_) }.year();
 	}
 	// Get the weekday value (0-6, Sunday=0)
 	constexpr Weekday weekdayVal() const noexcept {
-		return Weekday{ NEXSUITE_STD chrono::floor<Days>(timePoint_) };
+		return Weekday{ NEX_STD chrono::floor<Days>(timePoint_) };
 	}
 	// Get the time portion as a ClockTime object
 	constexpr Hours getHours() const noexcept {
-		return NEXSUITE_STD chrono::duration_cast<Hours>(
+		return NEX_STD chrono::duration_cast<Hours>(
 									timePoint_.time_since_epoch() % Days(1));
 	}
 	// Get the minute portion (0-59)
 	constexpr Minutes getMinutes() const noexcept {
-		return NEXSUITE_STD chrono::duration_cast<Minutes>(
+		return NEX_STD chrono::duration_cast<Minutes>(
 									timePoint_.time_since_epoch() % Hours(1));
 	}
 	// Get the second portion (0-59)
 	constexpr Seconds getSeconds() const noexcept {
-		return NEXSUITE_STD chrono::duration_cast<Seconds>(
+		return NEX_STD chrono::duration_cast<Seconds>(
 									timePoint_.time_since_epoch() % Minutes(1));
 	}
 	// Get the millisecond portion (0-999)
 	constexpr Milliseconds getMillisecs() const noexcept {
-		return NEXSUITE_STD chrono::duration_cast<Milliseconds>(
+		return NEX_STD chrono::duration_cast<Milliseconds>(
 									timePoint_.time_since_epoch() % Seconds(1));
 	}
 
@@ -1163,7 +1163,7 @@ public:
 
 	// Set the entire date (year, month, day)
 	void setDate(int year, unsigned int month, unsigned int day) noexcept {
-		NEXSUITE_ASSERT(isValidDate(year, month, day));
+		NEX_ASSERT(isValidDate(year, month, day));
 		DateTime original = *this;
 		auto newDateVal = Date{ Year(year), Month(month), Day(day) };
 		timePoint_ = SysDays{ newDateVal } 
@@ -1171,7 +1171,7 @@ public:
 	}
 	// Set the entire time (hour, minute, second, millisecond)
 	void setClockTime(int hour, int minute, int second, int millisecs = 0) noexcept {
-		NEXSUITE_ASSERT(isValidTime(hour, minute, second, millisecs));
+		NEX_ASSERT(isValidTime(hour, minute, second, millisecs));
 		DateTime original = *this;
 		auto newTimeVal = Hours(hour) + Minutes(minute) + Seconds(second) + Milliseconds(millisecs);
 		timePoint_ = SysDays{ original.dateVal() } + newTimeVal;
@@ -1185,7 +1185,7 @@ public:
 	// Set the year value
 	void setYear(int year) noexcept {
 		DateTime original = *this;
-		NEXSUITE_ASSERT(isValidDate(year, 
+		NEX_ASSERT(isValidDate(year, 
 									static_cast<unsigned>(original.monthVal()), 
 									static_cast<unsigned>(original.dayVal())));
 		auto newDateVal = Date{ Year(year), original.monthVal(), original.dayVal() };
@@ -1195,7 +1195,7 @@ public:
 	// Set the month value
 	void setMonth(int month) noexcept {
 		DateTime original = *this;
-		NEXSUITE_ASSERT(isValidDate(static_cast<int>(original.yearVal()), 
+		NEX_ASSERT(isValidDate(static_cast<int>(original.yearVal()), 
 									static_cast<unsigned>(month), 
 									static_cast<unsigned>(original.dayVal())));
 		auto newDateVal = Date{ original.yearVal(), Month(month), original.dayVal() };
@@ -1205,7 +1205,7 @@ public:
 	// Set the day value
 	void setDay(int day) noexcept {
 		DateTime original = *this;
-		NEXSUITE_ASSERT(isValidDate(static_cast<int>(original.yearVal()), 
+		NEX_ASSERT(isValidDate(static_cast<int>(original.yearVal()), 
 									static_cast<unsigned>(original.monthVal()), 
 									static_cast<unsigned>(day)));
 		auto newDateVal = Date{ original.yearVal(), original.monthVal(), Day(day) };
@@ -1214,7 +1214,7 @@ public:
 	}
 	// Set the hour value
 	void setHour(int hour) noexcept {
-		NEXSUITE_ASSERT(isValidHour(hour));
+		NEX_ASSERT(isValidHour(hour));
 		DateTime original = *this;
 		auto newTimeVal = Hours(hour) + original.getMinutes() 
 							+ original.getSeconds() + original.getMillisecs();
@@ -1222,7 +1222,7 @@ public:
 	}
 	// Set the minute value
 	void setMinute(int minute) noexcept {
-		NEXSUITE_ASSERT(isValidMinute(minute));
+		NEX_ASSERT(isValidMinute(minute));
 		DateTime original = *this;
 		auto newTimeVal = original.getHours() + Minutes(minute) 
 							+ original.getSeconds() + original.getMillisecs();
@@ -1230,7 +1230,7 @@ public:
 	}
 	// Set the second value
 	void setSecond(int second) noexcept {
-		NEXSUITE_ASSERT(isValidSecond(second));
+		NEX_ASSERT(isValidSecond(second));
 		DateTime original = *this;
 		auto newTimeVal = original.getHours() + original.getMinutes() 
 							+ Seconds(second) + original.getMillisecs();
@@ -1238,7 +1238,7 @@ public:
 	}
 	// Set the millisecond value
 	void setMillisecs(int millisecs) noexcept {
-		NEXSUITE_ASSERT(isValidMillisecs(millisecs));
+		NEX_ASSERT(isValidMillisecs(millisecs));
 		DateTime original = *this;
 		auto newTimeVal = original.getHours() + original.getMinutes() 
 							+ original.getSeconds() + Milliseconds(millisecs);
@@ -1262,15 +1262,15 @@ public:
 	}
 	// Check if the DateTime represents today's date
 	constexpr bool isToday(void) const noexcept {
-		return dateVal() == DateTime(NEXSUITE_STD chrono::system_clock::now()).dateVal();
+		return dateVal() == DateTime(NEX_STD chrono::system_clock::now()).dateVal();
 	}
 	// Check if the DateTime is in the future
 	constexpr bool isInTheFuture(void) const noexcept {
-		return timePoint_ > NEXSUITE_STD chrono::system_clock::now();
+		return timePoint_ > NEX_STD chrono::system_clock::now();
 	}
 	// Check if the DateTime is in the past
 	constexpr bool isInThePast(void) const noexcept {
-		return timePoint_ < NEXSUITE_STD chrono::system_clock::now();
+		return timePoint_ < NEX_STD chrono::system_clock::now();
 	}
 
 	////// Arithmetic methods ------------------------
@@ -1353,4 +1353,4 @@ public:
 	static DateTime fromString(const String& str);
 };
 
-NEXSUITE_NAMESPACE_END
+NEX_NAMESPACE_END

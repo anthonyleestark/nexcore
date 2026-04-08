@@ -8,11 +8,11 @@
 #include <string_view>
 #include <iterator>
 
-#include "common/macros.h"
-#include "common/types.h"
-#include "common/assert_crash.h"
+#include "nex/base/macros.h"
+#include "nex/base/types.h"
+#include "nex/base/assert_crash.h"
 
-NEXSUITE_NAMESPACE_BEGIN
+NEX_NAMESPACE_BEGIN
 
 /**
  * @class StringView
@@ -43,8 +43,8 @@ public:
     using const_pointer = const char16*;
     using const_iterator = const_pointer;
     using iterator = const_iterator;
-    using reverse_iterator = NEXSUITE_STD reverse_iterator<const_iterator>;
-    using const_reverse_iterator = NEXSUITE_STD reverse_iterator<const_iterator>;
+    using reverse_iterator = NEX_STD reverse_iterator<const_iterator>;
+    using const_reverse_iterator = NEX_STD reverse_iterator<const_iterator>;
 
 private:
     // Internal pointer to the string data (non-owning; UTF-16 encoded)
@@ -61,7 +61,7 @@ public:
         : data_(nullptr), size_(0) {}
 
     // Construct from UTF-16 string view
-    constexpr StringView(NEXSUITE_STD u16string_view view) 
+    constexpr StringView(NEX_STD u16string_view view) 
         : data_(view.data()), size_(view.size()) {}
     
     // Construct from UTF-16 string literal with explicit size
@@ -72,7 +72,7 @@ public:
     constexpr StringView(const_pointer nullTerminatedUtf16)
         : data_(nullTerminatedUtf16)
         , size_(nullTerminatedUtf16 
-            ? NEXSUITE_STD char_traits<value_type>::length(nullTerminatedUtf16) : 0) {}
+            ? NEX_STD char_traits<value_type>::length(nullTerminatedUtf16) : 0) {}
     
     // Construct from String
     StringView(const String& data);
@@ -99,18 +99,18 @@ public:
     }
     // Access first character of the view
     constexpr value_type front() const noexcept {
-        NEXSUITE_ASSERT_MSG(!empty(), "front() on empty StringView");
+        NEX_ASSERT_MSG(!empty(), "front() on empty StringView");
         return data_[0];
     }
     // Access last character of the view
     constexpr value_type back() const noexcept {
-        NEXSUITE_ASSERT_MSG(!empty(), "back() on empty StringView");
+        NEX_ASSERT_MSG(!empty(), "back() on empty StringView");
         return data_[size_ - 1];
     }
 
     // Access character at index (with bounds checking)
     constexpr value_type at(size_type pos) const {
-        NEXSUITE_ASSERT_MSG(pos < size_, "Position out of range");
+        NEX_ASSERT_MSG(pos < size_, "Position out of range");
         return data_[pos];
     }
     
@@ -184,13 +184,13 @@ public:
     String toString() const;
 
     // Convert to std::u16string (makes a copy of the data)
-    NEXSUITE_STD u16string toStdU16String() const {
-        return NEXSUITE_STD u16string(data_, size_);
+    NEX_STD u16string toStdU16String() const {
+        return NEX_STD u16string(data_, size_);
     }
 
     // Convert to std::u16string_view (returns a view of the same data)
-    constexpr NEXSUITE_STD u16string_view toStdU16StringView() const noexcept {
-        return NEXSUITE_STD u16string_view(data_, size_);
+    constexpr NEX_STD u16string_view toStdU16StringView() const noexcept {
+        return NEX_STD u16string_view(data_, size_);
     }
 
     ////// Operations -----------------------
@@ -228,7 +228,7 @@ public:
     
     // Compare with another view
     constexpr int compare(StringView other) const noexcept  {
-        int result = NEXSUITE_STD char_traits<char16>::compare(data_, other.data_, 0);
+        int result = NEX_STD char_traits<char16>::compare(data_, other.data_, 0);
         if (result != 0) { return result; } // Data differs in the common prefix
         if (size() < other.size()) { return -1; } // Data is identical in the common prefix, but this view is shorter
         if (size() > other.size()) { return 1; } // Data is identical in the common prefix, but this view is longer
@@ -343,15 +343,15 @@ struct StringViewHash {
     }
 };
 
-NEXSUITE_NAMESPACE_END
+NEX_NAMESPACE_END
 
 // Implicit hash specialization for StringView to allow usage in unordered containers 
 // without needing to specify the hash function
 namespace std {
     template <>
-    struct hash<NEXSUITE_PREPEND_NAMESPACE(StringView)> {
-        constexpr size_t operator()(NEXSUITE_PREPEND_NAMESPACE(StringView) sv) const noexcept {
-            return NEXSUITE_PREPEND_NAMESPACE(StringViewHash){}(sv);
+    struct hash<NEX_PREPEND_NAMESPACE(StringView)> {
+        constexpr size_t operator()(NEX_PREPEND_NAMESPACE(StringView) sv) const noexcept {
+            return NEX_PREPEND_NAMESPACE(StringViewHash){}(sv);
         }
     };
 }

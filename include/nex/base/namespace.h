@@ -30,9 +30,7 @@
  * The NEX_MANGLE_JOIN macro is a helper macro used by NEX_MANGLE_NAME to concatenate the namespace and the name. 
  * These macros can be used to create unique names for functions, classes, variables, etc., to avoid potential conflicts 
  * with other libraries or with the global namespace, and to improve readability by clearly indicating the namespace to 
- * which the name belongs. It is recommended to use these macros consistently throughout the Nex-ecosystem codebases to 
- * ensure that all names are properly mangled and prepended with the appropriate namespaces, and to avoid potential 
- * conflicts and improve readability.
+ * which the name belongs.
  */
 
 #define NEX_MANGLE_JOIN(a, b)                                       a##_##b
@@ -46,11 +44,7 @@
  * The NEX_NAMESPACE macro defines the name of the global namespace for the Nex-ecosystem, while the NEX_NAMESPACE_BEGIN 
  * and NEX_NAMESPACE_END macros define the beginning and end of the global namespace, respectively. 
  * The NEX_USING_NAMESPACE macro is a using directive for the global namespace, and the NEX_PREPEND_NAMESPACE macro is 
- * a helper macro used to prepend the global namespace to a name. 
- * These macros can be used throughout the Nex-ecosystem codebases to ensure consistent namespace usage and to simplify 
- * the declaration of namespaces and using directives. It is recommended to use these macros consistently throughout 
- * the Nex-ecosystem codebases to ensure that all namespaces are properly declared and used, and to avoid potential 
- * conflicts and improve readability.
+ * a helper macro used to prepend the global namespace to a name.
  */
 
 #define NEX_NAMESPACE                                               nex
@@ -67,10 +61,8 @@
  * namespace, respectively. 
  * Inline namespaces are used for versioning and for internal implementation details that should not be exposed 
  * in the public API. 
- * By using inline namespaces, we can ensure that the public API remains clean and consistent, while still allowing for 
- * internal changes and improvements without breaking the public API. It is recommended to use these macros consistently 
- * throughout the Nex-ecosystem codebases to ensure that all inline namespaces are properly declared and used, and to 
- * avoid potential conflicts and improve readability.
+ * By using inline namespaces, we can ensure that the public API remains clean and consistent, while still allowing 
+ * for internal changes and improvements without breaking the public API.
  */
 
 #define NEX_INLINE_NAMESPACE_BEGIN(name)                            inline namespace name {
@@ -78,10 +70,12 @@
 
 /** 
  * @section Using global ::std:: namespace
- * @note Do not expose std:: anywhere in the public API of Nex-ecosystem. 
- *       Only use std:: in the implementation files and private members of classes.
- *       This is to avoid potential conflicts with other libraries that may be used by the users 
- *       of Nex-ecosystem, and to keep the public API clean and consistent.
+ * @brief   Define macros for using the global ::std:: namespace in public APIs and implementation files
+ * @note 
+ * Do not expose std:: anywhere in the public API of Nex-ecosystem. 
+ * Only use std:: in the implementation files and private members of classes.
+ * This is to avoid potential conflicts with other libraries that may be used by the users 
+ * of Nex-ecosystem, and to keep the public API clean and consistent.
  */
 #define NEX_STD                                                     ::std::
 #define NEX_STD_BEGIN                                               namespace ::std {
@@ -93,12 +87,8 @@
  * @brief   Define macros for nested namespaces to simplify the declaration of nested namespaces
  * @note
  * The NEX_NAMESPACE_BEGIN2 and NEX_NAMESPACE_END2 macros define the beginning and end of a nested namespace with 
- * two levels, while the NEX_NAMESPACE_BEGIN3 and NEX_NAMESPACE_END3 macros define the beginning and end of a nested namespace 
- * with three levels. 
- * These macros can be used to simplify the declaration of nested namespaces, and to improve readability by clearly indicating 
- * the structure of the namespaces. 
- * It is recommended to use these macros consistently throughout the Nex-ecosystem codebases to ensure that all nested namespaces 
- * are properly declared and used, and to avoid potential conflicts and improve readability.
+ * two levels, while the NEX_NAMESPACE_BEGIN3 and NEX_NAMESPACE_END3 macros define the beginning and end of a nested 
+ * namespace with three levels.
  */
 
 #define NEX_NAMESPACE_BEGIN2(ns1, ns2)                              \
@@ -126,10 +116,6 @@
  * respectively. 
  * The NEX_USING_LAYER_NAMESPACE macro is a using directive for a layer namespace, and the NEX_PREPEND_LAYER_NAMESPACE macro 
  * is a helper macro used to prepend a layer namespace to a name. 
- * These macros can be used throughout the Nex-ecosystem codebases to ensure consistent namespace usage and to simplify the 
- * declaration of namespaces and using directives for the foundation layers of the Nex-ecosystem. 
- * It is recommended to use these macros consistently throughout the Nex-ecosystem codebases to ensure that all layer 
- * namespaces are properly declared and used, and to avoid potential conflicts and improve readability.
  */
 
 #define NEX_LAYER_NAMESPACE_BEGIN(layer)                            \
@@ -148,18 +134,13 @@
  * @section Nex-ecosystem project/layer namespace macros
  * @brief   Define macros for project/layer namespaces and helper macros for namespace usage
  * @note
- * The NEX_PROJECT_NAMESPACE_BEGIN and NEX_PROJECT_NAMESPACE_END macros define the beginning and end of a project 
- * namespace, respectively. 
- * The NEX_USING_PROJECT_NAMESPACE macro is a using directive for a project namespace, and the NEX_PREPEND_PROJECT_NAMESPACE 
- * macro is a helper macro used to prepend a project namespace to a name. 
- * The NEX_PROJECT_LAYER_NAMESPACE_BEGIN and NEX_PROJECT_LAYER_NAMESPACE_END macros define the beginning and end of 
- * a project/layer namespace, respectively. 
- * The NEX_USING_PROJECT_LAYER_NAMESPACE macro is a using directive for a project/layer namespace, and the 
- * NEX_PREPEND_PROJECT_LAYER_NAMESPACE macro is a helper macro used to prepend a project/layer namespace to a name. 
- * These macros can be used throughout the Nex-ecosystem codebases to ensure consistent namespace usage and to simplify 
- * the declaration of namespaces and using directives for the projects and layers of the Nex-ecosystem. 
- * It is recommended to use these macros consistently throughout the Nex-ecosystem codebases to ensure that all project 
- * and layer namespaces are properly declared and used, and to avoid potential conflicts and improve readability.
+ * The NEX_PROJECT_NAMESPACE_BEGIN and NEX_PROJECT_NAMESPACE_END macros define the start and end of a project namespace. 
+ * The NEX_USING_PROJECT_NAMESPACE macro provides a using directive for the project namespace, while the 
+ * NEX_PREPEND_PROJECT_NAMESPACE is a helper to prepend the project namespace to a name. 
+ * The NEX_PROJECT_LAYER_NAMESPACE_BEGIN and NEX_PROJECT_LAYER_NAMESPACE_END macros define the start and end of a 
+ * project/layer namespace.
+ * The NEX_USING_PROJECT_LAYER_NAMESPACE and NEX_PREPEND_PROJECT_LAYER_NAMESPACE macros serve similar purposes for 
+ * project/layer namespaces.
  */
 
 #define NEX_PROJECT_NAMESPACE_BEGIN(project)                        namespace project {
@@ -180,3 +161,27 @@
     NEX_PREPEND_PROJECT_NAMESPACE(project, layer);
 #define NEX_PREPEND_PROJECT_LAYER_NAMESPACE(project, layer, name)   \
     NEX_PREPEND_PROJECT_NAMESPACE(project, layer)::name
+
+/**
+ * @section Cross-layer type importing macros
+ * @brief   Define macros for importing types from other layers and projects/layers
+ * @note
+ * The NEX_IMPORT_TYPE_FROM_LAYER macro is used to import a type from another layer within the same project, while the 
+ * NEX_IMPORT_TYPE_FROM_PROJECT_LAYER macro is used to import a type from another project/layer. These macros help manage 
+ * dependencies, allowing to use the types directly inside the current scope while respecting the ownership of the type.
+ */
+
+#define NEX_IMPORT_TYPE_FROM_LAYER(layer, type)                                 \
+    using NEX_PREPEND_LAYER_NAMESPACE(layer, type);
+#define NEX_IMPORT_TYPE_FROM_PROJECT_LAYER(project, layer, type)                \
+    using NEX_PREPEND_PROJECT_LAYER_NAMESPACE(project, layer, type);
+
+#define NEX_ALIAS_TYPE_FROM_LAYER(layer, type)                                  \
+    using type = NEX_PREPEND_LAYER_NAMESPACE(layer, type);
+#define NEX_ALIAS_TYPE_FROM_PROJECT_LAYER(project, layer, type)                 \
+    using type = NEX_PREPEND_PROJECT_LAYER_NAMESPACE(project, layer, type);
+
+#define NEX_ALIAS_TYPE_AS_FROM_LAYER(alias, layer, type)                        \
+    using alias = NEX_PREPEND_LAYER_NAMESPACE(layer, type);
+#define NEX_ALIAS_TYPE_AS_FROM_PROJECT_LAYER(alias, project, layer, type)       \
+    using alias = NEX_PREPEND_PROJECT_LAYER_NAMESPACE(project, layer, type);

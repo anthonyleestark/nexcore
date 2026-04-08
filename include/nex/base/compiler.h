@@ -42,10 +42,15 @@
 #define NEX_CXX_23_VER_NUMBER          202302L
 #define NEX_CXX_26_VER_NUMBER          0xFFFFFL    // (not yet standardized)
 
-////// Compiler detection =========================================================
-
-//// Note: clang masquerades as GCC on POSIX and as MSVC on Windows.
-
+/**
+ * @section Compiler detection macros
+ * @brief   Define macros for detecting the compiler being used to compile the code
+ * @note
+ * The NEX_COMPILER_GCC and NEX_COMPILER_MSVC macros are defined to 1 if the corresponding compiler is detected, 
+ * and the NEX_COMPILER_IS_GCC and NEX_COMPILER_IS_MSVC macros are defined to 1 if the corresponding compiler is 
+ * detected, and 0 otherwise.
+ * Clang masquerades as GCC on POSIX and as MSVC on Windows.
+ */
 #if defined(__GNUC__)
     #define NEX_COMPILER_GCC 1
     #undef NEX_COMPILER_IS_GCC
@@ -58,8 +63,12 @@
     #error Compiler is not supported or not detected.
 #endif
 
-////// C++ version detection =========================================================
-
+/**
+ * @section C++ version detection macros
+ * @brief   Define macros for detecting the C++ version being used to compile the code
+ * @note
+ * The NEX_CXX_VER macro is defined to the value of the __cplusplus macro, or the _MSVC_LANG macro if using MSVC.
+ */
 #ifdef __cplusplus
     #if defined(_MSVC_LANG) && (_MSVC_LANG > __cplusplus)
         #define NEX_CXX_VER _MSVC_LANG     // override with MSVC version

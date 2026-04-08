@@ -5,12 +5,12 @@
 
 #pragma once
 
-#include "common/macros.h"
-#include "common/types.h"
-#include "common/result.h"
-#include "common/string_view.h"
+#include "nex/base/macros.h"
+#include "nex/base/types.h"
+#include "nex/core/result.h"
+#include "nex/core/string_view.h"
 
-NEXSUITE_NAMESPACE_BEGIN
+NEX_NAMESPACE_BEGIN
 
 /**
  * @class   KeyCombination
@@ -71,10 +71,10 @@ public:
         : modifiers_(static_cast<uint32>(modifier)), virtualKey_(virtualKey) {}
 
     // Copy constructor and assignment
-    NEXSUITE_DEFAULT_COPY(KeyCombination);
+    NEX_DEFAULT_COPY(KeyCombination);
 
     // Move constructor and assignment
-    NEXSUITE_DEFAULT_MOVE(KeyCombination);
+    NEX_DEFAULT_MOVE(KeyCombination);
 
     ////// Accessors and utility methods ------------------------
     
@@ -198,14 +198,14 @@ private:
     uint32 virtualKey_ = 0;
 };
 
-NEXSUITE_NAMESPACE_END
+NEX_NAMESPACE_END
 
 // Hash specialization for KeyCombination to allow usage in unordered containers
 // Combines the modifiers and virtual key into a single hash value
 namespace std {
     template <>
-    struct hash<NEXSUITE_PREPEND_NAMESPACE(KeyCombination)> {
-        constexpr size_t operator()(const NEXSUITE_PREPEND_NAMESPACE(KeyCombination)& value) const noexcept {
+    struct hash<NEX_PREPEND_NAMESPACE(KeyCombination)> {
+        constexpr size_t operator()(const NEX_PREPEND_NAMESPACE(KeyCombination)& value) const noexcept {
             return (static_cast<size_t>(value.modifiers()) << 32)
                 ^ static_cast<size_t>(value.virtualKey());
         }

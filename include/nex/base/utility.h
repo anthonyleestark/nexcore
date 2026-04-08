@@ -20,12 +20,12 @@ NEX_NAMESPACE_BEGIN
 /**
  * @namespace utility
  * @brief   Contains utility functions and classes that provide common functionality and services
- *          across the NexSuite system, such as helper functions, common data structures, and other
+ *          across the NEX system, such as helper functions, common data structures, and other
  *          utilities that can be used by various components of the system.
  * 
  * @details
  * The `utility` namespace is intended to contain utility functions and classes that provide common
- * functionality and services across the NexSuite system, such as helper functions, common data structures,
+ * functionality and services across the NEX system, such as helper functions, common data structures,
  * and other utilities that can be used by various components of the system. The utilities in this
  * namespace are designed to be reusable and can be used by different layers and components of the system
  * without introducing dependencies on specific layers or components. The `utility` namespace is intended to

@@ -9,9 +9,9 @@
 #include <algorithm>
 #include <cwctype>
 
-#include "common/time.h"
+#include "nex/core/time.h"
 
-NEXSUITE_NAMESPACE_BEGIN
+NEX_NAMESPACE_BEGIN
 
 // Helper function to trim whitespace
 static String trim(const String& str) {
@@ -20,9 +20,9 @@ static String trim(const String& str) {
 	const auto res = str.toUtf16();
 	if (!res.isOk()) return String();
 
-	NEXSUITE_STD u16string u16str = res.value();
+	NEX_STD u16string u16str = res.value();
 	size_t first = u16str.find_first_not_of(u" \t\n\r");
-	if (first == NEXSUITE_STD u16string::npos) return String();
+	if (first == NEX_STD u16string::npos) return String();
 
 	size_t last = u16str.find_last_not_of(u" \t\n\r");
 	return String(u16str.substr(first, (last - first + 1)));
@@ -33,9 +33,9 @@ static String toLower(const String& str) {
 	const auto res = str.toUtf16();
 	if (!res.isOk()) return String();
 
-	NEXSUITE_STD u16string u16str = res.value();
-	NEXSUITE_STD transform(u16str.begin(), u16str.end(), u16str.begin(),
-		[](char16_t c) { return NEXSUITE_STD towlower(c); });
+	NEX_STD u16string u16str = res.value();
+	NEX_STD transform(u16str.begin(), u16str.end(), u16str.begin(),
+		[](char16_t c) { return NEX_STD towlower(c); });
 	return String(u16str);
 }
 
@@ -55,7 +55,7 @@ static String toLower(const String& str) {
 String TimeSpan::toString(const wchar_t* format) const {
 	String result;
 	if (!format) format = L"default";
-	NEXSUITE_STD wstring fmt(format);
+	NEX_STD wstring fmt(format);
 	
 	if (fmt == L"compact") {
 		// Format: HH:MM:SS
@@ -160,19 +160,19 @@ TimeSpan TimeSpan::fromString(const String& str) {
 	
 	auto utf16Res = trimmed.toUtf16();
 	if (!utf16Res.isOk()) return TimeSpan();
-	const NEXSUITE_STD u16string& u16str = utf16Res.value();
-	NEXSUITE_STD wstring wstr(u16str.begin(), u16str.end());
+	const NEX_STD u16string& u16str = utf16Res.value();
+	NEX_STD wstring wstr(u16str.begin(), u16str.end());
 	
 	// Try ISO 8601 format: PTnHnMnS
 	if (wstr.length() >= 2 && (wstr[0] == L'P' || wstr[0] == L'p') && 
 		(wstr[1] == L'T' || wstr[1] == L't')) {
 		try {
-			NEXSUITE_STD wregex isoRegex(LR"(PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?)", NEXSUITE_STD regex::icase);
-			NEXSUITE_STD wsmatch match;
-			if (NEXSUITE_STD regex_match(wstr, match, isoRegex)) {
-				int hours = match[1].matched ? NEXSUITE_STD stoi(match[1].str()) : 0;
-				int minutes = match[2].matched ? NEXSUITE_STD stoi(match[2].str()) : 0;
-				int seconds = match[3].matched ? NEXSUITE_STD stoi(match[3].str()) : 0;
+			NEX_STD wregex isoRegex(LR"(PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?)", NEX_STD regex::icase);
+			NEX_STD wsmatch match;
+			if (NEX_STD regex_match(wstr, match, isoRegex)) {
+				int hours = match[1].matched ? NEX_STD stoi(match[1].str()) : 0;
+				int minutes = match[2].matched ? NEX_STD stoi(match[2].str()) : 0;
+				int seconds = match[3].matched ? NEX_STD stoi(match[3].str()) : 0;
 				return TimeSpan(0, hours, minutes, seconds);
 			}
 		}
@@ -182,14 +182,14 @@ TimeSpan TimeSpan::fromString(const String& str) {
 	}
 	
 	// Try compact format: HH:MM:SS or HH:MM:SS.mmm
-	NEXSUITE_STD wregex compactRegex(LR"((\d+):(\d{1,2}):(\d{1,2})(?:\.(\d{1,3}))?)");
-	NEXSUITE_STD wsmatch match;
-	if (NEXSUITE_STD regex_match(wstr, match, compactRegex)) {
+	NEX_STD wregex compactRegex(LR"((\d+):(\d{1,2}):(\d{1,2})(?:\.(\d{1,3}))?)");
+	NEX_STD wsmatch match;
+	if (NEX_STD regex_match(wstr, match, compactRegex)) {
 		try {
-			int hours = NEXSUITE_STD stoi(match[1].str());
-			int minutes = NEXSUITE_STD stoi(match[2].str());
-			int seconds = NEXSUITE_STD stoi(match[3].str());
-			int millisecs = match[4].matched ? NEXSUITE_STD stoi(match[4].str()) : 0;
+			int hours = NEX_STD stoi(match[1].str());
+			int minutes = NEX_STD stoi(match[2].str());
+			int seconds = NEX_STD stoi(match[3].str());
+			int millisecs = match[4].matched ? NEX_STD stoi(match[4].str()) : 0;
 			// Pad milliseconds to 3 digits if needed
 			if (match[4].matched && match[4].str().length() == 1) millisecs *= 100;
 			else if (match[4].matched && match[4].str().length() == 2) millisecs *= 10;
@@ -203,13 +203,13 @@ TimeSpan TimeSpan::fromString(const String& str) {
 	// Try default format: "D days, H hours, M minutes, S seconds"
 	try {
 		int days = 0, hours = 0, minutes = 0, seconds = 0;
-		NEXSUITE_STD wregex defaultRegex(LR"((\d+)\s*(?:day|days),?\s*(\d+)\s*(?:hour|hours),?\s*(\d+)\s*(?:minute|minutes),?\s*(\d+)\s*(?:second|seconds))", NEXSUITE_STD regex::icase);
-		NEXSUITE_STD wsmatch match;
-		if (NEXSUITE_STD regex_match(wstr, match, defaultRegex)) {
-			days = NEXSUITE_STD stoi(match[1].str());
-			hours = NEXSUITE_STD stoi(match[2].str());
-			minutes = NEXSUITE_STD stoi(match[3].str());
-			seconds = NEXSUITE_STD stoi(match[4].str());
+		NEX_STD wregex defaultRegex(LR"((\d+)\s*(?:day|days),?\s*(\d+)\s*(?:hour|hours),?\s*(\d+)\s*(?:minute|minutes),?\s*(\d+)\s*(?:second|seconds))", NEX_STD regex::icase);
+		NEX_STD wsmatch match;
+		if (NEX_STD regex_match(wstr, match, defaultRegex)) {
+			days = NEX_STD stoi(match[1].str());
+			hours = NEX_STD stoi(match[2].str());
+			minutes = NEX_STD stoi(match[3].str());
+			seconds = NEX_STD stoi(match[4].str());
 			return TimeSpan(days, hours, minutes, seconds);
 		}
 	}
@@ -219,7 +219,7 @@ TimeSpan TimeSpan::fromString(const String& str) {
 	
 	// Try simple integer (seconds)
 	try {
-		int64 seconds = NEXSUITE_STD stoll(wstr);
+		int64 seconds = NEX_STD stoll(wstr);
 		return TimeSpan(0, 0, 0, static_cast<int>(seconds));
 	}
 	catch (...) {
@@ -245,7 +245,7 @@ TimeSpan TimeSpan::fromString(const String& str) {
 String ClockTime::toString(const wchar_t* format) const {
 	String result;
 	if (!format) format = L"default";
-	NEXSUITE_STD wstring fmt(format);
+	NEX_STD wstring fmt(format);
 	int h = hour();
 	int m = minute();
 	int s = second();
@@ -333,14 +333,14 @@ ClockTime ClockTime::fromString(const String& str) {
 	
 	auto utf16Res = trimmed.toUtf16();
 	if (!utf16Res.isOk()) return ClockTime(0, 0, 0);
-	const NEXSUITE_STD u16string& u16str = utf16Res.value();
-	NEXSUITE_STD wstring wstr(u16str.begin(), u16str.end());
+	const NEX_STD u16string& u16str = utf16Res.value();
+	NEX_STD wstring wstr(u16str.begin(), u16str.end());
 	
 	// Try compact format: HHMM
-	if (wstr.length() == 4 && NEXSUITE_STD all_of(wstr.begin(), wstr.end(), ::iswdigit)) {
+	if (wstr.length() == 4 && NEX_STD all_of(wstr.begin(), wstr.end(), ::iswdigit)) {
 		try {
-			int hour = NEXSUITE_STD stoi(wstr.substr(0, 2));
-			int minute = NEXSUITE_STD stoi(wstr.substr(2, 2));
+			int hour = NEX_STD stoi(wstr.substr(0, 2));
+			int minute = NEX_STD stoi(wstr.substr(2, 2));
 			if (time::isValidHour(hour) && time::isValidMinute(minute)) {
 				return ClockTime(hour, minute, 0);
 			}
@@ -351,20 +351,20 @@ ClockTime ClockTime::fromString(const String& str) {
 	}
 	
 	// Try 12-hour format: HH:MM:SS AM/PM or HH:MM:SS.mmm AM/PM
-	NEXSUITE_STD wregex regex12h(LR"((\d{1,2}):(\d{1,2}):(\d{1,2})(?:\.(\d{1,3}))?\s*(AM|PM))", NEXSUITE_STD regex::icase);
-	NEXSUITE_STD wsmatch match;
-	if (NEXSUITE_STD regex_match(wstr, match, regex12h)) {
+	NEX_STD wregex regex12h(LR"((\d{1,2}):(\d{1,2}):(\d{1,2})(?:\.(\d{1,3}))?\s*(AM|PM))", NEX_STD regex::icase);
+	NEX_STD wsmatch match;
+	if (NEX_STD regex_match(wstr, match, regex12h)) {
 		try {
-			int hour = NEXSUITE_STD stoi(match[1].str());
-			int minute = NEXSUITE_STD stoi(match[2].str());
-			int second = NEXSUITE_STD stoi(match[3].str());
-			int millisec = match[4].matched ? NEXSUITE_STD stoi(match[4].str()) : 0;
+			int hour = NEX_STD stoi(match[1].str());
+			int minute = NEX_STD stoi(match[2].str());
+			int second = NEX_STD stoi(match[3].str());
+			int millisec = match[4].matched ? NEX_STD stoi(match[4].str()) : 0;
 			// Pad milliseconds
 			if (match[4].matched && match[4].str().length() == 1) millisec *= 100;
 			else if (match[4].matched && match[4].str().length() == 2) millisec *= 10;
 			
-			NEXSUITE_STD wstring ampm = match[5].str();
-			NEXSUITE_STD transform(ampm.begin(), ampm.end(), ampm.begin(), ::towlower);
+			NEX_STD wstring ampm = match[5].str();
+			NEX_STD transform(ampm.begin(), ampm.end(), ampm.begin(), ::towlower);
 			if (ampm == L"pm" && hour != 12) hour += 12;
 			else if (ampm == L"am" && hour == 12) hour = 0;
 			
@@ -379,13 +379,13 @@ ClockTime ClockTime::fromString(const String& str) {
 	}
 	
 	// Try 24-hour format: HH:MM:SS or HH:MM:SS.mmm
-	NEXSUITE_STD wregex regex24h(LR"((\d{1,2}):(\d{1,2}):(\d{1,2})(?:\.(\d{1,3}))?)");
-	if (NEXSUITE_STD regex_match(wstr, match, regex24h)) {
+	NEX_STD wregex regex24h(LR"((\d{1,2}):(\d{1,2}):(\d{1,2})(?:\.(\d{1,3}))?)");
+	if (NEX_STD regex_match(wstr, match, regex24h)) {
 		try {
-			int hour = NEXSUITE_STD stoi(match[1].str());
-			int minute = NEXSUITE_STD stoi(match[2].str());
-			int second = NEXSUITE_STD stoi(match[3].str());
-			int millisec = match[4].matched ? NEXSUITE_STD stoi(match[4].str()) : 0;
+			int hour = NEX_STD stoi(match[1].str());
+			int minute = NEX_STD stoi(match[2].str());
+			int second = NEX_STD stoi(match[3].str());
+			int millisec = match[4].matched ? NEX_STD stoi(match[4].str()) : 0;
 			// Pad milliseconds
 			if (match[4].matched && match[4].str().length() == 1) millisec *= 100;
 			else if (match[4].matched && match[4].str().length() == 2) millisec *= 10;
@@ -422,7 +422,7 @@ ClockTime ClockTime::fromString(const String& str) {
 String DateTime::toString(const wchar_t* format) const {
 	String result;
 	if (!format) format = L"default";
-	NEXSUITE_STD wstring fmt(format);
+	NEX_STD wstring fmt(format);
 	
 	int y = year();
 	unsigned m = month();
@@ -578,27 +578,27 @@ DateTime DateTime::fromString(const String& str) {
 	
 	auto utf16Res = trimmed.toUtf16();
 	if (!utf16Res.isOk()) return DateTime();
-	const NEXSUITE_STD u16string& u16str = utf16Res.value();
-	NEXSUITE_STD wstring wstr(u16str.begin(), u16str.end());
+	const NEX_STD u16string& u16str = utf16Res.value();
+	NEX_STD wstring wstr(u16str.begin(), u16str.end());
 	
 	// Try US format with 12-hour: MM/DD/YYYY HH:MM:SS AM/PM
-	NEXSUITE_STD wregex regexUS12h(LR"((\d{1,2})/(\d{1,2})/(\d{4})\s+(\d{1,2}):(\d{1,2}):(\d{1,2})(?:\.(\d{1,3}))?\s+(AM|PM))", NEXSUITE_STD regex::icase);
-	NEXSUITE_STD wsmatch match;
-	if (NEXSUITE_STD regex_match(wstr, match, regexUS12h)) {
+	NEX_STD wregex regexUS12h(LR"((\d{1,2})/(\d{1,2})/(\d{4})\s+(\d{1,2}):(\d{1,2}):(\d{1,2})(?:\.(\d{1,3}))?\s+(AM|PM))", NEX_STD regex::icase);
+	NEX_STD wsmatch match;
+	if (NEX_STD regex_match(wstr, match, regexUS12h)) {
 		try {
-			unsigned month = static_cast<unsigned>(NEXSUITE_STD stoi(match[1].str()));
-			unsigned day = static_cast<unsigned>(NEXSUITE_STD stoi(match[2].str()));
-			int year = NEXSUITE_STD stoi(match[3].str());
-			int hour = NEXSUITE_STD stoi(match[4].str());
-			int minute = NEXSUITE_STD stoi(match[5].str());
-			int second = NEXSUITE_STD stoi(match[6].str());
-			int millisec = match[7].matched ? NEXSUITE_STD stoi(match[7].str()) : 0;
+			unsigned month = static_cast<unsigned>(NEX_STD stoi(match[1].str()));
+			unsigned day = static_cast<unsigned>(NEX_STD stoi(match[2].str()));
+			int year = NEX_STD stoi(match[3].str());
+			int hour = NEX_STD stoi(match[4].str());
+			int minute = NEX_STD stoi(match[5].str());
+			int second = NEX_STD stoi(match[6].str());
+			int millisec = match[7].matched ? NEX_STD stoi(match[7].str()) : 0;
 			// Pad milliseconds
 			if (match[7].matched && match[7].str().length() == 1) millisec *= 100;
 			else if (match[7].matched && match[7].str().length() == 2) millisec *= 10;
 			
-			NEXSUITE_STD wstring ampm = match[8].str();
-			NEXSUITE_STD transform(ampm.begin(), ampm.end(), ampm.begin(), ::towlower);
+			NEX_STD wstring ampm = match[8].str();
+			NEX_STD transform(ampm.begin(), ampm.end(), ampm.begin(), ::towlower);
 			if (ampm == L"pm" && hour != 12) hour += 12;
 			else if (ampm == L"am" && hour == 12) hour = 0;
 			
@@ -612,16 +612,16 @@ DateTime DateTime::fromString(const String& str) {
 	}
 	
 	// Try US format: MM/DD/YYYY HH:MM:SS or MM/DD/YYYY HH:MM:SS.mmm
-	NEXSUITE_STD wregex regexUS(LR"((\d{1,2})/(\d{1,2})/(\d{4})\s+(\d{1,2}):(\d{1,2}):(\d{1,2})(?:\.(\d{1,3}))?)");
-	if (NEXSUITE_STD regex_match(wstr, match, regexUS)) {
+	NEX_STD wregex regexUS(LR"((\d{1,2})/(\d{1,2})/(\d{4})\s+(\d{1,2}):(\d{1,2}):(\d{1,2})(?:\.(\d{1,3}))?)");
+	if (NEX_STD regex_match(wstr, match, regexUS)) {
 		try {
-			unsigned month = static_cast<unsigned>(NEXSUITE_STD stoi(match[1].str()));
-			unsigned day = static_cast<unsigned>(NEXSUITE_STD stoi(match[2].str()));
-			int year = NEXSUITE_STD stoi(match[3].str());
-			int hour = NEXSUITE_STD stoi(match[4].str());
-			int minute = NEXSUITE_STD stoi(match[5].str());
-			int second = NEXSUITE_STD stoi(match[6].str());
-			int millisec = match[7].matched ? NEXSUITE_STD stoi(match[7].str()) : 0;
+			unsigned month = static_cast<unsigned>(NEX_STD stoi(match[1].str()));
+			unsigned day = static_cast<unsigned>(NEX_STD stoi(match[2].str()));
+			int year = NEX_STD stoi(match[3].str());
+			int hour = NEX_STD stoi(match[4].str());
+			int minute = NEX_STD stoi(match[5].str());
+			int second = NEX_STD stoi(match[6].str());
+			int millisec = match[7].matched ? NEX_STD stoi(match[7].str()) : 0;
 			// Pad milliseconds
 			if (match[7].matched && match[7].str().length() == 1) millisec *= 100;
 			else if (match[7].matched && match[7].str().length() == 2) millisec *= 10;
@@ -636,16 +636,16 @@ DateTime DateTime::fromString(const String& str) {
 	}
 	
 	// Try ISO 8601 format: YYYY-MM-DDTHH:MM:SS or YYYY-MM-DDTHH:MM:SS.mmm
-	NEXSUITE_STD wregex regexISO(LR"((\d{4})-(\d{1,2})-(\d{1,2})T(\d{1,2}):(\d{1,2}):(\d{1,2})(?:\.(\d{1,3}))?)");
-	if (NEXSUITE_STD regex_match(wstr, match, regexISO)) {
+	NEX_STD wregex regexISO(LR"((\d{4})-(\d{1,2})-(\d{1,2})T(\d{1,2}):(\d{1,2}):(\d{1,2})(?:\.(\d{1,3}))?)");
+	if (NEX_STD regex_match(wstr, match, regexISO)) {
 		try {
-			int year = NEXSUITE_STD stoi(match[1].str());
-			unsigned month = static_cast<unsigned>(NEXSUITE_STD stoi(match[2].str()));
-			unsigned day = static_cast<unsigned>(NEXSUITE_STD stoi(match[3].str()));
-			int hour = NEXSUITE_STD stoi(match[4].str());
-			int minute = NEXSUITE_STD stoi(match[5].str());
-			int second = NEXSUITE_STD stoi(match[6].str());
-			int millisec = match[7].matched ? NEXSUITE_STD stoi(match[7].str()) : 0;
+			int year = NEX_STD stoi(match[1].str());
+			unsigned month = static_cast<unsigned>(NEX_STD stoi(match[2].str()));
+			unsigned day = static_cast<unsigned>(NEX_STD stoi(match[3].str()));
+			int hour = NEX_STD stoi(match[4].str());
+			int minute = NEX_STD stoi(match[5].str());
+			int second = NEX_STD stoi(match[6].str());
+			int millisec = match[7].matched ? NEX_STD stoi(match[7].str()) : 0;
 			// Pad milliseconds
 			if (match[7].matched && match[7].str().length() == 1) millisec *= 100;
 			else if (match[7].matched && match[7].str().length() == 2) millisec *= 10;
@@ -660,16 +660,16 @@ DateTime DateTime::fromString(const String& str) {
 	}
 	
 	// Try default format: YYYY-MM-DD HH:MM:SS or YYYY-MM-DD HH:MM:SS.mmm
-	NEXSUITE_STD wregex regexDefault(LR"((\d{4})-(\d{1,2})-(\d{1,2})\s+(\d{1,2}):(\d{1,2}):(\d{1,2})(?:\.(\d{1,3}))?)");
-	if (NEXSUITE_STD regex_match(wstr, match, regexDefault)) {
+	NEX_STD wregex regexDefault(LR"((\d{4})-(\d{1,2})-(\d{1,2})\s+(\d{1,2}):(\d{1,2}):(\d{1,2})(?:\.(\d{1,3}))?)");
+	if (NEX_STD regex_match(wstr, match, regexDefault)) {
 		try {
-			int year = NEXSUITE_STD stoi(match[1].str());
-			unsigned month = static_cast<unsigned>(NEXSUITE_STD stoi(match[2].str()));
-			unsigned day = static_cast<unsigned>(NEXSUITE_STD stoi(match[3].str()));
-			int hour = NEXSUITE_STD stoi(match[4].str());
-			int minute = NEXSUITE_STD stoi(match[5].str());
-			int second = NEXSUITE_STD stoi(match[6].str());
-			int millisec = match[7].matched ? NEXSUITE_STD stoi(match[7].str()) : 0;
+			int year = NEX_STD stoi(match[1].str());
+			unsigned month = static_cast<unsigned>(NEX_STD stoi(match[2].str()));
+			unsigned day = static_cast<unsigned>(NEX_STD stoi(match[3].str()));
+			int hour = NEX_STD stoi(match[4].str());
+			int minute = NEX_STD stoi(match[5].str());
+			int second = NEX_STD stoi(match[6].str());
+			int millisec = match[7].matched ? NEX_STD stoi(match[7].str()) : 0;
 			// Pad milliseconds
 			if (match[7].matched && match[7].str().length() == 1) millisec *= 100;
 			else if (match[7].matched && match[7].str().length() == 2) millisec *= 10;
@@ -687,4 +687,4 @@ DateTime DateTime::fromString(const String& str) {
 	return DateTime();
 }
 
-NEXSUITE_NAMESPACE_END
+NEX_NAMESPACE_END

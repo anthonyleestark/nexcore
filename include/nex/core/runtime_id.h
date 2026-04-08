@@ -7,12 +7,12 @@
 
 #include <functional>
 
-#include "common/macros.h"
-#include "common/types.h"
-#include "common/wrappers.h"
-#include "common/string.h"
+#include "nex/base/macros.h"
+#include "nex/base/types.h"
+#include "nex/base/wrappers.h"
+#include "nex/core/string.h"
 
-NEXSUITE_NAMESPACE_BEGIN
+NEX_NAMESPACE_BEGIN
 
 /**
  * @class   RuntimeId
@@ -63,7 +63,7 @@ public:
     static RuntimeId generate() {
         // Start from 1 because 0 is invalid
         static AtomicUInt64 counter{1};
-        return RuntimeId(counter.fetch_add(1, NEXSUITE_STD memory_order_relaxed));
+        return RuntimeId(counter.fetch_add(1, NEX_STD memory_order_relaxed));
     }
 
     // Get an invalid RuntimeId
@@ -113,7 +113,7 @@ public:
     }
     
     // Strong ordering comparison operator (enables use in ordered containers and comparisons)
-    constexpr NEXSUITE_STD strong_ordering operator<=>(const RuntimeId& other) const noexcept {
+    constexpr NEX_STD strong_ordering operator<=>(const RuntimeId& other) const noexcept {
         return value_ <=> other.value_;
     }
     
@@ -122,15 +122,15 @@ private:
     uint64 value_;
 };
 
-NEXSUITE_NAMESPACE_END
+NEX_NAMESPACE_END
 
 // Implicit hash specialization for RuntimeId
 // to allow usage in hash-based containers like std::unordered_map
 namespace std {
     template<>
-    struct hash<NEXSUITE_PREPEND_NAMESPACE(RuntimeId)> {
-        constexpr size_t operator()(const NEXSUITE_PREPEND_NAMESPACE(RuntimeId)& id) const noexcept {
-            return std::hash<NEXSUITE_PREPEND_NAMESPACE(uint64)>{}(id.get());
+    struct hash<NEX_PREPEND_NAMESPACE(RuntimeId)> {
+        constexpr size_t operator()(const NEX_PREPEND_NAMESPACE(RuntimeId)& id) const noexcept {
+            return std::hash<NEX_PREPEND_NAMESPACE(uint64)>{}(id.get());
         }
     };
 }

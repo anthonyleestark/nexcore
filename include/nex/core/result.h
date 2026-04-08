@@ -7,11 +7,11 @@
 
 #include <utility>
 
-#include "common/error.h"
-#include "common/assert_crash.h"
-#include "common/types.h"
+#include "nex/base/error.h"
+#include "nex/base/assert_crash.h"
+#include "nex/base/types.h"
 
-NEXSUITE_NAMESPACE_BEGIN
+NEX_NAMESPACE_BEGIN
 
 /**
  * @class Result
@@ -49,7 +49,7 @@ public:
     static Result ok(T value) {
         Result result;
         result.isOk_ = true;
-        new (&result.value_) T(NEXSUITE_STD move(value));
+        new (&result.value_) T(NEX_STD move(value));
         return result;
     }
     
@@ -57,7 +57,7 @@ public:
     static Result error(E error) {
         Result result;
         result.isOk_ = false;
-        new (&result.error_) E(NEXSUITE_STD move(error));
+        new (&result.error_) E(NEX_STD move(error));
         return result;
     }
     
@@ -68,7 +68,7 @@ public:
     // Get the success value (crash if error)
     T& value() {
         if (!isOk_) {
-            NEXSUITE_FATAL(
+            NEX_FATAL(
                 "Attempted to access value of error Result");
         }
         return value_;
@@ -77,7 +77,7 @@ public:
     // Get the success value (const, crash if error)
     const T& value() const {
         if (!isOk_) {
-            NEXSUITE_FATAL(
+            NEX_FATAL(
                 "Attempted to access value of error Result");
         }
         return value_;
@@ -94,7 +94,7 @@ public:
     // Get the error value (crash if success)
     E& error() {
         if (isOk_) {
-            NEXSUITE_FATAL(
+            NEX_FATAL(
                 "Attempted to access error of success Result");
         }
         return error_;
@@ -103,7 +103,7 @@ public:
     // Get the error value (const, crash if success)
     const E& error() const {
         if (isOk_) {
-            NEXSUITE_FATAL(
+            NEX_FATAL(
                 "Attempted to access error of success Result");
         }
         return error_;
@@ -133,7 +133,7 @@ private:
     Result() noexcept = default;
 
     // Disable copy semantics
-    NEXSUITE_DISALLOW_COPY(Result);
+    NEX_DISALLOW_COPY(Result);
 
     // Move constructor and assignment
     Result(Result&&) = default;
@@ -199,7 +199,7 @@ public:
     // Get the error value (crash if success)
     E& error() {
         if (isOk_) {
-            NEXSUITE_FATAL(
+            NEX_FATAL(
                 "Attempted to access error of success Result");
         }
         return error_;
@@ -208,7 +208,7 @@ public:
     // Get the error value (const, crash if success)
     const E& error() const {
         if (isOk_) {
-            NEXSUITE_FATAL(
+            NEX_FATAL(
                 "Attempted to access error of success Result");
         }
         return error_;
@@ -224,7 +224,7 @@ private:
     Result() noexcept = default;
 
     // Disable copy semantics
-    NEXSUITE_DISALLOW_COPY(Result);
+    NEX_DISALLOW_COPY(Result);
 
     // Move constructor and assignment operator
     Result(Result&&) = default;
@@ -239,4 +239,4 @@ private:
     E error_;
 };
 
-NEXSUITE_NAMESPACE_END
+NEX_NAMESPACE_END

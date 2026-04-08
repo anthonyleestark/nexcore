@@ -29,7 +29,7 @@
 #define NEX_PLATFORM_IS_MAC            0
 #define NEX_PLATFORM_IS_MACOSX         0
 #define NEX_PLATFORM_IS_LINUX          0
-#define NEX_PLATFORM_IS_WIN            0
+#define NEX_PLATFORM_IS_WINDOWS        0
 #define NEX_LIBC_IS_GLIBC              0
 
 /**
@@ -81,9 +81,9 @@
         #define NEX_LIBC_IS_GLIBC 1
     #endif
 #elif defined(_WIN32)
-    #define NEX_PLATFORM_WIN 1
-    #undef NEX_PLATFORM_IS_WIN
-    #define NEX_PLATFORM_IS_WIN 1
+    #define NEX_PLATFORM_WINDOWS 1
+    #undef NEX_PLATFORM_IS_WINDOWS
+    #define NEX_PLATFORM_IS_WINDOWS 1
 #else
     #error Platform is not supported or not detected.
 #endif

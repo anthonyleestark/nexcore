@@ -3,9 +3,9 @@
  * Copyright (c) 2026 Anthony Lee Stark. All rights reserved.
  */
 
-#include "common/error.h"
+#include "nex/core/error.h"
 
-NEXSUITE_NAMESPACE_BEGIN
+NEX_NAMESPACE_BEGIN
 
 // Convert error code to string
 const char* errorCodeToString(ErrorCode code) {
@@ -345,4 +345,4 @@ bool isRecoverable(ErrorCode code) {
     }
 }
 
-NEXSUITE_NAMESPACE_END
+NEX_NAMESPACE_END

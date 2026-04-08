@@ -10,13 +10,13 @@
 #include <iterator>
 #include <utility>
 
-#include "common/macros.h"
-#include "common/types.h"
-#include "common/result.h"
-#include "common/assert_crash.h"
-#include "common/string_view.h"
+#include "nex/base/macros.h"
+#include "nex/base/types.h"
+#include "nex/core/result.h"
+#include "nex/base/assert_crash.h"
+#include "nex/core/string_view.h"
 
-NEXSUITE_NAMESPACE_BEGIN
+NEX_NAMESPACE_BEGIN
 
 /**
  * @class String
@@ -50,7 +50,7 @@ public:
 
 private:
 	// Using UTF-16 as the internal buffer
-	NEXSUITE_STD u16string buffer_;
+	NEX_STD u16string buffer_;
 
 public:
 	 ////// Construction ------------------------
@@ -59,13 +59,13 @@ public:
 	explicit String();
 
 	// Construct from UTF-8 string view
-	String(NEXSUITE_STD string_view utf8);
+	String(NEX_STD string_view utf8);
 
 	// Construct from UTF-8 string literal
 	String(const char* utf8);
 	
 	// Construct from UTF-16 string view
-	String(NEXSUITE_STD u16string_view utf16);
+	String(NEX_STD u16string_view utf16);
 
 	// Construct from UTF-16 string literal
 	String(const char16* utf16);
@@ -87,12 +87,12 @@ public:
 
 	// Move constructor
 	String(String&& other) noexcept 
-		: buffer_(NEXSUITE_STD move(other.buffer_)) {}
+		: buffer_(NEX_STD move(other.buffer_)) {}
 
 	// Move assignment operator
 	String& operator=(String&& other) noexcept {
 		if (this != &other)
-			buffer_ = NEXSUITE_STD move(other.buffer_);
+			buffer_ = NEX_STD move(other.buffer_);
 		return *this;
 	}
 
@@ -114,18 +114,18 @@ public:
 	////// Create string from specified encoding -----------------------
 
 	// Create string from UTF-8 string
-	static String fromUtf8(NEXSUITE_STD string_view utf8);
+	static String fromUtf8(NEX_STD string_view utf8);
 
 	// Create string from UTF-16 string
-	static String fromUtf16(NEXSUITE_STD u16string_view utf16);
+	static String fromUtf16(NEX_STD u16string_view utf16);
 
 	////// Convert to specified encoding (instance methods) -----------------------
 
 	// Convert to UTF-8 string
-	NEX_NODISCARD Result<NEXSUITE_STD string> toUtf8() const;
+	NEX_NODISCARD Result<NEX_STD string> toUtf8() const;
 
 	// Convert to UTF-16 string
-	NEX_NODISCARD Result<NEXSUITE_STD u16string> toUtf16() const;
+	NEX_NODISCARD Result<NEX_STD u16string> toUtf16() const;
 
 private:
 	// Internal constants
@@ -237,12 +237,12 @@ public:
 
 	// Access character at index (with bounds checking)
 	constexpr reference at(size_type pos) {
-		NEXSUITE_ASSERT_MSG(pos < buffer_.size(), "Position out of range");
+		NEX_ASSERT_MSG(pos < buffer_.size(), "Position out of range");
 		return buffer_.at(pos);
 	}
 	// Access character at index (with bounds checking, const version)
 	constexpr const_reference at(size_type pos) const {
-		NEXSUITE_ASSERT_MSG(pos < buffer_.size(), "Position out of range");
+		NEX_ASSERT_MSG(pos < buffer_.size(), "Position out of range");
 		return buffer_.at(pos);
 	}
 	// Access first character
@@ -277,7 +277,7 @@ public:
 
 	public:
 		// Type aliases for iterator traits (compatible with standard library iterators)
-		using iterator_category = NEXSUITE_STD random_access_iterator_tag;
+		using iterator_category = NEX_STD random_access_iterator_tag;
 		using value_type = char16;
 		using difference_type = isize;
 		using pointer = value_type*;
@@ -367,7 +367,7 @@ public:
 
 	public:
 		 // Type aliases for iterator traits (compatible with standard library iterators)
-		using iterator_category = NEXSUITE_STD random_access_iterator_tag;
+		using iterator_category = NEX_STD random_access_iterator_tag;
 		using value_type = char16;
 		using difference_type = isize;
 		using pointer = const value_type*;
@@ -449,7 +449,7 @@ public:
 	}
 
 	// ReverseIterator is a reverse iterator that provides read-write access to the characters in reverse order
-	using ReverseIterator = NEXSUITE_STD reverse_iterator<Iterator>;
+	using ReverseIterator = NEX_STD reverse_iterator<Iterator>;
 	
 	// Get a reverse iterator to the beginning of the reversed string (i.e., end of the normal string)
 	constexpr ReverseIterator rbegin() noexcept {
@@ -462,7 +462,7 @@ public:
 	}
 
 	// ConstReverseIterator is a reverse iterator that provides read-only access to the characters in reverse order
-	using ConstReverseIterator = NEXSUITE_STD reverse_iterator<ConstIterator>;
+	using ConstReverseIterator = NEX_STD reverse_iterator<ConstIterator>;
 	
 	// Get a const reverse iterator to the beginning of the reversed string (i.e., end of the normal string)
 	constexpr ConstReverseIterator rbegin() const noexcept {
@@ -567,4 +567,4 @@ public:
 	int compare(StringView other) const noexcept;
 };
 
-NEXSUITE_NAMESPACE_END
+NEX_NAMESPACE_END

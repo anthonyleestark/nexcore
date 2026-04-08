@@ -5,11 +5,11 @@
 
 #include <functional> // for std::hash
 
-#include "common/uuid.h"
-#include "common/assert_crash.h"
+#include "nex/core/uuid.h"
+#include "nex/base/assert_crash.h"
 #include <stduuid/uuid.h>
 
-#ifndef NEXSUITE_STDUUID_SUPPORTS_V7
+#ifndef NEX_STDUUID_SUPPORTS_V7
     // Because stduuid does not yet support UUID version 7, we will need to implement our own time-ordered 
     // UUID generation logic until stduuid adds support for it.
     // For now, we will generate version 7 UUIDs using a combination of the current timestamp and random data, 
@@ -21,7 +21,7 @@
     #include <array>
 #endif
 
-NEXSUITE_NAMESPACE_BEGIN
+NEX_NAMESPACE_BEGIN
 
 // Internal implementation of Uuid class using stduuid library
 struct Uuid::Impl {
@@ -31,11 +31,11 @@ struct Uuid::Impl {
 
 // Default constructor (create a nil/invalid UUID with all bits set to zero)
 Uuid::Uuid() noexcept
-    : impl_(NEXSUITE_STD make_unique<Impl>()) {}
+    : impl_(NEX_STD make_unique<Impl>()) {}
 
 // Copy constructor (deep copy of the internal implementation)
 Uuid::Uuid(const Uuid& other)
-    : impl_(NEXSUITE_STD make_unique<Impl>(*other.impl_)) {}
+    : impl_(NEX_STD make_unique<Impl>(*other.impl_)) {}
 
 // Copy assignment operator
 Uuid& Uuid::operator=(const Uuid& other) {
@@ -46,33 +46,33 @@ Uuid& Uuid::operator=(const Uuid& other) {
 }
 
 // Default move semantics
-NEXSUITE_DEFINE_DEFAULT_MOVE(Uuid)
+NEX_DEFINE_DEFAULT_MOVE(Uuid)
 
 // Default destructor
-NEXSUITE_DEFINE_DEFAULT_DTOR(Uuid)
+NEX_DEFINE_DEFAULT_DTOR(Uuid)
 
 // Generate a new UUID (universally unique identifier; uses V4 random generation by default)
 Uuid Uuid::generate() noexcept {
     // Setup a random number generator with a non-deterministic seed
-    NEXSUITE_STD random_device rd;
-    auto seed_data = NEXSUITE_STD array<int, 6> {};
-    NEXSUITE_STD generate(NEXSUITE_STD begin(seed_data), NEXSUITE_STD end(seed_data), NEXSUITE_STD ref(rd));
-    NEXSUITE_STD seed_seq seq(NEXSUITE_STD begin(seed_data), NEXSUITE_STD end(seed_data));
-    NEXSUITE_STD ranlux48_base generator(seq);
+    NEX_STD random_device rd;
+    auto seed_data = NEX_STD array<int, 6> {};
+    NEX_STD generate(NEX_STD begin(seed_data), NEX_STD end(seed_data), NEX_STD ref(rd));
+    NEX_STD seed_seq seq(NEX_STD begin(seed_data), NEX_STD end(seed_data));
+    NEX_STD ranlux48_base generator(seq);
 
     // Initialize the UUID generator with the random number generator
-    uuids::basic_uuid_random_generator<NEXSUITE_STD ranlux48_base> gen(&generator);
+    uuids::basic_uuid_random_generator<NEX_STD ranlux48_base> gen(&generator);
 
     // Generate a new UUID using the generator
     Uuid newUuid{};
     newUuid.impl_->uuid = gen();
 
     // Validate that the generator produces valid UUIDs (this is a sanity check and should always pass)
-    NEXSUITE_ASSERT_MSG(!newUuid.impl_->uuid.is_nil(), "Generated UUID should not be nil");
-    NEXSUITE_ASSERT_MSG(newUuid.impl_->uuid.as_bytes().size() == 16, "Generated UUID should be 16 bytes");
-    NEXSUITE_ASSERT_MSG(newUuid.impl_->uuid.variant() == uuids::uuid_variant::rfc, 
+    NEX_ASSERT_MSG(!newUuid.impl_->uuid.is_nil(), "Generated UUID should not be nil");
+    NEX_ASSERT_MSG(newUuid.impl_->uuid.as_bytes().size() == 16, "Generated UUID should be 16 bytes");
+    NEX_ASSERT_MSG(newUuid.impl_->uuid.variant() == uuids::uuid_variant::rfc, 
                         "Generated UUID should have RFC variant");
-    NEXSUITE_ASSERT_MSG(newUuid.impl_->uuid.version() == uuids::uuid_version::random_number_based, 
+    NEX_ASSERT_MSG(newUuid.impl_->uuid.version() == uuids::uuid_version::random_number_based, 
                         "Generated UUID should be version 4 (random number based)");
 
     // Successfully generated a new UUID, return it
@@ -93,19 +93,19 @@ Uuid Uuid::generateV4() noexcept {
 
 // Generate a new version 7 (time-ordered) UUID
 Uuid Uuid::generateV7() noexcept {
-#ifndef NEXSUITE_STDUUID_SUPPORTS_V7
+#ifndef NEX_STDUUID_SUPPORTS_V7
     // Since stduuid does not support UUID version 7, we will implement our own generation logic here.
 
-    using namespace NEXSUITE_STD chrono;
+    using namespace NEX_STD chrono;
 
     // 48-bit timestamp (milliseconds since Unix epoch)
     auto now = system_clock::now().time_since_epoch();
     uint64 timestamp_ms = duration_cast<milliseconds>(now).count();
 
     // 74 bits of randomness
-    NEXSUITE_STD random_device rd;
-    NEXSUITE_STD mt19937_64 gen(rd());
-    NEXSUITE_STD uniform_int_distribution<uint64> dist;
+    NEX_STD random_device rd;
+    NEX_STD mt19937_64 gen(rd());
+    NEX_STD uniform_int_distribution<uint64> dist;
 
     uint64 random_high = dist(gen) & 0x0FFFFFFFFFFFFFFFULL;  // 60 bits
     uint64 random_low  = dist(gen) & 0xFFFFFFFFFFFFFFFFULL;  // 64 bits → we'll use 14 bits
@@ -122,7 +122,7 @@ Uuid Uuid::generateV7() noexcept {
                     (0x2ULL << 62) | (random_low >> 2);   // variant 10xx
 
     // Pack into uuid (stduuid stores as array<uint8_t,16>)
-    NEXSUITE_STD array<uint8, 16> data{};
+    NEX_STD array<uint8, 16> data{};
     for (int i = 0; i < 8; ++i) {
         data[i]     = (high >> (56 - i*8)) & 0xFF;
         data[8 + i] = (low  >> (56 - i*8)) & 0xFF;
@@ -133,11 +133,11 @@ Uuid Uuid::generateV7() noexcept {
     newUuid.impl_->uuid = uuids::uuid{data};
 
     // Validate that the generator produces valid UUIDs (this is a sanity check and should always pass)
-    NEXSUITE_ASSERT_MSG(!newUuid.impl_->uuid.is_nil(), "Generated UUID should not be nil");
-    NEXSUITE_ASSERT_MSG(newUuid.impl_->uuid.as_bytes().size() == 16, "Generated UUID should be 16 bytes");
-    NEXSUITE_ASSERT_MSG(newUuid.impl_->uuid.variant() == uuids::uuid_variant::rfc, 
+    NEX_ASSERT_MSG(!newUuid.impl_->uuid.is_nil(), "Generated UUID should not be nil");
+    NEX_ASSERT_MSG(newUuid.impl_->uuid.as_bytes().size() == 16, "Generated UUID should be 16 bytes");
+    NEX_ASSERT_MSG(newUuid.impl_->uuid.variant() == uuids::uuid_variant::rfc, 
                         "Generated UUID should have RFC variant");
-    NEXSUITE_ASSERT_MSG(newUuid.impl_->uuid.version() == uuids::uuid_version::time_based, 
+    NEX_ASSERT_MSG(newUuid.impl_->uuid.version() == uuids::uuid_version::time_based, 
                         "Generated UUID should be version 7 (time-based)");
 
     // Successfully generated a new version 7 UUID, return it
@@ -157,7 +157,7 @@ Result<Uuid, Error> Uuid::fromString(StringView str) noexcept {
     }
 
     // Validate the UTF-8 string format for a UUID (e.g., "123e4567-e89b-12d3-a456-426614174000")
-    NEXSUITE_STD string utf8 = res.value();
+    NEX_STD string utf8 = res.value();
     if (utf8.empty() || !uuids::uuid::is_valid_uuid(utf8)) {
         return Result<Uuid, Error>::error({
             ErrorCode::InvalidFormat, 
@@ -190,14 +190,14 @@ bool Uuid::isNil() const noexcept {
 // Convert to string
 String Uuid::toString() const {
     // Convert the internal UUID to its string representation using the stduuid library
-    NEXSUITE_STD string utf8 = uuids::to_string<char>(impl_->uuid);
+    NEX_STD string utf8 = uuids::to_string<char>(impl_->uuid);
     return String::fromUtf8(utf8);
 }
 
 // Get a hash value for the Uuid (enables use in hash-based containers)
 usize Uuid::hash() const noexcept {
     // Use the stduuid library's built-in hash function for the uuid class
-    return NEXSUITE_STD hash<uuids::uuid>{}(impl_->uuid);
+    return NEX_STD hash<uuids::uuid>{}(impl_->uuid);
 }
 
-NEXSUITE_NAMESPACE_END
+NEX_NAMESPACE_END

@@ -5,14 +5,14 @@
 
 #pragma once
 
-#include "common/macros.h"
-#include "common/types.h"
-#include "common/linear.h"
-#include "common/string.h"
-#include "common/string_view.h"
-#include "common/wrappers.h"
+#include "nex/base/macros.h"
+#include "nex/base/types.h"
+#include "nex/base/linear.h"
+#include "nex/core/string.h"
+#include "nex/core/string_view.h"
+#include "nex/base/wrappers.h"
 
-NEXSUITE_NAMESPACE_BEGIN
+NEX_NAMESPACE_BEGIN
 
 /**
  * @struct  RegexMatch
@@ -99,14 +99,14 @@ public:
     explicit Regex(StringView pattern, RegexOptions options = RegexOptions::None);
 
     // Destructor
-    NEXSUITE_DECLARE_DEFAULT_DTOR(Regex);
+    NEX_DECLARE_DEFAULT_DTOR(Regex);
 
     // Disable copy operations to prevent accidental copying of the regex object, 
     // which may be expensive to copy due to internal compiled state or resources.
-    NEXSUITE_DISALLOW_COPY(Regex);
+    NEX_DISALLOW_COPY(Regex);
 
     // Enable move operations for efficient transfer of regex objects without copying internal resources.
-    NEXSUITE_DECLARE_DEFAULT_MOVE(Regex);
+    NEX_DECLARE_DEFAULT_MOVE(Regex);
 
     ////// Regular expression matching operations -----------------------
 
@@ -152,4 +152,4 @@ private:
     UniquePtr<Impl> impl_;
 };
 
-NEXSUITE_NAMESPACE_END
+NEX_NAMESPACE_END

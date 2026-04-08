@@ -6,11 +6,11 @@
 #include <charconv>
 #include <algorithm>
 
-#include "common/string.h"
-#include "common/string_view.h"
-#include "common/encoding.h"
+#include "nex/core/string.h"
+#include "nex/core/string_view.h"
+#include "nex/core/encoding.h"
 
-NEXSUITE_NAMESPACE_BEGIN
+NEX_NAMESPACE_BEGIN
 
 ////// Construction ------------------------
 
@@ -18,23 +18,23 @@ NEXSUITE_NAMESPACE_BEGIN
 String::String() : buffer_() {}
 
 // Construct from UTF-8 string view
-String::String(NEXSUITE_STD string_view utf8) {
+String::String(NEX_STD string_view utf8) {
 	buffer_ = fromUtf8(utf8).buffer_;
 }
 
 // Construct from UTF-8 string literal
 String::String(const char* utf8) {
-	buffer_ = fromUtf8(NEXSUITE_STD string_view(utf8)).buffer_;
+	buffer_ = fromUtf8(NEX_STD string_view(utf8)).buffer_;
 }
 
 // Construct from UTF-16 string view
-String::String(NEXSUITE_STD u16string_view utf16) {
+String::String(NEX_STD u16string_view utf16) {
 	buffer_.assign(utf16.data(), utf16.size());
 }
 
 // Construct from UTF-16 string literal
 String::String(const char16* utf16) {
-	buffer_ = fromUtf16(NEXSUITE_STD u16string_view(utf16)).buffer_;
+	buffer_ = fromUtf16(NEX_STD u16string_view(utf16)).buffer_;
 }
 
 // Constructor from StringView
@@ -53,12 +53,12 @@ String::String(StringView view) {
 // Create string from a signed integer with specified base (default is 10)
 String String::fromInt(int64 value, int base /* = 10 */) {
 	char buffer[64];
-	auto result = NEXSUITE_STD to_chars(buffer, buffer+64, value, base);
-	if (result.ec == NEXSUITE_STD errc()) {
+	auto result = NEX_STD to_chars(buffer, buffer+64, value, base);
+	if (result.ec == NEX_STD errc()) {
 		// Successfully converted integer to string
 		// Continue convert from ANSI to internal string representation
 		return fromUtf16(encoding::ansiToUtf16(
-			NEXSUITE_STD string_view(buffer, result.ptr - buffer)).valueOr(kEmpty));
+			NEX_STD string_view(buffer, result.ptr - buffer)).valueOr(kEmpty));
 	} else {
 		// Error occurred during conversion (e.g., buffer too small)
 		return String(kEmpty);
@@ -68,12 +68,12 @@ String String::fromInt(int64 value, int base /* = 10 */) {
 // Create string from an unsigned integer with specified base (default is 10)
 String String::fromUInt(uint64 value, int base /* = 10 */) {
 	char buffer[64];
-	auto result = NEXSUITE_STD to_chars(buffer, buffer+64, value, base);
-	if (result.ec == NEXSUITE_STD errc()) {
+	auto result = NEX_STD to_chars(buffer, buffer+64, value, base);
+	if (result.ec == NEX_STD errc()) {
 		// Successfully converted integer to string
 		// Continue convert from ANSI to internal string representation
 		return fromUtf16(encoding::ansiToUtf16(
-			NEXSUITE_STD string_view(buffer, result.ptr - buffer)).valueOr(kEmpty));
+			NEX_STD string_view(buffer, result.ptr - buffer)).valueOr(kEmpty));
 	} else {
 		// Error occurred during conversion (e.g., buffer too small)
 		return String(kEmpty);
@@ -83,42 +83,42 @@ String String::fromUInt(uint64 value, int base /* = 10 */) {
 // Create string from a floating-point number
 String String::fromFloat(double value, char format /* = 'g' */, int precision /* = 6 */) {
 	// Determine the chars_format based on the given format character
-	NEXSUITE_STD chars_format charsFormat = NEXSUITE_STD chars_format::general;
+	NEX_STD chars_format charsFormat = NEX_STD chars_format::general;
 	switch (format) {
 	case 'f':
 	case 'F':
 		// Fixed-point notation
-		charsFormat = NEXSUITE_STD chars_format::fixed;
+		charsFormat = NEX_STD chars_format::fixed;
 		break;
 	case 'e':
 	case 'E':
 		// Scientific notation
-		charsFormat = NEXSUITE_STD chars_format::scientific;
+		charsFormat = NEX_STD chars_format::scientific;
 		break;
 	case 'a':
 	case 'A':
 		// Hexadecimal notation
-		charsFormat = NEXSUITE_STD chars_format::hex;
+		charsFormat = NEX_STD chars_format::hex;
 		break;
 	case 'g':
 	case 'G':
 	default:
 		// General format (default)
-		charsFormat = NEXSUITE_STD chars_format::general;
+		charsFormat = NEX_STD chars_format::general;
 		break;
 	}
 
 	// First try to convert using a small stack buffer
 	char stackBuffer[128];
 	const int safePrecision = precision < 0 ? 0 : precision;
-	auto result = NEXSUITE_STD to_chars(stackBuffer, stackBuffer + sizeof(stackBuffer), value, charsFormat, safePrecision);
-	if (result.ec == NEXSUITE_STD errc()) {
+	auto result = NEX_STD to_chars(stackBuffer, stackBuffer + sizeof(stackBuffer), value, charsFormat, safePrecision);
+	if (result.ec == NEX_STD errc()) {
 		// Successfully converted floating-point number to string
 		// Continue convert from ANSI to internal string representation
 		return fromUtf16(encoding::ansiToUtf16(
-			NEXSUITE_STD string_view(stackBuffer, result.ptr - stackBuffer)).valueOr(kEmpty));
+			NEX_STD string_view(stackBuffer, result.ptr - stackBuffer)).valueOr(kEmpty));
 	}
-	if (result.ec != NEXSUITE_STD errc::value_too_large) {
+	if (result.ec != NEX_STD errc::value_too_large) {
 		// An error occurred during conversion (e.g., invalid format), 
 		// but it's not due to buffer size, so return an empty string
 		return String(kEmpty);
@@ -127,14 +127,14 @@ String String::fromFloat(double value, char format /* = 'g' */, int precision /*
 	// If the stack buffer was too small, allocate a larger buffer on the heap
 	// The required size can be estimated based on the precision and format, but to be safe, 
 	// we can allocate a buffer that is large enough to hold the worst-case scenario for the given precision.
-	NEXSUITE_STD string dynamicBuffer(static_cast<usize>(safePrecision) + 64, '\0');
-	result = NEXSUITE_STD to_chars(dynamicBuffer.data(), dynamicBuffer.data() + dynamicBuffer.size()
+	NEX_STD string dynamicBuffer(static_cast<usize>(safePrecision) + 64, '\0');
+	result = NEX_STD to_chars(dynamicBuffer.data(), dynamicBuffer.data() + dynamicBuffer.size()
 							, value, charsFormat, safePrecision);
-	if (result.ec == NEXSUITE_STD errc()) {
+	if (result.ec == NEX_STD errc()) {
 		// Successfully converted floating-point number to string
 		// Continue convert from ANSI to internal string representation
 		return fromUtf16(encoding::ansiToUtf16(
-			NEXSUITE_STD string_view(dynamicBuffer.data(), result.ptr - dynamicBuffer.data())).valueOr(kEmpty));
+			NEX_STD string_view(dynamicBuffer.data(), result.ptr - dynamicBuffer.data())).valueOr(kEmpty));
 	}
 
 	// An error occurred during conversion, return an empty string
@@ -144,21 +144,21 @@ String String::fromFloat(double value, char format /* = 'g' */, int precision /*
 ////// Create string from specified encoding -----------------------
 
 // Create string from UTF-8 string
-String String::fromUtf8(NEXSUITE_STD string_view utf8) {
-	Result<NEXSUITE_STD u16string> result = encoding::utf8ToUtf16(utf8);
+String String::fromUtf8(NEX_STD string_view utf8) {
+	Result<NEX_STD u16string> result = encoding::utf8ToUtf16(utf8);
 	if (result.isOk()) {
 		// Successfully converted UTF-8 to UTF-16, 
 		// create String from UTF-16 result
 		return fromUtf16(result.value());
 	} else {
 		// Handle conversion error (e.g., invalid UTF-8 sequence)
-		NEXSUITE_ASSERT_MSG(false, "Invalid UTF-8 sequence");
+		NEX_ASSERT_MSG(false, "Invalid UTF-8 sequence");
 		return String(kEmpty);
 	}
 }
 
 // Create string from UTF-16 string
-String String::fromUtf16(NEXSUITE_STD u16string_view utf16) {
+String String::fromUtf16(NEX_STD u16string_view utf16) {
 	String result;
 	result.buffer_.assign(utf16.data(), utf16.size());
 	return result;
@@ -167,14 +167,14 @@ String String::fromUtf16(NEXSUITE_STD u16string_view utf16) {
 ////// Convert to specified encoding (instance methods) -----------------------
 
 // Convert to UTF-8 string
-Result<NEXSUITE_STD string> String::toUtf8() const {
+Result<NEX_STD string> String::toUtf8() const {
 	return encoding::utf16ToUtf8(buffer_);
 }
 
 // Convert to UTF-16 string
-Result<NEXSUITE_STD u16string> String::toUtf16() const {
+Result<NEX_STD u16string> String::toUtf16() const {
 	// Since the internal representation is already UTF-16, we can directly return it as a result
-	return Result<NEXSUITE_STD u16string>::ok(buffer_);
+	return Result<NEX_STD u16string>::ok(buffer_);
 }
 
 ////// Concatenation operator -----------------------
@@ -214,28 +214,28 @@ String String::substr(size_type pos, size_type count) const {
 String::size_type String::find(StringView substring, size_type pos = 0) const {
 	if (pos > buffer_.size()) return npos;
 	size_type index = buffer_.find(substring.data(), pos, substring.size());
-	return index != NEXSUITE_STD u16string::npos ? index : npos;
+	return index != NEX_STD u16string::npos ? index : npos;
 }
 
 // Find the first match of a character
 String::size_type String::find(value_type ch, size_type pos = 0) const {
 	if (pos > buffer_.size()) return npos;
 	size_type index = buffer_.find(ch, pos);
-	return index != NEXSUITE_STD u16string::npos ? index : npos;
+	return index != NEX_STD u16string::npos ? index : npos;
 }
 
 // Find the last match of a substring
 String::size_type String::rfind(StringView substring, size_type pos = npos) const {
 	if (pos > buffer_.size()) return npos;
 	size_type index = buffer_.rfind(substring.data(), pos, substring.size());
-	return index != NEXSUITE_STD u16string::npos ? index : npos;
+	return index != NEX_STD u16string::npos ? index : npos;
 }
 
 // Find the last match of a character
 String::size_type String::rfind(value_type ch, size_type pos = npos) const {
 	if (pos > buffer_.size()) return npos;
 	size_type index = buffer_.rfind(ch, pos);
-	return index != NEXSUITE_STD u16string::npos ? index : npos;
+	return index != NEX_STD u16string::npos ? index : npos;
 }
 
 // Check if the string contains a substring
@@ -256,7 +256,7 @@ bool String::contains(value_type ch) const {
 // - 0 if this string is equal to the other string
 // - 1 if this string is greater than the other string
 int String::compare(StringView other) const noexcept {
-	size_type minLength = NEXSUITE_STD min(buffer_.size(), other.size());
+	size_type minLength = NEX_STD min(buffer_.size(), other.size());
 
 	// If either string is empty, the result depends on their sizes
 	if (minLength == 0) { 
@@ -286,4 +286,4 @@ int String::compare(StringView other) const noexcept {
 	return 0; 
 }
 
-NEXSUITE_NAMESPACE_END
+NEX_NAMESPACE_END

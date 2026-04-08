@@ -5,14 +5,14 @@
 
 #pragma once
 
-#include "common/macros.h"
-#include "common/types.h"
-#include "common/string.h"
-#include "common/string_view.h"
-#include "common/result.h"
-#include "common/wrappers.h"
+#include "nex/base/macros.h"
+#include "nex/base/types.h"
+#include "nex/core/string.h"
+#include "nex/core/string_view.h"
+#include "nex/core/result.h"
+#include "nex/base/wrappers.h"
 
-NEXSUITE_NAMESPACE_BEGIN
+NEX_NAMESPACE_BEGIN
 
 /**
  * @class   Uuid
@@ -49,14 +49,14 @@ public:
     explicit Uuid() noexcept;
 
     // Destructor
-    NEXSUITE_DECLARE_DEFAULT_DTOR(Uuid);
+    NEX_DECLARE_DEFAULT_DTOR(Uuid);
 
     // Copy constructor and copy assignment operator
     Uuid(const Uuid& other);
     Uuid& operator=(const Uuid& other);
 
     // Default move semantics
-    NEXSUITE_DECLARE_DEFAULT_MOVE(Uuid);
+    NEX_DECLARE_DEFAULT_MOVE(Uuid);
 
     ////// Factory methods for generating and creating Uuids -----------------------
 
@@ -101,7 +101,7 @@ public:
     bool operator!=(const Uuid& other) const noexcept = default;
 
     // Strong ordering comparison operator (enables use in ordered containers and comparisons)
-    NEXSUITE_STD strong_ordering operator<=>(const Uuid& other) const noexcept = default;
+    NEX_STD strong_ordering operator<=>(const Uuid& other) const noexcept = default;
 
 private:
     // Hidden implementation using the Pimpl idiom to avoid exposing internal details 
@@ -110,14 +110,14 @@ private:
     UniquePtr<Impl> impl_;
 };
 
-NEXSUITE_NAMESPACE_END
+NEX_NAMESPACE_END
 
 // Hash specialization for Uuid 
 // to enable use in hash-based containers like std::unordered_map
 namespace std {
     template <>
-    struct hash<NEXSUITE_PREPEND_NAMESPACE(Uuid)> {
-        size_t operator()(const NEXSUITE_PREPEND_NAMESPACE(Uuid)& uuid) const noexcept {
+    struct hash<NEX_PREPEND_NAMESPACE(Uuid)> {
+        size_t operator()(const NEX_PREPEND_NAMESPACE(Uuid)& uuid) const noexcept {
             return uuid.hash();
         }
     };

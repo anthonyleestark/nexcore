@@ -5,17 +5,17 @@
 
 #pragma once
 
-#include "common/macros.h"
-#include "common/types.h"
+#include "nex/base/macros.h"
+#include "nex/base/types.h"
 
-NEXSUITE_NAMESPACE_BEGIN
+NEX_NAMESPACE_BEGIN
 
 /**
  * @enum    ErrorCode
- * @brief   Standardized error codes for NexSuite operations
+ * @brief   Standardized error codes for Nex-ecosystem
  * 
  * Defines a set of error codes that can be returned by various functions
- * across the NexSuite system. These codes provide a consistent way to
+ * across the Nex-ecosystem. These codes provide a consistent way to
  * represent different error conditions, allowing for better error handling
  * and user feedback.
  * 
@@ -167,9 +167,9 @@ enum class ErrorCode : uint32 {
     // Plugin / Extension errors (0x8000-0x8FFF)
     // Including errors related to plugin or extension management, such as failed loads, 
     // compatibility issues, initialization failures, and security violations. 
-    // This is important because NexSuite is designed to be extensible and support plugins, 
-    // so having a clear set of error codes for plugin-related issues is crucial for debugging 
-    // and user feedback.
+    // This is important because Nex-ecosystem projects might be designed to be extensible and 
+    // support extensions or plugins, so having a clear set of error codes for plugin-related 
+    // issues is crucial for debugging and user feedback.
     // =======================================================================================
 
     PluginLoadFailed                = 0x8000,
@@ -186,8 +186,8 @@ enum class ErrorCode : uint32 {
     // Including errors related to security mechanisms, such as authentication failures, token
     // invalidation, encryption/decryption failures, and access violations. 
     // This is important for ensuring that security-related issues are clearly identified and 
-    // handled appropriately, especially if NexSuite includes features that require 
-    // authentication or handle sensitive data.
+    // handled appropriately, especially if a Nex-ecosystem project includes features that 
+    // require authentication or handle sensitive data.
     // =======================================================================================
 
     SecurityViolation               = 0x9000,
@@ -216,8 +216,8 @@ enum class ErrorCode : uint32 {
     // Input / Hotkey / Shortcut errors (0xB000-0xBFFF)
     // Including errors related to input handling, such as hotkey registration failures, invalid 
     // shortcuts, and input capture issues. This is important for ensuring that input-related
-    // issues are clearly identified and can be addressed, especially if NexSuite includes 
-    // features that rely on user input or customizable hotkeys and shortcuts.
+    // issues are clearly identified and can be addressed, especially if a Nex-ecosystem project 
+    // includes features that rely on user input or customizable hotkeys and shortcuts.
     // =======================================================================================
 
     HotkeyRegistrationFailed        = 0xB000,
@@ -234,8 +234,8 @@ enum class ErrorCode : uint32 {
     // process spawns, command execution failures, timeouts, and elevated process requirements.
     // This is important for ensuring that issues related to executing external processes or 
     // commands are clearly identified and can be handled appropriately, especially if 
-    // NexSuite includes features that involve running external tools or commands as part of 
-    // its functionality.
+    // a Nex-ecosystem project includes features that involve running external tools or 
+    // commands as part of its functionality.
     // =======================================================================================
 
     ProcessSpawnFailed              = 0xC000,
@@ -250,8 +250,8 @@ enum class ErrorCode : uint32 {
     // Including errors related to application updates, such as failed downloads, installation
     // failures, version mismatches, and update conflicts. This is important for ensuring that
     // issues related to updating the application are clearly identified and can be addressed,
-    // especially if NexSuite includes an auto-update mechanism or relies on version checks for
-    // compatibility.
+    // especially if a Nex-ecosystem project includes an auto-update mechanism or relies on 
+    // version checks for compatibility.
     // =======================================================================================
 
     UpdateCheckFailed               = 0xD000,
@@ -267,8 +267,8 @@ enum class ErrorCode : uint32 {
     // Including errors related to user interactions, such as cancelled operations, invalid input,
     // and confirmation requirements. This is important for ensuring that issues related to user
     // interactions are clearly identified and can be handled appropriately, especially if
-    // NexSuite includes features that involve user input or actions that can be cancelled 
-    // or require confirmation.
+    // a Nex-ecosystem project includes features that involve user input or actions that can be 
+    // cancelled or require confirmation.
     // =======================================================================================
 
     UserCancelled                   = 0xE000,
@@ -396,4 +396,4 @@ struct NEX_EXPORT Error {
     const char* message;
 };
 
-NEXSUITE_NAMESPACE_END
+NEX_NAMESPACE_END

@@ -5,16 +5,16 @@
 
 #pragma once
 
-#include "common/macros.h"
-#include "common/types.h"
-#include "common/linear.h"
-#include "common/string.h"
-#include "common/string_view.h"
-#include "common/result.h"
-#include "common/error.h"
-#include "common/regex.h"
+#include "nex/base/macros.h"
+#include "nex/base/types.h"
+#include "nex/base/linear.h"
+#include "nex/core/string.h"
+#include "nex/core/string_view.h"
+#include "nex/core/result.h"
+#include "nex/core/error.h"
+#include "nex/core/regex.h"
 
-NEXSUITE_NAMESPACE_BEGIN
+NEX_NAMESPACE_BEGIN
 
 /**
  * @namespace   text
@@ -584,4 +584,4 @@ namespace text {
 
 } // namespace text
 
-NEXSUITE_NAMESPACE_END
+NEX_NAMESPACE_END

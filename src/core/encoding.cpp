@@ -3,7 +3,7 @@
  * Copyright (c) 2026 Anthony Lee Stark. All rights reserved.
  */
 
-#include "common/encoding.h"
+#include "nex/core/encoding.h"
 
 /**
  * @note
@@ -15,11 +15,11 @@
  * platform-specific implementations should suffice for basic encoding conversion needs.
  */
 
-#if NEXSUITE_PLATFORM_IS_WIN
+#if NEX_PLATFORM_IS_WINDOWS
     #include <windows.h>
 #endif
 
-NEXSUITE_NAMESPACE_BEGIN
+NEX_NAMESPACE_BEGIN
 
 // ========================================================================================
 // Implementation of character classification functions
@@ -108,7 +108,7 @@ bool encoding::isUnicodeAlpha(char16 ch) noexcept {
     // For languages with large character sets, such as Vietnamese, Chinese, Japanese, Korean, etc., 
     // we can use the OS-provided functions to check for alphabetic characters based on Unicode properties,
     // which will be more comprehensive and accurate than hardcoding specific ranges.
-#if NEXSUITE_PLATFORM_IS_WIN
+#if NEX_PLATFORM_IS_WINDOWS
     return iswalpha(static_cast<wint_t>(ch)) != 0;
 #else
     // On non-Windows platforms, we can use the standard library function to check for alphabetic characters
@@ -121,7 +121,7 @@ bool encoding::isUnicodeAlpha(char16 ch) noexcept {
 // ========================================================================================
 
 // Check if a UTF-8 string contains invalid sequences
-bool encoding::containsInvalidUtf8Sequences(NEXSUITE_STD string_view input) noexcept {
+bool encoding::containsInvalidUtf8Sequences(NEX_STD string_view input) noexcept {
     const char* ptr = input.data();
     const char* end = ptr + input.size();
 
@@ -148,12 +148,12 @@ bool encoding::containsInvalidUtf8Sequences(NEXSUITE_STD string_view input) noex
 }
 
 // Check if a UTF-8 string is valid
-bool encoding::isValidUtf8(NEXSUITE_STD string_view input) noexcept {
+bool encoding::isValidUtf8(NEX_STD string_view input) noexcept {
     return !containsInvalidUtf8Sequences(input);
 }
 
 // Check if a UTF-8 sequence is valid
-bool encoding::isValidUtf8Sequence(NEXSUITE_STD string_view input) noexcept {
+bool encoding::isValidUtf8Sequence(NEX_STD string_view input) noexcept {
     if (input.empty()) {
         return false; // Empty input is not a valid UTF-8 sequence
     }
@@ -176,7 +176,7 @@ bool encoding::isValidUtf8Sequence(NEXSUITE_STD string_view input) noexcept {
 }
 
 // Decode a UTF-8 code point
-Result<char32> encoding::decodeUtf8CodePoint(NEXSUITE_STD string_view input, usize& advance) {
+Result<char32> encoding::decodeUtf8CodePoint(NEX_STD string_view input, usize& advance) {
     advance = 0;
 
     if (input.empty()) {
@@ -291,7 +291,7 @@ usize encoding::encodeUtf8CodePoint(char32 cp, char8* out) {
 }
 
 // Count the number of Unicode code points in a UTF-8 string
-Result<usize> encoding::countUtf8CodePoints(NEXSUITE_STD string_view input) noexcept {
+Result<usize> encoding::countUtf8CodePoints(NEX_STD string_view input) noexcept {
     usize count = 0;
     const char* ptr = input.data();
     const char* end = ptr + input.size();
@@ -319,7 +319,7 @@ Result<usize> encoding::countUtf8CodePoints(NEXSUITE_STD string_view input) noex
 // ========================================================================================
 
 // Decode a UTF-16 code point
-Result<char32> encoding::decodeUtf16CodePoint(NEXSUITE_STD u16string_view input, usize& advance) {
+Result<char32> encoding::decodeUtf16CodePoint(NEX_STD u16string_view input, usize& advance) {
     advance = 0;
 
     if (input.empty()) {
@@ -372,7 +372,7 @@ usize encoding::encodeUtf16CodePoint(char32 cp, char16* out) {
 }
 
 // Count the number of Unicode code points in a UTF-16 string
-Result<usize> encoding::countUtf16CodePoints(NEXSUITE_STD u16string_view input) noexcept {
+Result<usize> encoding::countUtf16CodePoints(NEX_STD u16string_view input) noexcept {
     usize count = 0;
     usize i = 0;
 
@@ -408,7 +408,7 @@ Result<usize> encoding::countUtf16CodePoints(NEXSUITE_STD u16string_view input) 
 // ========================================================================================
 
 // Check if a UTF-32 string is valid
-bool encoding::isValidUtf32Sequence(NEXSUITE_STD u32string_view input) noexcept {
+bool encoding::isValidUtf32Sequence(NEX_STD u32string_view input) noexcept {
     for (char32 cp : input) {
         if (!isValidCodePoint(cp)) {
             return false; // Found an invalid code point
@@ -418,7 +418,7 @@ bool encoding::isValidUtf32Sequence(NEXSUITE_STD u32string_view input) noexcept 
 }
 
 // Count the number of Unicode code points in a UTF-32 string
-Result<usize> encoding::countUtf32CodePoints(NEXSUITE_STD u32string_view input) noexcept {
+Result<usize> encoding::countUtf32CodePoints(NEX_STD u32string_view input) noexcept {
     if (input.empty()) {
         return Result<usize>::ok(0); // Empty string has 0 code points
     } 
@@ -439,10 +439,10 @@ Result<usize> encoding::countUtf32CodePoints(NEXSUITE_STD u32string_view input) 
 // Internal helper functions for encoding conversion
 // ========================================================================================
 
-#if NEXSUITE_PLATFORM_IS_WIN
+#if NEX_PLATFORM_IS_WINDOWS
     // Helper function to safely cast size_t to int for Windows API calls, with overflow check
     int safeStaticCastInt(usize size) {
-        if (size > static_cast<usize>((NEXSUITE_STD numeric_limits<int>::max)())) return -1;
+        if (size > static_cast<usize>((NEX_STD numeric_limits<int>::max)())) return -1;
         return static_cast<int>(size);
     }
 #endif
@@ -452,31 +452,31 @@ Result<usize> encoding::countUtf32CodePoints(NEXSUITE_STD u32string_view input) 
 // ========================================================================================
 
 // Convert ANSI string to UTF-16 string
-Result<NEXSUITE_STD u16string> encoding::ansiToUtf16(NEXSUITE_STD string_view ansi) {
-#if NEXSUITE_PLATFORM_IS_WIN
+Result<NEX_STD u16string> encoding::ansiToUtf16(NEX_STD string_view ansi) {
+#if NEX_PLATFORM_IS_WINDOWS
     // Windows-specific implementation using MultiByteToWideChar
 
     int len = safeStaticCastInt(ansi.size());
     if (len < 0) {
         // Input size is too large to fit in an int, return an error result
-        return Result<NEXSUITE_STD u16string>::error({
+        return Result<NEX_STD u16string>::error({
                 ErrorCode::InvalidFormat, "Input string is too large" 
             });
     }
     int requiredSize = MultiByteToWideChar(CP_ACP, 0, ansi.data(), len, nullptr, 0);
     if (requiredSize <= 0) {
         // Failed to convert ANSI to UTF-16, return an error result
-        return Result<NEXSUITE_STD u16string>::error({
+        return Result<NEX_STD u16string>::error({
                 ErrorCode::OperationFailed, "Failed to convert ANSI to UTF-16" 
             });
     }
-    NEXSUITE_STD u16string utf16(requiredSize, '\0');
+    NEX_STD u16string utf16(requiredSize, '\0');
     MultiByteToWideChar(CP_ACP, 0, ansi.data(), len, 
                         reinterpret_cast<wchar_t*>(utf16.data()), 
                         requiredSize);
 
     // Successfully converted ANSI to UTF-16, return the result
-    return Result<NEXSUITE_STD u16string>::ok(NEXSUITE_STD move(utf16));
+    return Result<NEX_STD u16string>::ok(NEX_STD move(utf16));
 
 #else
     // On non-Windows platforms, we can assume ANSI is UTF-8 and convert to UTF-16
@@ -485,14 +485,14 @@ Result<NEXSUITE_STD u16string> encoding::ansiToUtf16(NEXSUITE_STD string_view an
 }
 
 // Convert UTF-16 string to ANSI string
-Result<NEXSUITE_STD string> encoding::utf16ToAnsi(NEXSUITE_STD u16string_view utf16) {
-#if NEXSUITE_PLATFORM_IS_WIN
+Result<NEX_STD string> encoding::utf16ToAnsi(NEX_STD u16string_view utf16) {
+#if NEX_PLATFORM_IS_WINDOWS
     // Windows-specific implementation using WideCharToMultiByte
 
     int len = safeStaticCastInt(utf16.size());
     if (len < 0) {
         // Input size is too large to fit in an int, return an error result
-        return Result<NEXSUITE_STD string>::error({
+        return Result<NEX_STD string>::error({
                 ErrorCode::InvalidFormat, "Input string is too large" 
             });
     }
@@ -500,13 +500,13 @@ Result<NEXSUITE_STD string> encoding::utf16ToAnsi(NEXSUITE_STD u16string_view ut
                             len, nullptr, 0, nullptr, nullptr);
     if (requiredSize <= 0) {
         // Failed to convert UTF-16 to ANSI, return an error result
-        return Result<NEXSUITE_STD string>::error({
+        return Result<NEX_STD string>::error({
                 ErrorCode::OperationFailed, "Failed to convert UTF-16 to ANSI" 
             });
     }
 
     BOOL usedDefaultChar = FALSE;
-    NEXSUITE_STD string ansi(requiredSize, '\0');
+    NEX_STD string ansi(requiredSize, '\0');
     WideCharToMultiByte(CP_ACP, 0, 
                         reinterpret_cast<LPCWCH>(utf16.data()), 
                         len, 
@@ -516,13 +516,13 @@ Result<NEXSUITE_STD string> encoding::utf16ToAnsi(NEXSUITE_STD u16string_view ut
                         &usedDefaultChar);
     if (usedDefaultChar) {
         // The conversion used a default character, which means some characters could not be represented in ANSI
-        return Result<NEXSUITE_STD string>::error({
+        return Result<NEX_STD string>::error({
                 ErrorCode::OperationFailed, "Some characters could not be represented in ANSI encoding" 
             });
     }
 
     // Successfully converted UTF-16 to ANSI, return the result
-    return Result<NEXSUITE_STD string>::ok(NEXSUITE_STD move(ansi));
+    return Result<NEX_STD string>::ok(NEX_STD move(ansi));
 
 #else
     // On non-Windows platforms, we can assume ANSI is UTF-8 and convert from UTF-16 to UTF-8
@@ -531,8 +531,8 @@ Result<NEXSUITE_STD string> encoding::utf16ToAnsi(NEXSUITE_STD u16string_view ut
 }
 
 // Convert local string to UTF-16 string
-Result<NEXSUITE_STD u16string> encoding::localToUtf16(NEXSUITE_STD string_view local) {
-#if NEXSUITE_PLATFORM_IS_WIN
+Result<NEX_STD u16string> encoding::localToUtf16(NEX_STD string_view local) {
+#if NEX_PLATFORM_IS_WINDOWS
     // On Windows, local encoding is typically ANSI, so we can reuse the ANSI conversion
     return ansiToUtf16(local);
 #else
@@ -542,8 +542,8 @@ Result<NEXSUITE_STD u16string> encoding::localToUtf16(NEXSUITE_STD string_view l
 }
 
 // Convert UTF-16 string to local string
-Result<NEXSUITE_STD string> encoding::utf16ToLocal(NEXSUITE_STD u16string_view utf16) {
-#if NEXSUITE_PLATFORM_IS_WIN
+Result<NEX_STD string> encoding::utf16ToLocal(NEX_STD u16string_view utf16) {
+#if NEX_PLATFORM_IS_WINDOWS
     // On Windows, local encoding is typically ANSI, so we can reuse the ANSI conversion
     return utf16ToAnsi(utf16);
 #else
@@ -553,36 +553,36 @@ Result<NEXSUITE_STD string> encoding::utf16ToLocal(NEXSUITE_STD u16string_view u
 }
 
 // Convert UTF-8 string to UTF-16 string
-Result<NEXSUITE_STD u16string> encoding::utf8ToUtf16(NEXSUITE_STD string_view utf8) {
-#if NEXSUITE_PLATFORM_IS_WIN
+Result<NEX_STD u16string> encoding::utf8ToUtf16(NEX_STD string_view utf8) {
+#if NEX_PLATFORM_IS_WINDOWS
     // Windows-specific implementation using MultiByteToWideChar
 
     int len = safeStaticCastInt(utf8.size());
     if (len < 0) {
         // Input size is too large to fit in an int, return an error result
-        return Result<NEXSUITE_STD u16string>::error({
+        return Result<NEX_STD u16string>::error({
                 ErrorCode::InvalidFormat, "Input string is too large" 
             });
     }
     int requiredSize = MultiByteToWideChar(CP_UTF8, 0, utf8.data(), len, nullptr, 0);
     if (requiredSize <= 0) {
         // Failed to convert UTF-8 to UTF-16, return an error result
-        return Result<NEXSUITE_STD u16string>::error({
+        return Result<NEX_STD u16string>::error({
                 ErrorCode::OperationFailed, "Failed to convert UTF-8 to UTF-16" 
             });
     }
-    NEXSUITE_STD u16string utf16(requiredSize, '\0');
+    NEX_STD u16string utf16(requiredSize, '\0');
     MultiByteToWideChar(CP_UTF8, 0, utf8.data(), len, 
                         reinterpret_cast<wchar_t*>(utf16.data()), 
                         requiredSize);
 
     // Successfully converted UTF-8 to UTF-16, return the result
-    return Result<NEXSUITE_STD u16string>::ok(NEXSUITE_STD move(utf16));
+    return Result<NEX_STD u16string>::ok(NEX_STD move(utf16));
 
 #else
     // On non-Windows platforms, we can assume UTF-8 is already in the correct encoding and convert to UTF-16
 
-    NEXSUITE_STD u16string result;
+    NEX_STD u16string result;
 
     // Reserve enough space to avoid multiple reallocations (worst case: all ASCII characters)
     result.reserve(utf8.size());
@@ -592,11 +592,11 @@ Result<NEXSUITE_STD u16string> encoding::utf8ToUtf16(NEXSUITE_STD string_view ut
     
     while (ptr < end) {
         usize advance = 0;
-        auto decodeRes = decodeUtf8CodePoint(NEXSUITE_STD string_view(ptr, end - ptr), advance);
+        auto decodeRes = decodeUtf8CodePoint(NEX_STD string_view(ptr, end - ptr), advance);
         
         if (!decodeRes.isOk()) {
             // Failed to decode a UTF-8 code point, return an error result
-            return Result<NEXSUITE_STD u16string>::error(decodeRes.error());
+            return Result<NEX_STD u16string>::error(decodeRes.error());
         }
         
         char16 utf16Buf[2];
@@ -607,19 +607,19 @@ Result<NEXSUITE_STD u16string> encoding::utf8ToUtf16(NEXSUITE_STD string_view ut
     }
 
     // Successfully converted UTF-8 to UTF-16, return the result
-    return Result<NEXSUITE_STD u16string>::ok(move(result));
+    return Result<NEX_STD u16string>::ok(move(result));
 
 #endif
 }
 
 // Convert UTF-16 string to UTF-8 string
-Result<NEXSUITE_STD string> encoding::utf16ToUtf8(NEXSUITE_STD u16string_view utf16) {
-#if NEXSUITE_PLATFORM_IS_WIN
+Result<NEX_STD string> encoding::utf16ToUtf8(NEX_STD u16string_view utf16) {
+#if NEX_PLATFORM_IS_WINDOWS
     // Windows-specific implementation using WideCharToMultiByte
     int len = safeStaticCastInt(utf16.size());
     if (len < 0) {
         // Input size is too large to fit in an int, return an error result
-        return Result<NEXSUITE_STD string>::error({
+        return Result<NEX_STD string>::error({
                 ErrorCode::InvalidFormat, "Input string is too large" 
             });
     }
@@ -627,12 +627,12 @@ Result<NEXSUITE_STD string> encoding::utf16ToUtf8(NEXSUITE_STD u16string_view ut
                             len, nullptr, 0, nullptr, nullptr);
     if (requiredSize <= 0) {
         // Failed to convert UTF-16 to UTF-8, return an error result
-        return Result<NEXSUITE_STD string>::error({
+        return Result<NEX_STD string>::error({
                 ErrorCode::OperationFailed, "Failed to convert UTF-16 to UTF-8" 
             });
     }
 
-    NEXSUITE_STD string utf8(requiredSize, '\0');
+    NEX_STD string utf8(requiredSize, '\0');
     WideCharToMultiByte(CP_UTF8, 0, 
                         reinterpret_cast<LPCWCH>(utf16.data()), 
                         len, 
@@ -642,11 +642,11 @@ Result<NEXSUITE_STD string> encoding::utf16ToUtf8(NEXSUITE_STD u16string_view ut
                         nullptr);
 
     // Successfully converted UTF-16 to UTF-8, return the result
-    return Result<NEXSUITE_STD string>::ok(NEXSUITE_STD move(utf8));
+    return Result<NEX_STD string>::ok(NEX_STD move(utf8));
 #else
     // On non-Windows platforms, we can assume UTF-16 is already in the correct encoding and convert to UTF-8
     
-    NEXSUITE_STD string result;
+    NEX_STD string result;
 
     // Reserve enough space to avoid multiple reallocations (worst case: all characters are 4-byte code points)
     result.reserve(utf16.size() * 3 / 2); 
@@ -658,14 +658,14 @@ Result<NEXSUITE_STD string> encoding::utf16ToUtf8(NEXSUITE_STD u16string_view ut
 
         if (!decodeRes.isOk()) { 
             // Failed to decode a UTF-16 code point, return an error result
-            return Result<NEXSUITE_STD string>::error(decodeRes.error());
+            return Result<NEX_STD string>::error(decodeRes.error());
         }
 
         char8 u8buf[4];
         usize u8len = encodeUtf8CodePoint(decodeRes.value(), u8buf);
         if (u8len == 0) {
             // Failed to encode a UTF-8 code point, return an error result
-            return Result<NEXSUITE_STD string>::error({ 
+            return Result<NEX_STD string>::error({ 
                 ErrorCode::InvalidFormat, "Failed to encode UTF-8" 
             });
         }
@@ -675,14 +675,14 @@ Result<NEXSUITE_STD string> encoding::utf16ToUtf8(NEXSUITE_STD u16string_view ut
     }
 
     // Successfully converted UTF-16 to UTF-8, return the result
-    return Result<NEXSUITE_STD string>::ok(NEXSUITE_STD move(result));
+    return Result<NEX_STD string>::ok(NEX_STD move(result));
 
 #endif
 }
 
 // Convert UTF-32 string to UTF-16 string
-Result<NEXSUITE_STD u16string> encoding::utf32ToUtf16(NEXSUITE_STD u32string_view utf32) {
-    NEXSUITE_STD u16string result;
+Result<NEX_STD u16string> encoding::utf32ToUtf16(NEX_STD u32string_view utf32) {
+    NEX_STD u16string result;
 
     // Reserve enough space to avoid multiple reallocations, 
     // worst case: all characters are 4-byte code points, which would require 2 UTF-16 code units each
@@ -691,7 +691,7 @@ Result<NEXSUITE_STD u16string> encoding::utf32ToUtf16(NEXSUITE_STD u32string_vie
     for (char32 cp : utf32) {
         if (!isValidCodePoint(cp)) {
             // Found an invalid code point, return an error result
-            return Result<NEXSUITE_STD u16string>::error({ 
+            return Result<NEX_STD u16string>::error({ 
                 ErrorCode::InvalidFormat, "Invalid Unicode code point in input" 
             });
         }
@@ -700,7 +700,7 @@ Result<NEXSUITE_STD u16string> encoding::utf32ToUtf16(NEXSUITE_STD u32string_vie
         usize u16Len = encodeUtf16CodePoint(cp, utf16Buf);
         if (u16Len == 0) {
             // Failed to encode a UTF-16 code point, return an error result
-            return Result<NEXSUITE_STD u16string>::error({ 
+            return Result<NEX_STD u16string>::error({ 
                 ErrorCode::InvalidFormat, "Failed to encode UTF-16" 
             });
         }
@@ -709,12 +709,12 @@ Result<NEXSUITE_STD u16string> encoding::utf32ToUtf16(NEXSUITE_STD u32string_vie
     }
 
     // Successfully converted UTF-32 to UTF-16, return the result
-    return Result<NEXSUITE_STD u16string>::ok(NEXSUITE_STD move(result));
+    return Result<NEX_STD u16string>::ok(NEX_STD move(result));
 }
 
 // Convert UTF-16 string to UTF-32 string
-Result<NEXSUITE_STD u32string> encoding::utf16ToUtf32(NEXSUITE_STD u16string_view utf16) {
-    NEXSUITE_STD u32string result;
+Result<NEX_STD u32string> encoding::utf16ToUtf32(NEX_STD u16string_view utf16) {
+    NEX_STD u32string result;
     result.reserve(utf16.size()); // Reserve enough space to avoid multiple reallocations
 
     usize i = 0;
@@ -724,7 +724,7 @@ Result<NEXSUITE_STD u32string> encoding::utf16ToUtf32(NEXSUITE_STD u16string_vie
 
         if (!decodeRes.isOk()) { 
             // Failed to decode a UTF-16 code point, return an error result
-            return Result<NEXSUITE_STD u32string>::error(decodeRes.error());
+            return Result<NEX_STD u32string>::error(decodeRes.error());
         }
 
         result.push_back(decodeRes.value());
@@ -732,7 +732,7 @@ Result<NEXSUITE_STD u32string> encoding::utf16ToUtf32(NEXSUITE_STD u16string_vie
     }
 
     // Successfully converted UTF-16 to UTF-32, return the result
-    return Result<NEXSUITE_STD u32string>::ok(NEXSUITE_STD move(result));
+    return Result<NEX_STD u32string>::ok(NEX_STD move(result));
 }
 
-NEXSUITE_NAMESPACE_END
+NEX_NAMESPACE_END

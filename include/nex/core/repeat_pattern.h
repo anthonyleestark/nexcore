@@ -8,13 +8,13 @@
 #include <bitset>
 #include <algorithm>
 
-#include "common/macros.h"
-#include "common/types.h"
-#include "common/wrappers.h"
-#include "common/string.h"
-#include "common/time.h"
+#include "nex/base/macros.h"
+#include "nex/base/types.h"
+#include "nex/base/wrappers.h"
+#include "nex/core/string.h"
+#include "nex/core/time.h"
 
-NEXSUITE_NAMESPACE_BEGIN
+NEX_NAMESPACE_BEGIN
 
 /**
  * @enum    RepeatFrequency
@@ -77,24 +77,24 @@ public:
     // Constructor with repeat enabled
     explicit RepeatPattern(bool repeatEnabled)
         : enabled_(repeatEnabled),
-        frequency_(deriveFrequency(repeatEnabled, NEXSUITE_STD bitset<7>(kAllDaysMask))),
-        endDate_(NEXSUITE_STD nullopt) {}
+        frequency_(deriveFrequency(repeatEnabled, NEX_STD bitset<7>(kAllDaysMask))),
+        endDate_(NEX_STD nullopt) {}
     
     // Constructor with repeat enabled and active days
-    RepeatPattern(bool repeatEnabled, const NEXSUITE_STD bitset<7>& activeDays)
+    RepeatPattern(bool repeatEnabled, const NEX_STD bitset<7>& activeDays)
         : enabled_(repeatEnabled),
         activeDays_(activeDays),
         frequency_(deriveFrequency(repeatEnabled, activeDays)),
-        endDate_(NEXSUITE_STD nullopt) {}
+        endDate_(NEX_STD nullopt) {}
     
     // Check if repeat is enabled
     bool isEnabled() const { return enabled_; }
     
     // Get active days
-    const NEXSUITE_STD bitset<7>& activeDays() const { return activeDays_; }
+    const NEX_STD bitset<7>& activeDays() const { return activeDays_; }
 
     // Replace active days
-    RepeatPattern withActiveDays(const NEXSUITE_STD bitset<7>& activeDays) const {
+    RepeatPattern withActiveDays(const NEX_STD bitset<7>& activeDays) const {
         RepeatPattern pattern = *this;
         pattern.activeDays_ = activeDays;
         if (pattern.enabled_ && isDayBasedFrequency(pattern.frequency_)) {
@@ -183,7 +183,7 @@ public:
         pattern.frequency_ = frequency;
         pattern.enabled_ = (frequency != RepeatFrequency::None);
         if (frequency == RepeatFrequency::Daily) {
-            pattern.activeDays_ = NEXSUITE_STD bitset<7>(kAllDaysMask);
+            pattern.activeDays_ = NEX_STD bitset<7>(kAllDaysMask);
         }
         return pattern;
     }
@@ -241,7 +241,7 @@ private:
     ////// Basic attributes -----------------------
 
     bool enabled_ = false;                                 // Whether repeat is enabled
-    NEXSUITE_STD bitset<7> activeDays_{ kAllDaysMask };    // Bit 0=Sunday, bit 6=Saturday
+    NEX_STD bitset<7> activeDays_{ kAllDaysMask };    // Bit 0=Sunday, bit 6=Saturday
     bool allowsSnooze_ = false;                            // Whether snooze is allowed
     int32 snoozeIntervalSeconds_ = kDefaultSnoozeSeconds;  // Snooze interval in seconds
     
@@ -257,7 +257,7 @@ private:
     RepeatFrequency frequency_ = RepeatFrequency::None;
 
     // Optional end date for the repeat pattern
-    Optional<DateTime::Date> endDate_ = NEXSUITE_STD nullopt;
+    Optional<DateTime::Date> endDate_ = NEX_STD nullopt;
 
     // Repeat count, e.g. 5 = repeat 5 times (0 = forever)
     int32 count_ = kForeverCount;
@@ -270,7 +270,7 @@ private:
     
     // Clamp snooze interval to valid range
     static int32 clampSnoozeInterval(int32 seconds) {
-        return NEXSUITE_STD clamp(seconds, kMinSnoozeSeconds, kMaxSnoozeSeconds);
+        return NEX_STD clamp(seconds, kMinSnoozeSeconds, kMaxSnoozeSeconds);
     }
 
     // Normalize interval to valid range
@@ -291,15 +291,15 @@ private:
     }
 
     // Derive frequency based on enabled state and active days
-    static RepeatFrequency deriveFrequency(bool enabled, const NEXSUITE_STD bitset<7>& activeDays) {
+    static RepeatFrequency deriveFrequency(bool enabled, const NEX_STD bitset<7>& activeDays) {
         if (!enabled) {
             return RepeatFrequency::None;
         }
 
-        return (activeDays == NEXSUITE_STD bitset<7>(kAllDaysMask))
+        return (activeDays == NEX_STD bitset<7>(kAllDaysMask))
             ? RepeatFrequency::Daily
             : RepeatFrequency::Weekly;
     }
 };
 
-NEXSUITE_NAMESPACE_END
+NEX_NAMESPACE_END

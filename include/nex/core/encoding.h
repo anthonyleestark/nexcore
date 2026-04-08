@@ -8,12 +8,12 @@
 #include <string>
 #include <string_view>
 
-#include "common/macros.h"
-#include "common/types.h"
-#include "common/result.h"
-#include "common/error.h"
+#include "nex/base/macros.h"
+#include "nex/base/types.h"
+#include "nex/core/result.h"
+#include "nex/core/error.h"
 
-NEXSUITE_NAMESPACE_BEGIN
+NEX_NAMESPACE_BEGIN
 
 /**
  * @namespace   encoding
@@ -22,7 +22,7 @@ NEXSUITE_NAMESPACE_BEGIN
  * This namespace provides utility functions for encoding conversion and character classification, particularly 
  * for UTF-16 encoding which is used internally in the `String` class. It includes functions to check for surrogate 
  * characters, whitespace characters, and to perform conversions between different encodings (e.g., UTF-8 to UTF-16 
- * and vice versa). These utilities are essential for handling Unicode strings correctly and efficiently in the NexSuite 
+ * and vice versa). These utilities are essential for handling Unicode strings correctly and efficiently in the NEX 
  * system, especially when dealing with internationalized text that may contain various types of characters and encodings.
  * 
  * @note
@@ -168,7 +168,7 @@ namespace encoding {
      * @return true if the input string contains invalid UTF-8 sequences, false otherwise
      */
     NEX_EXPORT NEX_NODISCARD 
-    bool containsInvalidUtf8Sequences(NEXSUITE_STD string_view input) noexcept;
+    bool containsInvalidUtf8Sequences(NEX_STD string_view input) noexcept;
 
     /** 
      * @brief Check if a UTF-8 string is valid
@@ -182,7 +182,7 @@ namespace encoding {
      * @return true if the input string is a valid UTF-8 string, false otherwise
      */
     NEX_EXPORT NEX_NODISCARD 
-    bool isValidUtf8(NEXSUITE_STD string_view input) noexcept;
+    bool isValidUtf8(NEX_STD string_view input) noexcept;
 
     /** 
      * @brief Check if a UTF-8 sequence is valid
@@ -196,7 +196,7 @@ namespace encoding {
      * @return true if the sequence at the start of the input is a valid UTF-8 sequence, false otherwise
      */
     NEX_EXPORT NEX_NODISCARD 
-    bool isValidUtf8Sequence(NEXSUITE_STD string_view input) noexcept;
+    bool isValidUtf8Sequence(NEX_STD string_view input) noexcept;
 
     /** 
      * @brief Decode a UTF-8 code point
@@ -212,7 +212,7 @@ namespace encoding {
      *         or an error if the input sequence is invalid or incomplete
      */
     NEX_EXPORT NEX_NODISCARD 
-    Result<char32> decodeUtf8CodePoint(NEXSUITE_STD string_view input, usize& advance);
+    Result<char32> decodeUtf8CodePoint(NEX_STD string_view input, usize& advance);
 
     /** 
      * @brief Get the byte number of a UTF-8 code point
@@ -267,7 +267,7 @@ namespace encoding {
      *         or an error if the string contains invalid sequences
      */
     NEX_EXPORT NEX_NODISCARD
-    Result<usize> countUtf8CodePoints(NEXSUITE_STD string_view input) noexcept;
+    Result<usize> countUtf8CodePoints(NEX_STD string_view input) noexcept;
 
     ////// UTF-16 encoding utility functions --------------------------------------------------
 
@@ -285,7 +285,7 @@ namespace encoding {
      *         or an error if the input sequence is invalid or incomplete (e.g., unpaired surrogate)
      */
     NEX_EXPORT NEX_NODISCARD 
-    Result<char32> decodeUtf16CodePoint(NEXSUITE_STD u16string_view input, usize& advance);
+    Result<char32> decodeUtf16CodePoint(NEX_STD u16string_view input, usize& advance);
 
     /**
     * @brief Encode a Unicode code point into UTF-16
@@ -314,7 +314,7 @@ namespace encoding {
      *         or an error if the string contains invalid sequences (e.g., unpaired surrogates)
      */
     NEX_EXPORT NEX_NODISCARD
-    Result<usize> countUtf16CodePoints(NEXSUITE_STD u16string_view input) noexcept;
+    Result<usize> countUtf16CodePoints(NEX_STD u16string_view input) noexcept;
 
     ////// UTF-32 encoding utility functions --------------------------------------------------
 
@@ -330,7 +330,7 @@ namespace encoding {
      * @return true if the input string is a valid UTF-32 string, false otherwise
      */
     NEX_EXPORT NEX_NODISCARD
-    bool isValidUtf32Sequence(NEXSUITE_STD u32string_view input) noexcept;
+    bool isValidUtf32Sequence(NEX_STD u32string_view input) noexcept;
 
     /**
      * @brief Count the number of Unicode code points in a UTF-32 string
@@ -346,7 +346,7 @@ namespace encoding {
      *         or an error if the string contains invalid code points (e.g., surrogates or out-of-range values)
      */
     NEX_EXPORT NEX_NODISCARD
-    Result<usize> countUtf32CodePoints(NEXSUITE_STD u32string_view input) noexcept;
+    Result<usize> countUtf32CodePoints(NEX_STD u32string_view input) noexcept;
 
     ////// Encoding conversion functions --------------------------------------------------
 
@@ -356,7 +356,7 @@ namespace encoding {
      * @return Result containing the converted UTF-16 string if successful, or an error if the conversion fails
      */
     NEX_EXPORT NEX_NODISCARD 
-    Result<NEXSUITE_STD u16string> ansiToUtf16(NEXSUITE_STD string_view ansi);
+    Result<NEX_STD u16string> ansiToUtf16(NEX_STD string_view ansi);
 
     /**
      * @brief Convert UTF-16 string to ANSI string
@@ -365,7 +365,7 @@ namespace encoding {
      *         or an error if the conversion fails
      */
     NEX_EXPORT NEX_NODISCARD 
-    Result<NEXSUITE_STD string> utf16ToAnsi(NEXSUITE_STD u16string_view utf16);
+    Result<NEX_STD string> utf16ToAnsi(NEX_STD u16string_view utf16);
 
     /**
      * @brief Convert local string to UTF-16 string
@@ -374,7 +374,7 @@ namespace encoding {
      *         or an error if the conversion fails
      */
     NEX_EXPORT NEX_NODISCARD 
-    Result<NEXSUITE_STD u16string> localToUtf16(NEXSUITE_STD string_view local);
+    Result<NEX_STD u16string> localToUtf16(NEX_STD string_view local);
 
     /**
      * @brief Convert UTF-16 string to local string
@@ -382,7 +382,7 @@ namespace encoding {
      * @return Result containing the converted local string if successful, or an error if the conversion fails
      */
     NEX_EXPORT NEX_NODISCARD 
-    Result<NEXSUITE_STD string> utf16ToLocal(NEXSUITE_STD u16string_view utf16);
+    Result<NEX_STD string> utf16ToLocal(NEX_STD u16string_view utf16);
 
     /**
      * @brief Convert UTF-8 string to UTF-16 string
@@ -390,7 +390,7 @@ namespace encoding {
      * @return Result containing the converted UTF-16 string if successful, or an error if the conversion fails
      */
     NEX_EXPORT NEX_NODISCARD 
-    Result<NEXSUITE_STD u16string> utf8ToUtf16(NEXSUITE_STD string_view utf8);
+    Result<NEX_STD u16string> utf8ToUtf16(NEX_STD string_view utf8);
 
     /**
      * @brief Convert UTF-16 string to UTF-8 string
@@ -398,7 +398,7 @@ namespace encoding {
      * @return Result containing the converted UTF-8 string if successful, or an error if the conversion fails
      */
     NEX_EXPORT NEX_NODISCARD 
-    Result<NEXSUITE_STD string> utf16ToUtf8(NEXSUITE_STD u16string_view utf16);
+    Result<NEX_STD string> utf16ToUtf8(NEX_STD u16string_view utf16);
 
     /**
      * @brief Convert UTF-32 string to UTF-16 string
@@ -406,7 +406,7 @@ namespace encoding {
      * @return Result containing the converted UTF-16 string if successful, or an error if the conversion fails
      */
     NEX_EXPORT NEX_NODISCARD
-    Result<NEXSUITE_STD u16string> utf32ToUtf16(NEXSUITE_STD u32string_view utf32);
+    Result<NEX_STD u16string> utf32ToUtf16(NEX_STD u32string_view utf32);
 
     /**
      * @brief Convert UTF-16 string to UTF-32 string
@@ -414,8 +414,8 @@ namespace encoding {
      * @return Result containing the converted UTF-32 string if successful, or an error if the conversion fails
      */
     NEX_EXPORT NEX_NODISCARD
-    Result<NEXSUITE_STD u32string> utf16ToUtf32(NEXSUITE_STD u16string_view utf16);
+    Result<NEX_STD u32string> utf16ToUtf32(NEX_STD u16string_view utf16);
 
 } // namespace encoding
 
-NEXSUITE_NAMESPACE_END
+NEX_NAMESPACE_END

@@ -3,10 +3,10 @@
  * Copyright (c) 2026 Anthony Lee Stark. All rights reserved.
  */
 
-#include "common/geometry.h"
-#include "common/linear.h"
+#include "nex/core/geometry.h"
+#include "nex/core/linear.h"
 
-NEXSUITE_NAMESPACE_BEGIN
+NEX_NAMESPACE_BEGIN
 
 // Geometry2D implementation helper functions
 namespace geometry2d
@@ -27,8 +27,8 @@ namespace geometry2d
     
     // Rotates a point around a pivot
     Vector2D rotatePointAround(const Vector2D& point, const Vector2D& pivot, double angle) noexcept {
-        double sin = NEXSUITE_STD sin(angle);
-        double cos = NEXSUITE_STD cos(angle);
+        double sin = NEX_STD sin(angle);
+        double cos = NEX_STD cos(angle);
 
         // Translate to origin
         Vector2D translated = point - pivot;
@@ -69,10 +69,10 @@ Rect Rect::rotateAround(const Vector2D& pivot, double angleRadians) const noexce
 	double minX = corners[0].x, maxX = corners[0].x;
 	double minY = corners[0].y, maxY = corners[0].y;
 	for (int i = 1; i < 4; ++i) {
-		minX = NEXSUITE_STD min(minX, corners[i].x);
-		maxX = NEXSUITE_STD max(maxX, corners[i].x);
-		minY = NEXSUITE_STD min(minY, corners[i].y);
-		maxY = NEXSUITE_STD max(maxY, corners[i].y);
+		minX = NEX_STD min(minX, corners[i].x);
+		maxX = NEX_STD max(maxX, corners[i].x);
+		minY = NEX_STD min(minY, corners[i].y);
+		maxY = NEX_STD max(maxY, corners[i].y);
 	}
 
 	// Preserve inverted state
@@ -81,8 +81,8 @@ Rect Rect::rotateAround(const Vector2D& pivot, double angleRadians) const noexce
 
 	double newX = invertedX ? maxX : minX;
 	double newY = invertedY ? maxY : minY;
-	double newW = NEXSUITE_STD abs(maxX - minX);
-	double newH = NEXSUITE_STD abs(maxY - minY);
+	double newW = NEX_STD abs(maxX - minX);
+	double newH = NEX_STD abs(maxY - minY);
 
 	if (invertedX) newW = -newW;
 	if (invertedY) newH = -newH;
@@ -117,10 +117,10 @@ EdgeRect EdgeRect::rotateAround(const Vector2D& pivot, double angleRadians) cons
 	double minX = corners[0].x, maxX = corners[0].x;
 	double minY = corners[0].y, maxY = corners[0].y;
 	for (int i = 1; i < 4; ++i) {
-		minX = NEXSUITE_STD min(minX, corners[i].x);
-		maxX = NEXSUITE_STD max(maxX, corners[i].x);
-		minY = NEXSUITE_STD min(minY, corners[i].y);
-		maxY = NEXSUITE_STD max(maxY, corners[i].y);
+		minX = NEX_STD min(minX, corners[i].x);
+		maxX = NEX_STD max(maxX, corners[i].x);
+		minY = NEX_STD min(minY, corners[i].y);
+		maxY = NEX_STD max(maxY, corners[i].y);
 	}
 
 	// Preserve inversion
@@ -132,4 +132,4 @@ EdgeRect EdgeRect::rotateAround(const Vector2D& pivot, double angleRadians) cons
 	return EdgeRect(newLeft, newTop, newRight, newBottom);
 }
 
-NEXSUITE_NAMESPACE_END
+NEX_NAMESPACE_END

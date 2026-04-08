@@ -8,10 +8,10 @@
 #include <span>
 #include <iterator>
 
-#include "common/macros.h"
-#include "common/types.h"
+#include "nex/base/macros.h"
+#include "nex/base/types.h"
 
-NEXSUITE_NAMESPACE_BEGIN
+NEX_NAMESPACE_BEGIN
 
 /**
  * @class   Span
@@ -47,8 +47,8 @@ public:
     using const_reference = const T&;
     using iterator = const T*;
     using const_iterator = const T*;
-    using reverse_iterator = NEXSUITE_STD reverse_iterator<const_iterator>;
-    using const_reverse_iterator = NEXSUITE_STD reverse_iterator<const_iterator>;
+    using reverse_iterator = NEX_STD reverse_iterator<const_iterator>;
+    using const_reverse_iterator = NEX_STD reverse_iterator<const_iterator>;
 
 public:
     // Constructor
@@ -56,10 +56,10 @@ public:
         : buffer_(buffer, size) {}
 
     // Copy constructor and assignment
-    NEXSUITE_DEFAULT_COPY(Span);
+    NEX_DEFAULT_COPY(Span);
 
     // Move constructor and assignment
-    NEXSUITE_DEFAULT_MOVE(Span);
+    NEX_DEFAULT_MOVE(Span);
 
     ////// Accessors -----------------------
 
@@ -138,12 +138,12 @@ public:
 
     // Clear the span
     void clear() noexcept {
-        buffer_ = NEXSUITE_STD span<const T>();
+        buffer_ = NEX_STD span<const T>();
     }
 
 private:
     // Use STL std::span as underlying buffer
-    NEXSUITE_STD span<const T> buffer_;
+    NEX_STD span<const T> buffer_;
 };
 
-NEXSUITE_NAMESPACE_END
+NEX_NAMESPACE_END

@@ -5,15 +5,15 @@
 
 #pragma once
 
-#include "common/macros.h"
-#include "common/types.h"
-#include "common/string.h"
-#include "common/string_view.h"
-#include "common/result.h"
+#include "nex/base/macros.h"
+#include "nex/base/types.h"
+#include "nex/core/string.h"
+#include "nex/core/string_view.h"
+#include "nex/core/result.h"
 
 #include <fmt/format.h>
 
-NEXSUITE_NAMESPACE_BEGIN
+NEX_NAMESPACE_BEGIN
 
 /**
  * @namespace format
@@ -94,4 +94,4 @@ namespace format {
     }
 } // namespace format
 
-NEXSUITE_NAMESPACE_END
+NEX_NAMESPACE_END

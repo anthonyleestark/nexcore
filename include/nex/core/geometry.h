@@ -14,13 +14,13 @@
 
 // Using PI constants
 #ifndef M_PI
-	#ifdef NEXSUITE_HAS_CXX20
+	#ifdef NEX_HAS_CXX20
 		#if !defined(_NUMBERS_)
 			#include <numbers>
 		#endif
-		constexpr double M_PI = NEXSUITE_STD numbers::pi;
-		constexpr double M_PI_2 = NEXSUITE_STD numbers::pi / 2;
-		constexpr double M_PI_4 = NEXSUITE_STD numbers::pi / 4;
+		constexpr double M_PI = NEX_STD numbers::pi;
+		constexpr double M_PI_2 = NEX_STD numbers::pi / 2;
+		constexpr double M_PI_4 = NEX_STD numbers::pi / 4;
 	#else
 		#define M_PI       3.14159265358979323846   // pi
 		#define M_PI_2     1.57079632679489661923   // pi/2
@@ -34,11 +34,11 @@
 #include <algorithm>
 #include <stdexcept>
 
-#include "common/macros.h"
-#include "common/types.h"
-#include "common/assert_crash.h"
+#include "nex/base/macros.h"
+#include "nex/base/types.h"
+#include "nex/base/assert_crash.h"
 
-NEXSUITE_NAMESPACE_BEGIN
+NEX_NAMESPACE_BEGIN
 
 // Math utility functions
 namespace math_utils 
@@ -46,25 +46,25 @@ namespace math_utils
 	// For floating-point precision comparisons
 	inline constexpr double kEpsilon = 1e-9;
 	template<typename T>
-	inline typename NEXSUITE_STD enable_if<NEXSUITE_STD is_floating_point<T>::value, bool>::type
+	inline typename NEX_STD enable_if<NEX_STD is_floating_point<T>::value, bool>::type
 	nearlyEqual(T a, T b, T epsilon = static_cast<T>(kEpsilon)) noexcept {
-		return NEXSUITE_STD abs(a - b) <= epsilon * NEXSUITE_STD max(static_cast<T>(1), 
-				NEXSUITE_STD max(NEXSUITE_STD abs(a), NEXSUITE_STD abs(b)));
+		return NEX_STD abs(a - b) <= epsilon * NEX_STD max(static_cast<T>(1), 
+				NEX_STD max(NEX_STD abs(a), NEX_STD abs(b)));
 	}
 	template<typename T>
-	inline typename NEXSUITE_STD enable_if<NEXSUITE_STD is_floating_point<T>::value, bool>::type
+	inline typename NEX_STD enable_if<NEX_STD is_floating_point<T>::value, bool>::type
 	equalsToZero(T a, T epsilon = static_cast<T>(kEpsilon)) noexcept {
 		return nearlyEqual(a, static_cast<T>(0), epsilon);
 	}
 
 	// Fallback: exact equal for non-floating types
 	template<typename T>
-	inline typename NEXSUITE_STD enable_if<!NEXSUITE_STD is_floating_point<T>::value, bool>::type
+	inline typename NEX_STD enable_if<!NEX_STD is_floating_point<T>::value, bool>::type
 	nearlyEqual(const T& a, const T& b) noexcept {
 		return a == b;
 	}
 	template<typename T>
-	inline typename NEXSUITE_STD enable_if<!NEXSUITE_STD is_floating_point<T>::value, bool>::type
+	inline typename NEX_STD enable_if<!NEX_STD is_floating_point<T>::value, bool>::type
 	equalsToZero(const T& a) noexcept {
 		return a == 0;
 	}
@@ -83,7 +83,7 @@ namespace math_utils
  * - Template type conversion between different numeric types
  * - Comparison operators (equality, less than, greater than, etc.) with floating-point tolerance
  * - Lexicographical ordering
- * - Stream output operators for NEXSUITE_STD ostream and NEXSUITE_STD wostream
+ * - Stream output operators for NEX_STD ostream and NEX_STD wostream
  */
 template<typename T>
 struct Coordinate2DValues {
@@ -126,10 +126,10 @@ struct Coordinate2DValues {
 	}
 
 	// Stream Operators
-	friend NEXSUITE_STD ostream& operator<<(NEXSUITE_STD ostream& os, const Coordinate2DValues& coord) {
+	friend NEX_STD ostream& operator<<(NEX_STD ostream& os, const Coordinate2DValues& coord) {
 		return os << "(" << coord.x << ", " << coord.y << ")";
 	}
-	friend NEXSUITE_STD wostream& operator<<(NEXSUITE_STD wostream& wos, const Coordinate2DValues& coord) {
+	friend NEX_STD wostream& operator<<(NEX_STD wostream& wos, const Coordinate2DValues& coord) {
 		return wos << L"(" << coord.x << L", " << coord.y << L")";
 	}
 };
@@ -148,7 +148,7 @@ struct Coordinate2DValues {
  * - Comparison operators (equality, less than, greater than, etc.) with floating-point tolerance
  * - Area calculation
  * - Zero and validity checking
- * - Stream output operators for NEXSUITE_STD ostream and NEXSUITE_STD wostream
+ * - Stream output operators for NEX_STD ostream and NEX_STD wostream
  */
 template<typename T>
 struct Size2DValues {
@@ -189,16 +189,16 @@ struct Size2DValues {
 	}
 
 	// Stream Operators
-	friend NEXSUITE_STD ostream& operator<<(NEXSUITE_STD ostream& os, const Size2DValues& size) {
+	friend NEX_STD ostream& operator<<(NEX_STD ostream& os, const Size2DValues& size) {
 		return os << "(" << size.width << ", " << size.height << ")";
 	}
-	friend NEXSUITE_STD wostream& operator<<(NEXSUITE_STD wostream& wos, const Size2DValues& size) {
+	friend NEX_STD wostream& operator<<(NEX_STD wostream& wos, const Size2DValues& size) {
 		return wos << L"(" << size.width << L", " << size.height << L")";
 	}
 	
 	// Area
 	double area() const noexcept {
-		return NEXSUITE_STD abs(width * height);
+		return NEX_STD abs(width * height);
 	}
 	
 	// Is zero
@@ -243,7 +243,7 @@ enum class Rotation {
  * - Comparison operators (equality, less than, greater than, etc.) with floating-point tolerance
  * - Empty operation to reset all values to zero
  * - Zero checking
- * - Stream output operators for NEXSUITE_STD ostream and NEXSUITE_STD wostream
+ * - Stream output operators for NEX_STD ostream and NEX_STD wostream
  */
 template<typename T>
 struct RectBase {
@@ -289,10 +289,10 @@ struct RectBase {
 	}
 
 	// Stream Operators
-	friend NEXSUITE_STD ostream& operator<<(NEXSUITE_STD ostream& os, const RectBase& rect) {
+	friend NEX_STD ostream& operator<<(NEX_STD ostream& os, const RectBase& rect) {
 		return os << "(" << rect.x << ", " << rect.y << ", " << rect.width << ", " << rect.height << ")";
 	}
-	friend NEXSUITE_STD wostream& operator<<(NEXSUITE_STD wostream& wos, const RectBase& rect) {
+	friend NEX_STD wostream& operator<<(NEX_STD wostream& wos, const RectBase& rect) {
 		return wos << L"(" << rect.x << L", " << rect.y << L", " << rect.width << L", " << rect.height << L")";
 	}
 
@@ -414,7 +414,7 @@ public:
 	Point operator/(double scalar) const {
 		using math_utils::equalsToZero;
 		if (!equalsToZero(scalar)) return Point(x / scalar, y / scalar);
-		NEXSUITE_ASSERT_MSG(false, "Division by zero");
+		NEX_ASSERT_MSG(false, "Division by zero");
 	}
 
 	// Compound Assignment Operators
@@ -427,7 +427,7 @@ public:
 	Point& operator/=(double scalar) {
 		using math_utils::equalsToZero;
 		if (!equalsToZero(scalar)) { x /= scalar; y /= scalar; return *this; }
-		NEXSUITE_ASSERT_MSG(false, "Division by zero");
+		NEX_ASSERT_MSG(false, "Division by zero");
 	}
 
 // Geometric/Vector Math Operations
@@ -435,12 +435,12 @@ public:
 	// Distance between points
 	double distanceTo(const Point& other) const noexcept {
 		double dx = x - other.x; double dy = y - other.y;
-		return NEXSUITE_STD sqrt(dx * dx + dy * dy);
+		return NEX_STD sqrt(dx * dx + dy * dy);
 	}
 
 	// length / magnitude (treats the point as a vector from the origin (0, 0))
 	double magnitude() const noexcept {
-		return NEXSUITE_STD sqrt(x * x + y * y);
+		return NEX_STD sqrt(x * x + y * y);
 	}
 
 	// Dot products
@@ -460,10 +460,10 @@ public:
 		double magnitude1 = this->magnitude(); double magnitude2 = other.magnitude();
 		using math_utils::equalsToZero;
 		if (equalsToZero(magnitude1) || equalsToZero(magnitude2)) {
-			NEXSUITE_ASSERT_MSG(false, "Cannot compute angle with zero-length vector");
+			NEX_ASSERT_MSG(false, "Cannot compute angle with zero-length vector");
 		}
 		double magnitudes = magnitude1 * magnitude2;
-		return NEXSUITE_STD acos(NEXSUITE_STD clamp((dotProd / magnitudes), -1.0, 1.0)); // in radians
+		return NEX_STD acos(NEX_STD clamp((dotProd / magnitudes), -1.0, 1.0)); // in radians
 	}
 
 // Utility Operations
@@ -481,7 +481,7 @@ public:
 
 	// Manhattan distance
 	double manhattanDistanceTo(const Point& other) const noexcept {
-		return NEXSUITE_STD abs(x - other.x) + NEXSUITE_STD abs(y - other.y);
+		return NEX_STD abs(x - other.x) + NEX_STD abs(y - other.y);
 	}
 };
 
@@ -532,7 +532,7 @@ public:
 	Vector2D operator/(double scalar) const {
 		using math_utils::equalsToZero;
 		if (!equalsToZero(scalar)) return Vector2D(x / scalar, y / scalar);
-		NEXSUITE_ASSERT_MSG(false, "Division by zero");
+		NEX_ASSERT_MSG(false, "Division by zero");
 	}
 
 	// Compound Assignment Operators
@@ -551,7 +551,7 @@ public:
 	Vector2D& operator/=(double scalar) {
 		using math_utils::equalsToZero;
 		if (equalsToZero(scalar)) {
-			NEXSUITE_ASSERT_MSG(false, "Division by zero");
+			NEX_ASSERT_MSG(false, "Division by zero");
 		}
 		x /= scalar; y /= scalar;
 		return *this;
@@ -560,7 +560,7 @@ public:
 public:
 	// magnitude (length)
 	double length() const noexcept {
-		return NEXSUITE_STD sqrt(x * x + y * y);
+		return NEX_STD sqrt(x * x + y * y);
 	}
 
 	// Squared length (no sqrt)
@@ -573,7 +573,7 @@ public:
 		double len = length();
 		using math_utils::equalsToZero;
 		if (!equalsToZero(len)) return Vector2D(x / len, y / len);
-		NEXSUITE_ASSERT_MSG(false, "Cannot normalize zero-length vector");
+		NEX_ASSERT_MSG(false, "Cannot normalize zero-length vector");
 	}
 
 	// Dot product
@@ -592,10 +592,10 @@ public:
 		double length1 = this->length(); double length2 = other.length();
 		using math_utils::equalsToZero;
 		if (equalsToZero(length1) || equalsToZero(length2)) {
-			NEXSUITE_ASSERT_MSG(false, "Cannot compute angle with zero-length vector");
+			NEX_ASSERT_MSG(false, "Cannot compute angle with zero-length vector");
         }
 		double cosTheta = dotProd / (length1 * length2);
-		return NEXSUITE_STD acos(NEXSUITE_STD clamp(cosTheta, -1.0, 1.0));
+		return NEX_STD acos(NEX_STD clamp(cosTheta, -1.0, 1.0));
 	}
 
 	// Is zero
@@ -674,21 +674,21 @@ public:
 	Size operator/(double scalar) const {
 		using math_utils::equalsToZero;
 		if (!equalsToZero(scalar)) return Size(width / scalar, height / scalar);
-		NEXSUITE_ASSERT_MSG(false, "Division by zero");
+		NEX_ASSERT_MSG(false, "Division by zero");
 	}
 	Size& operator/=(double scalar) {
 		using math_utils::equalsToZero;
 		if (!equalsToZero(scalar)) { width /= scalar; height /= scalar; return *this; }
-		NEXSUITE_ASSERT_MSG(false, "Division by zero");
+		NEX_ASSERT_MSG(false, "Division by zero");
 	}
 
 public:
 	// Normalize size (positive width and height)
 	Size normalize() const noexcept {
-		return Size(NEXSUITE_STD abs(width), NEXSUITE_STD abs(height));
+		return Size(NEX_STD abs(width), NEX_STD abs(height));
 	}
 	Size& normalize() noexcept {
-		width = NEXSUITE_STD abs(width); height = NEXSUITE_STD abs(height);
+		width = NEX_STD abs(width); height = NEX_STD abs(height);
 		return *this;
 	}
 
@@ -750,21 +750,21 @@ public:
 	Resolution operator/(double scalar) const {
 		using math_utils::equalsToZero;
 		if (!equalsToZero(scalar)) return Resolution(width / scalar, height / scalar);
-		NEXSUITE_ASSERT_MSG(false, "Division by zero");
+		NEX_ASSERT_MSG(false, "Division by zero");
 	}
 	Resolution& operator/=(double scalar) {
 		using math_utils::equalsToZero;
 		if (!equalsToZero(scalar)) { width /= scalar; height /= scalar; return *this; }
-        NEXSUITE_ASSERT_MSG(false, "Division by zero");
+        NEX_ASSERT_MSG(false, "Division by zero");
 	}
 
 public:
 	// Normalize resolution (positive width and height)
 	Resolution normalize() const noexcept {
-		return Resolution(NEXSUITE_STD abs(width), NEXSUITE_STD abs(height));
+		return Resolution(NEX_STD abs(width), NEX_STD abs(height));
 	}
 	Resolution& normalize() noexcept {
-		width = NEXSUITE_STD abs(width); height = NEXSUITE_STD abs(height);
+		width = NEX_STD abs(width); height = NEX_STD abs(height);
 		return *this;
 	}
 
@@ -774,10 +774,10 @@ public:
 		if (equalsToZero(height)) return 0.0; // invalid result, not throwing exception here
 		return static_cast<double>(width) / static_cast<double>(height);
 	}
-	NEXSUITE_STD pair<int, int> simplifiedAspectRatio() const {
-		int w = static_cast<int>(NEXSUITE_STD round(width));
-		int h = static_cast<int>(NEXSUITE_STD round(height));
-		int gcd = NEXSUITE_STD gcd(w, h);
+	NEX_STD pair<int, int> simplifiedAspectRatio() const {
+		int w = static_cast<int>(NEX_STD round(width));
+		int h = static_cast<int>(NEX_STD round(height));
+		int gcd = NEX_STD gcd(w, h);
 		return { w / gcd, h / gcd };
 	}
 };
@@ -840,10 +840,10 @@ public:
 public:
 	// Return canonical values for inverted rectangles
 	constexpr double canonicalWidth() const noexcept {
-		return NEXSUITE_STD abs(width);
+		return NEX_STD abs(width);
 	}
 	constexpr double canonicalHeight() const noexcept {
-		return NEXSUITE_STD abs(height);
+		return NEX_STD abs(height);
 	}
 	constexpr Rect canonicalRect() const noexcept {
 		return Rect(x, y, canonicalWidth(), canonicalHeight());
@@ -932,7 +932,7 @@ public:
 
 	// Diagonal of the rectangle
 	double diagonal() const noexcept {
-		return NEXSUITE_STD sqrt(canonicalWidth() * canonicalWidth() 
+		return NEX_STD sqrt(canonicalWidth() * canonicalWidth() 
 								+ canonicalHeight() * canonicalHeight());
 	}
 
@@ -947,8 +947,8 @@ public:
 
 	// Invert the rectangle
 	Rect& invert() noexcept {
-		width = (width < 0.0) ? NEXSUITE_STD abs(width) : (0.0 - width);
-		height = (height < 0.0) ? NEXSUITE_STD abs(height) : (0.0 - height);
+		width = (width < 0.0) ? NEX_STD abs(width) : (0.0 - width);
+		height = (height < 0.0) ? NEX_STD abs(height) : (0.0 - height);
 		return *this;
 	}
 
@@ -972,17 +972,17 @@ public:
 	Rect intersection(const Rect& other) const noexcept {
 		if (!intersects(other)) return Rect();
 		Rect canonThis = this->canonicalRect(), canonOther = other.canonicalRect();
-		return Rect::fromEdges(NEXSUITE_STD max(canonThis.x, canonOther.x), NEXSUITE_STD max(canonThis.y, canonOther.y),
-			NEXSUITE_STD min((canonThis.x + canonThis.width), (canonOther.x + canonOther.width)), 
-			NEXSUITE_STD min((canonThis.y + canonThis.height), (canonOther.y + canonOther.height)));
+		return Rect::fromEdges(NEX_STD max(canonThis.x, canonOther.x), NEX_STD max(canonThis.y, canonOther.y),
+			NEX_STD min((canonThis.x + canonThis.width), (canonOther.x + canonOther.width)), 
+			NEX_STD min((canonThis.y + canonThis.height), (canonOther.y + canonOther.height)));
 	}
 
 	// Union rectangle
 	Rect unite(const Rect& other) const noexcept {
 		Rect canonThis = this->canonicalRect(), canonOther = other.canonicalRect();
-		return Rect::fromEdges(NEXSUITE_STD min(canonThis.x, canonOther.x), NEXSUITE_STD min(canonThis.y, canonOther.y),
-			NEXSUITE_STD max((canonThis.x + canonThis.width), (canonOther.x + canonOther.width)), 
-			NEXSUITE_STD max((canonThis.y + canonThis.height), (canonOther.y + canonOther.height)));
+		return Rect::fromEdges(NEX_STD min(canonThis.x, canonOther.x), NEX_STD min(canonThis.y, canonOther.y),
+			NEX_STD max((canonThis.x + canonThis.width), (canonOther.x + canonOther.width)), 
+			NEX_STD max((canonThis.y + canonThis.height), (canonOther.y + canonOther.height)));
 	}
 
 	// Move/Offset the rectangle
@@ -1005,13 +1005,13 @@ public:
 
 	// Flip horizontally: mirror across vertical axis
 	Rect& flipHorizontally() noexcept {
-		x += width; width = (width < 0.0) ? NEXSUITE_STD abs(width) : (0.0 - width);
+		x += width; width = (width < 0.0) ? NEX_STD abs(width) : (0.0 - width);
 		return *this;
 	}
 
 	// Flip vertically: mirror across horizontal axis
 	Rect& flipVertically() noexcept {
-		y += height; height = (height < 0.0) ? NEXSUITE_STD abs(height) : (0.0 - height);
+		y += height; height = (height < 0.0) ? NEX_STD abs(height) : (0.0 - height);
 		return *this;
 	}
 
@@ -1091,16 +1091,16 @@ public:
 public:
 	// Return canonical edge values for inverted rectangles
 	constexpr double canonicalLeft() const noexcept {
-		return NEXSUITE_STD min(left, right);
+		return NEX_STD min(left, right);
 	}
 	constexpr double canonicalRight() const noexcept {
-		return NEXSUITE_STD max(left, right);
+		return NEX_STD max(left, right);
 	}
 	constexpr double canonicalTop() const noexcept {
-		return NEXSUITE_STD min(top, bottom);
+		return NEX_STD min(top, bottom);
 	}
 	constexpr double canonicalBottom() const noexcept {
-		return NEXSUITE_STD max(top, bottom);
+		return NEX_STD max(top, bottom);
 	}
 	constexpr EdgeRect canonicalRect() const noexcept {
 		return EdgeRect(canonicalLeft(), canonicalTop(), canonicalRight(), canonicalBottom());
@@ -1157,11 +1157,11 @@ public:
 	}
 
 	// Stream Operators
-	friend NEXSUITE_STD ostream& operator<<(NEXSUITE_STD ostream& os, const EdgeRect& rect) {
+	friend NEX_STD ostream& operator<<(NEX_STD ostream& os, const EdgeRect& rect) {
 		return os << "EdgeRect(left=" << rect.left << ", top=" << rect.top 
 					<< ", right=" << rect.right << ", bottom=" << rect.bottom << ")";
 	}
-	friend NEXSUITE_STD wostream& operator<<(NEXSUITE_STD wostream& wos, const EdgeRect& rect) {
+	friend NEX_STD wostream& operator<<(NEX_STD wostream& wos, const EdgeRect& rect) {
 		return wos << L"EdgeRect(left=" << rect.left << L", top=" << rect.top 
 					<< L", right=" << rect.right << L", bottom=" << rect.bottom << L")";
 	}
@@ -1169,10 +1169,10 @@ public:
 public:
 	// Width and height of the rectangle
 	double width() const noexcept {
-		return NEXSUITE_STD abs(right - left);
+		return NEX_STD abs(right - left);
 	}
 	double height() const noexcept {
-		return NEXSUITE_STD abs(bottom - top);
+		return NEX_STD abs(bottom - top);
 	}
 
 	// Size of rectangle
@@ -1208,7 +1208,7 @@ public:
 
 	// Diagonal of the rectangle
 	double diagonal() const noexcept {
-		return NEXSUITE_STD sqrt(width() * width() + height() * height());
+		return NEX_STD sqrt(width() * width() + height() * height());
 	}
 
 	// For inverted rectangles
@@ -1216,8 +1216,8 @@ public:
 		return (right < left || bottom < top);
 	}
 	EdgeRect& normalize() noexcept {
-		if (right < left) NEXSUITE_STD swap(right, left);
-		if (bottom < top) NEXSUITE_STD swap(bottom, top);
+		if (right < left) NEX_STD swap(right, left);
+		if (bottom < top) NEX_STD swap(bottom, top);
 		return *this;
 	}
 
@@ -1245,15 +1245,15 @@ public:
 	EdgeRect intersection(const EdgeRect& other) const noexcept {
 		if (!intersects(other)) return EdgeRect();
 		EdgeRect canonThis = this->canonicalRect(), canonOther = other.canonicalRect();
-		return EdgeRect(NEXSUITE_STD max(canonThis.left, canonOther.left), NEXSUITE_STD max(canonThis.top, canonOther.top),
-			NEXSUITE_STD min(canonThis.right, canonOther.right), NEXSUITE_STD min(canonThis.bottom, canonOther.bottom));
+		return EdgeRect(NEX_STD max(canonThis.left, canonOther.left), NEX_STD max(canonThis.top, canonOther.top),
+			NEX_STD min(canonThis.right, canonOther.right), NEX_STD min(canonThis.bottom, canonOther.bottom));
 	}
 
 	// Union rectangle
 	EdgeRect unite(const EdgeRect& other) const noexcept {
 		EdgeRect canonThis = this->canonicalRect(), canonOther = other.canonicalRect();
-		return EdgeRect(NEXSUITE_STD min(canonThis.left, canonOther.left), NEXSUITE_STD min(canonThis.top, canonOther.top),
-			NEXSUITE_STD max(canonThis.right, canonOther.right), NEXSUITE_STD max(canonThis.bottom, canonOther.bottom));
+		return EdgeRect(NEX_STD min(canonThis.left, canonOther.left), NEX_STD min(canonThis.top, canonOther.top),
+			NEX_STD max(canonThis.right, canonOther.right), NEX_STD max(canonThis.bottom, canonOther.bottom));
 	}
 
 	// Move/Offset the rectangle
@@ -1279,13 +1279,13 @@ public:
 
 	// Flip horizontally: mirror across vertical axis
 	EdgeRect& flipHorizontally() noexcept {
-		NEXSUITE_STD swap(left, right);
+		NEX_STD swap(left, right);
 		return *this;
 	}
 
 	// Flip vertically: mirror across horizontal axis
 	EdgeRect& flipVertically() noexcept {
-		NEXSUITE_STD swap(top, bottom);
+		NEX_STD swap(top, bottom);
 		return *this;
 	}
 
@@ -1361,7 +1361,7 @@ public:
 	Margin operator/(double scalar) const {
 		using math_utils::equalsToZero;
 		if (!equalsToZero(scalar)) return Margin(left / scalar, top / scalar, right / scalar, bottom / scalar);
-		NEXSUITE_ASSERT_MSG(false, "Division by zero");
+		NEX_ASSERT_MSG(false, "Division by zero");
 	}
 	Margin& operator*=(double scalar) noexcept {
 		left *= scalar; top *= scalar; right *= scalar; bottom *= scalar;
@@ -1370,18 +1370,18 @@ public:
 	Margin& operator/=(double scalar) {
 		using math_utils::equalsToZero;
 		if (equalsToZero(scalar)) { 
-			NEXSUITE_ASSERT_MSG(false, "Division by zero");
+			NEX_ASSERT_MSG(false, "Division by zero");
 		}
 		left /= scalar; top /= scalar; right /= scalar; bottom /= scalar; 
 		return *this; 
 	}
 
 	// Stream Operators
-	friend NEXSUITE_STD ostream& operator<<(NEXSUITE_STD ostream& os, const Margin& margin) {
+	friend NEX_STD ostream& operator<<(NEX_STD ostream& os, const Margin& margin) {
 		return os << "Margin(left=" << margin.left << ", top=" << margin.top 
 					<< ", right=" << margin.right << ", bottom=" << margin.bottom << ")";
 	}
-	friend NEXSUITE_STD wostream& operator<<(NEXSUITE_STD wostream& wos, const Margin& margin) {
+	friend NEX_STD wostream& operator<<(NEX_STD wostream& wos, const Margin& margin) {
 		return wos << L"Margin(left=" << margin.left << L", top=" << margin.top 
 					<< L", right=" << margin.right << L", bottom=" << margin.bottom << L")";
 	}
@@ -1487,7 +1487,7 @@ public:
 	Padding operator/(double scalar) const {
 		using math_utils::equalsToZero;
 		if (!equalsToZero(scalar)) return Padding(left / scalar, top / scalar, right / scalar, bottom / scalar);
-		NEXSUITE_ASSERT_MSG(false, "Division by zero");
+		NEX_ASSERT_MSG(false, "Division by zero");
 	}
 	Padding& operator*=(double scalar) noexcept {
 		left *= scalar; top *= scalar; right *= scalar; bottom *= scalar;
@@ -1496,18 +1496,18 @@ public:
 	Padding& operator/=(double scalar) {
 		using math_utils::equalsToZero;
 		if (equalsToZero(scalar)) { 
-			NEXSUITE_ASSERT_MSG(false, "Division by zero");
+			NEX_ASSERT_MSG(false, "Division by zero");
 		}
 		left /= scalar; top /= scalar; right /= scalar; bottom /= scalar; 
 		return *this; 
 	}
 
 	// Stream Operators
-	friend NEXSUITE_STD ostream& operator<<(NEXSUITE_STD ostream& os, const Padding& padding) {
+	friend NEX_STD ostream& operator<<(NEX_STD ostream& os, const Padding& padding) {
 		return os << "Padding(left=" << padding.left << ", top=" << padding.top 
 					<< ", right=" << padding.right << ", bottom=" << padding.bottom << ")";
 	}
-	friend NEXSUITE_STD wostream& operator<<(NEXSUITE_STD wostream& wos, const Padding& padding) {
+	friend NEX_STD wostream& operator<<(NEX_STD wostream& wos, const Padding& padding) {
 		return wos << L"Padding(left=" << padding.left << L", top=" << padding.top 
 					<< L", right=" << padding.right << L", bottom=" << padding.bottom << L")";
 	}
@@ -1619,7 +1619,7 @@ public:
 	Thickness operator/(double scalar) const {
 		using math_utils::equalsToZero;
 		if (!equalsToZero(scalar)) return Thickness(left / scalar, top / scalar, right / scalar, bottom / scalar);
-		NEXSUITE_ASSERT_MSG(false, "Division by zero");
+		NEX_ASSERT_MSG(false, "Division by zero");
 	}
 	Thickness& operator*=(double scalar) noexcept {
 		left *= scalar; top *= scalar; right *= scalar; bottom *= scalar;
@@ -1628,18 +1628,18 @@ public:
 	Thickness& operator/=(double scalar) {
 		using math_utils::equalsToZero;
 		if (equalsToZero(scalar)) { 
-			NEXSUITE_ASSERT_MSG(false, "Division by zero");
+			NEX_ASSERT_MSG(false, "Division by zero");
 		}
 		left /= scalar; top /= scalar; right /= scalar; bottom /= scalar; 
 		return *this; 
 	}
 
 	// Stream Operators
-	friend NEXSUITE_STD ostream& operator<<(NEXSUITE_STD ostream& os, const Thickness& thickness) {
+	friend NEX_STD ostream& operator<<(NEX_STD ostream& os, const Thickness& thickness) {
 		return os << "Thickness(left=" << thickness.left << ", top=" << thickness.top 
 					<< ", right=" << thickness.right << ", bottom=" << thickness.bottom << ")";
 	}
-	friend NEXSUITE_STD wostream& operator<<(NEXSUITE_STD wostream& wos, const Thickness& thickness) {
+	friend NEX_STD wostream& operator<<(NEX_STD wostream& wos, const Thickness& thickness) {
 		return wos << L"Thickness(left=" << thickness.left << L", top=" << thickness.top 
 					<< L", right=" << thickness.right << L", bottom=" << thickness.bottom << L")";
 	}
@@ -1690,4 +1690,4 @@ public:
 	}
 };
 
-NEXSUITE_NAMESPACE_END
+NEX_NAMESPACE_END

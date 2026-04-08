@@ -12,10 +12,10 @@
 #include <sstream>
 #include <iomanip>
 
-#include "common/macros.h"
-#include "common/types.h"
+#include "nex/base/macros.h"
+#include "nex/base/types.h"
 
-NEXSUITE_NAMESPACE_BEGIN
+NEX_NAMESPACE_BEGIN
 
 // 32-bit RGBA color format (RGBA8888) (non-premultiplied). Common in OpenGL, WebGL, etc.
 // The color component order is 0xRRGGBBAA. Similar to ARGB but with a different layout. 
@@ -349,7 +349,7 @@ public:
             if (c <= 0.0031308f) {
                 return 12.92f * c;
             } else {
-                return 1.055f * NEXSUITE_STD pow(c, 1.0f / 2.4f) - 0.055f;
+                return 1.055f * NEX_STD pow(c, 1.0f / 2.4f) - 0.055f;
             }
         };
 
@@ -359,10 +359,10 @@ public:
 
         Color clr{}; 
         clr.clr_ = RGBAColorSet(
-            static_cast<uint8>(NEXSUITE_STD clamp(r * 255.0f, 0.0f, 255.0f)),
-            static_cast<uint8>(NEXSUITE_STD clamp(g * 255.0f, 0.0f, 255.0f)),
-            static_cast<uint8>(NEXSUITE_STD clamp(b * 255.0f, 0.0f, 255.0f)),
-            static_cast<uint8>(NEXSUITE_STD clamp(xyza.a * 255.0f, 0.0f, 255.0f)));
+            static_cast<uint8>(NEX_STD clamp(r * 255.0f, 0.0f, 255.0f)),
+            static_cast<uint8>(NEX_STD clamp(g * 255.0f, 0.0f, 255.0f)),
+            static_cast<uint8>(NEX_STD clamp(b * 255.0f, 0.0f, 255.0f)),
+            static_cast<uint8>(NEX_STD clamp(xyza.a * 255.0f, 0.0f, 255.0f)));
         return clr;
     }
     // Create Color from CMYKColor
@@ -419,27 +419,27 @@ public:
         float g = ycbcr.y - 0.344136f * (ycbcr.cb - 128.0f) - 0.714136f * (ycbcr.cr - 128.0f);
         float b = ycbcr.y + 1.772f * (ycbcr.cb - 128.0f);
 
-        uint8 r8 = static_cast<uint8>(NEXSUITE_STD clamp(r, 0.0f, 255.0f));
-        uint8 g8 = static_cast<uint8>(NEXSUITE_STD clamp(g, 0.0f, 255.0f));
-        uint8 b8 = static_cast<uint8>(NEXSUITE_STD clamp(b, 0.0f, 255.0f));
+        uint8 r8 = static_cast<uint8>(NEX_STD clamp(r, 0.0f, 255.0f));
+        uint8 g8 = static_cast<uint8>(NEX_STD clamp(g, 0.0f, 255.0f));
+        uint8 b8 = static_cast<uint8>(NEX_STD clamp(b, 0.0f, 255.0f));
         Color clr{}; clr.clr_ = RGBAColorSet(r8, g8, b8, 255);
         return clr;
     }
     // Create Color from hex string (#RRGGBB or #AARRGGBB)
-    static Color fromHex(const NEXSUITE_STD string& hex) {
-        NEXSUITE_STD string hexClean = hex;
+    static Color fromHex(const NEX_STD string& hex) {
+        NEX_STD string hexClean = hex;
         // Remove leading '#' if present
         if (!hexClean.empty() && hexClean[0] == '#') {
             hexClean = hexClean.substr(1);
         }
         // Convert to uppercase for easier parsing
         for (char& c : hexClean) {
-            c = static_cast<char>(NEXSUITE_STD toupper(static_cast<unsigned char>(c)));
+            c = static_cast<char>(NEX_STD toupper(static_cast<unsigned char>(c)));
         }
         // Parse hex string
         unsigned long value = 0;
         try {
-            value = NEXSUITE_STD stoul(hexClean, nullptr, 16);
+            value = NEX_STD stoul(hexClean, nullptr, 16);
         } catch (...) {
             // Invalid hex string, return black
             return Color(0, 0, 0, 255);
@@ -468,13 +468,13 @@ public:
         return Color(0, 0, 0, 255);
     }
     static Color fromHex(const char* hex) {
-        return fromHex(hex ? NEXSUITE_STD string(hex) : NEXSUITE_STD string());
+        return fromHex(hex ? NEX_STD string(hex) : NEX_STD string());
     }
     // Create Color from name (case-insensitive)
-    static Color fromName(const NEXSUITE_STD string& name) {
-        NEXSUITE_STD string nameLower = name;
+    static Color fromName(const NEX_STD string& name) {
+        NEX_STD string nameLower = name;
         for (char& c : nameLower) {
-            c = static_cast<char>(NEXSUITE_STD tolower(static_cast<unsigned char>(c)));
+            c = static_cast<char>(NEX_STD tolower(static_cast<unsigned char>(c)));
         }
         // Common color names
         if (nameLower == "transparent") return Transparent();
@@ -504,7 +504,7 @@ public:
         return Black();
     }
     static Color fromName(const char* name) {
-        return fromName(name ? NEXSUITE_STD string(name) : NEXSUITE_STD string());
+        return fromName(name ? NEX_STD string(name) : NEX_STD string());
     }
 
     // Color conversion methods
@@ -558,7 +558,7 @@ public:
             if (c <= 0.04045f) {
                 return c / 12.92f;
             } else {
-                return NEXSUITE_STD pow((c + 0.055f) / 1.055f, 2.4f);
+                return NEX_STD pow((c + 0.055f) / 1.055f, 2.4f);
             }
         };
 
@@ -580,7 +580,7 @@ public:
         float g = static_cast<float>(RGBAColor_GetG(clr_)) / 255.0f;
         float b = static_cast<float>(RGBAColor_GetB(clr_)) / 255.0f;
 
-        float k = 1.0f - NEXSUITE_STD max({ r, g, b });
+        float k = 1.0f - NEX_STD max({ r, g, b });
         float c = (1.0f - r - k) / (1.0f - k + 1e-10f);
         float m = (1.0f - g - k) / (1.0f - k + 1e-10f);
         float y = (1.0f - b - k) / (1.0f - k + 1e-10f);
@@ -593,8 +593,8 @@ public:
         float g = static_cast<float>(RGBAColor_GetG(clr_)) / 255.0f;
         float b = static_cast<float>(RGBAColor_GetB(clr_)) / 255.0f;
 
-        float max = NEXSUITE_STD max({ r, g, b });
-        float min = NEXSUITE_STD min({ r, g, b });
+        float max = NEX_STD max({ r, g, b });
+        float min = NEX_STD min({ r, g, b });
         float delta = max - min;
 
         float h = 0.0f;
@@ -620,8 +620,8 @@ public:
         float g = static_cast<float>(RGBAColor_GetG(clr_)) / 255.0f;
         float b = static_cast<float>(RGBAColor_GetB(clr_)) / 255.0f;
 
-        float max = NEXSUITE_STD max({ r, g, b });
-        float min = NEXSUITE_STD min({ r, g, b });
+        float max = NEX_STD max({ r, g, b });
+        float min = NEX_STD min({ r, g, b });
         float delta = max - min;
 
         float h = 0.0f;
@@ -654,22 +654,22 @@ public:
         return YCbCrColor(y, cb, cr);
     }
     // Convert to hex string (#RRGGBB format, alpha omitted)
-    NEXSUITE_STD string toHex() const {
-        NEXSUITE_STD ostringstream oss;
-        oss << "#" << NEXSUITE_STD hex << NEXSUITE_STD uppercase << NEXSUITE_STD setfill('0') 
-            << NEXSUITE_STD setw(2) << static_cast<int>(getR())
-            << NEXSUITE_STD setw(2) << static_cast<int>(getG())
-            << NEXSUITE_STD setw(2) << static_cast<int>(getB());
+    NEX_STD string toHex() const {
+        NEX_STD ostringstream oss;
+        oss << "#" << NEX_STD hex << NEX_STD uppercase << NEX_STD setfill('0') 
+            << NEX_STD setw(2) << static_cast<int>(getR())
+            << NEX_STD setw(2) << static_cast<int>(getG())
+            << NEX_STD setw(2) << static_cast<int>(getB());
         return oss.str();
     }
     // Convert to hex string with alpha (#AARRGGBB format)
-    NEXSUITE_STD string toHexWithAlpha() const {
-        NEXSUITE_STD ostringstream oss;
-        oss << "#" << NEXSUITE_STD hex << NEXSUITE_STD uppercase << NEXSUITE_STD setfill('0')
-            << NEXSUITE_STD setw(2) << static_cast<int>(getA())
-            << NEXSUITE_STD setw(2) << static_cast<int>(getR())
-            << NEXSUITE_STD setw(2) << static_cast<int>(getG())
-            << NEXSUITE_STD setw(2) << static_cast<int>(getB());
+    NEX_STD string toHexWithAlpha() const {
+        NEX_STD ostringstream oss;
+        oss << "#" << NEX_STD hex << NEX_STD uppercase << NEX_STD setfill('0')
+            << NEX_STD setw(2) << static_cast<int>(getA())
+            << NEX_STD setw(2) << static_cast<int>(getR())
+            << NEX_STD setw(2) << static_cast<int>(getG())
+            << NEX_STD setw(2) << static_cast<int>(getB());
         return oss.str();
     }
     
@@ -746,9 +746,9 @@ public:
         int bNum = (static_cast<int>(this->getB()) * static_cast<int>(a1)) +
                    (static_cast<int>(other.getB()) * static_cast<int>(a2) * (255 - static_cast<int>(a1)) / 255);
 
-        uint8 rOut = static_cast<uint8>(NEXSUITE_STD clamp(rNum / aOutInt, 0, 255));
-        uint8 gOut = static_cast<uint8>(NEXSUITE_STD clamp(gNum / aOutInt, 0, 255));
-        uint8 bOut = static_cast<uint8>(NEXSUITE_STD clamp(bNum / aOutInt, 0, 255));
+        uint8 rOut = static_cast<uint8>(NEX_STD clamp(rNum / aOutInt, 0, 255));
+        uint8 gOut = static_cast<uint8>(NEX_STD clamp(gNum / aOutInt, 0, 255));
+        uint8 bOut = static_cast<uint8>(NEX_STD clamp(bNum / aOutInt, 0, 255));
 
         return Color::fromRGBA(RGBAColorSet(rOut, gOut, bOut, aOut));
     }
@@ -758,10 +758,10 @@ public:
     }
     // Subtract color components
     Color operator-(const Color& other) const noexcept {
-        uint8 rOut = static_cast<uint8>(NEXSUITE_STD max(0, this->getR() - other.getR()));
-        uint8 gOut = static_cast<uint8>(NEXSUITE_STD max(0, this->getG() - other.getG()));
-        uint8 bOut = static_cast<uint8>(NEXSUITE_STD max(0, this->getB() - other.getB()));
-        uint8 aOut = static_cast<uint8>(NEXSUITE_STD max(0, this->getA() - other.getA()));
+        uint8 rOut = static_cast<uint8>(NEX_STD max(0, this->getR() - other.getR()));
+        uint8 gOut = static_cast<uint8>(NEX_STD max(0, this->getG() - other.getG()));
+        uint8 bOut = static_cast<uint8>(NEX_STD max(0, this->getB() - other.getB()));
+        uint8 aOut = static_cast<uint8>(NEX_STD max(0, this->getA() - other.getA()));
 
         return Color::fromRGBA(RGBAColorSet(rOut, gOut, bOut, aOut));
     }
@@ -771,10 +771,10 @@ public:
     }
     // Scale color components by a scalar
     Color operator*(float scalar) const noexcept {
-        uint8 rOut = static_cast<uint8>(NEXSUITE_STD clamp(this->getR() * scalar, 0.0f, 255.0f));
-        uint8 gOut = static_cast<uint8>(NEXSUITE_STD clamp(this->getG() * scalar, 0.0f, 255.0f));
-        uint8 bOut = static_cast<uint8>(NEXSUITE_STD clamp(this->getB() * scalar, 0.0f, 255.0f));
-        uint8 aOut = static_cast<uint8>(NEXSUITE_STD clamp(this->getA() * scalar, 0.0f, 255.0f));
+        uint8 rOut = static_cast<uint8>(NEX_STD clamp(this->getR() * scalar, 0.0f, 255.0f));
+        uint8 gOut = static_cast<uint8>(NEX_STD clamp(this->getG() * scalar, 0.0f, 255.0f));
+        uint8 bOut = static_cast<uint8>(NEX_STD clamp(this->getB() * scalar, 0.0f, 255.0f));
+        uint8 aOut = static_cast<uint8>(NEX_STD clamp(this->getA() * scalar, 0.0f, 255.0f));
 
         return Color::fromRGBA(RGBAColorSet(rOut, gOut, bOut, aOut));
     }
@@ -787,10 +787,10 @@ public:
         if (scalar == 0.0f) {
             return Color::fromRGBA(RGBAColorSet(0, 0, 0, 0));
         }
-        uint8 rOut = static_cast<uint8>(NEXSUITE_STD clamp(this->getR() / scalar, 0.0f, 255.0f));
-        uint8 gOut = static_cast<uint8>(NEXSUITE_STD clamp(this->getG() / scalar, 0.0f, 255.0f));
-        uint8 bOut = static_cast<uint8>(NEXSUITE_STD clamp(this->getB() / scalar, 0.0f, 255.0f));
-        uint8 aOut = static_cast<uint8>(NEXSUITE_STD clamp(this->getA() / scalar, 0.0f, 255.0f));
+        uint8 rOut = static_cast<uint8>(NEX_STD clamp(this->getR() / scalar, 0.0f, 255.0f));
+        uint8 gOut = static_cast<uint8>(NEX_STD clamp(this->getG() / scalar, 0.0f, 255.0f));
+        uint8 bOut = static_cast<uint8>(NEX_STD clamp(this->getB() / scalar, 0.0f, 255.0f));
+        uint8 aOut = static_cast<uint8>(NEX_STD clamp(this->getA() / scalar, 0.0f, 255.0f));
 
         return Color::fromRGBA(RGBAColorSet(rOut, gOut, bOut, aOut));
     }
@@ -803,9 +803,9 @@ public:
 public:
     // Darken the color by a factor (0.0 = no change, 1.0 = completely black)
     Color darken(float factor) const noexcept {
-        factor = NEXSUITE_STD clamp(factor, 0.0f, 1.0f);
+        factor = NEX_STD clamp(factor, 0.0f, 1.0f);
         HSLColor hsl = toHSL();
-        hsl.lightness = NEXSUITE_STD max(0.0f, hsl.lightness - factor * hsl.lightness);
+        hsl.lightness = NEX_STD max(0.0f, hsl.lightness - factor * hsl.lightness);
         Color result = fromHSL(hsl);
         result.setA(getA());
         return result;
@@ -813,9 +813,9 @@ public:
 
     // Lighten the color by a factor (0.0 = no change, 1.0 = completely white)
     Color lighten(float factor) const noexcept {
-        factor = NEXSUITE_STD clamp(factor, 0.0f, 1.0f);
+        factor = NEX_STD clamp(factor, 0.0f, 1.0f);
         HSLColor hsl = toHSL();
-        hsl.lightness = NEXSUITE_STD min(1.0f, hsl.lightness + factor * (1.0f - hsl.lightness));
+        hsl.lightness = NEX_STD min(1.0f, hsl.lightness + factor * (1.0f - hsl.lightness));
         Color result = fromHSL(hsl);
         result.setA(getA());
         return result;
@@ -824,7 +824,7 @@ public:
     // Brighten the color by adding a fixed amount to lightness
     Color brighten(int amount) const noexcept {
         HSLColor hsl = toHSL();
-        hsl.lightness = NEXSUITE_STD min(1.0f, hsl.lightness + static_cast<float>(amount) / 255.0f);
+        hsl.lightness = NEX_STD min(1.0f, hsl.lightness + static_cast<float>(amount) / 255.0f);
         Color result = fromHSL(hsl);
         result.setA(getA());
         return result;
@@ -833,7 +833,7 @@ public:
     // Dim the color by subtracting a fixed amount from lightness
     Color dim(int amount) const noexcept {
         HSLColor hsl = toHSL();
-        hsl.lightness = NEXSUITE_STD max(0.0f, hsl.lightness - static_cast<float>(amount) / 255.0f);
+        hsl.lightness = NEX_STD max(0.0f, hsl.lightness - static_cast<float>(amount) / 255.0f);
         Color result = fromHSL(hsl);
         result.setA(getA());
         return result;
@@ -842,7 +842,7 @@ public:
     // Adjust saturation by a factor (negative values desaturate, positive values saturate)
     Color adjustSaturation(float factor) const noexcept {
         HSLColor hsl = toHSL();
-        hsl.saturation = NEXSUITE_STD clamp(hsl.saturation * (1.0f + factor), 0.0f, 1.0f);
+        hsl.saturation = NEX_STD clamp(hsl.saturation * (1.0f + factor), 0.0f, 1.0f);
         Color result = fromHSL(hsl);
         result.setA(getA());
         return result;
@@ -878,7 +878,7 @@ public:
 public:
     // Linear interpolation between two colors (t should be in range [0.0, 1.0])
     static Color lerp(const Color& color1, const Color& color2, float t) noexcept {
-        t = NEXSUITE_STD clamp(t, 0.0f, 1.0f);
+        t = NEX_STD clamp(t, 0.0f, 1.0f);
         float r = color1.getR() * (1.0f - t) + color2.getR() * t;
         float g = color1.getG() * (1.0f - t) + color2.getG() * t;
         float b = color1.getB() * (1.0f - t) + color2.getB() * t;
@@ -901,9 +901,9 @@ public:
         float b = static_cast<float>(getB()) / 255.0f;
         
         // Apply gamma correction
-        r = (r <= 0.03928f) ? (r / 12.92f) : NEXSUITE_STD pow((r + 0.055f) / 1.055f, 2.4f);
-        g = (g <= 0.03928f) ? (g / 12.92f) : NEXSUITE_STD pow((g + 0.055f) / 1.055f, 2.4f);
-        b = (b <= 0.03928f) ? (b / 12.92f) : NEXSUITE_STD pow((b + 0.055f) / 1.055f, 2.4f);
+        r = (r <= 0.03928f) ? (r / 12.92f) : NEX_STD pow((r + 0.055f) / 1.055f, 2.4f);
+        g = (g <= 0.03928f) ? (g / 12.92f) : NEX_STD pow((g + 0.055f) / 1.055f, 2.4f);
+        b = (b <= 0.03928f) ? (b / 12.92f) : NEX_STD pow((b + 0.055f) / 1.055f, 2.4f);
         
         // Calculate relative luminance
         return 0.2126f * r + 0.7152f * g + 0.0722f * b;
@@ -915,8 +915,8 @@ public:
     static float contrastRatio(const Color& color1, const Color& color2) noexcept {
         float lum1 = color1.luminance();
         float lum2 = color2.luminance();
-        float lighter = NEXSUITE_STD max(lum1, lum2);
-        float darker = NEXSUITE_STD min(lum1, lum2);
+        float lighter = NEX_STD max(lum1, lum2);
+        float darker = NEX_STD min(lum1, lum2);
         // Avoid division by zero
         if (darker == 0.0f) return (lighter > 0.0f) ? 21.0f : 1.0f;
         return (lighter + 0.05f) / (darker + 0.05f);
@@ -941,4 +941,4 @@ public:
     }
 };
 
-NEXSUITE_NAMESPACE_END
+NEX_NAMESPACE_END

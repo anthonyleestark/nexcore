@@ -171,16 +171,22 @@
  * dependencies, allowing to use the types directly inside the current scope while respecting the ownership of the type.
  */
 
+#define NEX_IMPORT_TYPE_FROM_FOUNDATION(type)                                   \
+    using NEX_PREPEND_NAMESPACE(type);
 #define NEX_IMPORT_TYPE_FROM_LAYER(layer, type)                                 \
     using NEX_PREPEND_LAYER_NAMESPACE(layer, type);
 #define NEX_IMPORT_TYPE_FROM_PROJECT_LAYER(project, layer, type)                \
     using NEX_PREPEND_PROJECT_LAYER_NAMESPACE(project, layer, type);
 
+#define NEX_ALIAS_TYPE_FROM_FOUNDATION(type)                                    \
+    using type = NEX_PREPEND_NAMESPACE(type);
 #define NEX_ALIAS_TYPE_FROM_LAYER(layer, type)                                  \
     using type = NEX_PREPEND_LAYER_NAMESPACE(layer, type);
 #define NEX_ALIAS_TYPE_FROM_PROJECT_LAYER(project, layer, type)                 \
     using type = NEX_PREPEND_PROJECT_LAYER_NAMESPACE(project, layer, type);
 
+#define NEX_ALIAS_TYPE_AS_FROM_FOUNDATION(alias, type)                          \
+    using alias = NEX_PREPEND_NAMESPACE(type);
 #define NEX_ALIAS_TYPE_AS_FROM_LAYER(alias, layer, type)                        \
     using alias = NEX_PREPEND_LAYER_NAMESPACE(layer, type);
 #define NEX_ALIAS_TYPE_AS_FROM_PROJECT_LAYER(alias, project, layer, type)       \

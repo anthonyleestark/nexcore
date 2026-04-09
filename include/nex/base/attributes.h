@@ -7,7 +7,6 @@
 
 /**
  * @file      attributes.h
- * @defgroup  attributes Attributes and Annotations
  * @brief     Defines macros for common attributes and annotations used in the codebase, such as export/import, 
  *            deprecation, nodiscard, and noreturn.
  * 

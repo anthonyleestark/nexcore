@@ -6,8 +6,7 @@
 #pragma once
 
 /**
- * @file      build_config.h
- * @defgroup  build_config_detection Build Configuration Detection
+ * @file      build.h
  * @brief     Detects the build configuration (e.g., debug, release) and defines macros for conditional compilation 
  *            based on the build configuration; also defines helper macros for source location, which can be used for 
  *            logging, error reporting, and debugging purposes.

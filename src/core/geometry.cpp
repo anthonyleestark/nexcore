@@ -4,7 +4,7 @@
  */
 
 #include "nex/core/geometry.h"
-#include "nex/core/linear.h"
+#include "nex/base/linear.h"
 
 NEX_NAMESPACE_BEGIN
 

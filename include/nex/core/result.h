@@ -7,7 +7,7 @@
 
 #include <utility>
 
-#include "nex/base/error.h"
+#include "nex/core/error.h"
 #include "nex/base/assert_crash.h"
 #include "nex/base/types.h"
 

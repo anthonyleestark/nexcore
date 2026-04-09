@@ -33,14 +33,14 @@
  * These macros can be used to compare against the __cplusplus macro to determine the C++ version being used to compile the code.
  */
 
-#define NEX_CXX_98_VER_NUMBER          199711L
-#define NEX_CXX_03_VER_NUMBER          199711L
-#define NEX_CXX_11_VER_NUMBER          201103L
-#define NEX_CXX_14_VER_NUMBER          201402L
-#define NEX_CXX_17_VER_NUMBER          201703L
-#define NEX_CXX_20_VER_NUMBER          202002L
-#define NEX_CXX_23_VER_NUMBER          202302L
-#define NEX_CXX_26_VER_NUMBER          0xFFFFFL    // (not yet standardized)
+#define NEX_CXX98_VER_NUMBER           199711L
+#define NEX_CXX03_VER_NUMBER           199711L
+#define NEX_CXX11_VER_NUMBER           201103L
+#define NEX_CXX14_VER_NUMBER           201402L
+#define NEX_CXX17_VER_NUMBER           201703L
+#define NEX_CXX20_VER_NUMBER           202002L
+#define NEX_CXX23_VER_NUMBER           202302L
+#define NEX_CXX26_VER_NUMBER           0xFFFFFL    // (not yet standardized)
 
 /**
  * @section Compiler detection macros
@@ -79,53 +79,53 @@
     #define NEX_CXX_VER 0L                 // no C++ support
 #endif
 
-// Check if it has C++ 17 or later
+// Check if it has C++17 or later
 #ifndef NEX_HAS_CXX17
-    #if NEX_CXX_VER > NEX_CXX_14_VER_NUMBER
+    #if NEX_CXX_VER > NEX_CXX14_VER_NUMBER
         #define NEX_HAS_CXX17 1
     #else
         #define NEX_HAS_CXX17 0
     #endif
 #endif
 
-// Check if it has C++ 20 or later
+// Check if it has C++20 or later
 #ifndef NEX_HAS_CXX20
-    #if NEX_HAS_CXX17 && NEX_CXX_VER > NEX_CXX_17_VER_NUMBER
+    #if NEX_HAS_CXX17 && NEX_CXX_VER > NEX_CXX17_VER_NUMBER
         #define NEX_HAS_CXX20 1
     #else
         #define NEX_HAS_CXX20 0
     #endif
 #endif
 
-// Check if it has C++ 23 or later
+// Check if it has C++23 or later
 #ifndef NEX_HAS_CXX23
-    #if NEX_HAS_CXX20 && NEX_CXX_VER > NEX_CXX_20_VER_NUMBER
+    #if NEX_HAS_CXX20 && NEX_CXX_VER > NEX_CXX20_VER_NUMBER
         #define NEX_HAS_CXX23 1
     #else
         #define NEX_HAS_CXX23 0
     #endif
 #endif
 
-// Check if it has C++ 26 or later
+// Check if it has C++26 or later
 #ifndef NEX_HAS_CXX26
-    #if NEX_HAS_CXX23 && NEX_CXX_VER > NEX_CXX_23_VER_NUMBER
+    #if NEX_HAS_CXX23 && NEX_CXX_VER > NEX_CXX23_VER_NUMBER
         #define NEX_HAS_CXX26 1
     #else
         #define NEX_HAS_CXX26 0
     #endif
 #endif
 
-// Do not support C++ 17 and earlier
+// Do not support C++17 and earlier
 #if !NEX_HAS_CXX20
-    #error Nex-ecosystem only supports C++ 20 or later.
+    #error Nex-ecosystem only supports C++20 or later.
 #endif
 
-// C++ 23 must imply C++ 20
+// C++23 must imply C++20
 #if NEX_HAS_CXX23 && !NEX_HAS_CXX20
     #error NEX_HAS_CXX23 must imply NEX_HAS_CXX20.
 #endif
 
-// C++ 26 must imply C++ 23
+// C++26 must imply C++23
 #if NEX_HAS_CXX26 && !NEX_HAS_CXX23
     #error NEX_HAS_CXX26 must imply NEX_HAS_CXX23.
 #endif

@@ -7,7 +7,6 @@
 
 /**
  * @file      namespace.h
- * @defgroup  namespace_macros Namespace Macros
  * @brief     Defines macros for the Nex-ecosystem global namespace and helper macros for namespace usage.
  * 
  * @details 

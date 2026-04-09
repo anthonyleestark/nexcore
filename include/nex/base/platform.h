@@ -7,7 +7,6 @@
 
 /**
  * @file      platform.h
- * @defgroup  platform_detection Platform Detection
  * @brief     Detects the target platform and defines macros accordingly for conditional compilation.
  * 
  * @details

@@ -166,8 +166,9 @@
  * @brief   Define macros for importing types from other layers and projects/layers
  * @note
  * The NEX_IMPORT_TYPE_FROM_LAYER macro is used to import a type from another layer within the same project, while the 
- * NEX_IMPORT_TYPE_FROM_PROJECT_LAYER macro is used to import a type from another project/layer. These macros help manage 
- * dependencies, allowing to use the types directly inside the current scope while respecting the ownership of the type.
+ * NEX_IMPORT_TYPE_FROM_PROJECT_LAYER macro is used to import a type from another project/layer. 
+ * These macros help manage dependencies, allowing to use the types directly inside the current scope while respecting 
+ * the ownership of the type.
  */
 
 #define NEX_IMPORT_TYPE_FROM_FOUNDATION(type)                                   \
@@ -176,6 +177,18 @@
     using NEX_PREPEND_LAYER_NAMESPACE(layer, type);
 #define NEX_IMPORT_TYPE_FROM_PROJECT_LAYER(project, layer, type)                \
     using NEX_PREPEND_PROJECT_LAYER_NAMESPACE(project, layer, type);
+
+/**
+ * @section Cross-layer type aliasing macros
+ * @brief   Define macros for aliasing types from other layers and projects/layers
+ * @note
+ * The NEX_ALIAS_TYPE_FROM_LAYER macro is used to create an alias for a type from another layer within the same project, 
+ * while the NEX_ALIAS_TYPE_FROM_PROJECT_LAYER macro is used to create an alias for a type from another project/layer.
+ * The NEX_ALIAS_TYPE_AS_FROM_LAYER and NEX_ALIAS_TYPE_AS_FROM_PROJECT_LAYER macros are used to create an alias with a 
+ * different name for a type from another layer or project/layer, respectively.
+ * These macros help manage dependencies, allowing to use the types directly inside the current scope with a different name,
+ * while behaving as if the current layer is the owner of the type.
+ */
 
 #define NEX_ALIAS_TYPE_FROM_FOUNDATION(type)                                    \
     using type = NEX_PREPEND_NAMESPACE(type);
@@ -190,3 +203,29 @@
     using alias = NEX_PREPEND_LAYER_NAMESPACE(layer, type);
 #define NEX_ALIAS_TYPE_AS_FROM_PROJECT_LAYER(alias, project, layer, type)       \
     using alias = NEX_PREPEND_PROJECT_LAYER_NAMESPACE(project, layer, type);
+
+/**
+ * @section Cross-layer namespace aliasing macros
+ * @brief   Define macros for aliasing namespaces from other layers and projects/layers
+ * @note
+ * The NEX_ALIAS_NAMESPACE_FROM_LAYER macro is used to create an alias for a namespace from another layer within the same project, 
+ * while the NEX_ALIAS_NAMESPACE_FROM_PROJECT_LAYER macro is used to create an alias for a namespace from another project/layer.
+ * The NEX_ALIAS_NAMESPACE_AS_FROM_LAYER and NEX_ALIAS_NAMESPACE_AS_FROM_PROJECT_LAYER macros are used to create an alias with a 
+ * different name for a namespace from another layer or project/layer, respectively.
+ * These macros help manage dependencies, allowing to use the namespaces directly inside the current scope with a different name,
+ * while behaving as if the current layer is the owner of the namespace.
+ */
+
+#define NEX_ALIAS_NAMESPACE_FROM_FOUNDATION(ns)                                  \
+    namespace ns = NEX_PREPEND_NAMESPACE(ns);
+#define NEX_ALIAS_NAMESPACE_FROM_LAYER(layer, ns)                                \
+    namespace ns = NEX_PREPEND_LAYER_NAMESPACE(layer, ns);
+#define NEX_ALIAS_NAMESPACE_FROM_PROJECT_LAYER(project, layer, ns)               \
+    namespace ns = NEX_PREPEND_PROJECT_LAYER_NAMESPACE(project, layer, ns);
+
+#define NEX_ALIAS_NAMESPACE_AS_FROM_FOUNDATION(alias, ns)                        \
+    namespace alias = NEX_PREPEND_NAMESPACE(ns);
+#define NEX_ALIAS_NAMESPACE_AS_FROM_LAYER(alias, layer, ns)                      \
+    namespace alias = NEX_PREPEND_LAYER_NAMESPACE(layer, ns);
+#define NEX_ALIAS_NAMESPACE_AS_FROM_PROJECT_LAYER(alias, project, layer, ns)     \
+    namespace alias = NEX_PREPEND_PROJECT_LAYER_NAMESPACE(project, layer, ns);

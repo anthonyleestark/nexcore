@@ -8,7 +8,7 @@
 #include <utility>
 #include <type_traits>
 
-#include "nex/base/namespace.h"
+#include "nex/base/macros.h"
 #include "nex/base/types.h"
 
 #if NEX_USE_STD_SOURCE_LOCATION

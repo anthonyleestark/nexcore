@@ -5,11 +5,12 @@
 
 #pragma once
 
-#include <nex/base/platform.h>
-#include <nex/base/compiler.h>
-#include <nex/base/architecture.h>
-#include <nex/base/attributes.h>
-#include <nex/base/build.h>
+#include "nex/base/platform.h"
+#include "nex/base/compiler.h"
+#include "nex/base/architecture.h"
+#include "nex/base/attributes.h"
+#include "nex/base/build.h"
+#include "nex/base/namespace.h"
 
 /**
  * @section Copy and Move Semantics Macros

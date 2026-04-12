@@ -50,15 +50,6 @@
     #define NEX_EXPORT __attribute__((visibility("default")))
 #endif  // NEX_COMPILER_IS_MSVC
 
-// Undefine min/max macros if defined 
-// (to avoid conflicts with std::min/std::max)
-#ifdef min
-    #undef min
-#endif
-#ifdef max
-    #undef max
-#endif
-
 /**
  * @section Attribute and Annotation Macros
  * @brief   Defines macros for common attributes and annotations.

@@ -1,16 +1,16 @@
-# Nexara
+# NexCore
 
-**Nexara** is a low-level foundation library that defines the core primitives of the Nex-ecosystem.  
-Built with performance, clarity, and long-term scalability in mind, Nexara provides essential building blocks such as fundamental types, utilities, and system abstractions — all designed to be lightweight, consistent, and dependency-free.
+**NexCore** is a low-level foundation library that defines the core primitives of the Nex-ecosystem.  
+Built with performance, clarity, and long-term scalability in mind, NexCore provides essential building blocks such as fundamental types, utilities, and system abstractions — all designed to be lightweight, consistent, and dependency-free.
 
 It is not a framework, nor a product — but the ground upon which everything else is built.  
-Nexara exists to unify, simplify, and stabilize the core of every system that depends on it.
+NexCore exists to unify, simplify, and stabilize the core of every system that depends on it.
 
 ---
 
 ## Overview
 
-Nexara provides a cohesive set of cross-platform primitives and abstractions that serve as the foundation layer for all projects in the Nex-ecosystem. It eliminates inconsistencies across platforms, compilers, and standard library implementations while providing modern C++ conveniences through a carefully designed API.
+NexCore provides a cohesive set of cross-platform primitives and abstractions that serve as the foundation layer for all projects in the Nex-ecosystem. It eliminates inconsistencies across platforms, compilers, and standard library implementations while providing modern C++ conveniences through a carefully designed API.
 
 The library is organized into modules:
 
@@ -39,8 +39,8 @@ The library is organized into modules:
 
 ```bash
 # Clone the repository
-git clone https://github.com/anthonyleestark/nexara.git
-cd nexara
+git clone https://github.com/anthonyleestark/nexcore.git
+cd nexcore
 
 # Initialize dependency submodules
 git submodule update --init --recursive
@@ -54,7 +54,7 @@ git submodule update --init --recursive
 
 ### Principles
 
-Nexara follows a simple philosophy: keep the core small, stable, and uncompromising — so everything above it can grow without friction.
+NexCore follows a simple philosophy: keep the core small, stable, and uncompromising — so everything above it can grow without friction.
 
 1. **Clarity**: Code should be self-documenting and easy to understand
 2. **Performance**: Zero-cost abstractions wherever possible
@@ -65,7 +65,7 @@ Nexara follows a simple philosophy: keep the core small, stable, and uncompromis
 
 ### Positioning
 
-Nexara is not designed to solve problems at the application level.  
+NexCore is not designed to solve problems at the application level.  
 It exists to make solving those problems possible — efficiently, consistently, and at scale.
 
 ---
@@ -83,7 +83,7 @@ Contributions are welcome! Please ensure your code follows the project's coding 
 
 ## License
 
-Nexara is licensed under the **BSD-3-Clause License**.  
+NexCore is licensed under the **BSD-3-Clause License**.  
 Copyright (c) 2025-2026 Anthony Lee Stark. All rights reserved.
 
 See [LICENSE](LICENSE) for the full license text.

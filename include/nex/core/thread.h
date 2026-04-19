@@ -16,12 +16,15 @@
 #include "nex/core/runtime_id.h"
 #include "nex/core/time.h"
 #include "nex/core/string_view.h"
+#include "nex/core/error.h"
+#include "nex/core/result.h"
 
 NEX_NAMESPACE_BEGIN
 
 /**
  * @enum ThreadPriority
  * @brief Enumeration for thread priority levels.
+ * 
  * @details
  * This enum defines various priority levels that can be assigned to threads. 
  * The actual effect of setting thread priority is platform-dependent and may not be supported on all systems. 
@@ -43,11 +46,94 @@ enum class ThreadPriority {
 };
 
 /**
- * @class Thread
- * @brief Modern, cross-platform thread wrapper using composition and task-based approach.
- *        Supports graceful shutdown, message queue, and seamless fallback between C++17 and C++20.
+ * @class ThreadWorker
+ * @brief Abstract base class for creating custom thread workers.
  * 
- * @note This class is move-only (non-copyable). It prefers composition over inheritance.
+ * @details
+ * ThreadWorker provides a structured way to define the behavior of a thread.
+ * You can derive from this class and implement the init(), run(), and cleanup() methods
+ * or custom onMessage() handler to define the lifecycle of your own thread's work.
+ */
+class NEX_EXPORT ThreadWorker {
+public:
+    // Virtual destructor to allow proper cleanup of derived classes
+    virtual ~ThreadWorker() = default;
+
+    /**
+     * @brief Initialize the thread worker. 
+     * @details
+     * Called once when the thread is about to start. 
+     * This can be used to set up any necessary state before the thread starts running.
+     * @return Result indicating success or failure of initialization.
+     */
+    virtual Result<void, Error> init() = 0;
+
+    /**
+     * @brief Run the thread worker's main function.
+     * @details
+     * This is where the main work of the thread will be done.
+     * This function will be called repeatedly until the thread is requested to stop.
+     * @note 
+     * You should periodically check stopRequested() to support graceful shutdown.
+     * Do NOT block indefinitely without checking stop condition.
+     */
+    virtual void run() = 0;
+
+    /**
+     * @brief Clean up any resources used by the thread worker.
+     * @details
+     * This will be called after the thread has stopped (either normally or by requestStop).
+     * Use this to release any resources or perform any necessary cleanup after the thread finishes.
+     * @return Result indicating success or failure of cleanup.
+     */
+    virtual Result<void, Error> cleanup() = 0;
+    
+    /**
+     * @brief Handle a message sent to this thread.
+     * @details
+     * Called when a message is received via Thread::send()
+     * The default implementation does nothing, but you can override this to handle 
+     * specific message types if needed.
+     */
+    virtual void onMessage(Any message) NEX_NO_OPT;
+
+protected:
+    /**
+     * @brief Check if stop has been requested by the owning Thread.
+     * This is the recommended way for run() to know when to exit.
+     * @return true if a stop has been requested, false otherwise.
+     */
+    NEX_NODISCARD bool stopRequested() const noexcept;
+
+private:
+    // Owner thread will set this pointer when the worker is assigned to a thread
+    class Thread* owner_ = nullptr;
+    friend class Thread;
+};
+
+/**
+ * @class Thread
+ * @brief Modern, high-level, cross-platform thread abstraction with rich task support,
+ *        graceful shutdown, typed messaging, exception safety, and async capabilities.
+ * 
+ * @details
+ * The Thread class provides a comprehensive interface for creating and managing threads in C++.
+ * It supports starting threads with various types of tasks, including basic fire-and-forget tasks,
+ * stop-aware tasks that can respond to cancellation requests, and generic callables with arguments.
+ * The class also includes features for thread control (joining, detaching), status queries (running, 
+ * joinable, stop requested), and exception handling.
+ * Additionally, it offers a simple message queue system for inter-thread communication, allowing you to
+ * send messages to a thread and register handlers for specific message types. Thread naming and priority
+ * are also supported for better debugging and performance tuning.
+ * 
+ * @note
+ * Always ensure that threads are properly joined or detached to avoid resource leaks.
+ * When using stop-aware tasks, make sure to periodically check for stop requests to allow for graceful shutdown.
+ * The behavior of thread priorities is platform-dependent and may not have the desired effect on all systems.
+ * Exception handling within threads is crucial to prevent crashes; consider setting an exception handler 
+ * if your tasks may throw.
+ * 
+ * @see ThreadPriority enum for available priority levels.
  */
 class NEX_EXPORT Thread {
 public:
@@ -152,6 +238,13 @@ public:
         }));
     }
 
+    /**
+     * @brief Starts the thread with a custom ThreadWorker implementation.
+     * @param worker A unique pointer to a ThreadWorker instance that defines the thread's behavior.
+     * @return true if the thread was successfully started, false otherwise (already running).
+     */
+    bool start(UniquePtr<ThreadWorker> worker);
+
     ////// Thread Control ------------------------------------------------------------------
 
     /**
@@ -193,6 +286,19 @@ public:
     // Returns the native thread ID (if running), or a default-constructed ID if not running
     Id getId() const noexcept;
 
+    /**
+     * @brief Returns the RuntimeId associated with this thread.
+     * @return The RuntimeId of the thread.
+     * @note 
+     * The RuntimeId is a unique identifier for the thread that can be used for tracking and debugging purposes.
+     * This is different from the native thread ID and is generated internally by the Thread class.
+     * The thread doesn't need to be running to have a valid RuntimeId, as it is assigned when the thread is 
+     * constructed or started and remains constant for the lifetime of the Thread object. 
+     * Unlike the native thread ID, which can be reused by the system, the RuntimeId is ensured to be unique 
+     * across all threads in the process.
+     */
+    RuntimeId getRuntimeId() const noexcept;
+
     // Checks if a stop has been requested. Can be used inside the task if needed.
     bool stopRequested() const noexcept;
 
@@ -216,27 +322,6 @@ public:
     ////// Thread Message Queue (High-level) ----------------------------------------------
 
     /**
-     * @brief Posts a message to the thread's internal message queue.
-     *        The message will be processed in the thread's context.
-     * @tparam MessageType The type of the message to post. Can be any copyable or movable type.
-     * @param message The message to post to the thread's message queue.
-     * @return true if the message was queued successfully.
-     */
-    template<typename MessageType>
-    bool postMessage(MessageType&& message);
-
-    /**
-     * @brief Posts multiple messages at once.
-     *        This is a variadic template that allows posting multiple messages in a single call.
-     * @tparam MessageTypes The types of the messages to post. Each can be any copyable or movable type.
-     * @param messages The messages to post to the thread's message queue. Each message can be of 
-     *        any copyable or movable type.
-     * @return true if all messages were queued successfully.
-     */
-    template<typename... MessageTypes>
-    bool postMessages(MessageTypes&&... messages);
-
-    /**
      * @brief Sends a message to the thread's message queue.
      * @tparam MessageType The type of the message to send. Can be any copyable or movable type.
      * @param message The message to send to the thread's message queue.
@@ -249,7 +334,7 @@ public:
 
         // Lock the queue and add the message
         {
-            NEX_STD lock_guard<NEX_STD mutex> lock(getMessageQueueMutex());
+            LockGuard<Mutex> lock(getMessageQueueMutex());
             getMessageQueue().emplace(NEX_STD forward<MessageType>(message));
         }
 
@@ -363,10 +448,10 @@ public:
      * @return A Thread object representing the newly created thread.
      */
     template<typename F, typename... Args>
-    static Thread create(StringView name, F&& f, Args&&... args) {
+    static Thread create(StringView name, F&& func, Args&&... args) {
         Thread t;
         t.setName(name);
-        t.start(NEX_STD forward<F>(f), NEX_STD forward<Args>(args)...);
+        t.start(NEX_STD forward<F>(func), NEX_STD forward<Args>(args)...);
         return t;
     }
 
@@ -378,7 +463,7 @@ private:
     ////// Internal Helpers ------------------------------------------------------------------
 
     // Get the thread's internal message queue (for processing messages in the thread's context)
-    Queue<Any> getMessageQueue() const;
+    Queue<Any>& getMessageQueue() const;
 
     // Get the thread's internal message queue mutex (for synchronizing access to the message queue)
     Mutex& getMessageQueueMutex() const;

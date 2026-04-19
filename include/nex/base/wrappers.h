@@ -8,7 +8,7 @@
 /**
  * @file  wrappers.h
  * @brief Defines common wrapper types used throughout the codebase, such as Optional, Smart Pointers, 
- *        Variant, Function, Mutex and their associated type aliases.
+ *        Variant, Function, LockGuard and their associated type aliases.
  * 
  * @details
  * This header centralizes aliases for wrapper types used by Nex-ecosystem, including optional values, smart pointers,
@@ -32,11 +32,12 @@
  * @see https://en.cppreference.com/w/cpp/utility/variant for more information on std::variant.
  * @see https://en.cppreference.com/w/cpp/types/type_index for more information on std::type_index.
  * @see https://en.cppreference.com/w/cpp/types/type_info for more information on std::type_info.
- * @see https://en.cppreference.com/w/cpp/atomic for more information on std::atomic.
  * @see https://en.cppreference.com/w/cpp/utility/functional for more information on std::function.
  * @see https://en.cppreference.com/w/cpp/utility/functional/reference_wrapper for more information on std::reference_wrapper.
- * @see https://en.cppreference.com/w/cpp/thread/mutex for more information on std::mutex.
- * @see https://en.cppreference.com/w/cpp/thread/shared_mutex for more information on std::shared_mutex.
+ * @see https://en.cppreference.com/w/cpp/thread/lock_guard for more information on std::lock_guard.
+ * @see https://en.cppreference.com/w/cpp/thread/unique_lock for more information on std::unique_lock.
+ * @see https://en.cppreference.com/w/cpp/thread/shared_lock for more information on std::shared_lock.
+ * @see https://en.cppreference.com/w/cpp/thread/scoped_lock for more information on std::scoped_lock.
  */
 
 #include <optional>
@@ -45,9 +46,7 @@
 #include <variant>
 #include <typeindex>
 #include <typeinfo>
-#include <atomic>
 #include <functional>
-#include <mutex>
 #include <shared_mutex>
 
 #include "nex/base/namespace.h"
@@ -148,25 +147,6 @@ using TypeIndex = NEX_STD type_index;
 using TypeInfo = NEX_STD type_info;
 
 /**
- * @brief Template for thread-safe, atomic operations on a value.
- * @details 
- * Provides atomic access to a shared variable without the overhead 
- * of a mutex. It guarantees that operations are indivisible and prevents 
- * data races in multi-threaded environments.
- */
-template <typename T>
-using Atomic = NEX_STD atomic<T>;
-
-/**
- * @brief A lock-free atomic boolean flag.
- * @details 
- * The simplest atomic type, guaranteed to be lock-free on all 
- * supported platforms. Ideal for building low-level synchronization 
- * primitives like spinlocks or simple "stop" signals.
- */
-using AtomicFlag = NEX_STD atomic_flag;
-
-/**
  * @brief A general-purpose polymorphic function wrapper.
  * @details 
  * Can store, copy, and invoke any callable target—such as functions, 
@@ -194,32 +174,6 @@ using Reference = NEX_STD reference_wrapper<T>;
  */
 template <typename T>
 using ConstReference = NEX_STD reference_wrapper<const T>;
-
-/**
- * @brief Standard mutual exclusion primitive.
- * @details 
- * Basic synchronization object used to protect shared data from 
- * concurrent access. Only one thread can own the mutex at any given time.
- */
-using Mutex = NEX_STD mutex;
-
-/**
- * @brief Shared mutex for Reader-Writer scenarios.
- * @details 
- * Supports two levels of access: 'shared' (multiple threads can read 
- * simultaneously) and 'exclusive' (only one thread can write). Optimized for 
- * workloads where reads are more frequent than writes.
- */
-using SharedMutex = NEX_STD shared_mutex;
-
-/**
- * @brief Mutex that can be locked multiple times by the same thread.
- * @details 
- * Prevents deadlocks when a thread calls a sequence of functions 
- * that each require locking the same mutex. Use sparingly as it often 
- * indicates a need for refactoring.
- */
-using RecursiveMutex = NEX_STD recursive_mutex;
 
 /**
  * @brief Strict RAII wrapper for a single mutex.
@@ -301,19 +255,5 @@ using MaybeString = Optional<String>;
  * to find a match, providing better clarity than returning an out-of-bounds index.
  */
 using SearchResult = Optional<usize>;
-
-/**
- * @brief Thread-safe integer aliases for concurrent counters and flags.
- * @details Provides atomic primitives for common integer types. These ensure 
- * that modifications (like increments or exchanges) are safe across multiple 
- * threads without requiring a Mutex.
- */
-using AtomicInt = Atomic<int32>;
-using AtomicUInt = Atomic<uint32>;
-
-using AtomicInt64 = Atomic<int64>;
-using AtomicUInt64 = Atomic<uint64>;
-
-using AtomicBool = Atomic<bool>;
 
 NEX_NAMESPACE_END

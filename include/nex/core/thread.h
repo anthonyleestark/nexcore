@@ -415,7 +415,12 @@ public:
      * @return true if the predicate became true within the timeout, false otherwise.
      */
     template<typename Predicate>
-    bool waitFor(Predicate&& pred, time::Milliseconds timeout = time::Milliseconds::max());
+    bool waitFor(Predicate&& pred, time::Milliseconds timeout = time::Milliseconds::max()) {
+        auto& cv = getMessageQueueCV();
+        auto& mutex = getMessageQueueMutex();
+        UniqueLock lock(mutex);
+        return cv.wait_for(lock, timeout, NEX_STD forward<Predicate>(pred));
+    }
     
     ////// Exception Handling -------------------------------------------------------------
 

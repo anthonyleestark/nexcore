@@ -8,6 +8,14 @@
 #include "nex/base/adaptors.h"
 #include "nex/base/associative.h"
 #include "nex/core/string.h"
+#include "nex/core/encoding.h"
+
+#if NEX_PLATFORM_IS_WINDOWS
+    #include <windows.h>
+#elif NEX_PLATFORM_IS_MAC || NEX_PLATFORM_IS_LINUX
+    #include <pthread.h>
+    #include <sched.h>
+#endif
 
 NEX_NAMESPACE_BEGIN
 
@@ -136,18 +144,20 @@ bool Thread::start(StoppableTask task) {
     }
 
     // Start the thread with a lambda that wraps the user task and handles exceptions
-    impl_->jthread = NEX_STD jthread([this, task = NEX_STD move(task)](NEX_STD stop_token st) {
+    impl_->jthread = NEX_STD jthread([this, task = NEX_STD move(task)](StopToken stopToken) {
         impl_->running.store(true, NEX_STD memory_order_release);
 
         try {
             if (task) {
-                task(st);                    // Pass stop_token to user task
+                task(stopToken);    // Pass stop_token to user task
             }
         } catch (...) {
             if (impl_->exceptionHandler) {
                 impl_->exceptionHandler(NEX_STD current_exception());
             } else {
-                spdlog::error("Uncaught exception in thread '{}'", impl_->name);
+                // TODO: Log the exception using your logging system. 
+                // For example:
+                // spdlog::error("Uncaught exception in thread '{}'", impl_->name);
             }
         }
 
@@ -187,11 +197,14 @@ bool Thread::start(UniquePtr<ThreadWorker> worker) {
 
             // Main thread loop
             while (!stopRequested() && !stopToken.stop_requested()) {
-                workerThread->run();                   // run() will check for stopRequested() internally
+                workerThread->run();    // run() will check for stopRequested() internally
             }
 
             // Perform cleanup after stopping
-            workerThread->cleanup();
+            if (!workerThread->cleanup()) {
+                NEX_ASSERT_MSG(false, "Thread worker cleanup failed");
+                return;
+            }
         } catch (...) {
             // If an exception escapes from the worker, call the exception handler if set
             if (impl_->exceptionHandler) {
@@ -199,7 +212,10 @@ bool Thread::start(UniquePtr<ThreadWorker> worker) {
             }
 
             // Ensure cleanup is called even if an exception occurs
-            workerThread->cleanup();
+            if (!workerThread->cleanup()) {
+                // TODO: Assert or log or handle cleanup failure if needed
+                return;
+            }
         }
     });
 }
@@ -264,7 +280,31 @@ bool Thread::stopRequested() const noexcept {
 // Set the name of the thread (for debugging purposes)
 void Thread::setName(StringView name) {
     impl_->name = name;
-    // Platform-specific code to set thread name can be added here if desired
+
+#if NEX_PLATFORM_IS_WINDOWS
+    // Windows: Use SetThreadDescription for modern systems
+    if (isRunning()) {
+        auto nameUtf16Res = name.toString().toUtf16();
+        if (!nameUtf16Res) {
+            // Failed to convert name to UTF-16; log or handle error if needed
+            return;
+        }
+        auto nameUtf16 = nameUtf16Res.value();
+        HANDLE nativeHandle = impl_->jthread.native_handle();
+        SetThreadDescription(nativeHandle, reinterpret_cast<LPCWSTR>(nameUtf16.c_str()));
+    }
+#elif NEX_PLATFORM_IS_MAC || NEX_PLATFORM_IS_LINUX
+    // macOS/Linux: Use pthread_setname_np
+    if (isRunning()) {
+        auto nameUtf8Res = encoding::utf16ToUtf8(name);
+        if (!nameUtf8Res) {
+            // Failed to convert name to UTF-8; log or handle error if needed
+            return;
+        }
+        auto nameUtf8 = nameUtf8Res.value();
+        pthread_setname_np(nameUtf8.c_str());
+    }
+#endif
 }
 
 // Get the name of the thread (if set). 
@@ -277,12 +317,88 @@ StringView Thread::getName() const noexcept {
 // Note: Implementation is platform-dependent and may have limited effect.
 void Thread::setPriority(ThreadPriority priority) {
     impl_->priority = priority;
-    // Platform-specific code to set thread priority can be added here if desired
+
+    if (!isRunning()) {
+        // Thread is not running; priority will be applied when the thread starts.
+        return;
+    }
+
+#if NEX_PLATFORM_IS_WINDOWS
+
+    // Map ThreadPriority to Windows thread priority levels
+    HANDLE nativeHandle = impl_->jthread.native_handle();
+    int winPriority;
+
+    switch (priority) {
+        case ThreadPriority::Lowest:
+            winPriority = THREAD_PRIORITY_LOWEST;
+            break;
+        case ThreadPriority::BelowNormal:
+            winPriority = THREAD_PRIORITY_BELOW_NORMAL;
+            break;
+        case ThreadPriority::Normal:
+            winPriority = THREAD_PRIORITY_NORMAL;
+            break;
+        case ThreadPriority::AboveNormal:
+            winPriority = THREAD_PRIORITY_ABOVE_NORMAL;
+            break;
+        case ThreadPriority::Highest:
+            winPriority = THREAD_PRIORITY_HIGHEST;
+            break;
+    }
+
+    if (!SetThreadPriority(nativeHandle, winPriority)) {
+        // Failed to set thread priority; log or handle error if needed
+    }
+
+#elif NEX_PLATFORM_IS_MAC || NEX_PLATFORM_IS_LINUX
+
+    int policy;
+    struct sched_param param;
+
+    // Map ThreadPriority to platform-specific priority levels
+    pthread_t nativeHandle = impl_->jthread.native_handle();
+    if (pthread_getschedparam(nativeHandle, &policy, &param) != 0) {
+        // Failed to get current scheduling parameters; log or handle error if needed
+        return;
+    }
+
+    switch (priority) {
+        case ThreadPriority::Lowest:
+            param.sched_priority = sched_get_priority_min(policy);
+            break;
+        case ThreadPriority::BelowNormal:
+            param.sched_priority = sched_get_priority_min(policy) + 1;
+            break;
+        case ThreadPriority::Normal:
+            param.sched_priority = (sched_get_priority_min(policy) + sched_get_priority_max(policy)) / 2;
+            break;
+        case ThreadPriority::AboveNormal:
+            param.sched_priority = sched_get_priority_max(policy) - 1;
+            break;
+        case ThreadPriority::Highest:
+            param.sched_priority = sched_get_priority_max(policy);
+            break;
+    }
+
+    if (pthread_setschedparam(nativeHandle, policy, &param) != 0) {
+        // Failed to set thread priority; log or handle error if needed
+    }
+
+#endif
 }
 
 // Get the current priority of the thread.
 ThreadPriority Thread::getPriority() const noexcept {
     return impl_->priority;
+}
+
+////// Exception Handling -------------------------------------------------------------
+
+// Set a handler to be called when an exception escapes from the task.
+// If not set, exception will be logged and thread will terminate.
+void Thread::setExceptionHandler(ExceptionHandler handler) {
+    impl_->exceptionHandler = NEX_STD move(handler);
 }
 
 ////// Static Utilities ---------------------------------------------------------------

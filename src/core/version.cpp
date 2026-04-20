@@ -35,7 +35,7 @@ namespace {
     }
 
     // Validate pre-release and build metadata identifiers (e.g., "alpha", "beta", "rc.1", "build.1234")
-    bool validateIdentifier(StringView str, bool allowLeadingZeros) {
+    bool doValidateIdentifier(StringView str, bool allowLeadingZeros) {
         // Check for empty string or empty segments (e.g., "rc..1")
         if (str.empty() || str.front() == u'.' || str.back() == u'.' || str.find(u"..") != StringView::npos) {
             return false;
@@ -50,7 +50,7 @@ namespace {
             auto segment = str.substr(start, dotPos - start);
             // Check each character in the segment
             for (char16 ch : segment) {
-                if (!encoding::isAsciiAlnum(ch) && ch != u'-') {
+                if (!encoding::isAsciiAlpha(ch) && !encoding::isAsciiDigit(ch) && ch != u'-') {
                     return false; // Invalid character in segment
                 }
             }
@@ -73,7 +73,7 @@ namespace {
     }
 
     // Basic validation for version string format (e.g., "1.2.3", "1.2.3-alpha", "1.2.3+build")
-    Result<Version, Error> validateVersionString(StringView versionStr) {
+    Result<Version, Error> doValidateVersionString(StringView versionStr) {
         //// 0. Check for empty string
         if (versionStr.empty()) {
             return Result<Version, Error>::error({
@@ -85,17 +85,17 @@ namespace {
         String build, pre, core;
         usize plusPos = versionStr.find(u'+');
         if (plusPos != StringView::npos) {
-            build = versionStr.substr(plusPos + 1);
+            build = versionStr.substr(plusPos + 1).toString();
             versionStr = versionStr.substr(0, plusPos); // Remaining is core + pre-release
         }
 
         //// 2. Separate Pre-release (-)
         usize dashPos = versionStr.find(u'-');
         if (dashPos != StringView::npos) {
-            pre = versionStr.substr(dashPos + 1);
-            core = versionStr.substr(0, dashPos);
+            pre = versionStr.substr(dashPos + 1).toString();
+            core = versionStr.substr(0, dashPos).toString();
         } else {
-            core = versionStr;
+            core = versionStr.toString();
         }
 
         //// 3. Validate Core (X.Y.Z)
@@ -132,12 +132,12 @@ namespace {
         }
 
         //// 4. Validate Pre-release and Build Metadata
-        if (!pre.empty() && !validateIdentifier(pre, false)) {
+        if (!pre.empty() && !doValidateIdentifier(pre, false)) {
             return Result<Version, Error>::error({
                 ErrorCode::InvalidFormat, "Invalid pre-release identifier format"
             });
         }
-        if (!build.empty() && !validateIdentifier(build, true)) {
+        if (!build.empty() && !doValidateIdentifier(build, true)) {
             return Result<Version, Error>::error({
                 ErrorCode::InvalidFormat, "Invalid build metadata identifier format"
             });
@@ -148,9 +148,9 @@ namespace {
         Version version{};
         version.preRelease = pre;
         version.buildMetadata = build;
-        version.major = static_cast<uint16>(NEX_STD stoi(coreParts[0]));
-        version.minor = static_cast<uint16>(NEX_STD stoi(coreParts[1]));
-        version.patch = static_cast<uint16>(NEX_STD stoi(coreParts[2]));
+        version.major = static_cast<uint16>(NEX_STD stoi(coreParts[0].toUtf8().valueOr("0")));
+        version.minor = static_cast<uint16>(NEX_STD stoi(coreParts[1].toUtf8().valueOr("0")));
+        version.patch = static_cast<uint16>(NEX_STD stoi(coreParts[2].toUtf8().valueOr("0")));
 
         //// 5. Final validation of the version instance (e.g., check for valid ranges)
 
@@ -182,7 +182,12 @@ namespace {
 
 // Create a Version instance from a string in the format "major.minor.patch"
 Result<Version> Version::fromString(StringView versionStr) {
-    return validateVersionString(versionStr);
+    auto validationResult = doValidateVersionString(versionStr);
+    if (validationResult.isOk()) {
+        return Result<Version>::ok(validationResult.value());
+    } else {
+        return Result<Version>::error(validationResult.error());
+    }
 }
 
 // Create a Version instance from a packed 64-bit integer representation
@@ -248,11 +253,11 @@ bool Version::isValid() const {
     if (major > 0xFFFF || minor > 0xFFFF || patch > 0xFFFF) {
         return false; // Version numbers exceed maximum allowed values
     }
-    if (!preRelease.empty() && !validateIdentifier(preRelease, false)) {
+    if (!preRelease.empty() && !doValidateIdentifier(preRelease, false)) {
         return false; // Invalid pre-release identifier
     }
     // Build metadata allows leading zeros, so we pass 'true' to allow them
-    if (!buildMetadata.empty() && !validateIdentifier(buildMetadata, true)) {
+    if (!buildMetadata.empty() && !doValidateIdentifier(buildMetadata, true)) {
         return false; // Invalid build metadata identifier
     }
     return true;

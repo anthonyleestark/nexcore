@@ -266,7 +266,7 @@ Thread::Id Thread::getId() const noexcept {
 }
 
 // Returns the RuntimeId associated with this thread.
-Thread::RuntimeId Thread::getRuntimeId() const noexcept {
+RuntimeId Thread::getRuntimeId() const noexcept {
     return impl_->runtimeId;
 }
 
@@ -279,12 +279,12 @@ bool Thread::stopRequested() const noexcept {
 
 // Set the name of the thread (for debugging purposes)
 void Thread::setName(StringView name) {
-    impl_->name = name;
+    impl_->name = name.toString();
 
 #if NEX_PLATFORM_IS_WINDOWS
     // Windows: Use SetThreadDescription for modern systems
     if (isRunning()) {
-        auto nameUtf16Res = name.toString().toUtf16();
+        auto nameUtf16Res = impl_->name.toUtf16();
         if (!nameUtf16Res) {
             // Failed to convert name to UTF-16; log or handle error if needed
             return;
@@ -398,7 +398,21 @@ ThreadPriority Thread::getPriority() const noexcept {
 // Set a handler to be called when an exception escapes from the task.
 // If not set, exception will be logged and thread will terminate.
 void Thread::setExceptionHandler(ExceptionHandler handler) {
-    impl_->exceptionHandler = NEX_STD move(handler);
+    if (handler) {
+        impl_->exceptionHandler = [h = NEX_STD move(handler)](Any any) {
+            // Try to extract exception_ptr from Any.
+            // Adjust this based on how your `nex::Any` works (std::any-like? custom?).
+            try {
+                auto eptr = any_cast<NEX_STD exception_ptr>(any);  // or whatever your Any supports
+                h(eptr);
+            } catch (...) {
+                // Optional: ignore or handle type mismatch
+            }
+        };
+    } else {
+        // Invalid handler means we should clear the existing handler
+        impl_->exceptionHandler = nullptr;
+    }
 }
 
 ////// Static Utilities ---------------------------------------------------------------

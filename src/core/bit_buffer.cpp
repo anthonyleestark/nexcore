@@ -7,6 +7,7 @@
 #include <utility>
 
 #include "nex/core/bit_buffer.h"
+#include "nex/base/assert_crash.h"
 
 NEX_NAMESPACE_BEGIN
 
@@ -181,7 +182,7 @@ void BitBuffer::toggleBit(usize index) noexcept {
 
 // Access bit at index (with bounds checking)
 bool BitBuffer::at(usize index) const {
-    STONE_ASSERT_MSG(index >= 0 && index < bitCount_, "Index out of range");
+    NEX_ASSERT_MSG(index >= 0 && index < bitCount_, "Index out of range");
     return testBit(index);
 }
 

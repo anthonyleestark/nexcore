@@ -49,10 +49,10 @@ struct NEX_EXPORT Version {
     ////// Constructors --------------------------------------------------
 
     // Default constructor
-    constexpr Version() = default;
+    Version() = default;
 
     // Construct a version info with individual version components
-    constexpr Version(uint16 major, uint16 minor, uint16 patch) noexcept
+    Version(uint16 major, uint16 minor, uint16 patch) noexcept
         : major(major), minor(minor), patch(patch) {}
 
     ////// Comparison operators ------------------------------------------

@@ -310,7 +310,7 @@ public:
 
     // Get the name of the thread (if set). 
     // Returns an empty string if no name was set.
-    String getName() const;
+    StringView getName() const;
 
     // Set the priority of the thread. 
     // Note: Implementation is platform-dependent and may have limited effect.

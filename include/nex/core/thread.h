@@ -14,12 +14,79 @@
 #include "nex/base/primitive.h"
 #include "nex/base/wrappers.h"
 #include "nex/core/runtime_id.h"
-#include "nex/core/time.h"
 #include "nex/core/string_view.h"
 #include "nex/core/error.h"
 #include "nex/core/result.h"
 
 NEX_NAMESPACE_BEGIN
+
+/**
+ * @typedef ThreadId
+ * @brief A type alias for the native thread ID type.
+ * 
+ * @details
+ * This type represents the unique identifier for a thread as defined by the underlying operating system.
+ * It is typically used for thread management and debugging purposes. The actual type of ThreadId may vary 
+ * across different platforms, but it is designed to be compatible with the native thread ID type provided 
+ * by the C++ standard library (std::thread::id).
+ * The ThreadId can be obtained from a Thread object using the getId() method, and it can be compared with 
+ * other ThreadId instances to check for thread identity.
+ * 
+ * @note
+ * - ThreadId is not necessarily a numeric value and may not be directly usable for arithmetic operations. 
+ *   It is primarily intended for comparison and identification of threads.
+ * - A ThreadId can be reused by the system after a thread has finished execution, so it should not be stored 
+ *   for long-term use without proper management.
+ * - The default-constructed ThreadId represents a non-existent thread and can be used to check if a thread 
+ *   is running (i.e., if getId() returns a non-default value).
+ */
+using ThreadId = NEX_STD thread::id;
+
+/**
+ * @typedef StopToken
+ * @brief A type alias for the stop token used for cooperative cancellation of threads.
+ * 
+ * @details
+ * This type represents a token that can be used to request a thread to stop its execution gracefully.
+ * It is part of the C++20 standard library and is designed to facilitate cooperative cancellation of threads.
+ * A StopToken can be passed to a thread's task function, allowing the thread to periodically check if a stop 
+ * has been requested and exit accordingly.
+ * The Thread class provides a requestStop() method that can be called to signal the thread to stop, and the 
+ * thread's task can check for this signal using the stopRequested() method or by directly checking the StopToken.
+ */
+using StopToken = NEX_STD stop_token;
+
+/**
+ * @typedef StopSource
+ * @brief A type alias for the stop source used to create stop tokens for cooperative cancellation of threads.
+ * 
+ * @details
+ * This type represents a source that can be used to create StopToken instances for requesting threads to stop 
+ * their execution gracefully. It is part of the C++20 standard library and works in conjunction with StopToken 
+ * to facilitate cooperative cancellation of threads. A StopSource can be used to generate StopTokens that can be 
+ * passed to thread tasks, allowing those tasks to check for stop requests and exit when requested.
+ */
+using StopSource = NEX_STD stop_source;
+
+/**
+ * @struct ThreadContext
+ * @brief A struct that encapsulates the context of a thread, including its ID and stop token.
+ * 
+ * @details
+ * This struct is designed to provide a convenient way to access thread-related information and control 
+ * mechanisms within a thread's execution context. It contains the thread's unique identifier (ThreadId) 
+ * and a StopToken that can be used to check for stop requests. The stopRequested() method allows the thread 
+ * to easily determine if it should exit based on a stop request from another thread.
+ */
+struct ThreadContext {
+    ThreadId threadId;
+    StopToken stopToken;
+
+    // Check if stop has been requested by the owning Thread.
+    bool stopRequested() const noexcept {
+        return stopToken.stop_requested();
+    }
+};
 
 /**
  * @enum ThreadPriority
@@ -46,69 +113,47 @@ enum class ThreadPriority {
 };
 
 /**
- * @class ThreadWorker
- * @brief Abstract base class for creating custom thread workers.
+ * @typedef ThreadNativeHandle
+ * @brief A type alias for the native handle of a thread.
  * 
  * @details
- * ThreadWorker provides a structured way to define the behavior of a thread.
- * You can derive from this class and implement the init(), run(), and cleanup() methods
- * or custom onMessage() handler to define the lifecycle of your own thread's work.
+ * This type represents the native handle of a thread, which is system-specific. It can be used to perform
+ * low-level operations on the thread that are not covered by the standard C++ thread interface.
  */
-class NEX_EXPORT ThreadWorker {
+using ThreadNativeHandle = NEX_STD thread::native_handle_type;
+
+/**
+ * @class Executor
+ * @brief Abstract base class for creating custom executors.
+ * 
+ * @details
+ * Executor provides a structured way to define the behavior of a thread. You can derive from this class and implement 
+ * the execute() method to define how tasks are executed in the context of the thread.
+ */
+class Executor {
 public:
     // Virtual destructor to allow proper cleanup of derived classes
-    virtual ~ThreadWorker() = default;
+    virtual ~Executor() = default;
 
-    /**
-     * @brief Initialize the thread worker. 
-     * @details
-     * Called once when the thread is about to start. 
-     * This can be used to set up any necessary state before the thread starts running.
-     * @return Result indicating success or failure of initialization.
-     */
-    virtual Result<void, Error> init() = 0;
+    // Execute a task in the context of the thread
+    virtual void execute(Function<void()> task) = 0;
+};
 
-    /**
-     * @brief Run the thread worker's main function.
-     * @details
-     * This is where the main work of the thread will be done.
-     * This function will be called repeatedly until the thread is requested to stop.
-     * @note 
-     * You should periodically check stopRequested() to support graceful shutdown.
-     * Do NOT block indefinitely without checking stop condition.
-     */
-    virtual void run() = 0;
+/**
+ * @struct Runnable
+ * @brief An interface for defining runnable tasks that can be executed by a thread.
+ * 
+ * @details
+ * This struct defines a simple interface for tasks that can be run in a thread. The run() method takes a StopToken as 
+ * an argument, allowing the task to check for stop requests and exit gracefully when requested. 
+ * You can implement this interface in your own classes to define custom behavior for thread tasks.
+ */
+struct Runnable {
+    // Virtual destructor to allow proper cleanup of derived classes
+    virtual ~Runnable() = default;
 
-    /**
-     * @brief Clean up any resources used by the thread worker.
-     * @details
-     * This will be called after the thread has stopped (either normally or by requestStop).
-     * Use this to release any resources or perform any necessary cleanup after the thread finishes.
-     * @return Result indicating success or failure of cleanup.
-     */
-    virtual Result<void, Error> cleanup() = 0;
-    
-    /**
-     * @brief Handle a message sent to this thread.
-     * @details
-     * Called when a message is received via Thread::send()
-     * The default implementation does nothing, but you can override this to handle 
-     * specific message types if needed.
-     */
-    virtual void onMessage(Any message) NEX_NO_OPT;
-
-protected:
-    /**
-     * @brief Check if stop has been requested by the owning Thread.
-     * This is the recommended way for run() to know when to exit.
-     * @return true if a stop has been requested, false otherwise.
-     */
-    NEX_NODISCARD bool stopRequested() const noexcept;
-
-private:
-    // Owner thread will set this pointer when the worker is assigned to a thread
-    class Thread* owner_ = nullptr;
-    friend class Thread;
+    // Run a task with the given stop token for cooperative cancellation
+    virtual void run(StopToken) = 0;
 };
 
 /**
@@ -137,45 +182,11 @@ private:
  */
 class NEX_EXPORT Thread {
 public:
-    ////// Type Aliases ------------------------------------------------------------------
-
-    // Thread ID type (system-specific)
-    using Id = NEX_STD thread::id;
-
-    // Native handle type (system-specific)
-    using NativeHandle = NEX_STD thread::native_handle_type;
-    
-    // Stop token type for cooperative cancellation
-    using StopToken = NEX_STD stop_token;
-
-    // Task type
-    template <typename R = void, typename... Args>
-    using Task = Function<R(Args...)>;
-
-    // Basic task type: a simple fire-and-forget task
-    using BasicTask = Function<void()>;
-
-    // A modern stop-aware task type
-    using StoppableTask = Function<void(StopToken)>;
-
-    // Generic task support
-    template<typename F, typename... Args>
-    using TaskResult = NEX_STD invoke_result_t<F, Args...>;
-
-    // Exception handler type
-    using ExceptionHandler = Function<void(NEX_STD exception_ptr)>;
-
     ////// Construction & Destruction ---------------------------------------------------
 
     // Default constructor 
     // Creates an empty thread object that can be started later
     Thread() noexcept;
-
-    // Constructor that starts the thread immediately with a basic task
-    explicit Thread(BasicTask task);
-
-    // Constructor that starts the thread immediately with a stop-aware task
-    explicit Thread(StoppableTask task);
 
     // Destructor
     // Automatically requests stop and joins the thread (RAII) to ensure clean shutdown
@@ -188,38 +199,8 @@ public:
     ////// Starting a Thread ------------------------------------------------------------
 
     /**
-     * @brief Starts the thread with the given basic task.
-     * @param task The function to execute in the thread. Must be callable with no arguments.
-     * @return true if the thread was successfully started, false otherwise (already running).
-     */
-    bool start(BasicTask task);
-
-    /**
-     * @brief Starts the thread with the given stop-aware task.
-     * @param task The function to execute in the thread. Must be callable with a StopToken argument.
-     * @return true if the thread was successfully started, false otherwise (already running).
-     * 
-     * @note If the thread is already running, this function will return false and do nothing.
-     */
-    bool start(StoppableTask task);
-
-    /**
-     * @brief Starts the thread with the given task.
-     * @param task The function to execute in the thread. Can be any callable type (function, lambda, etc.).
-     * @return true if the thread was successfully started, false otherwise (already running).
-     * 
-     * @note If the thread is already running, this function will return false and do nothing.
-     */
-    template <typename R, typename... Args>
-    bool start(Task<R, Args...> task) {
-        return start([taskFunc = NEX_STD move(task)]() mutable {
-            taskFunc();
-        });
-    }
-
-    /**
      * @brief Starts the thread with a generic callable and arguments.
-     * @tparam F The type of the callable (function, lambda, etc.).
+     * @tparam Fn The type of the callable (function, lambda, etc.).
      * @tparam Args The types of the arguments to pass to the callable.
      * @param callable The function or callable object to execute in the thread.
      * @param args The arguments to pass to the callable when executed.
@@ -227,25 +208,10 @@ public:
      * 
      * @note If the thread is already running, this function will return false and do nothing.
      */
-    template<typename F, typename... Args>
-    bool start(F&& callable, Args&&... args) {
-        return start(StoppableTask([func = NEX_STD forward<F>(callable), 
-                                    tupleArgs = NEX_STD make_tuple(NEX_STD forward<Args>(args)...)] 
-                                    (StopToken stopToken) mutable {
-            NEX_STD apply([&](auto&&... unpacked) {
-                func(NEX_STD forward<decltype(unpacked)>(unpacked)...);
-            }, NEX_STD move(tupleArgs));
-        }));
-    }
+    template<typename Fn, typename... Args>
+    bool start(Fn&& callable, Args&&... args);
 
-    /**
-     * @brief Starts the thread with a custom ThreadWorker implementation.
-     * @param worker A unique pointer to a ThreadWorker instance that defines the thread's behavior.
-     * @return true if the thread was successfully started, false otherwise (already running).
-     */
-    bool start(UniquePtr<ThreadWorker> worker);
-
-    ////// Thread Control ------------------------------------------------------------------
+    ////// Thread Control ---------------------------------------------------------------
 
     /**
      * @brief Requests the thread to stop gracefully.
@@ -275,7 +241,7 @@ public:
      */
     void detach();
 
-    ////// Status Queries -----------------------------------------------------------------
+    ////// Status Queries ---------------------------------------------------------------
 
     // Check whether the thread is currently executing
     bool isRunning() const noexcept;
@@ -284,7 +250,7 @@ public:
     bool isJoinable() const noexcept;
 
     // Returns the native thread ID (if running), or a default-constructed ID if not running
-    Id getId() const noexcept;
+    ThreadId getId() const noexcept;
 
     /**
      * @brief Returns the RuntimeId associated with this thread.
@@ -302,15 +268,14 @@ public:
     // Checks if a stop has been requested. Can be used inside the task if needed.
     bool stopRequested() const noexcept;
 
-    ////// Thread Naming and Priority -----------------------------------------------------
+    ////// Thread Naming and Priority ---------------------------------------------------
 
-    // Set a name for the thread (for debugging and profiling purposes). 
-    // Note: This method should be called before start().
+    // Set a name for the thread (for debugging and profiling purposes).
     void setName(StringView name);
 
-    // Get the name of the thread (if set). 
+    // Get the name of the thread (if set).
     // Returns an empty string if no name was set.
-    StringView getName() const;
+    StringView getName() const noexcept;
 
     // Set the priority of the thread. 
     // Note: Implementation is platform-dependent and may have limited effect.
@@ -319,144 +284,28 @@ public:
     // Get the current priority of the thread.
     ThreadPriority getPriority() const noexcept;
 
-    ////// Thread Message Queue (High-level) ----------------------------------------------
-
-    /**
-     * @brief Sends a message to the thread's message queue.
-     * @tparam MessageType The type of the message to send. Can be any copyable or movable type.
-     * @param message The message to send to the thread's message queue.
-     * @return true if the message was queued successfully.
-     */
-    template<typename MessageType>
-    bool send(MessageType&& message) {
-        // If the thread is not running, we cannot send messages to it
-        if (!isRunning()) return false;
-
-        // Lock the queue and add the message
-        {
-            LockGuard<Mutex> lock(getMessageQueueMutex());
-            getMessageQueue().emplace(NEX_STD forward<MessageType>(message));
-        }
-
-        // Notify one waiting thread that a new message is available
-        getMessageQueueCV().notify_one();
-        return true;
-    }
-
-    /**
-     * @brief Registers a handler for a specific message type. 
-     *        When a message of that type is received, the handler will be called with the message as an argument.
-     * @tparam MessageType The type of the message to handle. Can be any copyable or movable type.
-     * @tparam Handler The type of the handler function. Must be callable with a single argument of type MessageType.
-     * @param handler The function to call when a message of the specified type is received. It should take 
-     *        a single argument of type MessageType.
-     * @note This allows you to set up a message handling system where different types of messages can be processed 
-     *       by different handlers. The handler will be called in the thread's context when a message of the 
-     *       corresponding type is received. You can register multiple handlers for different message types as needed.
-     *       If a message is received for which no handler is registered, it will be ignored.
-     */
-    template<typename MessageType, typename Handler>
-    void registerMessageHandler(Handler&& handler) {
-        LockGuard<Mutex> lock(getMessageQueueMutex());
-        getMessageHandlers()[TypeIndex(typeid(MessageType))] = 
-            [h = NEX_STD forward<Handler>(handler)](Any msg) {
-                h(NEX_STD any_cast<MessageType>(NEX_STD move(msg)));
-            };
-    }
-
-    ////// Advanced Control ---------------------------------------------------------------
-    
-    /**
-     * @brief Execute a task asynchronously and return a future with result.
-     *        This runs on this thread, not on a thread pool.
-     * @tparam F The type of the callable (function, lambda, etc.).
-     * @tparam Args The types of the arguments to pass to the callable.
-      * @param f The function or callable object to execute.
-     * @param args The arguments to pass to the callable when executed.
-     * @return A future that will hold the result of the callable once it has finished executing
-     */
-    template<typename F, typename... Args>
-    auto async(F&& f, Args&&... args) 
-        -> NEX_STD future<TaskResult<F, Args...>> 
-    {
-        using ResultType = TaskResult<F, Args...>;
-        auto promise = NEX_STD make_shared<NEX_STD promise<ResultType>>();
-        auto future = promise->get_future();
-
-        auto task = [p = NEX_STD move(promise), 
-                    func = NEX_STD forward<F>(f), 
-                    tup = NEX_STD make_tuple(NEX_STD forward<Args>(args)...)]() mutable {
-            try {
-                if constexpr (NEX_STD is_void_v<ResultType>) {
-                    NEX_STD apply(NEX_STD move(func), NEX_STD move(tup));
-                    p->set_value();
-                } else {
-                    auto result = NEX_STD apply(NEX_STD move(func), NEX_STD move(tup));
-                    p->set_value(NEX_STD move(result));
-                }
-            } catch (...) {
-                p->set_exception(NEX_STD current_exception());
-            }
-        };
-
-        // Post task as message or run directly if possible
-        send(NEX_STD function<void()>(NEX_STD move(task)));
-
-        return future;
-    }
-
-    /**
-     * @brief Wait for a specific condition with timeout inside the thread.
-     *        This can be used for waiting on a condition variable or any predicate that becomes true 
-     *        when the thread should proceed.
-     * @tparam Predicate The type of the predicate function.
-     * @param pred The predicate function to evaluate.
-     * @param timeout The maximum duration to wait for the predicate to become true.
-     * @return true if the predicate became true within the timeout, false otherwise.
-     */
-    template<typename Predicate>
-    bool waitFor(Predicate&& pred, time::Milliseconds timeout = time::Milliseconds::max()) {
-        auto& cv = getMessageQueueCV();
-        auto& mutex = getMessageQueueMutex();
-        UniqueLock lock(mutex);
-        return cv.wait_for(lock, timeout, NEX_STD forward<Predicate>(pred));
-    }
-    
-    ////// Exception Handling -------------------------------------------------------------
-
-    /**
-     * @brief Set a handler to be called when an exception escapes from the task.
-     *        If not set, exception will be logged and thread will terminate.
-     * @param handler The function to call when an exception is caught. 
-     *        It receives the exception as a std::exception_ptr.
-     * @note This allows you to handle exceptions gracefully without crashing the entire application. 
-     *       You can log the exception, attempt recovery, or perform any necessary cleanup. If no handler 
-     *       is set, the default behavior is to log the exception and terminate the thread.
-     */
-    void setExceptionHandler(ExceptionHandler handler);
-
-    ////// Static Utilities ---------------------------------------------------------------
+    ////// Static Utilities -------------------------------------------------------------
 
     // Returns the hardware concurrency (number of logical cores) available on the system
     static uint32 hardwareConcurrency() noexcept;
 
     // Returns the current thread's ID from anywhere
-    static Id currentThreadId() noexcept;
+    static ThreadId currentThreadId() noexcept;
 
     /**
      * @brief Create a named thread. The thread will run the provided task.
-     * @tparam F The type of the callable (function, lambda, etc.).
+     * @tparam Fn The type of the callable (function, lambda, etc.).
      * @tparam Args The types of the arguments to pass to the callable.
      * @param name The name of the thread.
-     * @param f The function or callable object to execute.
+     * @param callable The function or callable object to execute.
      * @param args The arguments to pass to the callable when executed.
      * @return A Thread object representing the newly created thread.
      */
-    template<typename F, typename... Args>
-    static Thread create(StringView name, F&& func, Args&&... args) {
+    template<typename Fn, typename... Args>
+    static Thread create(StringView name, Fn&& callable, Args&&... args) {
         Thread t;
         t.setName(name);
-        t.start(NEX_STD forward<F>(func), NEX_STD forward<Args>(args)...);
+        t.start(NEX_STD forward<Fn>(callable), NEX_STD forward<Args>(args)...);
         return t;
     }
 
@@ -464,20 +313,6 @@ private:
     // Internal implementation details
     struct Impl;
     UniquePtr<Impl> impl_;
-
-    ////// Internal Helpers ------------------------------------------------------------------
-
-    // Get the thread's internal message queue (for processing messages in the thread's context)
-    Queue<Any>& getMessageQueue() const;
-
-    // Get the thread's internal message queue mutex (for synchronizing access to the message queue)
-    Mutex& getMessageQueueMutex() const;
-
-    // Get the thread's internal condition variable (for waiting on messages)
-    ConditionVariable& getMessageQueueCV() const;
-
-    // Get the thread's internal message handlers map (for dispatching messages to handlers)
-    HashMap<TypeIndex, Function<void(Any)>>& getMessageHandlers() const;
 };
 
 NEX_NAMESPACE_END

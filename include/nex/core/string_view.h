@@ -34,7 +34,7 @@ NEX_NAMESPACE_BEGIN
  */
 class NEX_EXPORT StringView {
 public:
-	// Type aliases for compatibility with standard container conventions
+    // Type aliases for compatibility with standard container conventions
     using value_type = char16;
     using size_type = usize;
     using difference_type = isize;
@@ -88,7 +88,7 @@ public:
     constexpr ~StringView() = default;
 
 public:
-	// Constant representing "not found" for find operations or "until the end" for substring operations
+    // Constant representing "not found" for find operations or "until the end" for substring operations
     static constexpr size_type npos = static_cast<size_type>(-1);
 
 public:

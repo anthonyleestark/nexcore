@@ -45,12 +45,12 @@
 #if defined(ANDROID)
     #error Nex-ecosystem does not support Android for now.
 #elif defined(__APPLE__)
-	/**
-	 * @note TargetConditionals.h is only included after testing for Android because
-	 *       some Android builds on Mac have this header available, but it should only
-	 *       be used when the target is genuinely an Apple platform.
-	 */
-	#include <TargetConditionals.h>
+    /**
+     * @note TargetConditionals.h is only included after testing for Android because
+     *       some Android builds on Mac have this header available, but it should only
+     *       be used when the target is genuinely an Apple platform.
+     */
+    #include <TargetConditionals.h>
     #if defined(TARGET_OS_IPHONE) && TARGET_OS_IPHONE
         #error Nex-ecosystem does not support iOS for now.
     #else

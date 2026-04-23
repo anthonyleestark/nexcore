@@ -124,7 +124,7 @@ public:
 
     // Construct from count and fill value (fill first 'count' bits with 'value', rest are false)
     constexpr explicit BitSet(usize count, bool value) noexcept {
-        NEX_ASSERT(count <= N, "Count cannot exceed the size of the BitSet"); // debug runtime-check only
+        NEX_ASSERT_MSG(count <= N, "Count cannot exceed the size of the BitSet"); // debug runtime-check only
         clear(); // Ensure all bits are cleared first
         if (value) {
             for (usize i = 0; i < count; ++i) {
@@ -229,7 +229,7 @@ public:
 
     // Access bit at index for reading (with bounds checking)
     constexpr bool at(usize index) const noexcept {
-        NEX_ASSERT(index < N, "Index out of bounds"); // debug runtime-check only
+        NEX_ASSERT_MSG(index < N, "Index out of bounds"); // debug runtime-check only
         if (index >= N) return false;
         return testBit(index);
     }

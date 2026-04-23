@@ -135,7 +135,8 @@ using Latch = NEX_STD latch;
  * A barrier allows a group of threads to wait for each other at a certain point in the code. 
  * Once all threads have reached the barrier, they are all released and the barrier can be reused.
  */
-using Barrier = NEX_STD barrier;
+template <typename Func = void(*)()>
+using Barrier = NEX_STD barrier<Func>;
 
 /**
  * @brief Common primitive type aliases

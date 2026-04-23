@@ -236,7 +236,7 @@ public:
     constexpr Color(uint8 r, uint8 g, uint8 b, uint8 a = 255) 
         : clr_(RGBAColorSet(r, g, b, a)) {}
 
-	// Copy constructor
+    // Copy constructor
     constexpr Color(const Color& other) : clr_(other.clr_) {}
 
     // Copy assignment operator

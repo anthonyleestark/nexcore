@@ -4,10 +4,10 @@
  */
 
 #include "nex/base/linear.h"
-#include "nex/core/string_view.h"
-#include "nex/core/encoding.h"
-#include "nex/core/format.h"
-#include "nex/core/text.h"
+#include "nex/core/text/string_view.h"
+#include "nex/core/text/encoding.h"
+#include "nex/core/text/format.h"
+#include "nex/core/text/text.h"
 #include "nex/core/version.h"
 
 NEX_NAMESPACE_BEGIN

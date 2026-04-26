@@ -9,7 +9,7 @@
 #include <algorithm>
 #include <cwctype>
 
-#include "nex/core/time.h"
+#include "nex/core/time/time.h"
 
 NEX_NAMESPACE_BEGIN
 

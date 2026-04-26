@@ -14,7 +14,7 @@
 #include "nex/base/types.h"
 #include "nex/core/result.h"
 #include "nex/base/assert_crash.h"
-#include "nex/core/string_view.h"
+#include "nex/core/text/string_view.h"
 
 NEX_NAMESPACE_BEGIN
 

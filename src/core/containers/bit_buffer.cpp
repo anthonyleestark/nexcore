@@ -6,7 +6,7 @@
 #include <algorithm>
 #include <utility>
 
-#include "nex/core/bit_buffer.h"
+#include "nex/core/containers/bit_buffer.h"
 #include "nex/base/assert_crash.h"
 
 NEX_NAMESPACE_BEGIN

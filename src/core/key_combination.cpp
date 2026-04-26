@@ -9,7 +9,7 @@
 #include <string>
 
 #include "nex/core/key_combination.h"
-#include "nex/core/string.h"
+#include "nex/core/text/string.h"
 
 NEX_NAMESPACE_BEGIN
 

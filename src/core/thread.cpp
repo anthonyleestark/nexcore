@@ -7,8 +7,8 @@
 #include "nex/base/linear.h"
 #include "nex/base/adaptors.h"
 #include "nex/base/associative.h"
-#include "nex/core/string.h"
-#include "nex/core/encoding.h"
+#include "nex/core/text/string.h"
+#include "nex/core/text/encoding.h"
 
 #if NEX_PLATFORM_IS_WINDOWS
     #include <windows.h>

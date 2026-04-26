@@ -3,7 +3,7 @@
  * Copyright (c) 2026 Anthony Lee Stark. All rights reserved.
  */
 
-#include "nex/core/encoding.h"
+#include "nex/core/text/encoding.h"
 
 /**
  * @note

@@ -13,8 +13,9 @@
 #include "nex/base/types.h"
 #include "nex/base/primitive.h"
 #include "nex/base/wrappers.h"
+#include "nex/base/adaptors.h"
 #include "nex/core/runtime_id.h"
-#include "nex/core/string_view.h"
+#include "nex/core/text/string_view.h"
 #include "nex/core/error.h"
 #include "nex/core/result.h"
 

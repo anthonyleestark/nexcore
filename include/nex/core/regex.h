@@ -8,8 +8,8 @@
 #include "nex/base/macros.h"
 #include "nex/base/types.h"
 #include "nex/base/linear.h"
-#include "nex/core/string.h"
-#include "nex/core/string_view.h"
+#include "nex/core/text/string.h"
+#include "nex/core/text/string_view.h"
 #include "nex/base/wrappers.h"
 
 NEX_NAMESPACE_BEGIN

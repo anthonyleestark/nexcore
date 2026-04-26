@@ -9,8 +9,8 @@
 
 #include "nex/base/macros.h"
 #include "nex/base/types.h"
-#include "nex/base/wrappers.h"
-#include "nex/core/string.h"
+#include "nex/base/primitive.h"
+#include "nex/core/text/string.h"
 
 NEX_NAMESPACE_BEGIN
 

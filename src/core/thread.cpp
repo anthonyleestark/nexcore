@@ -162,8 +162,9 @@ NEX_DEFINE_DEFAULT_MOVE(Thread);
 
 ////// Starting a Thread --------------------------------------------------------------
 
+// Start the thread with a packaged task that wraps the callable and its arguments.
 template<typename Fn, typename... Args>
-bool Thread::start(Fn&& callable, Args&&... args) {
+bool Thread::startWithTask(Fn&& callable, Args&&... args) {
     // If the thread is already running, we cannot start it again
     if (isRunning()) return false;
 
@@ -200,6 +201,13 @@ bool Thread::start(Fn&& callable, Args&&... args) {
 
     return true;
 }
+
+// Explicit template instantations for basic task types
+template bool Thread::startWithTask<Function<void()>>(Function<void()>&& callable);
+template bool Thread::startWithTask<void(*)()>(void(*&& callable)());
+
+// Explicit template instantiation for tasks that accept a StopToken
+template bool Thread::startWithTask<Function<void(StopToken)>>(Function<void(StopToken)>&& callable);
 
 ////// Thread Control -----------------------------------------------------------------
 

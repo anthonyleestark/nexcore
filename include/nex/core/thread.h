@@ -209,7 +209,9 @@ public:
      * @note If the thread is already running, this function will return false and do nothing.
      */
     template<typename Fn, typename... Args>
-    bool start(Fn&& callable, Args&&... args);
+    bool start(Fn&& callable, Args&&... args) {
+        return startWithTask(NEX_STD forward<Fn>(callable), NEX_STD forward<Args>(args)...);
+    }
 
     ////// Thread Control ---------------------------------------------------------------
 
@@ -313,6 +315,159 @@ private:
     // Internal implementation details
     struct Impl;
     UniquePtr<Impl> impl_;
+
+    /**
+     * @brief Start the thread with a packaged task that wraps the callable and its arguments.
+     * @tparam Fn The type of the callable (function, lambda, etc.).
+     * @tparam Args The types of the arguments to pass to the callable.
+     * @param callable The function or callable object to execute in the thread.
+     * @param args The arguments to pass to the callable when executed.
+     * @return true if the thread was successfully started, false otherwise (already running).
+     * @note If the thread is already running, this function will return false and do nothing.
+     */
+    template<typename Fn, typename... Args>
+    bool startWithTask(Fn&& callable, Args&&... args);
 };
+
+/**
+ * @class ThreadExecutor
+ * @brief Manages a dedicated background thread for sequential task execution.
+ * 
+ * @details
+ * ThreadExecutor is a basic implementation of the Executor interface that manages a single thread and 
+ * a queue of tasks. It allows you to start a thread that continuously processes tasks from the queue until stopped.
+ * You can submit tasks to the executor using the execute() method, and the thread will execute them in the order 
+ * they were received. The executor can be stopped gracefully, allowing the thread to finish processing any 
+ * remaining tasks before exiting.
+ * 
+ * @note
+ * Tasks are processed in FIFO order. 
+ * Ensure stop() is called to prevent resource leaks and allow pending tasks to complete.
+ * 
+ * @see Executor for the base class interface.
+ * @see Thread for the underlying thread management.
+ */
+class NEX_EXPORT ThreadExecutor : public Executor {
+public:
+    // Constructor and destructor
+    ThreadExecutor();
+    ~ThreadExecutor();
+
+    // Start the executor's thread and begin processing tasks from the queue.
+    void start();
+    
+    // Request the executor to stop processing tasks and exit the thread gracefully.
+    void stop();
+
+    // Execute a task in the context of the thread. 
+    // Tasks are added to a queue and processed sequentially.
+    void execute(Function<void()> task) override;
+
+private:
+    Thread thread_;
+    Queue<Function<void()>> queue_;
+};
+
+/**
+ * @class ThreadPool
+ * @brief A fixed-size pool of threads for concurrent task processing.
+ * 
+ * @details
+ * ThreadPool manages a pool of threads that can execute tasks concurrently. You can specify the number of threads
+ * in the pool, and the pool will distribute tasks among a set of available worker threads to maximize CPU utilization. 
+ * Tasks are submitted to the pool using the execute() method, and the pool will handle the scheduling and execution 
+ * of those tasks across the threads. Ideal for compute-intensive or parallelizable workloads.
+ * 
+ * @see Executor for the base class interface.
+ * @see Thread for the underlying thread management.
+ */
+class NEX_EXPORT ThreadPool : public Executor {
+public:
+    // Constructor that initializes the thread pool with a specified number of threads.
+    explicit ThreadPool(uint32 threadCount = Thread::hardwareConcurrency());
+
+    // Start all threads in the pool and begin processing tasks from the shared queue.
+    void start();
+
+    // Request all threads in the pool to stop processing tasks and exit gracefully.
+    void stop();
+
+    // Execute a task in the context of the thread pool.
+    // Tasks are added to a shared queue and processed by available threads.
+    void execute(Function<void()> task) override;
+
+    // Get the number of threads in the pool.
+    uint32 threadCount() const noexcept;
+};
+
+/**
+ * @class Future
+ * @brief Represents a value that will be available at some point in the future.
+ * 
+ * @details
+ * Future is a template class that encapsulates the result of an asynchronous operation. It provides a way 
+ * to retrieve the value once it is ready, and to check if the value is available without blocking. 
+ * A Future can be obtained from a Promise, which is used to set the value or an exception that occurred 
+ * during the asynchronous operation. The Future class provides methods to get the value, check if it is ready, 
+ * and handle exceptions. It is designed to work seamlessly with the Thread and ThreadPool classes for managing 
+ * asynchronous tasks and their results.
+ * 
+ * @tparam T The type of the value that will be available.
+ */
+template<typename T>
+class NEX_EXPORT Future {
+public:
+    // Get the value of the Future. 
+    // This will block until the value is available.
+    T get();
+
+    // Check if the value is ready without blocking.
+    bool isReady() const;
+};
+
+/**
+ * @class Promise
+ * @brief Used to set a value or an exception for a Future.
+ * 
+ * @details
+ * Promise is a template class that allows you to set the value or an exception for a Future. It is typically 
+ * used in conjunction with asynchronous operations, where the Promise is used to signal the completion of a task 
+ * and provide the result to any waiting Futures. The Promise class provides methods to set the value, set an 
+ * exception, and retrieve the associated Future. It is designed to work seamlessly with the Thread and ThreadPool 
+ * classes for managing asynchronous tasks and their results.
+ * 
+ * @tparam T The type of the value that will be set for the Future.
+ */
+template<typename T>
+class NEX_EXPORT Promise {
+public:
+    // Set the value of the Promise, which will make it available to the associated Future.
+    void setValue(T value);
+
+    // Set an exception for the Promise, which will be propagated to the associated Future.
+    void setException(NEX_STD exception_ptr e);
+
+    // Get the Future associated with this Promise.
+    Future<T> getFuture();
+};
+
+/**
+ * @typedef InvokeResult
+ * @brief A type alias for the result type of invoking a callable with specific arguments.
+ */
+template<typename Fn, typename... Args>
+using InvokeResult = NEX_STD invoke_result_t<Fn, Args...>;
+
+/**
+ * @brief Asynchronously executes a callable on the given executor and returns a Future for its result.
+ * @tparam Fn The type of the callable (function, lambda, etc.).
+ * @tparam Args The types of the arguments to pass to the callable.
+ * @param executor The executor on which to run the task.
+ * @param fn The function or callable object to execute.
+ * @param args The arguments to pass to the callable when executed.
+ * @return A Future representing the result of the asynchronous operation.
+ */
+template<typename Fn, typename... Args>
+auto async(Executor& executor, Fn&& fn, Args&&... args) -> Future<InvokeResult<Fn, Args...>>;
 
 NEX_NAMESPACE_END

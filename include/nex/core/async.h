@@ -44,7 +44,7 @@ NEX_DETAIL_NAMESPACE_BEGIN
  * it is an implementation detail that supports the functionality of those classes.
  */
 template<typename T>
-class FutureState {
+class NEX_INTERNAL FutureState {
 public:
     // Set the value of the Future.
     // This will unblock any waiting threads.
@@ -157,7 +157,7 @@ private:
  * an exception has been set.
  */
 template<>
-class FutureState<void> {
+class NEX_INTERNAL FutureState<void> {
 public:
     // Set the value of the Future (for void, this just means marking it as ready).
     void setValue() {
@@ -273,7 +273,7 @@ private:
  * FutureState and to ensure proper error handling in case of a broken promise scenario.
  */
 template<typename T>
-struct PromiseLifetime {
+struct NEX_INTERNAL PromiseLifetime {
     // Constructor that takes a shared pointer to the FutureState.
     explicit PromiseLifetime(SharedPtr<FutureState<T>> state)
         : state_(NEX_STD move(state)) {
@@ -299,7 +299,7 @@ struct PromiseLifetime {
  * @tparam Args The types of the arguments to be passed to the function.
  */
 template<typename ReturnType, typename Fn, typename... Args>
-class AsyncTask {
+class NEX_INTERNAL AsyncTask {
 public:
     // Constructor that takes a Promise, a function, and its arguments.
     AsyncTask(Promise<ReturnType> promise, Fn fn, Args... args)

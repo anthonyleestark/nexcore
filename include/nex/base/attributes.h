@@ -7,13 +7,13 @@
 
 /**
  * @file      attributes.h
- * @brief     Defines macros for common attributes and annotations used in the codebase, such as export/import, 
- *            deprecation, nodiscard, and noreturn.
+ * @brief     Defines macros for common attributes and annotations used in the codebase, such as deprecation, nodiscard, 
+ *            noinline, and noreturn.
  * 
  * @details
  * This section defines macros for marking functions and classes with attributes such as export/import (for shared libraries), 
- * deprecation (with or without a message), nodiscard (to indicate that the return value should not be ignored), and noreturn 
- * (to indicate that a function does not return).
+ * deprecation (with or without a message), nodiscard (to indicate that the return value should not be ignored), noinline 
+ * (to indicate that a function should not be inlined), and noreturn (to indicate that a function does not return).
  * The macros are defined based on the compiler being used, and they can be used throughout the codebase to provide 
  * consistent annotations and attributes for functions and classes.
  * 
@@ -22,33 +22,6 @@
  */
 
 #include "nex/base/compiler.h"
-
-/**
- * @section Export/Import Macros
- * @brief   Defines the NEX_EXPORT macro for marking symbols for export or import in shared libraries.
- * 
- * @details
- * The NEX_EXPORT macro is defined based on the compiler and build configuration.
- * - On MSVC, it expands to `__declspec(dllexport)` when building the shared library, and `__declspec(dllimport)` 
- *   when using the shared library.
- * - On GCC, it expands to `__attribute__((visibility("default")))` to make symbols visible for export.
- * - If the compiler does not support these attributes, it expands to nothing, allowing the code to compile 
- *   without errors.
- */
-
-#if NEX_COMPILER_IS_MSVC
-
-    #if defined(NEX_BUILDING_SHARED)
-        #define NEX_EXPORT __declspec(dllexport)
-    #elif defined(NEX_USING_SHARED)
-        #define NEX_EXPORT __declspec(dllimport)
-    #else
-        #define NEX_EXPORT
-    #endif
-
-#elif NEX_COMPILER_IS_GCC
-    #define NEX_EXPORT __attribute__((visibility("default")))
-#endif  // NEX_COMPILER_IS_MSVC
 
 /**
  * @section Attribute and Annotation Macros

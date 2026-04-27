@@ -7,6 +7,7 @@
 
 #include "nex/base/platform.h"
 #include "nex/base/compiler.h"
+#include "nex/base/attributes.h"
 #include "nex/base/build.h"
 #include "nex/base/namespace.h"
 
@@ -73,7 +74,7 @@ FatalHandler getFatalHandler();
  * }
  * ```
  */
-[[noreturn]] inline void immediateCrash() {
+NEX_NORETURN inline void immediateCrash() {
 #if NEX_COMPILER_IS_MSVC && !defined(__clang__)
     // MSVC: __fastfail is a low-level intrinsic that triggers a fast fail, 
     // which is a special kind of crash that is designed to be fatal, unique, and non-allocating. 
@@ -123,7 +124,7 @@ FatalHandler getFatalHandler();
  * }
  * ```
  */
-[[noreturn]] inline void unreachable() {
+NEX_NORETURN inline void unreachable() {
     // Uses compiler specific extensions if possible.
     // Even if no extension is used, undefined behavior is still raised by
     // an empty function body and the noreturn attribute.

@@ -67,6 +67,27 @@
 #define NEX_INLINE_NAMESPACE_BEGIN(name)                            inline namespace name {
 #define NEX_INLINE_NAMESPACE_END(name)                              } // inline namespace
 
+/**
+ * @section Detail namespace macros
+ * @brief   Define macros for the detail namespace used for internal implementation details
+ * @note
+ * The NEX_DETAIL_NAMESPACE_BEGIN and NEX_DETAIL_NAMESPACE_END macros define the beginning and end of the detail 
+ * namespace, respectively. 
+ * The detail namespace is used for internal implementation details that should not be exposed in the public API. 
+ * By using a separate namespace for these details, we can keep the public API clean and consistent, while still 
+ * allowing for internal changes and improvements without breaking the public API.
+ * The NEX_DETAIL macro is a helper macro used to refer to the detail namespace in a concise way, and it can be used 
+ * to access internal implementation details from the public API when necessary.
+ * The detail namespace is not intended to be used directly by users of the Nex-ecosystem; it is an implementation
+ * detail that supports the functionality of the public API and is subject to change without notice.
+ * The detail namespace macros should be used within the range of the Nex-ecosystem namespace to avoid potential 
+ * conflicts with other libraries or with the global namespace.
+ */
+
+#define NEX_DETAIL                                                  detail::
+#define NEX_DETAIL_NAMESPACE_BEGIN                                  namespace detail {
+#define NEX_DETAIL_NAMESPACE_END                                    } // namespace detail
+
 /** 
  * @section Using global ::std:: namespace
  * @brief   Define macros for using the global ::std:: namespace in public APIs and implementation files
@@ -76,6 +97,7 @@
  * This is to avoid potential conflicts with other libraries that may be used by the users 
  * of Nex-ecosystem, and to keep the public API clean and consistent.
  */
+
 #define NEX_STD                                                     ::std::
 #define NEX_STD_BEGIN                                               namespace ::std {
 #define NEX_STD_END                                                 } // namespace ::std

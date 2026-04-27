@@ -13,9 +13,9 @@
 #include <type_traits>
 #include <utility>
 
-#include "nex/base/primitive.h"
 #include "nex/base/macros.h"
 #include "nex/base/types.h"
+#include "nex/base/primitive.h"
 #include "nex/base/wrappers.h"
 #include "nex/core/functional.h"
 #include "nex/core/executor.h"
@@ -26,7 +26,7 @@ NEX_NAMESPACE_BEGIN
 template<typename T>
 class Promise;
 
-namespace detail {
+NEX_DETAIL_NAMESPACE_BEGIN
 
 /**
  * @class FutureState
@@ -342,7 +342,7 @@ private:
     NEX_STD tuple<Args...> args_;
 };
 
-} // namespace detail
+NEX_DETAIL_NAMESPACE_END
 
 /**
  * @class Future
@@ -386,12 +386,12 @@ private:
     friend class Promise<T>;
 
     // Private constructor used by Promise to create a Future associated with the given state.
-    explicit Future(SharedPtr<detail::FutureState<T>> state)
+    explicit Future(SharedPtr<NEX_DETAIL FutureState<T>> state)
         : state_(NEX_STD move(state)) {
     }
 
     // Internal shared state of the Future, managed by the Promise.
-    SharedPtr<detail::FutureState<T>> state_;
+    SharedPtr<NEX_DETAIL FutureState<T>> state_;
 };
 
 /**
@@ -412,8 +412,8 @@ class NEX_EXPORT Promise {
 public:
     // Default constructor creates a new Promise with an associated Future state.
     Promise()
-        : state_(NEX_STD make_shared<detail::FutureState<T>>()),
-          lifetime_(NEX_STD make_shared<detail::PromiseLifetime<T>>(state_)) {
+        : state_(NEX_STD make_shared<NEX_DETAIL FutureState<T>>()),
+          lifetime_(NEX_STD make_shared<NEX_DETAIL PromiseLifetime<T>>(state_)) {
     }
 
     // Default copy and move semantics
@@ -451,12 +451,12 @@ private:
 
     // Internal shared state of the Future, managed by this Promise.
     // This is shared with the Future to allow communication of the value or exception.
-    SharedPtr<detail::FutureState<T>> state_;
+    SharedPtr<NEX_DETAIL FutureState<T>> state_;
 
     // Lifetime manager for the Promise's state.
     // This ensures that if the Promise is destroyed without setting a value or an exception,
     // the associated Future will be notified appropriately.
-    SharedPtr<detail::PromiseLifetime<T>> lifetime_;
+    SharedPtr<NEX_DETAIL PromiseLifetime<T>> lifetime_;
 };
 
 /**
@@ -472,8 +472,8 @@ class NEX_EXPORT Promise<void> {
 public:
     // Default constructor creates a new Promise with an associated Future state.
     Promise()
-        : state_(NEX_STD make_shared<detail::FutureState<void>>()),
-          lifetime_(NEX_STD make_shared<detail::PromiseLifetime<void>>(state_)) {
+        : state_(NEX_STD make_shared<NEX_DETAIL FutureState<void>>()),
+          lifetime_(NEX_STD make_shared<NEX_DETAIL PromiseLifetime<void>>(state_)) {
     }
 
     // Default copy and move semantics
@@ -511,12 +511,12 @@ private:
 
     // Internal shared state of the Future, managed by this Promise.
     // This is shared with the Future to allow communication of the completion or exception.
-    SharedPtr<detail::FutureState<void>> state_;
+    SharedPtr<NEX_DETAIL FutureState<void>> state_;
 
     // Lifetime manager for the Promise's state.
     // This ensures that if the Promise is destroyed without setting a value or an exception,
     // the associated Future will be notified appropriately.
-    SharedPtr<detail::PromiseLifetime<void>> lifetime_;
+    SharedPtr<NEX_DETAIL PromiseLifetime<void>> lifetime_;
 };
 
 /**
@@ -533,7 +533,7 @@ auto async(Executor& executor, Fn&& fn, Args&&... args)
     -> Future<InvokeResult<Fn, Args...>>
 {
     using ReturnType = InvokeResult<Fn, Args...>;
-    using Task = detail::AsyncTask<
+    using Task = NEX_DETAIL AsyncTask<
         ReturnType,
         NEX_STD decay_t<Fn>,
         NEX_STD decay_t<Args>...

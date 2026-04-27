@@ -12,7 +12,7 @@
 #include "nex/core/text/string_view.h"
 #include "nex/core/result.h"
 #include "nex/core/error.h"
-#include "nex/core/regex.h"
+#include "nex/core/text/regex.h"
 
 NEX_NAMESPACE_BEGIN
 

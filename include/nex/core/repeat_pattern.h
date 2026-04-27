@@ -12,7 +12,7 @@
 #include "nex/base/types.h"
 #include "nex/base/wrappers.h"
 #include "nex/core/text/string.h"
-#include "nex/core/time/time.h"
+#include "nex/core/chrono/time.h"
 
 NEX_NAMESPACE_BEGIN
 

@@ -9,35 +9,41 @@
 #include <algorithm>
 #include <cwctype>
 
-#include "nex/core/time/time.h"
+#include "nex/core/chrono/time.h"
 
 NEX_NAMESPACE_BEGIN
 
-// Helper function to trim whitespace
-static String trim(const String& str) {
-    if (str.empty()) return String();
-    
-    const auto res = str.toUtf16();
-    if (!res.isOk()) return String();
+// ============================================================================
+// Internal helper functions
+// ============================================================================
 
-    NEX_STD u16string u16str = res.value();
-    size_t first = u16str.find_first_not_of(u" \t\n\r");
-    if (first == NEX_STD u16string::npos) return String();
+namespace {
+    // Trim whitespace
+    String trim(const String& str) {
+        if (str.empty()) return String();
+        
+        const auto res = str.toUtf16();
+        if (!res.isOk()) return String();
 
-    size_t last = u16str.find_last_not_of(u" \t\n\r");
-    return String(u16str.substr(first, (last - first + 1)));
-}
+        NEX_STD u16string u16str = res.value();
+        size_t first = u16str.find_first_not_of(u" \t\n\r");
+        if (first == NEX_STD u16string::npos) return String();
 
-// Helper function to convert to lowercase
-static String toLower(const String& str) {
-    const auto res = str.toUtf16();
-    if (!res.isOk()) return String();
+        size_t last = u16str.find_last_not_of(u" \t\n\r");
+        return String(u16str.substr(first, (last - first + 1)));
+    }
 
-    NEX_STD u16string u16str = res.value();
-    NEX_STD transform(u16str.begin(), u16str.end(), u16str.begin(),
-        [](char16_t c) { return NEX_STD towlower(c); });
-    return String(u16str);
-}
+    // Convert to lowercase
+    String toLower(const String& str) {
+        const auto res = str.toUtf16();
+        if (!res.isOk()) return String();
+
+        NEX_STD u16string u16str = res.value();
+        NEX_STD transform(u16str.begin(), u16str.end(), u16str.begin(),
+            [](char16_t c) { return NEX_STD towlower(c); });
+        return String(u16str);
+    }
+} // namespace
 
 // ============================================================================
 // TimeSpan string conversion

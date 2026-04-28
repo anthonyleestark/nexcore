@@ -10,8 +10,8 @@
 #include "nex/base/linear.h"
 #include "nex/core/text/string.h"
 #include "nex/core/text/string_view.h"
-#include "nex/core/result.h"
-#include "nex/core/error.h"
+#include "nex/base/result.h"
+#include "nex/base/error.h"
 #include "nex/core/text/regex.h"
 
 NEX_CORE_NAMESPACE_BEGIN

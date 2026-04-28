@@ -11,17 +11,14 @@
 #include "nex/base/wrappers.h"
 #include "nex/core/text/string.h"
 #include "nex/core/text/string_view.h"
-#include "nex/core/result.h"
-#include "nex/core/error.h"
+#include "nex/base/result.h"
+#include "nex/base/error.h"
 
 NEX_INFRA_NAMESPACE_BEGIN
 
 // Access common core types
 NEX_IMPORT_TYPE_FROM_LAYER(core, String);
 NEX_IMPORT_TYPE_FROM_LAYER(core, StringView);
-NEX_IMPORT_TYPE_FROM_LAYER(core, Result);
-NEX_IMPORT_TYPE_FROM_LAYER(core, ErrorCode);
-NEX_IMPORT_TYPE_FROM_LAYER(core, Error);
 
 // Forward declarations
 class XmlAttribute;

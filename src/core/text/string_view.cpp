@@ -9,7 +9,7 @@
 
 #include "nex/core/text/string_view.h"
 #include "nex/core/text/string.h"
-#include "nex/core/result.h"
+#include "nex/base/result.h"
 
 NEX_CORE_NAMESPACE_BEGIN
 

@@ -10,8 +10,8 @@
 
 #include "nex/base/macros.h"
 #include "nex/base/types.h"
-#include "nex/core/result.h"
-#include "nex/core/error.h"
+#include "nex/base/result.h"
+#include "nex/base/error.h"
 
 NEX_CORE_NAMESPACE_BEGIN
 

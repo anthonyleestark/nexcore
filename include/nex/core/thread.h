@@ -14,8 +14,8 @@
 #include "nex/base/wrappers.h"
 #include "nex/core/runtime_id.h"
 #include "nex/core/text/string_view.h"
-#include "nex/core/error.h"
-#include "nex/core/result.h"
+#include "nex/base/error.h"
+#include "nex/base/result.h"
 
 NEX_CORE_NAMESPACE_BEGIN
 

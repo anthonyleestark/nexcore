@@ -9,7 +9,7 @@
 #include "nex/base/types.h"
 #include "nex/core/text/string.h"
 #include "nex/core/text/string_view.h"
-#include "nex/core/result.h"
+#include "nex/base/result.h"
 #include "nex/base/wrappers.h"
 
 NEX_CORE_NAMESPACE_BEGIN
@@ -116,8 +116,8 @@ NEX_CORE_NAMESPACE_END
 // to enable use in hash-based containers like std::unordered_map
 namespace std {
     template <>
-    struct hash<NEX_PREPEND_NAMESPACE(Uuid)> {
-        size_t operator()(const NEX_PREPEND_NAMESPACE(Uuid)& uuid) const noexcept {
+    struct hash<NEX_PREPEND_CORE_NAMESPACE(Uuid)> {
+        size_t operator()(const NEX_PREPEND_CORE_NAMESPACE(Uuid)& uuid) const noexcept {
             return uuid.hash();
         }
     };

@@ -7,7 +7,7 @@
 
 #include "nex/base/macros.h"
 #include "nex/base/types.h"
-#include "nex/core/result.h"
+#include "nex/base/result.h"
 #include "nex/core/text/string_view.h"
 
 NEX_CORE_NAMESPACE_BEGIN
@@ -204,8 +204,8 @@ NEX_CORE_NAMESPACE_END
 // Combines the modifiers and virtual key into a single hash value
 namespace std {
     template <>
-    struct hash<NEX_PREPEND_NAMESPACE(KeyCombination)> {
-        constexpr size_t operator()(const NEX_PREPEND_NAMESPACE(KeyCombination)& value) const noexcept {
+    struct hash<NEX_PREPEND_CORE_NAMESPACE(KeyCombination)> {
+        constexpr size_t operator()(const NEX_PREPEND_CORE_NAMESPACE(KeyCombination)& value) const noexcept {
             return (static_cast<size_t>(value.modifiers()) << 32)
                 ^ static_cast<size_t>(value.virtualKey());
         }

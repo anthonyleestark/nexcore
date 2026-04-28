@@ -350,9 +350,9 @@ NEX_CORE_NAMESPACE_END
 // without needing to specify the hash function
 namespace std {
     template <>
-    struct hash<NEX_PREPEND_NAMESPACE(StringView)> {
-        constexpr size_t operator()(NEX_PREPEND_NAMESPACE(StringView) sv) const noexcept {
-            return NEX_PREPEND_NAMESPACE(StringViewHash){}(sv);
+    struct hash<NEX_PREPEND_CORE_NAMESPACE(StringView)> {
+        constexpr size_t operator()(NEX_PREPEND_CORE_NAMESPACE(StringView) sv) const noexcept {
+            return NEX_PREPEND_CORE_NAMESPACE(StringViewHash){}(sv);
         }
     };
 }

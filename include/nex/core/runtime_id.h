@@ -128,8 +128,8 @@ NEX_CORE_NAMESPACE_END
 // to allow usage in hash-based containers like std::unordered_map
 namespace std {
     template<>
-    struct hash<NEX_PREPEND_NAMESPACE(RuntimeId)> {
-        constexpr size_t operator()(const NEX_PREPEND_NAMESPACE(RuntimeId)& id) const noexcept {
+    struct hash<NEX_PREPEND_CORE_NAMESPACE(RuntimeId)> {
+        constexpr size_t operator()(const NEX_PREPEND_CORE_NAMESPACE(RuntimeId)& id) const noexcept {
             return std::hash<NEX_PREPEND_NAMESPACE(uint64)>{}(id.get());
         }
     };

@@ -7,11 +7,11 @@
 
 #include <utility>
 
-#include "nex/core/error.h"
-#include "nex/base/assert_crash.h"
 #include "nex/base/types.h"
+#include "nex/base/error.h"
+#include "nex/base/assert_crash.h"
 
-NEX_CORE_NAMESPACE_BEGIN
+NEX_NAMESPACE_BEGIN
 
 /**
  * @class Result
@@ -239,4 +239,4 @@ private:
     E error_;
 };
 
-NEX_CORE_NAMESPACE_END
+NEX_NAMESPACE_END

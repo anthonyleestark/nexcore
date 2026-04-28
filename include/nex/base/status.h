@@ -7,9 +7,9 @@
 
 #include "nex/base/macros.h"
 #include "nex/base/types.h"
-#include "nex/core/error.h"
+#include "nex/base/error.h"
 
-NEX_CORE_NAMESPACE_BEGIN
+NEX_NAMESPACE_BEGIN
 
 /**
  * @class   Status
@@ -84,4 +84,4 @@ private:
     Error error_;
 };
 
-NEX_CORE_NAMESPACE_END
+NEX_NAMESPACE_END

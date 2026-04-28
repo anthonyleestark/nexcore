@@ -202,13 +202,16 @@ NEX_CORE_NAMESPACE_END
 
 // Hash specialization for KeyCombination to allow usage in unordered containers
 // Combines the modifiers and virtual key into a single hash value
-namespace std {
-    template <>
-    struct hash<NEX_PREPEND_CORE_NAMESPACE(KeyCombination)> {
-        constexpr size_t operator()(const NEX_PREPEND_CORE_NAMESPACE(KeyCombination)& value) const noexcept {
-            return (static_cast<size_t>(value.modifiers()) << 32)
-                ^ static_cast<size_t>(value.virtualKey());
-        }
-    };
-} // namespace std
+
+NEX_STD_BEGIN
+
+template<>
+struct hash<NEX_PREPEND_CORE_NAMESPACE(KeyCombination)> {
+    constexpr size_t operator()(const NEX_PREPEND_CORE_NAMESPACE(KeyCombination)& value) const noexcept {
+        return (static_cast<size_t>(value.modifiers()) << 32)
+            ^ static_cast<size_t>(value.virtualKey());
+    }
+};
+
+NEX_STD_END
 

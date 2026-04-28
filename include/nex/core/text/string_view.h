@@ -349,11 +349,14 @@ NEX_CORE_NAMESPACE_END
 
 // Implicit hash specialization for StringView to allow usage in unordered containers 
 // without needing to specify the hash function
-namespace std {
-    template <>
-    struct hash<NEX_PREPEND_CORE_NAMESPACE(StringView)> {
-        constexpr size_t operator()(NEX_PREPEND_CORE_NAMESPACE(StringView) sv) const noexcept {
-            return NEX_PREPEND_CORE_NAMESPACE(StringViewHash){}(sv);
-        }
-    };
-}
+
+NEX_STD_BEGIN
+
+template<>
+struct hash<NEX_PREPEND_CORE_NAMESPACE(StringView)> {
+    constexpr size_t operator()(NEX_PREPEND_CORE_NAMESPACE(StringView) sv) const noexcept {
+        return NEX_PREPEND_CORE_NAMESPACE(StringViewHash){}(sv);
+    }
+};
+
+NEX_STD_END

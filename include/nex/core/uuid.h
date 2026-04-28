@@ -114,11 +114,14 @@ NEX_CORE_NAMESPACE_END
 
 // Hash specialization for Uuid 
 // to enable use in hash-based containers like std::unordered_map
-namespace std {
-    template <>
-    struct hash<NEX_PREPEND_CORE_NAMESPACE(Uuid)> {
-        size_t operator()(const NEX_PREPEND_CORE_NAMESPACE(Uuid)& uuid) const noexcept {
-            return uuid.hash();
-        }
-    };
-}
+
+NEX_STD_BEGIN
+
+template<>
+struct hash<NEX_PREPEND_CORE_NAMESPACE(Uuid)> {
+    size_t operator()(const NEX_PREPEND_CORE_NAMESPACE(Uuid)& uuid) const noexcept {
+        return uuid.hash();
+    }
+};
+
+NEX_STD_END

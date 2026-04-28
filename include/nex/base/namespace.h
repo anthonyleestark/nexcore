@@ -99,9 +99,9 @@
  */
 
 #define NEX_STD                                                     ::std::
-#define NEX_STD_BEGIN                                               namespace ::std {
-#define NEX_STD_END                                                 } // namespace ::std
-#define NEX_USING_STD_NAMESPACE                                     using namespace ::std;
+#define NEX_STD_BEGIN                                               namespace std {
+#define NEX_STD_END                                                 } // namespace std
+#define NEX_USING_STD_NAMESPACE                                     using namespace std;
 
 /**
  * @section Nested namespace macros for convenience

@@ -112,7 +112,7 @@ using DoubleArray = Array<float64, Size>;
  * static configuration or small collections of text data where the size is known at compile time.
  */
 template <usize Size>
-using StringArray = Array<String, Size>;
+using StringArray = Array<NEX_PREPEND_CORE_NAMESPACE(String), Size>;
 
 /**
  * @brief Dynamic numeric and string list aliases.
@@ -128,6 +128,6 @@ using UInt64List = ArrayList<uint64>;
 using FloatList = ArrayList<float32>;
 using DoubleList = ArrayList<float64>;
 
-using StringList = ArrayList<String>;
+using StringList = ArrayList<NEX_PREPEND_CORE_NAMESPACE(String)>;
 
 NEX_NAMESPACE_END

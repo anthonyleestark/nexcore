@@ -165,8 +165,8 @@ using UInt64Map = HashMap<uint64, uint64>;
  * Provides fast, hash-based mapping from strings to 32-bit or 64-bit integers. These are optimized for 
  * high-performance search operations where string keys are mapped to numeric identifiers or counts.
  */
-using LookupTable = HashMap<String, int32>;
-using LookupTable64 = HashMap<String, int64>;
+using LookupTable = HashMap<NEX_PREPEND_CORE_NAMESPACE(String), int32>;
+using LookupTable64 = HashMap<NEX_PREPEND_CORE_NAMESPACE(String), int64>;
 
 /**
  * @brief StringMap (Map of Strings to Strings) type alias
@@ -174,7 +174,7 @@ using LookupTable64 = HashMap<String, int64>;
  * A standard ordered map used for storing key-value pairs where both components are strings. Typically used 
  * for configuration settings, metadata, or dictionary-like structures.
  */
-using StringMap = Map<String, String>;
+using StringMap = Map<NEX_PREPEND_CORE_NAMESPACE(String), NEX_PREPEND_CORE_NAMESPACE(String)>;
 
 /**
  * @brief IntSet, UIntSet, Int64Set, UInt64Set (Sets of integers) type aliases
@@ -194,6 +194,6 @@ using UInt64Set = HashSet<uint64>;
  * A standard Set container for strings that maintains element order. Use this when uniqueness is required and 
  * you need to iterate through strings in lexicographical order.
  */
-using StringSet = Set<String>;
+using StringSet = Set<NEX_PREPEND_CORE_NAMESPACE(String)>;
 
 NEX_NAMESPACE_END

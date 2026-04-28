@@ -247,7 +247,7 @@ using MaybeBool = Optional<bool>;
  * @details Represents a string value that may or may not be present, allowing 
  * for efficient handling of optional text data without resorting to empty strings or null pointers.
  */
-using MaybeString = Optional<String>;
+using MaybeString = Optional<NEX_PREPEND_CORE_NAMESPACE(String)>;
 
 /**
  * @brief Semantic alias for search operations.

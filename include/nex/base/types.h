@@ -107,6 +107,5 @@ NEX_CORE_NAMESPACE_BEGIN
 // Forward declare common core types
 class String;
 class StringView;
-class Result;
 
 NEX_CORE_NAMESPACE_END

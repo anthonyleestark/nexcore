@@ -39,14 +39,24 @@ NEX_NAMESPACE_BEGIN
  */
 class NEX_EXPORT String {
 public:
+    // Forward declaration of iterators
+    class Iterator;
+    class ConstIterator;
+    using ReverseIterator = NEX_STD reverse_iterator<Iterator>;
+    using ConstReverseIterator = NEX_STD reverse_iterator<ConstIterator>;
+
     // Type aliases for compatibility with standard container conventions
     using value_type = char16;
     using size_type = usize;
     using difference_type = isize;
-    using reference = char16&;
-    using const_reference = const char16&;
-    using pointer = char16*;
-    using const_pointer = const char16*;
+    using reference = value_type&;
+    using const_reference = const value_type&;
+    using pointer = value_type*;
+    using const_pointer = const value_type*;
+    using iterator = Iterator;
+    using const_iterator = ConstIterator;
+    using reverse_iterator = ReverseIterator;
+    using const_reverse_iterator = ConstReverseIterator;
 
 private:
     // Using UTF-16 as the internal buffer
@@ -256,9 +266,6 @@ public:
 
     ////// Iterators -----------------------
 
-    class Iterator;
-    class ConstIterator;
-
     /**
      * @brief Iterator class for String
      * 
@@ -271,19 +278,19 @@ public:
      * @see ConstIterator for a const version of the iterator that provides read-only access to the characters.
      */
     class Iterator {
-    private:
-         // Using UTF-16 string pointer for iteration
-        pointer ptr_;
-
     public:
         // Type aliases for iterator traits (compatible with standard library iterators)
         using iterator_category = NEX_STD random_access_iterator_tag;
-        using value_type = char16;
-        using difference_type = isize;
-        using pointer = value_type*;
-        using const_pointer = const value_type*;
-        using reference = value_type&;
-        using const_reference = const value_type&;
+        using value_type = String::value_type;
+        using difference_type = String::difference_type;
+        using pointer = String::pointer;
+        using const_pointer = String::const_pointer;
+        using reference = String::reference;
+        using const_reference = String::const_reference;
+
+    private:
+         // Using UTF-16 string pointer for iteration
+        pointer ptr_;
 
         // Allow ConstIterator to access private members of Iterator
         friend class ConstIterator;
@@ -306,19 +313,19 @@ public:
 
         constexpr Iterator& operator--() { --ptr_; return *this; }
         constexpr Iterator operator--(int) { Iterator tmp = *this; --ptr_; return tmp; }
-        
+
         // Arithmetic operators for random access iterator
         constexpr Iterator operator+(difference_type offset) const { return Iterator(ptr_ + offset); }
         constexpr Iterator& operator+=(difference_type n) { ptr_ += n; return *this; }
 
         constexpr Iterator operator-(difference_type offset) const { return Iterator(ptr_ - offset); }
         constexpr Iterator& operator-=(difference_type n) { ptr_ -= n; return *this; }
-        
+
         // Friend function for addition with difference_type on the left
         friend constexpr Iterator operator+(difference_type n, const Iterator& it) { 
             return Iterator(it.ptr_ + n); 
         }
-        
+
         // Difference operator for random access iterator
         constexpr difference_type operator-(const Iterator& other) const { 
             return ptr_ - other.ptr_; 
@@ -361,19 +368,20 @@ public:
      * @see Iterator for a non-const version of the iterator that provides read-write access to the characters.
      */
     class ConstIterator {
-    private:
-         // Using UTF-16 string const pointer for iteration
-        const_pointer ptr_;
 
     public:
          // Type aliases for iterator traits (compatible with standard library iterators)
         using iterator_category = NEX_STD random_access_iterator_tag;
-        using value_type = char16;
-        using difference_type = isize;
-        using pointer = const value_type*;
-        using const_pointer = const value_type*;
-        using reference = const value_type&;
-        using const_reference = const value_type&;
+        using value_type = String::value_type;
+        using difference_type = String::difference_type;
+        using pointer = String::const_pointer;
+        using const_pointer = String::const_pointer;
+        using reference = String::const_reference;
+        using const_reference = String::const_reference;
+
+    private:
+         // Using UTF-16 string const pointer for iteration
+        const_pointer ptr_;
 
     public:
         // Construct a const iterator from a UTF-16 string const pointer
@@ -448,9 +456,6 @@ public:
         return ConstIterator(buffer_.data() + buffer_.size());
     }
 
-    // ReverseIterator is a reverse iterator that provides read-write access to the characters in reverse order
-    using ReverseIterator = NEX_STD reverse_iterator<Iterator>;
-    
     // Get a reverse iterator to the beginning of the reversed string (i.e., end of the normal string)
     constexpr ReverseIterator rbegin() noexcept {
         return ReverseIterator(end());
@@ -460,9 +465,6 @@ public:
     constexpr ReverseIterator rend() noexcept {
         return ReverseIterator(begin());
     }
-
-    // ConstReverseIterator is a reverse iterator that provides read-only access to the characters in reverse order
-    using ConstReverseIterator = NEX_STD reverse_iterator<ConstIterator>;
     
     // Get a const reverse iterator to the beginning of the reversed string (i.e., end of the normal string)
     constexpr ConstReverseIterator rbegin() const noexcept {

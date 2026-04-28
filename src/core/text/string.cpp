@@ -18,23 +18,23 @@ NEX_CORE_NAMESPACE_BEGIN
 String::String() : buffer_() {}
 
 // Construct from UTF-8 string view
-String::String(NEX_STD string_view utf8) {
+String::String(Utf8StringView utf8) {
     buffer_ = fromUtf8(utf8).buffer_;
 }
 
 // Construct from UTF-8 string literal
 String::String(const char* utf8) {
-    buffer_ = fromUtf8(NEX_STD string_view(utf8)).buffer_;
+    buffer_ = fromUtf8(Utf8StringView(utf8)).buffer_;
 }
 
 // Construct from UTF-16 string view
-String::String(NEX_STD u16string_view utf16) {
+String::String(Utf16StringView utf16) {
     buffer_.assign(utf16.data(), utf16.size());
 }
 
 // Construct from UTF-16 string literal
 String::String(const char16* utf16) {
-    buffer_ = fromUtf16(NEX_STD u16string_view(utf16)).buffer_;
+    buffer_ = fromUtf16(Utf16StringView(utf16)).buffer_;
 }
 
 // Constructor from StringView
@@ -58,7 +58,7 @@ String String::fromInt(int64 value, int base /* = 10 */) {
         // Successfully converted integer to string
         // Continue convert from ANSI to internal string representation
         return fromUtf16(encoding::ansiToUtf16(
-            NEX_STD string_view(buffer, result.ptr - buffer)).valueOr(kEmpty));
+            Utf8StringView(buffer, result.ptr - buffer)).valueOr(kEmpty));
     } else {
         // Error occurred during conversion (e.g., buffer too small)
         return String(kEmpty);
@@ -73,7 +73,7 @@ String String::fromUInt(uint64 value, int base /* = 10 */) {
         // Successfully converted integer to string
         // Continue convert from ANSI to internal string representation
         return fromUtf16(encoding::ansiToUtf16(
-            NEX_STD string_view(buffer, result.ptr - buffer)).valueOr(kEmpty));
+            Utf8StringView(buffer, result.ptr - buffer)).valueOr(kEmpty));
     } else {
         // Error occurred during conversion (e.g., buffer too small)
         return String(kEmpty);
@@ -116,7 +116,7 @@ String String::fromFloat(double value, char format /* = 'g' */, int precision /*
         // Successfully converted floating-point number to string
         // Continue convert from ANSI to internal string representation
         return fromUtf16(encoding::ansiToUtf16(
-            NEX_STD string_view(stackBuffer, result.ptr - stackBuffer)).valueOr(kEmpty));
+            Utf8StringView(stackBuffer, result.ptr - stackBuffer)).valueOr(kEmpty));
     }
     if (result.ec != NEX_STD errc::value_too_large) {
         // An error occurred during conversion (e.g., invalid format), 
@@ -127,14 +127,14 @@ String String::fromFloat(double value, char format /* = 'g' */, int precision /*
     // If the stack buffer was too small, allocate a larger buffer on the heap
     // The required size can be estimated based on the precision and format, but to be safe, 
     // we can allocate a buffer that is large enough to hold the worst-case scenario for the given precision.
-    NEX_STD string dynamicBuffer(static_cast<usize>(safePrecision) + 64, '\0');
+    Utf8String dynamicBuffer(static_cast<usize>(safePrecision) + 64, '\0');
     result = NEX_STD to_chars(dynamicBuffer.data(), dynamicBuffer.data() + dynamicBuffer.size()
                             , value, charsFormat, safePrecision);
     if (result.ec == NEX_STD errc()) {
         // Successfully converted floating-point number to string
         // Continue convert from ANSI to internal string representation
         return fromUtf16(encoding::ansiToUtf16(
-            NEX_STD string_view(dynamicBuffer.data(), result.ptr - dynamicBuffer.data())).valueOr(kEmpty));
+            Utf8StringView(dynamicBuffer.data(), result.ptr - dynamicBuffer.data())).valueOr(kEmpty));
     }
 
     // An error occurred during conversion, return an empty string
@@ -144,8 +144,8 @@ String String::fromFloat(double value, char format /* = 'g' */, int precision /*
 ////// Create string from specified encoding -----------------------
 
 // Create string from UTF-8 string
-String String::fromUtf8(NEX_STD string_view utf8) {
-    Result<NEX_STD u16string> result = encoding::utf8ToUtf16(utf8);
+String String::fromUtf8(Utf8StringView utf8) {
+    Result<Utf16String> result = encoding::utf8ToUtf16(utf8);
     if (result.isOk()) {
         // Successfully converted UTF-8 to UTF-16, 
         // create String from UTF-16 result
@@ -158,7 +158,7 @@ String String::fromUtf8(NEX_STD string_view utf8) {
 }
 
 // Create string from UTF-16 string
-String String::fromUtf16(NEX_STD u16string_view utf16) {
+String String::fromUtf16(Utf16StringView utf16) {
     String result;
     result.buffer_.assign(utf16.data(), utf16.size());
     return result;
@@ -167,14 +167,14 @@ String String::fromUtf16(NEX_STD u16string_view utf16) {
 ////// Convert to specified encoding (instance methods) -----------------------
 
 // Convert to UTF-8 string
-Result<NEX_STD string> String::toUtf8() const {
+Result<Utf8String> String::toUtf8() const {
     return encoding::utf16ToUtf8(buffer_);
 }
 
 // Convert to UTF-16 string
-Result<NEX_STD u16string> String::toUtf16() const {
+Result<Utf16String> String::toUtf16() const {
     // Since the internal representation is already UTF-16, we can directly return it as a result
-    return Result<NEX_STD u16string>::ok(buffer_);
+    return Result<Utf16String>::ok(buffer_);
 }
 
 ////// Concatenation operator -----------------------
@@ -214,28 +214,28 @@ String String::substr(size_type pos, size_type count) const {
 String::size_type String::find(StringView substring, size_type pos = 0) const {
     if (pos > buffer_.size()) return npos;
     size_type index = buffer_.find(substring.data(), pos, substring.size());
-    return index != NEX_STD u16string::npos ? index : npos;
+    return index != Utf16String::npos ? index : npos;
 }
 
 // Find the first match of a character
 String::size_type String::find(value_type ch, size_type pos = 0) const {
     if (pos > buffer_.size()) return npos;
     size_type index = buffer_.find(ch, pos);
-    return index != NEX_STD u16string::npos ? index : npos;
+    return index != Utf16String::npos ? index : npos;
 }
 
 // Find the last match of a substring
 String::size_type String::rfind(StringView substring, size_type pos = npos) const {
     if (pos > buffer_.size()) return npos;
     size_type index = buffer_.rfind(substring.data(), pos, substring.size());
-    return index != NEX_STD u16string::npos ? index : npos;
+    return index != Utf16String::npos ? index : npos;
 }
 
 // Find the last match of a character
 String::size_type String::rfind(value_type ch, size_type pos = npos) const {
     if (pos > buffer_.size()) return npos;
     size_type index = buffer_.rfind(ch, pos);
-    return index != NEX_STD u16string::npos ? index : npos;
+    return index != Utf16String::npos ? index : npos;
 }
 
 // Check if the string contains a substring

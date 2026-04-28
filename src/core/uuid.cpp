@@ -157,7 +157,7 @@ Result<Uuid, Error> Uuid::fromString(StringView str) noexcept {
     }
 
     // Validate the UTF-8 string format for a UUID (e.g., "123e4567-e89b-12d3-a456-426614174000")
-    NEX_STD string utf8 = res.value();
+    Utf8String utf8 = res.value();
     if (utf8.empty() || !uuids::uuid::is_valid_uuid(utf8)) {
         return Result<Uuid, Error>::error({
             ErrorCode::InvalidFormat, 
@@ -190,7 +190,7 @@ bool Uuid::isNil() const noexcept {
 // Convert to string
 String Uuid::toString() const {
     // Convert the internal UUID to its string representation using the stduuid library
-    NEX_STD string utf8 = uuids::to_string<char>(impl_->uuid);
+    Utf8String utf8 = uuids::to_string<char>(impl_->uuid);
     return String::fromUtf8(utf8);
 }
 

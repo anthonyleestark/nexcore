@@ -48,6 +48,7 @@
 
 #include "nex/base/namespace.h"
 #include "nex/base/types.h"
+#include "nex/base/string.h"
 
 NEX_NAMESPACE_BEGIN
 

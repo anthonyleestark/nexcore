@@ -14,15 +14,15 @@ NEX_INFRA_NAMESPACE_BEGIN
 namespace {
 
     // Convert StringView to UTF-8 string (std::string) (returns string)
-    NEX_STD string toUtf8String(StringView value) {
+    Utf8String toUtf8String(StringView value) {
         using namespace NEX_PREPEND_CORE_NAMESPACE(encoding);
-        const auto result = utf16ToUtf8(NEX_STD u16string_view(value.data(), value.size()));
-        return result.isOk() ? result.value() : NEX_STD string();
+        const auto result = utf16ToUtf8(Utf16StringView(value.data(), value.size()));
+        return result.isOk() ? result.value() : Utf8String();
     }
 
     // Convert StringView to UTF-8 string (std::string) (output parameter; returns boolean)
-    bool toUtf8String(StringView value, NEX_STD string& out) {
-        const NEX_STD string result = toUtf8String(value);
+    bool toUtf8String(StringView value, Utf8String& out) {
+        const Utf8String result = toUtf8String(value);
         if (result.empty() && !value.empty()) {
             return false;
         }
@@ -31,7 +31,7 @@ namespace {
     }
 
     // Convert UTF-8 string (std::string) to String
-    String fromUtf8String(const NEX_STD string& value) {
+    String fromUtf8String(const Utf8String& value) {
         return String::fromUtf8(value);
     }
 
@@ -146,7 +146,7 @@ XmlNode XmlNode::child(StringView name) const {
     if (!isValid()) return out;
     
     // Convert parameter to UTF-8 string (std::string)
-    NEX_STD string utf8;
+    Utf8String utf8;
     if (!toUtf8String(name, utf8) || utf8.empty()) return out;
 
     // Get the child node with the specified name using pugixml
@@ -170,7 +170,7 @@ bool XmlNode::hasChild(StringView name) const {
     if (!isValid()) return false;
 
     // Convert parameter to UTF-8 string (std::string)
-    NEX_STD string utf8;
+    Utf8String utf8;
     if (!toUtf8String(name, utf8) || utf8.empty()) return false;
 
     // Check for child node with the specified name using pugixml
@@ -183,7 +183,7 @@ ArrayList<XmlNode> XmlNode::children(StringView name) const {
     if (!isValid()) return list;
     
     // Convert parameter to UTF-8 string (std::string)
-    NEX_STD string utf8;
+    Utf8String utf8;
     if (!toUtf8String(name, utf8) || utf8.empty()) return list;
 
     // Iterate over all child nodes with the specified name using pugixml
@@ -205,7 +205,7 @@ XmlAttribute XmlNode::attribute(StringView name) const {
     if (!isValid()) return attr;
     
     // Convert parameter to UTF-8 string (std::string)
-    NEX_STD string utf8;
+    Utf8String utf8;
     if (!toUtf8String(name, utf8) || utf8.empty()) return attr;
 
     // Get the attribute with the specified name using pugixml
@@ -240,7 +240,7 @@ NEX_DEFINE_DEFAULT_DTOR(XmlDocument);
 // Load XML from file
 Result<void, Error> XmlDocument::loadFromFile(StringView path) {
     // Convert StringView to UTF-8 std::string
-    NEX_STD string utf8;
+    Utf8String utf8;
     const auto success = toUtf8String(path, utf8);
     if (!success || utf8.empty()) {
         return Result<void, Error>::error({
@@ -264,7 +264,7 @@ Result<void, Error> XmlDocument::loadFromFile(StringView path) {
 // Load XML from string
 Result<void, Error> XmlDocument::loadFromString(const StringView content) {
     // Convert StringView to UTF-8 std::string
-    NEX_STD string utf8;
+    Utf8String utf8;
     const auto success = toUtf8String(content, utf8);
     if (!success || utf8.empty()) {
         return Result<void, Error>::error({

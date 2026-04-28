@@ -17,7 +17,7 @@ NEX_CORE_NAMESPACE_BEGIN
 namespace {
 
     // Trim leading and trailing ASCII whitespace from a string
-    NEX_STD string trimAscii(NEX_STD string_view text) {
+    Utf8String trimAscii(Utf8StringView text) {
         usize start = 0;
         usize end = text.size();
 
@@ -28,12 +28,12 @@ namespace {
             --end;
         }
 
-        return NEX_STD string(text.substr(start, end - start));
+        return Utf8String(text.substr(start, end - start));
     }
 
     // Convert a string to uppercase ASCII
-    NEX_STD string toUpperAscii(NEX_STD string_view text) {
-        NEX_STD string upper(text);
+    Utf8String toUpperAscii(Utf8StringView text) {
+        Utf8String upper(text);
         NEX_STD transform(upper.begin(), upper.end(), upper.begin(),
             [](unsigned char ch) {
                 return static_cast<char>(NEX_STD toupper(ch));
@@ -42,7 +42,7 @@ namespace {
     }
 
     // Parse an unsigned integer from a string view, ensuring the entire string is consumed
-    bool parseUnsignedValue(NEX_STD string_view text, uint32& value) {
+    bool parseUnsignedValue(Utf8StringView text, uint32& value) {
         if (text.empty()) {
             return false;
         }
@@ -54,7 +54,7 @@ namespace {
     }
 
     // Parse function key tokens like "F1", "F2", ..., "F24" and convert them to virtual key codes
-    bool parseFunctionKey(NEX_STD string_view token, uint32& value) {
+    bool parseFunctionKey(Utf8StringView token, uint32& value) {
         if (token.size() < 2 || token[0] != 'F') {
             return false;
         }
@@ -69,11 +69,11 @@ namespace {
     }
 
     // Parse a virtual key token and convert it to a virtual key code
-    bool parseVirtualKeyToken(NEX_STD string_view token, uint32& value) {
-        const NEX_STD string upper = toUpperAscii(token);
+    bool parseVirtualKeyToken(Utf8StringView token, uint32& value) {
+        const Utf8String upper = toUpperAscii(token);
 
         if (upper.rfind("VK", 0) == 0) {
-            return parseUnsignedValue(NEX_STD string_view(upper).substr(2), value);
+            return parseUnsignedValue(Utf8StringView(upper).substr(2), value);
         }
 
         // Handle function keys
@@ -101,9 +101,9 @@ namespace {
     }
 
     // Convert a virtual key code to a human-readable string representation
-    NEX_STD string virtualKeyToHumanReadable(uint32 virtualKey) {
+    Utf8String virtualKeyToHumanReadable(uint32 virtualKey) {
         if ((virtualKey >= 'A' && virtualKey <= 'Z') || (virtualKey >= '0' && virtualKey <= '9')) {
-            return NEX_STD string(1, static_cast<char>(virtualKey));
+            return Utf8String(1, static_cast<char>(virtualKey));
         }
 
         if (virtualKey >= 0x70 && virtualKey <= 0x87) {
@@ -124,8 +124,8 @@ namespace {
     }
 
     // Parse from a UTF-8 string view and return a KeyCombination result
-    Result<KeyCombination, ErrorCode> parseFromUtf8String(NEX_STD string_view text) {
-        const NEX_STD string trimmed = trimAscii(text);
+    Result<KeyCombination, ErrorCode> parseFromUtf8String(Utf8StringView text) {
+        const Utf8String trimmed = trimAscii(text);
         if (trimmed.empty()) {
             return Result<KeyCombination, ErrorCode>::ok(KeyCombination::none());
         }
@@ -136,16 +136,16 @@ namespace {
         usize start = 0;
         while (start <= trimmed.size()) {
             const usize plusPos = trimmed.find('+', start);
-            const usize tokenEnd = (plusPos == NEX_STD string::npos) ? trimmed.size() : plusPos;
-            const NEX_STD string token = trimAscii(
-                NEX_STD string_view(trimmed).substr(start, tokenEnd - start));
+            const usize tokenEnd = (plusPos == Utf8String::npos) ? trimmed.size() : plusPos;
+            const Utf8String token = trimAscii(
+                Utf8StringView(trimmed).substr(start, tokenEnd - start));
 
             if (token.empty()) {
                 return Result<KeyCombination, ErrorCode>::error(ErrorCode::InvalidArgument);
             }
 
             // Check if the token is a modifier or a virtual key
-            const NEX_STD string upper = toUpperAscii(token);
+            const Utf8String upper = toUpperAscii(token);
             if (upper == "CTRL" || upper == "CONTROL") {
                 modifiers |= KeyCombination::kModifierCtrl;
             } else if (upper == "ALT") {
@@ -162,7 +162,7 @@ namespace {
                 virtualKey = parsedKey;
             }
 
-            if (plusPos == NEX_STD string::npos) {
+            if (plusPos == Utf8String::npos) {
                 break;
             }
             start = plusPos + 1;
@@ -180,8 +180,8 @@ namespace {
 
 // Convert the key combination to a string representation based on the specified format
 String KeyCombination::toString(StringFormat format /* = StringFormat::HumanReadable */) const {
-    NEX_STD string text;
-    const auto appendToken = [&text](NEX_STD string_view token) {
+    Utf8String text;
+    const auto appendToken = [&text](Utf8StringView token) {
         if (!text.empty()) {
             text += '+';
         }

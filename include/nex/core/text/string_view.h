@@ -11,6 +11,7 @@
 
 #include "nex/base/macros.h"
 #include "nex/base/types.h"
+#include "nex/base/string.h"
 #include "nex/base/assert_crash.h"
 
 NEX_CORE_NAMESPACE_BEGIN
@@ -62,7 +63,7 @@ public:
         : data_(nullptr), size_(0) {}
 
     // Construct from UTF-16 string view
-    constexpr StringView(NEX_STD u16string_view view) 
+    constexpr StringView(Utf16StringView view) 
         : data_(view.data()), size_(view.size()) {}
     
     // Construct from UTF-16 string literal with explicit size
@@ -185,13 +186,13 @@ public:
     String toString() const;
 
     // Convert to std::u16string (makes a copy of the data)
-    NEX_STD u16string toStdU16String() const {
-        return NEX_STD u16string(data_, size_);
+    Utf16String toStdU16String() const {
+        return Utf16String(data_, size_);
     }
 
     // Convert to std::u16string_view (returns a view of the same data)
-    constexpr NEX_STD u16string_view toStdU16StringView() const noexcept {
-        return NEX_STD u16string_view(data_, size_);
+    constexpr Utf16StringView toStdU16StringView() const noexcept {
+        return Utf16StringView(data_, size_);
     }
 
     ////// Operations -----------------------

@@ -12,6 +12,7 @@
 
 #include "nex/base/macros.h"
 #include "nex/base/types.h"
+#include "nex/base/string.h"
 #include "nex/base/result.h"
 #include "nex/base/assert_crash.h"
 #include "nex/core/text/string_view.h"
@@ -60,7 +61,7 @@ public:
 
 private:
     // Using UTF-16 as the internal buffer
-    NEX_STD u16string buffer_;
+    Utf16String buffer_;
 
 public:
      ////// Construction ------------------------
@@ -69,13 +70,13 @@ public:
     explicit String();
 
     // Construct from UTF-8 string view
-    String(NEX_STD string_view utf8);
+    String(Utf8StringView utf8);
 
     // Construct from UTF-8 string literal
     String(const char* utf8);
     
     // Construct from UTF-16 string view
-    String(NEX_STD u16string_view utf16);
+    String(Utf16StringView utf16);
 
     // Construct from UTF-16 string literal
     String(const char16* utf16);
@@ -124,18 +125,18 @@ public:
     ////// Create string from specified encoding -----------------------
 
     // Create string from UTF-8 string
-    static String fromUtf8(NEX_STD string_view utf8);
+    static String fromUtf8(Utf8StringView utf8);
 
     // Create string from UTF-16 string
-    static String fromUtf16(NEX_STD u16string_view utf16);
+    static String fromUtf16(Utf16StringView utf16);
 
     ////// Convert to specified encoding (instance methods) -----------------------
 
     // Convert to UTF-8 string
-    NEX_NODISCARD Result<NEX_STD string> toUtf8() const;
+    NEX_NODISCARD Result<Utf8String> toUtf8() const;
 
     // Convert to UTF-16 string
-    NEX_NODISCARD Result<NEX_STD u16string> toUtf16() const;
+    NEX_NODISCARD Result<Utf16String> toUtf16() const;
 
 private:
     // Internal constants

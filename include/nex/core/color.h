@@ -14,6 +14,7 @@
 
 #include "nex/base/macros.h"
 #include "nex/base/types.h"
+#include "nex/base/string.h"
 
 NEX_CORE_NAMESPACE_BEGIN
 
@@ -426,8 +427,8 @@ public:
         return clr;
     }
     // Create Color from hex string (#RRGGBB or #AARRGGBB)
-    static Color fromHex(const NEX_STD string& hex) {
-        NEX_STD string hexClean = hex;
+    static Color fromHex(const Utf8String& hex) {
+        Utf8String hexClean = hex;
         // Remove leading '#' if present
         if (!hexClean.empty() && hexClean[0] == '#') {
             hexClean = hexClean.substr(1);
@@ -468,11 +469,11 @@ public:
         return Color(0, 0, 0, 255);
     }
     static Color fromHex(const char* hex) {
-        return fromHex(hex ? NEX_STD string(hex) : NEX_STD string());
+        return fromHex(hex ? Utf8String(hex) : Utf8String());
     }
     // Create Color from name (case-insensitive)
-    static Color fromName(const NEX_STD string& name) {
-        NEX_STD string nameLower = name;
+    static Color fromName(const Utf8String& name) {
+        Utf8String nameLower = name;
         for (char& c : nameLower) {
             c = static_cast<char>(NEX_STD tolower(static_cast<unsigned char>(c)));
         }
@@ -504,7 +505,7 @@ public:
         return Black();
     }
     static Color fromName(const char* name) {
-        return fromName(name ? NEX_STD string(name) : NEX_STD string());
+        return fromName(name ? Utf8String(name) : Utf8String());
     }
 
     // Color conversion methods
@@ -654,7 +655,7 @@ public:
         return YCbCrColor(y, cb, cr);
     }
     // Convert to hex string (#RRGGBB format, alpha omitted)
-    NEX_STD string toHex() const {
+    Utf8String toHex() const {
         NEX_STD ostringstream oss;
         oss << "#" << NEX_STD hex << NEX_STD uppercase << NEX_STD setfill('0') 
             << NEX_STD setw(2) << static_cast<int>(getR())
@@ -663,7 +664,7 @@ public:
         return oss.str();
     }
     // Convert to hex string with alpha (#AARRGGBB format)
-    NEX_STD string toHexWithAlpha() const {
+    Utf8String toHexWithAlpha() const {
         NEX_STD ostringstream oss;
         oss << "#" << NEX_STD hex << NEX_STD uppercase << NEX_STD setfill('0')
             << NEX_STD setw(2) << static_cast<int>(getA())

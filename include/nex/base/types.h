@@ -101,11 +101,3 @@ using const_void_ptr = const void*;
 using address = uintptr;  // Represents a memory address (pointer-sized unsigned integer)
 
 NEX_NAMESPACE_END
-
-NEX_CORE_NAMESPACE_BEGIN
-
-// Forward declare common core types
-class String;
-class StringView;
-
-NEX_CORE_NAMESPACE_END

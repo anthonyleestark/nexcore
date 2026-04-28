@@ -31,19 +31,19 @@ struct Json::Impl {
 namespace {
 
     // Convert StringView to UTF-8 string (std::string)
-    NEX_STD string toUtf8String(StringView value) {
+    Utf8String toUtf8String(StringView value) {
         using namespace NEX_PREPEND_CORE_NAMESPACE(encoding);
-        const auto result = utf16ToUtf8(NEX_STD u16string_view(value.data(), value.size()));
-        return result.isOk() ? result.value() : NEX_STD string();
+        const auto result = utf16ToUtf8(Utf16StringView(value.data(), value.size()));
+        return result.isOk() ? result.value() : Utf8String();
     }
 
     // Convert UTF-8 string (std::string) to String
-    String fromUtf8String(const NEX_STD string& value) {
+    String fromUtf8String(const Utf8String& value) {
         return String::fromUtf8(value);
     }
 
     // Navigate JSON using dot-separated key path (e.g., "application.name")
-    const nlohmann::json* navigatePathImpl(const nlohmann::json& root, const NEX_STD string& keyPath) {
+    const nlohmann::json* navigatePathImpl(const nlohmann::json& root, const Utf8String& keyPath) {
         if (keyPath.empty()) {
             return nullptr;
         }
@@ -51,7 +51,7 @@ namespace {
         const nlohmann::json* current = &root;
 
         NEX_STD stringstream ss(keyPath);
-        NEX_STD string segment;
+        Utf8String segment;
 
         while (NEX_STD getline(ss, segment, '.')) {
             if (segment.empty()) {
@@ -81,7 +81,7 @@ NEX_DEFINE_DEFAULT_DTOR(Json);
 // Load JSON from file
 Result<void, Error> Json::loadFromFile(StringView filePath) {
     // Convert file path to UTF-8 string
-    const NEX_STD string path = toUtf8String(filePath);
+    const Utf8String path = toUtf8String(filePath);
     if (path.empty()) {
         return Result<void, Error>::error({
             ErrorCode::InvalidArgument, "Invalid file path"
@@ -168,7 +168,7 @@ Result<void, Error> Json::loadFromFile(StringView filePath) {
 // Load JSON from string
 Result<void, Error> Json::loadFromString(StringView jsonString) {
     // Convert JSON string to UTF-8 std::string
-    const NEX_STD string text = toUtf8String(jsonString);
+    const Utf8String text = toUtf8String(jsonString);
     if (text.empty()) {
         return Result<void, Error>::error({
             ErrorCode::InvalidArgument, "Invalid argument"
@@ -243,7 +243,7 @@ const Json::NodeHandle* Json::navigatePath(StringView keyPath) const {
     }
 
     // Convert key path to UTF-8 string and navigate the JSON structure
-    const NEX_STD string path = toUtf8String(keyPath);
+    const Utf8String path = toUtf8String(keyPath);
     const nlohmann::json* node = navigatePathImpl(impl_->json, path);
     if (!node) {
         impl_->nodeHandle.reset();
@@ -270,7 +270,7 @@ String Json::getString(StringView keyPath, StringView defaultValue /* = StringVi
     }
 
     // Convert the JSON string to String and return
-    return fromUtf8String(node->get<NEX_STD string>());
+    return fromUtf8String(node->get<Utf8String>());
 }
 
 // Get integer value by key path
@@ -360,7 +360,7 @@ bool Json::tryGetString(StringView keyPath, String& value) const {
     if (!node || !node->is_string()) return false;
 
     // Convert the JSON string to String and set the output parameter
-    value = fromUtf8String(node->get<NEX_STD string>());
+    value = fromUtf8String(node->get<Utf8String>());
     return true;
 }
 
@@ -489,7 +489,7 @@ bool Json::tryGetStringAt(StringView keyPath, usize index, String& value) const 
     if (!elem.is_string()) return false;
 
     // Convert the JSON string to String and set the output parameter
-    value = fromUtf8String(elem.get<NEX_STD string>());
+    value = fromUtf8String(elem.get<Utf8String>());
     return true;
 }
 

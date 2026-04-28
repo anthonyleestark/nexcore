@@ -10,6 +10,7 @@
 #include <cwctype>
 
 #include "nex/core/chrono/time.h"
+#include "nex/base/string.h"
 
 NEX_CORE_NAMESPACE_BEGIN
 
@@ -25,9 +26,9 @@ namespace {
         const auto res = str.toUtf16();
         if (!res.isOk()) return String();
 
-        NEX_STD u16string u16str = res.value();
+        Utf16String u16str = res.value();
         size_t first = u16str.find_first_not_of(u" \t\n\r");
-        if (first == NEX_STD u16string::npos) return String();
+        if (first == Utf16String::npos) return String();
 
         size_t last = u16str.find_last_not_of(u" \t\n\r");
         return String(u16str.substr(first, (last - first + 1)));
@@ -38,7 +39,7 @@ namespace {
         const auto res = str.toUtf16();
         if (!res.isOk()) return String();
 
-        NEX_STD u16string u16str = res.value();
+        Utf16String u16str = res.value();
         NEX_STD transform(u16str.begin(), u16str.end(), u16str.begin(),
             [](char16_t c) { return NEX_STD towlower(c); });
         return String(u16str);
@@ -166,7 +167,7 @@ TimeSpan TimeSpan::fromString(const String& str) {
     
     auto utf16Res = trimmed.toUtf16();
     if (!utf16Res.isOk()) return TimeSpan();
-    const NEX_STD u16string& u16str = utf16Res.value();
+    const Utf16String& u16str = utf16Res.value();
     NEX_STD wstring wstr(u16str.begin(), u16str.end());
     
     // Try ISO 8601 format: PTnHnMnS
@@ -339,7 +340,7 @@ ClockTime ClockTime::fromString(const String& str) {
     
     auto utf16Res = trimmed.toUtf16();
     if (!utf16Res.isOk()) return ClockTime(0, 0, 0);
-    const NEX_STD u16string& u16str = utf16Res.value();
+    const Utf16String& u16str = utf16Res.value();
     NEX_STD wstring wstr(u16str.begin(), u16str.end());
     
     // Try compact format: HHMM
@@ -584,7 +585,7 @@ DateTime DateTime::fromString(const String& str) {
     
     auto utf16Res = trimmed.toUtf16();
     if (!utf16Res.isOk()) return DateTime();
-    const NEX_STD u16string& u16str = utf16Res.value();
+    const Utf16String& u16str = utf16Res.value();
     NEX_STD wstring wstr(u16str.begin(), u16str.end());
     
     // Try US format with 12-hour: MM/DD/YYYY HH:MM:SS AM/PM

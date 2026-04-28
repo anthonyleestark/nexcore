@@ -10,7 +10,7 @@
 #include "nex/core/result.h"
 #include "nex/core/text/string_view.h"
 
-NEX_NAMESPACE_BEGIN
+NEX_CORE_NAMESPACE_BEGIN
 
 /**
  * @class   KeyCombination
@@ -198,7 +198,7 @@ private:
     uint32 virtualKey_ = 0;
 };
 
-NEX_NAMESPACE_END
+NEX_CORE_NAMESPACE_END
 
 // Hash specialization for KeyCombination to allow usage in unordered containers
 // Combines the modifiers and virtual key into a single hash value

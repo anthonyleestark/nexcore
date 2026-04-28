@@ -9,7 +9,7 @@
 #include "nex/core/containers/bit_buffer.h"
 #include "nex/base/assert_crash.h"
 
-NEX_NAMESPACE_BEGIN
+NEX_CORE_NAMESPACE_BEGIN
 
 ////// Helper functions for bit manipulation ------------------------
 
@@ -390,4 +390,4 @@ bool BitBuffer::operator==(const BitBuffer& other) const noexcept {
     return true;
 }
 
-NEX_NAMESPACE_END
+NEX_CORE_NAMESPACE_END

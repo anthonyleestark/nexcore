@@ -13,7 +13,7 @@
 
 #include <fmt/format.h>
 
-NEX_NAMESPACE_BEGIN
+NEX_CORE_NAMESPACE_BEGIN
 
 /**
  * @namespace format
@@ -94,4 +94,4 @@ namespace format {
     }
 } // namespace format
 
-NEX_NAMESPACE_END
+NEX_CORE_NAMESPACE_END

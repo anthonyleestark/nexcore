@@ -13,7 +13,7 @@
 #include "nex/base/types.h"
 #include "nex/base/assert_crash.h"
 
-NEX_NAMESPACE_BEGIN
+NEX_CORE_NAMESPACE_BEGIN
 
 /**
  * @class StringView
@@ -344,7 +344,7 @@ struct StringViewHash {
     }
 };
 
-NEX_NAMESPACE_END
+NEX_CORE_NAMESPACE_END
 
 // Implicit hash specialization for StringView to allow usage in unordered containers 
 // without needing to specify the hash function

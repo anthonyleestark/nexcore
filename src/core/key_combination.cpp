@@ -11,7 +11,7 @@
 #include "nex/core/key_combination.h"
 #include "nex/core/text/string.h"
 
-NEX_NAMESPACE_BEGIN
+NEX_CORE_NAMESPACE_BEGIN
 
 // Helper functions for parsing and formatting key combinations
 namespace {
@@ -220,4 +220,4 @@ Result<KeyCombination, ErrorCode> KeyCombination::fromString(StringView text) {
     return fromString(text.toString());
 }
 
-NEX_NAMESPACE_END
+NEX_CORE_NAMESPACE_END

@@ -12,7 +12,7 @@
 #include "nex/base/macros.h"
 #include "nex/base/types.h"
 
-NEX_NAMESPACE_BEGIN
+NEX_CORE_NAMESPACE_BEGIN
 
 /**
  * @struct PropertyPolicy
@@ -167,4 +167,4 @@ public:
     }
 };
 
-NEX_NAMESPACE_END
+NEX_CORE_NAMESPACE_END

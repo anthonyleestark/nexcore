@@ -20,7 +20,7 @@
 #include "nex/core/functional.h"
 #include "nex/core/executor.h"
 
-NEX_NAMESPACE_BEGIN
+NEX_CORE_NAMESPACE_BEGIN
 
 // Forward declaration
 template<typename T>
@@ -559,4 +559,4 @@ auto async(Executor& executor, Fn&& fn, Args&&... args)
     return future;
 }
 
-NEX_NAMESPACE_END
+NEX_CORE_NAMESPACE_END

@@ -208,8 +208,8 @@
  * while the NEX_ALIAS_TYPE_FROM_PROJECT_LAYER macro is used to create an alias for a type from another project/layer.
  * The NEX_ALIAS_TYPE_AS_FROM_LAYER and NEX_ALIAS_TYPE_AS_FROM_PROJECT_LAYER macros are used to create an alias with a 
  * different name for a type from another layer or project/layer, respectively.
- * These macros help manage dependencies, allowing to use the types directly inside the current scope with a different name,
- * while behaving as if the current layer is the owner of the type.
+ * These macros help manage dependencies, allowing to use the types directly inside the current scope with a different 
+ * name, while behaving as if the current layer is the owner of the type.
  */
 
 #define NEX_ALIAS_TYPE_FROM_FOUNDATION(type)                                    \
@@ -230,12 +230,13 @@
  * @section Cross-layer namespace aliasing macros
  * @brief   Define macros for aliasing namespaces from other layers and projects/layers
  * @note
- * The NEX_ALIAS_NAMESPACE_FROM_LAYER macro is used to create an alias for a namespace from another layer within the same project, 
- * while the NEX_ALIAS_NAMESPACE_FROM_PROJECT_LAYER macro is used to create an alias for a namespace from another project/layer.
- * The NEX_ALIAS_NAMESPACE_AS_FROM_LAYER and NEX_ALIAS_NAMESPACE_AS_FROM_PROJECT_LAYER macros are used to create an alias with a 
- * different name for a namespace from another layer or project/layer, respectively.
- * These macros help manage dependencies, allowing to use the namespaces directly inside the current scope with a different name,
- * while behaving as if the current layer is the owner of the namespace.
+ * The NEX_ALIAS_NAMESPACE_FROM_LAYER macro is used to create an alias for a namespace from another layer within 
+ * the same project, while the NEX_ALIAS_NAMESPACE_FROM_PROJECT_LAYER macro is used to create an alias for 
+ * a namespace from another project/layer.
+ * The NEX_ALIAS_NAMESPACE_AS_FROM_LAYER and NEX_ALIAS_NAMESPACE_AS_FROM_PROJECT_LAYER macros are used to create 
+ * an alias with a different name for a namespace from another layer or project/layer, respectively.
+ * These macros help manage dependencies, allowing to use the namespaces directly inside the current scope with 
+ * a different name, while behaving as if the current layer is the owner of the namespace.
  */
 
 #define NEX_ALIAS_NAMESPACE_FROM_FOUNDATION(ns)                                  \
@@ -251,3 +252,56 @@
     namespace alias = NEX_PREPEND_LAYER_NAMESPACE(layer, ns);
 #define NEX_ALIAS_NAMESPACE_AS_FROM_PROJECT_LAYER(alias, project, layer, ns)     \
     namespace alias = NEX_PREPEND_PROJECT_LAYER_NAMESPACE(project, layer, ns);
+
+/**
+ * @section Cross-layer function aliasing macros
+ * @brief   Define macros for aliasing functions from other layers and projects/layers
+ * @note
+ * The NEX_ALIAS_FUNCTION_FROM_LAYER macro is used to create an alias for a function from another layer within 
+ * the same project, while the NEX_ALIAS_FUNCTION_FROM_PROJECT_LAYER macro is used to create an alias for 
+ * a function from another project/layer.
+ * The NEX_ALIAS_FUNCTION_AS_FROM_LAYER and NEX_ALIAS_FUNCTION_AS_FROM_PROJECT_LAYER macros are used to create 
+ * an alias with a different name for a function from another layer or project/layer, respectively.
+ * These macros help manage dependencies, allowing to use the functions directly inside the current scope with 
+ * a different name, while behaving as if the current layer is the owner of the function.
+ */
+
+#define NEX_ALIAS_FUNCTION_FROM_LAYER(layer, func)                                \
+    using NEX_PREPEND_LAYER_NAMESPACE(layer, func);
+#define NEX_ALIAS_FUNCTION_FROM_PROJECT_LAYER(project, layer, func)               \
+    using NEX_PREPEND_PROJECT_LAYER_NAMESPACE(project, layer, func);
+#define NEX_ALIAS_FUNCTION_AS_FROM_LAYER(alias, layer, func)                      \
+    using alias = NEX_PREPEND_LAYER_NAMESPACE(layer, func);
+#define NEX_ALIAS_FUNCTION_AS_FROM_PROJECT_LAYER(alias, project, layer, func)     \
+    using alias = NEX_PREPEND_PROJECT_LAYER_NAMESPACE(project, layer, func);
+
+/**
+ * @section NexCore module/layer namespace macros
+ * @brief   Define macros for the NexCore module/layer namespace and helper macros for namespace usage
+ */
+
+/**
+ * @brief  NexCore's core module/layer namespace macros
+ */
+
+#define NEX_CORE_NAMESPACE_BEGIN                                                  \
+    NEX_LAYER_NAMESPACE_BEGIN(core)
+#define NEX_CORE_NAMESPACE_END                                                    \
+    NEX_LAYER_NAMESPACE_END(core)
+#define NEX_USING_CORE_NAMESPACE                                                  \
+    NEX_USING_LAYER_NAMESPACE(core)
+#define NEX_PREPEND_CORE_NAMESPACE(name)                                          \
+    NEX_PREPEND_LAYER_NAMESPACE(core, name)
+
+/**
+ * @brief  NexCore's infrastructure module/layer namespace macros
+ */
+
+#define NEX_INFRA_NAMESPACE_BEGIN                                                  \
+    NEX_LAYER_NAMESPACE_BEGIN(infra)
+#define NEX_INFRA_NAMESPACE_END                                                    \
+    NEX_LAYER_NAMESPACE_END(infra)
+#define NEX_USING_INFRA_NAMESPACE                                                  \
+    NEX_USING_LAYER_NAMESPACE(infra)
+#define NEX_PREPEND_INFRA_NAMESPACE(name)                                          \
+    NEX_PREPEND_LAYER_NAMESPACE(infra, name)

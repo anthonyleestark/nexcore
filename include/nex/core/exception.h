@@ -12,7 +12,7 @@
 #include "nex/core/text/string.h"
 #include "nex/core/text/string_view.h"
 
-NEX_NAMESPACE_BEGIN
+NEX_CORE_NAMESPACE_BEGIN
 
 /**
  * @class  Exception
@@ -279,4 +279,4 @@ public:
     virtual ~FormatError() noexcept = default;
 };
 
-NEX_NAMESPACE_END
+NEX_CORE_NAMESPACE_END

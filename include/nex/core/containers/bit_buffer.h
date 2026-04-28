@@ -9,7 +9,7 @@
 #include "nex/base/types.h"
 #include "nex/base/linear.h"
 
-NEX_NAMESPACE_BEGIN
+NEX_CORE_NAMESPACE_BEGIN
 
 /**
  * @class BitBuffer
@@ -370,4 +370,4 @@ public:
     }
 };
 
-NEX_NAMESPACE_END
+NEX_CORE_NAMESPACE_END

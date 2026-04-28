@@ -10,7 +10,7 @@
 #include "nex/core/text/text.h"
 #include "nex/core/version.h"
 
-NEX_NAMESPACE_BEGIN
+NEX_CORE_NAMESPACE_BEGIN
 
 // =================================================================================
 // Internal helper functions for Version class
@@ -263,4 +263,4 @@ bool Version::isValid() const {
     return true;
 }
 
-NEX_NAMESPACE_END
+NEX_CORE_NAMESPACE_END

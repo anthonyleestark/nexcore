@@ -8,7 +8,7 @@
 #include "nex/base/macros.h"
 #include "nex/base/types.h"
 
-NEX_NAMESPACE_BEGIN
+NEX_CORE_NAMESPACE_BEGIN
 
 /**
  * @enum    ErrorCode
@@ -396,4 +396,4 @@ struct NEX_EXPORT Error {
     const char* message;
 };
 
-NEX_NAMESPACE_END
+NEX_CORE_NAMESPACE_END

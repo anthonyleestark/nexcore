@@ -9,7 +9,7 @@
 #include "nex/base/types.h"
 #include "nex/core/containers/details/ring_buffer_base.h"
 
-NEX_NAMESPACE_BEGIN
+NEX_CORE_NAMESPACE_BEGIN
 
 /**
  * @class RingBuffer
@@ -72,4 +72,4 @@ template <typename T, usize Capacity,
 requires (Capacity > 0) // Capacity must be greater than 0
 using StaticRingBuffer = ring_buffer::details::RingBufferBase<T, ring_buffer::details::StaticStorage<T, Capacity>, Policy>;
 
-NEX_NAMESPACE_END
+NEX_CORE_NAMESPACE_END

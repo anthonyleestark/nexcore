@@ -13,7 +13,7 @@
 #include "nex/base/linear.h"
 #include "nex/base/assert_crash.h"
 
-NEX_NAMESPACE_BEGIN
+NEX_CORE_NAMESPACE_BEGIN
 
 /**
  * @class BitSet
@@ -579,4 +579,4 @@ public:
     }
 };
 
-NEX_NAMESPACE_END
+NEX_CORE_NAMESPACE_END

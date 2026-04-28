@@ -11,7 +11,7 @@
 #include "nex/core/text/string.h"
 #include "nex/core/result.h"
 
-NEX_NAMESPACE_BEGIN
+NEX_CORE_NAMESPACE_BEGIN
 
 /** 
  * @brief Internal helper functions for optimized character lookup in contains() method
@@ -443,4 +443,4 @@ bool StringView::endsWith(StringView suffix) const {
                                                     , suffix.data_, suffix.size_) == 0;
 }
 
-NEX_NAMESPACE_END
+NEX_CORE_NAMESPACE_END

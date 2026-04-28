@@ -15,7 +15,7 @@
 #include "nex/base/macros.h"
 #include "nex/base/types.h"
 
-NEX_NAMESPACE_BEGIN
+NEX_CORE_NAMESPACE_BEGIN
 
 // 32-bit RGBA color format (RGBA8888) (non-premultiplied). Common in OpenGL, WebGL, etc.
 // The color component order is 0xRRGGBBAA. Similar to ARGB but with a different layout. 
@@ -941,4 +941,4 @@ public:
     }
 };
 
-NEX_NAMESPACE_END
+NEX_CORE_NAMESPACE_END

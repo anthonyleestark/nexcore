@@ -11,7 +11,7 @@
 #include "nex/base/macros.h"
 #include "nex/base/types.h"
 
-NEX_NAMESPACE_BEGIN
+NEX_CORE_NAMESPACE_BEGIN
 
 /**
  * @class   Span
@@ -146,4 +146,4 @@ private:
     NEX_STD span<const T> buffer_;
 };
 
-NEX_NAMESPACE_END
+NEX_CORE_NAMESPACE_END

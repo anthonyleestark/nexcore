@@ -13,7 +13,7 @@
 #include "nex/core/text/string_view.h"
 #include "nex/core/result.h"
 
-NEX_NAMESPACE_BEGIN
+NEX_CORE_NAMESPACE_BEGIN
 
 /**
  * @struct Version
@@ -142,4 +142,4 @@ struct NEX_EXPORT Version {
     }
 };
 
-NEX_NAMESPACE_END
+NEX_CORE_NAMESPACE_END

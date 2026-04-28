@@ -12,7 +12,7 @@
 #include "nex/core/text/string_view.h"
 #include "nex/base/wrappers.h"
 
-NEX_NAMESPACE_BEGIN
+NEX_CORE_NAMESPACE_BEGIN
 
 /**
  * @struct  RegexMatch
@@ -152,4 +152,4 @@ private:
     UniquePtr<Impl> impl_;
 };
 
-NEX_NAMESPACE_END
+NEX_CORE_NAMESPACE_END

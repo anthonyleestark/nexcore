@@ -17,7 +17,7 @@
     #include <sched.h>
 #endif
 
-NEX_NAMESPACE_BEGIN
+NEX_CORE_NAMESPACE_BEGIN
 
 // ======================================================================
 // Thread Implementation
@@ -306,4 +306,4 @@ ThreadId Thread::currentThreadId() noexcept {
     return NEX_STD this_thread::get_id();
 }
 
-NEX_NAMESPACE_END
+NEX_CORE_NAMESPACE_END

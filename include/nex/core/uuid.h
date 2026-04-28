@@ -12,7 +12,7 @@
 #include "nex/core/result.h"
 #include "nex/base/wrappers.h"
 
-NEX_NAMESPACE_BEGIN
+NEX_CORE_NAMESPACE_BEGIN
 
 /**
  * @class   Uuid
@@ -110,7 +110,7 @@ private:
     UniquePtr<Impl> impl_;
 };
 
-NEX_NAMESPACE_END
+NEX_CORE_NAMESPACE_END
 
 // Hash specialization for Uuid 
 // to enable use in hash-based containers like std::unordered_map

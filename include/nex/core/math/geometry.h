@@ -38,7 +38,7 @@
 #include "nex/base/types.h"
 #include "nex/base/assert_crash.h"
 
-NEX_NAMESPACE_BEGIN
+NEX_CORE_NAMESPACE_BEGIN
 
 /**
  * @namespace math_utils
@@ -1693,4 +1693,4 @@ public:
     }
 };
 
-NEX_NAMESPACE_END
+NEX_CORE_NAMESPACE_END

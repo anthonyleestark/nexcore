@@ -13,7 +13,7 @@
 #include "nex/core/result.h"
 #include "nex/core/error.h"
 
-NEX_NAMESPACE_BEGIN
+NEX_CORE_NAMESPACE_BEGIN
 
 /**
  * @namespace   encoding
@@ -418,4 +418,4 @@ namespace encoding {
 
 } // namespace encoding
 
-NEX_NAMESPACE_END
+NEX_CORE_NAMESPACE_END

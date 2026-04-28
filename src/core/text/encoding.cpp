@@ -19,7 +19,7 @@
     #include <windows.h>
 #endif
 
-NEX_NAMESPACE_BEGIN
+NEX_CORE_NAMESPACE_BEGIN
 
 // ========================================================================================
 // Implementation of character classification functions
@@ -735,4 +735,4 @@ Result<NEX_STD u32string> encoding::utf16ToUtf32(NEX_STD u16string_view utf16) {
     return Result<NEX_STD u32string>::ok(NEX_STD move(result));
 }
 
-NEX_NAMESPACE_END
+NEX_CORE_NAMESPACE_END

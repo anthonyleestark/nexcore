@@ -21,7 +21,7 @@
     #include <array>
 #endif
 
-NEX_NAMESPACE_BEGIN
+NEX_CORE_NAMESPACE_BEGIN
 
 // Internal implementation of Uuid class using stduuid library
 struct Uuid::Impl {
@@ -200,4 +200,4 @@ usize Uuid::hash() const noexcept {
     return NEX_STD hash<uuids::uuid>{}(impl_->uuid);
 }
 
-NEX_NAMESPACE_END
+NEX_CORE_NAMESPACE_END

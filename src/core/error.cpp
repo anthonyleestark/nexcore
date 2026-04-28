@@ -5,7 +5,7 @@
 
 #include "nex/core/error.h"
 
-NEX_NAMESPACE_BEGIN
+NEX_CORE_NAMESPACE_BEGIN
 
 // Convert error code to string
 const char* errorCodeToString(ErrorCode code) {
@@ -345,4 +345,4 @@ bool isRecoverable(ErrorCode code) {
     }
 }
 
-NEX_NAMESPACE_END
+NEX_CORE_NAMESPACE_END

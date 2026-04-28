@@ -16,7 +16,7 @@
 #include "nex/base/assert_crash.h"
 #include "nex/core/text/string_view.h"
 
-NEX_NAMESPACE_BEGIN
+NEX_CORE_NAMESPACE_BEGIN
 
 /**
  * @class String
@@ -569,4 +569,4 @@ public:
     int compare(StringView other) const noexcept;
 };
 
-NEX_NAMESPACE_END
+NEX_CORE_NAMESPACE_END

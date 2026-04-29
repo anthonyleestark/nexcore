@@ -6,7 +6,7 @@
 #include <algorithm>
 #include <utility>
 
-#include "nex/core/containers/bit_buffer.h"
+#include "nex/core/containers/bit_array.h"
 #include "nex/base/assert_crash.h"
 
 NEX_CORE_NAMESPACE_BEGIN
@@ -14,7 +14,7 @@ NEX_CORE_NAMESPACE_BEGIN
 ////// Helper functions for bit manipulation ------------------------
 
 // Clear unused bits in the last byte
-void BitBuffer::clearUnusedBits() noexcept {
+void BitArray::clearUnusedBits() noexcept {
     if (bitCount_ > 0) {
         usize lastByteIndex = byteIndex(bitCount_ - 1);
         usize lastBitOffset = bitOffset(bitCount_ - 1);
@@ -29,14 +29,14 @@ void BitBuffer::clearUnusedBits() noexcept {
 ////// Constructors --------------------------------------------------
 
 // Construct from size (all bits initialized to false)
-BitBuffer::BitBuffer(usize size) : bitCount_(size) {
+BitArray::BitArray(usize size) : bitCount_(size) {
     if (size > 0) {
         buffer_.resize(bufferSizeForBits(size), 0);
     }
 }
 
 // Construct from size and fill value
-BitBuffer::BitBuffer(usize size, bool fillValue) : bitCount_(size) {
+BitArray::BitArray(usize size, bool fillValue) : bitCount_(size) {
     if (size > 0) {
         uint8 fillByte = fillValue ? 0xFF : 0x00;
         buffer_.resize(bufferSizeForBits(size), fillByte);
@@ -45,7 +45,7 @@ BitBuffer::BitBuffer(usize size, bool fillValue) : bitCount_(size) {
 }
 
 // Copy assignment operator
-BitBuffer& BitBuffer::operator=(const BitBuffer& other) {
+BitArray& BitArray::operator=(const BitArray& other) {
     if (this != &other) {
         buffer_ = other.buffer_;
         bitCount_ = other.bitCount_;
@@ -54,13 +54,13 @@ BitBuffer& BitBuffer::operator=(const BitBuffer& other) {
 }
 
 // Move constructor
-BitBuffer::BitBuffer(BitBuffer&& other) noexcept 
+BitArray::BitArray(BitArray&& other) noexcept 
     : buffer_(NEX_STD move(other.buffer_)), bitCount_(other.bitCount_) {
     other.bitCount_ = 0;
 }
 
 // Move assignment operator
-BitBuffer& BitBuffer::operator=(BitBuffer&& other) noexcept {
+BitArray& BitArray::operator=(BitArray&& other) noexcept {
     if (this != &other) {
         buffer_ = NEX_STD move(other.buffer_);
         bitCount_ = other.bitCount_;
@@ -72,7 +72,7 @@ BitBuffer& BitBuffer::operator=(BitBuffer&& other) noexcept {
 ////// Capacity --------------------------------------------------
 
 // Resize the buffer with fill value
-void BitBuffer::resize(usize newSize, bool fillValue) {
+void BitArray::resize(usize newSize, bool fillValue) {
     usize oldSize = bitCount_;
     bitCount_ = newSize;
     
@@ -112,16 +112,16 @@ void BitBuffer::resize(usize newSize, bool fillValue) {
 }
 
 // Clear the buffer
-void BitBuffer::clear() noexcept {
+void BitArray::clear() noexcept {
     buffer_.clear();
     bitCount_ = 0;
 }
 
 ////// Conversion and serialization ------------------------------
 
-// Create BitBuffer from Vector of booleans (ArrayList<bool>)
-BitBuffer BitBuffer::fromVector(const ArrayList<bool>& vec) noexcept {
-    BitBuffer result(vec.size());
+// Create BitArray from Vector of booleans (ArrayList<bool>)
+BitArray BitArray::fromVector(const ArrayList<bool>& vec) noexcept {
+    BitArray result(vec.size());
     for (usize i = 0; i < vec.size(); ++i) {
         result.setBit(i, vec[i]);
     }
@@ -129,7 +129,7 @@ BitBuffer BitBuffer::fromVector(const ArrayList<bool>& vec) noexcept {
 }
 
 // Convert to Vector of booleans (ArrayList<bool>)
-ArrayList<bool> BitBuffer::toVector() const noexcept {
+ArrayList<bool> BitArray::toVector() const noexcept {
     ArrayList<bool> result(bitCount_);
     for (usize i = 0; i < bitCount_; ++i) {
         result[i] = testBit(i);
@@ -140,7 +140,7 @@ ArrayList<bool> BitBuffer::toVector() const noexcept {
 ////// Element access --------------------------------------------------
 
 // Test bit at index (returns true if set, false if clear)
-bool BitBuffer::testBit(usize index) const noexcept {
+bool BitArray::testBit(usize index) const noexcept {
     if (index >= bitCount_) return false;
     usize byteIdx = byteIndex(index);
     usize bitOff = bitOffset(index);
@@ -148,7 +148,7 @@ bool BitBuffer::testBit(usize index) const noexcept {
 }
 
 // Set bit at index to true
-void BitBuffer::setBit(usize index) noexcept {
+void BitArray::setBit(usize index) noexcept {
     if (index >= bitCount_) return;
     usize byteIdx = byteIndex(index);
     usize bitOff = bitOffset(index);
@@ -156,7 +156,7 @@ void BitBuffer::setBit(usize index) noexcept {
 }
 
 // Set bit at index to specified value
-void BitBuffer::setBit(usize index, bool value) noexcept {
+void BitArray::setBit(usize index, bool value) noexcept {
     if (value) {
         setBit(index);
     } else {
@@ -165,7 +165,7 @@ void BitBuffer::setBit(usize index, bool value) noexcept {
 }
 
 // Clear bit at index (set to false)
-void BitBuffer::clearBit(usize index) noexcept {
+void BitArray::clearBit(usize index) noexcept {
     if (index >= bitCount_) return;
     usize byteIdx = byteIndex(index);
     usize bitOff = bitOffset(index);
@@ -173,7 +173,7 @@ void BitBuffer::clearBit(usize index) noexcept {
 }
 
 // Toggle bit at index
-void BitBuffer::toggleBit(usize index) noexcept {
+void BitArray::toggleBit(usize index) noexcept {
     if (index >= bitCount_) return;
     usize byteIdx = byteIndex(index);
     usize bitOff = bitOffset(index);
@@ -181,7 +181,7 @@ void BitBuffer::toggleBit(usize index) noexcept {
 }
 
 // Access bit at index (with bounds checking)
-bool BitBuffer::at(usize index) const {
+bool BitArray::at(usize index) const {
     NEX_ASSERT_MSG(index >= 0 && index < bitCount_, "Index out of range");
     return testBit(index);
 }
@@ -189,7 +189,7 @@ bool BitBuffer::at(usize index) const {
 ////// Modifiers --------------------------------------------------
 
 // Fill all bits with value
-BitBuffer& BitBuffer::fill(bool value) {
+BitArray& BitArray::fill(bool value) {
     uint8 fillByte = value ? 0xFF : 0x00;
     NEX_STD fill(buffer_.begin(), buffer_.end(), fillByte);
     clearUnusedBits();
@@ -197,7 +197,7 @@ BitBuffer& BitBuffer::fill(bool value) {
 }
 
 // Fill bits in range with value
-BitBuffer& BitBuffer::fill(bool value, usize start, usize count) {
+BitArray& BitArray::fill(bool value, usize start, usize count) {
     if (start >= bitCount_) return *this;
     usize end = NEX_STD min(start + count, bitCount_);
     for (usize i = start; i < end; ++i) {
@@ -209,7 +209,7 @@ BitBuffer& BitBuffer::fill(bool value, usize start, usize count) {
 ////// Bitwise operations --------------------------------------------------
 
 // Bitwise AND
-BitBuffer& BitBuffer::operator&=(const BitBuffer& other) {
+BitArray& BitArray::operator&=(const BitArray& other) {
     usize minSize = NEX_STD min(bitCount_, other.bitCount_);
     usize minBytes = NEX_STD min(buffer_.size(), other.buffer_.size());
     
@@ -229,7 +229,7 @@ BitBuffer& BitBuffer::operator&=(const BitBuffer& other) {
 }
 
 // Bitwise OR
-BitBuffer& BitBuffer::operator|=(const BitBuffer& other) {
+BitArray& BitArray::operator|=(const BitArray& other) {
     if (other.bitCount_ > bitCount_) {
         resize(other.bitCount_, false);
     }
@@ -244,7 +244,7 @@ BitBuffer& BitBuffer::operator|=(const BitBuffer& other) {
 }
 
 // Bitwise XOR
-BitBuffer& BitBuffer::operator^=(const BitBuffer& other) {
+BitArray& BitArray::operator^=(const BitArray& other) {
     if (other.bitCount_ > bitCount_) {
         resize(other.bitCount_, false);
     }
@@ -259,8 +259,8 @@ BitBuffer& BitBuffer::operator^=(const BitBuffer& other) {
 }
 
 // Bitwise NOT (invert all bits)
-BitBuffer BitBuffer::operator~() const {
-    BitBuffer result = *this;
+BitArray BitArray::operator~() const {
+    BitArray result = *this;
     for (usize i = 0; i < result.buffer_.size(); ++i) {
         result.buffer_[i] = ~result.buffer_[i];
     }
@@ -269,20 +269,20 @@ BitBuffer BitBuffer::operator~() const {
 }
 
 // Non-member bitwise operators
-BitBuffer operator&(const BitBuffer& a, const BitBuffer& b) {
-    BitBuffer result = a;
+BitArray operator&(const BitArray& a, const BitArray& b) {
+    BitArray result = a;
     result &= b;
     return result;
 }
 
-BitBuffer operator|(const BitBuffer& a, const BitBuffer& b) {
-    BitBuffer result = a;
+BitArray operator|(const BitArray& a, const BitArray& b) {
+    BitArray result = a;
     result |= b;
     return result;
 }
 
-BitBuffer operator^(const BitBuffer& a, const BitBuffer& b) {
-    BitBuffer result = a;
+BitArray operator^(const BitArray& a, const BitArray& b) {
+    BitArray result = a;
     result ^= b;
     return result;
 }
@@ -291,13 +291,13 @@ BitBuffer operator^(const BitBuffer& a, const BitBuffer& b) {
 ////// Sub-array operations --------------------------------------------------
 
 // Get middle part of the buffer
-BitBuffer BitBuffer::mid(usize start, usize count /* = NEX_STD numeric_limits<usize>::max() */) const noexcept {
-    if (start >= bitCount_) return BitBuffer();
+BitArray BitArray::mid(usize start, usize count /* = NEX_STD numeric_limits<usize>::max() */) const noexcept {
+    if (start >= bitCount_) return BitArray();
     usize maxCount = bitCount_ - start;
     usize actualCount = (count == NEX_STD numeric_limits<usize>::max()) 
                             ? maxCount : NEX_STD min(count, maxCount);
     
-    BitBuffer result(actualCount);
+    BitArray result(actualCount);
     for (usize i = 0; i < actualCount; ++i) {
         result.setBit(i, testBit(start + i));
     }
@@ -307,7 +307,7 @@ BitBuffer BitBuffer::mid(usize start, usize count /* = NEX_STD numeric_limits<us
 ////// Search operations --------------------------------------------------
 
 // Count number of bits set to true
-usize BitBuffer::countTrue() const noexcept {
+usize BitArray::countTrue() const noexcept {
     usize count = 0;
     for (usize i = 0; i < bitCount_; ++i) {
         if (testBit(i)) {
@@ -318,12 +318,12 @@ usize BitBuffer::countTrue() const noexcept {
 }
 
 // Count number of bits set to false
-usize BitBuffer::countFalse() const noexcept {
+usize BitArray::countFalse() const noexcept {
     return bitCount_ - countTrue();
 }
 
 // Check if any bit is set
-bool BitBuffer::any() const noexcept {
+bool BitArray::any() const noexcept {
     for (usize i = 0; i < buffer_.size(); ++i) {
         if (buffer_[i] != 0) {
             return true;
@@ -333,7 +333,7 @@ bool BitBuffer::any() const noexcept {
 }
 
 // Check if all bits are set
-bool BitBuffer::all() const noexcept {
+bool BitArray::all() const noexcept {
     if (bitCount_ == 0) return true;
     for (usize i = 0; i < bitCount_; ++i) {
         if (!testBit(i)) {
@@ -345,8 +345,8 @@ bool BitBuffer::all() const noexcept {
 
 ////// Comparison operations --------------------------------------------------
 
-// Compare with another BitBuffer
-int32 BitBuffer::compare(const BitBuffer& other) const noexcept {
+// Compare with another BitArray
+int32 BitArray::compare(const BitArray& other) const noexcept {
     usize minSize = NEX_STD min(bitCount_, other.bitCount_);
     
     // Compare common bits
@@ -365,7 +365,7 @@ int32 BitBuffer::compare(const BitBuffer& other) const noexcept {
 }
 
 // Comparison operators
-bool BitBuffer::operator==(const BitBuffer& other) const noexcept {
+bool BitArray::operator==(const BitArray& other) const noexcept {
     if (bitCount_ != other.bitCount_) return false;
     if (bitCount_ == 0) return true;
     

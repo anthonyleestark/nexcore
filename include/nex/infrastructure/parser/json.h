@@ -113,6 +113,7 @@ public:
 
     ////// Array accessors -----------------------
 
+    // Get size of array at key path
     usize arraySize(StringView keyPath) const;
 
     // Try to get string value at array index by key path (e.g., "users[0].name")

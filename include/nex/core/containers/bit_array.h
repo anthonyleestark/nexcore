@@ -12,12 +12,12 @@
 NEX_CORE_NAMESPACE_BEGIN
 
 /**
- * @class BitBuffer
- * @brief A class that represents a buffer of bits (boolean values) with various operations 
+ * @class BitArray
+ * @brief A class that represents a dynamic array of bits (boolean values) with various operations 
  *        for manipulation and querying.
  * @details
- * The BitBuffer is a dynamic, heap-allocated container designed for the efficient storage and manipulation of 
- * individual bits. Unlike a fixed-size BitSet, the BitBuffer can grow or shrink at runtime, making it ideal for 
+ * The BitArray is a dynamic, heap-allocated container designed for the efficient storage and manipulation of 
+ * individual bits. Unlike a fixed-size BitSet, the BitArray can grow or shrink at runtime, making it ideal for 
  * scenarios where the total number of bits is unknown upfront or varies over time.
  * It bridges the gap between a high-level list and a low-level memory buffer, providing random-access performance 
  * while supporting sequential operations.
@@ -33,7 +33,7 @@ NEX_CORE_NAMESPACE_BEGIN
  * 
  * @see BitSet for a fixed-size alternative, and ArrayList<bool> for a more flexible but less memory-efficient option.
  */
-class NEX_EXPORT BitBuffer {
+class NEX_EXPORT BitArray {
 private:
     // Internal buffer to store bits (8 bits per byte)
     ArrayList<uint8> buffer_;
@@ -73,42 +73,42 @@ public:
     ////// Constructors and assignment operators ------------------------------
 
     // Default constructor
-    explicit BitBuffer() : bitCount_(0) {}
+    explicit BitArray() : bitCount_(0) {}
     
     // Construct from size (all bits initialized to false)
-    explicit BitBuffer(usize size);
+    explicit BitArray(usize size);
     
     // Construct from size and fill value
-    explicit BitBuffer(usize size, bool fillValue);
+    explicit BitArray(usize size, bool fillValue);
     
-    // Construct from another BitBuffer
-    BitBuffer(const BitBuffer& other) : buffer_(other.buffer_), bitCount_(other.bitCount_) {}
+    // Construct from another BitArray
+    BitArray(const BitArray& other) : buffer_(other.buffer_), bitCount_(other.bitCount_) {}
     
     // Copy assignment operator
-    BitBuffer& operator=(const BitBuffer& other);
+    BitArray& operator=(const BitArray& other);
     
     // Move constructor
-    BitBuffer(BitBuffer&& other) noexcept;
+    BitArray(BitArray&& other) noexcept;
     
     // Move assignment operator
-    BitBuffer& operator=(BitBuffer&& other) noexcept;
+    BitArray& operator=(BitArray&& other) noexcept;
     
     // Destructor
-    ~BitBuffer() = default;
+    ~BitArray() = default;
 
     ////// Capacity and size management ------------------------------
 
-    // Get size of the buffer (number of bits)
+    // Get size of the BitArray (number of bits)
     constexpr usize size() const noexcept {
         return bitCount_;
     }
     
-    // Get length of the buffer (same as size)
+    // Get length of the BitArray (same as size)
     constexpr usize length() const noexcept {
         return bitCount_;
     }
     
-    // Check if the buffer is empty
+    // Check if the BitArray is empty
     constexpr bool empty() const noexcept {
         return bitCount_ == 0;
     }
@@ -123,21 +123,21 @@ public:
         return buffer_.capacity();
     }
     
-    // Resize the buffer
+    // Resize the BitArray (newSize is number of bits)
     void resize(usize newSize) {
         resize(newSize, false);
     }
     
-    // Resize the buffer with fill value
+    // Resize the BitArray with fill value
     void resize(usize newSize, bool fillValue);
     
-    // Clear the buffer
+    // Clear the BitArray (set size to 0, does not deallocate memory)
     void clear() noexcept;
 
     ////// Conversion --------------------------------------
 
-    // Create BitBuffer from Vector of booleans (ArrayList<bool>)
-    static BitBuffer fromVector(const ArrayList<bool>& vec) noexcept;
+    // Create BitArray from Vector of booleans (ArrayList<bool>)
+    static BitArray fromVector(const ArrayList<bool>& vec) noexcept;
 
     // Convert to Vector of booleans (ArrayList<bool>)
     ArrayList<bool> toVector() const noexcept;
@@ -175,26 +175,26 @@ public:
      * 
      * @details
      * This class allows for setting bits using operator[] with a reference-like syntax.
-     * It holds a pointer to the BitBuffer and the index of the bit it represents.
+     * It holds a pointer to the BitArray and the index of the bit it represents.
      * The assignment operator sets the bit to the assigned value, and the conversion operator 
      * allows reading the bit value.
      * 
-     * @note This proxy class is used to enable syntax like bitBuffer[index] = true; to set bits, 
-     *       and bool value = bitBuffer[index]; to read bits.
+     * @note This proxy class is used to enable syntax like bitArray[index] = true; to set bits, 
+     *       and bool value = bitArray[index]; to read bits.
      * @warning This proxy class does not support all reference-like operations and is intended for 
      *          simple assignment and reading. Use with caution for more complex expressions.
      */
     class BitReference {
     private:
-        // Pointer to the BitBuffer
-        BitBuffer* buffer_;
+        // Pointer to the BitArray
+        BitArray* buffer_;
 
-        // Index of the bit in the BitBuffer
+        // Index of the bit in the BitArray
         usize index_;
         
     public:
         // Constructor
-        BitReference(BitBuffer* buffer, usize index) 
+        BitReference(BitArray* buffer, usize index) 
             : buffer_(buffer), index_(index) {}
         
         // Assignment operator to set the bit value
@@ -246,23 +246,23 @@ public:
     ////// Modifiers ------------------------------
 
     // Fill all bits with value
-    BitBuffer& fill(bool value);
+    BitArray& fill(bool value);
     
     // Fill bits in range with value
-    BitBuffer& fill(bool value, usize start, usize count);
+    BitArray& fill(bool value, usize start, usize count);
     
     // Set all bits
-    BitBuffer& setAll() {
+    BitArray& setAll() {
         return fill(true);
     }
     
     // Clear all bits
-    BitBuffer& clearAll() {
+    BitArray& clearAll() {
         return fill(false);
     }
     
-    // Swap with another BitBuffer
-    void swap(BitBuffer& other) noexcept {
+    // Swap with another BitArray
+    void swap(BitArray& other) noexcept {
         buffer_.swap(other.buffer_);
         NEX_STD swap(bitCount_, other.bitCount_);
     }
@@ -270,47 +270,47 @@ public:
     ////// Bitwise operations ------------------------------
 
     // Bitwise AND
-    BitBuffer& operator&=(const BitBuffer& other);
+    BitArray& operator&=(const BitArray& other);
     
     // Bitwise OR
-    BitBuffer& operator|=(const BitBuffer& other);
+    BitArray& operator|=(const BitArray& other);
     
     // Bitwise XOR
-    BitBuffer& operator^=(const BitBuffer& other);
+    BitArray& operator^=(const BitArray& other);
     
     // Bitwise NOT (invert all bits)
-    BitBuffer operator~() const;
+    BitArray operator~() const;
     
     ////// Non-member bitwise operators ------------------------------
 
     // Bitwise AND
-    friend BitBuffer operator&(const BitBuffer& a, const BitBuffer& b);
+    friend BitArray operator&(const BitArray& a, const BitArray& b);
     
     // Bitwise OR
-    friend BitBuffer operator|(const BitBuffer& a, const BitBuffer& b);
+    friend BitArray operator|(const BitArray& a, const BitArray& b);
     
     // Bitwise XOR
-    friend BitBuffer operator^(const BitBuffer& a, const BitBuffer& b);
+    friend BitArray operator^(const BitArray& a, const BitArray& b);
 
     ////// Sub-array operations ------------------------------
 
     // Get left part of the buffer
-    BitBuffer left(usize count) const noexcept {
-        if (count == 0) return BitBuffer();
+    BitArray left(usize count) const noexcept {
+        if (count == 0) return BitArray();
         if (count >= bitCount_) return *this;
         return mid(0, count);
     }
     
     // Get right part of the buffer
-    BitBuffer right(usize count) const noexcept {
-        if (count == 0) return BitBuffer();
+    BitArray right(usize count) const noexcept {
+        if (count == 0) return BitArray();
         if (count >= bitCount_) return *this;
         usize start = bitCount_ - count;
         return mid(start, count);
     }
     
     // Get middle part of the buffer
-    BitBuffer mid(usize start, usize count = NEX_STD numeric_limits<usize>::max()) const noexcept;
+    BitArray mid(usize start, usize count = NEX_STD numeric_limits<usize>::max()) const noexcept;
 
     ////// Search operations ------------------------------
 
@@ -338,34 +338,34 @@ public:
 
     ////// Comparison operations ------------------------------
 
-    // Compare with another BitBuffer
-    int32 compare(const BitBuffer& other) const noexcept;
+    // Compare with another BitArray
+    int32 compare(const BitArray& other) const noexcept;
     
     // Equality operator
-    bool operator==(const BitBuffer& other) const noexcept;
+    bool operator==(const BitArray& other) const noexcept;
     
     // Inequality operator
-    bool operator!=(const BitBuffer& other) const noexcept {
+    bool operator!=(const BitArray& other) const noexcept {
         return !(*this == other);
     }
     
     // Less-than operator
-    bool operator<(const BitBuffer& other) const noexcept {
+    bool operator<(const BitArray& other) const noexcept {
         return compare(other) < 0;
     }
     
     // Less-than-or-equal operator
-    bool operator<=(const BitBuffer& other) const noexcept {
+    bool operator<=(const BitArray& other) const noexcept {
         return compare(other) <= 0;
     }
     
     // Greater-than operator
-    bool operator>(const BitBuffer& other) const noexcept {
+    bool operator>(const BitArray& other) const noexcept {
         return compare(other) > 0;
     }
     
     // Greater-than-or-equal operator
-    bool operator>=(const BitBuffer& other) const noexcept {
+    bool operator>=(const BitArray& other) const noexcept {
         return compare(other) >= 0;
     }
 };

@@ -8,6 +8,7 @@
 #include <type_traits>
 #include <iterator>
 #include <utility>
+#include <cstring>
 
 #include "nex/base/macros.h"
 #include "nex/base/types.h"
@@ -39,11 +40,14 @@ namespace ring_buffer::details {
     template <typename T>
     struct NEX_INTERNAL DynamicStorage {
         using value_type = T;
+
         UniquePtr<value_type[]> buffer;                 // Dynamic array to hold the elements
         usize capacity = 0;                             // Total capacity of the buffer
         static constexpr bool is_dynamic = true;        // Flag to indicate dynamic storage
+
+        // Constructor to initialize dynamic storage with a specified capacity
         DynamicStorage(usize cap) 
-            : buffer(NEX_STD make_unique<value_type[]>(cap)), capacity(cap) {}
+            : buffer(NEX_STD make_unique<value_type[]>(cap > 0 ? cap : 1)), capacity(cap > 0 ? cap : 1) {}
     };
 
     /**
@@ -57,10 +61,14 @@ namespace ring_buffer::details {
     struct NEX_INTERNAL StaticStorage {
         // Compile-time check for valid capacity
         static_assert(Capacity > 0, "Capacity must be greater than 0");
+
         using value_type = T;
+
         value_type buffer[Capacity] = {};               // Static array to hold the elements (default-initialized)
         static constexpr usize capacity = Capacity;     // Total capacity of the buffer
         static constexpr bool is_dynamic = false;       // Flag to indicate static storage
+
+        // Default constructor
         StaticStorage() = default;
     };
 
@@ -99,17 +107,14 @@ namespace ring_buffer::details {
         size_type tail_ = 0;        // Index of the next element to be written
         size_type count_ = 0;       // Current number of elements in the buffer
 
+    public:
         ////// Construction -----------------------------------------------
 
         // Constructor for dynamic storage
-        template <typename S = Storage, typename = NEX_STD enable_if_t<NEX_STD is_constructible_v<S, size_type>>>
-        explicit RingBufferBase(size_type capacity) : Storage(capacity) {}
+        explicit RingBufferBase(size_type capacity) requires (Storage::is_dynamic) : Storage(capacity) {}
 
         // Constructor for static storage
-        template <typename S = Storage, typename = NEX_STD enable_if_t<NEX_STD is_default_constructible_v<S>>>
-        RingBufferBase() = default;
-
-    public:
+        RingBufferBase() requires (!Storage::is_dynamic) = default;
 
         ////// Capacity and size management -----------------------------------------------
 
@@ -120,10 +125,10 @@ namespace ring_buffer::details {
         constexpr size_type capacity() const noexcept { return Storage::capacity; }
 
         // Check if the buffer is empty
-        constexpr bool empty() const noexcept { return count == 0; }
+        constexpr bool empty() const noexcept { return count_ == 0; }
 
         // Check if the buffer is full
-        constexpr bool full() const noexcept { return count == Storage::capacity; }
+        constexpr bool full() const noexcept { return count_ == Storage::capacity; }
 
         // Clear the buffer
         void clear() noexcept {
@@ -144,10 +149,45 @@ namespace ring_buffer::details {
             // Create a new buffer with the new capacity
             UniquePtr<value_type[]> new_buffer = NEX_STD make_unique<value_type[]>(newCapacity);
             size_type new_count = count_ < newCapacity ? count_ : newCapacity;
+            size_type old_capacity = Storage::capacity;
 
-            // Copy existing elements to the new buffer
-            for (size_type i = 0; i < new_count; ++i) {
-                new_buffer[i] = Storage::buffer[(head_ + i) % Storage::capacity];
+            // Copy existing elements to the new buffer (for trivially copyable types)
+            if constexpr (NEX_STD is_trivially_copyable_v<value_type>) {
+                size_type first_count = new_count;
+                if (head_ + first_count > old_capacity) {
+                    first_count = old_capacity - head_;
+                }
+
+                // Copy the first contiguous block
+                if (first_count > 0) {
+                    NEX_STD memcpy(
+                        new_buffer.get(), 
+                        Storage::buffer.get() + head_, 
+                        first_count * sizeof(value_type)
+                    );
+                }
+
+                // Copy the second block if needed
+                size_type second_count = new_count - first_count;
+                if (second_count > 0) {
+                    NEX_STD memcpy(
+                        new_buffer.get() + first_count, 
+                        Storage::buffer.get(), 
+                        second_count * sizeof(value_type)
+                    );
+                }
+            } else {
+                // For non-trivially copyable types, we need to move or copy elements individually
+                for (size_type i = 0; i < new_count; ++i) {
+                    if constexpr (NEX_STD is_nothrow_move_assignable_v<value_type> 
+                                    || !NEX_STD is_copy_assignable_v<value_type>) {
+                        // Move elements if it's safe to do so
+                        new_buffer[i] = NEX_STD move(Storage::buffer[(head_ + i) % old_capacity]);
+                    } else {
+                        // Otherwise, copy elements
+                        new_buffer[i] = Storage::buffer[(head_ + i) % old_capacity];
+                    }
+                }
             }
 
             // Replace old buffer with new buffer
@@ -247,85 +287,113 @@ namespace ring_buffer::details {
             friend class ConstIterator;
 
             // Constructor
-            constexpr explicit Iterator(RingBufferBase* buffer, size_type index) 
-                : buffer_(buffer), index_(index) {}
+            constexpr explicit Iterator(RingBufferBase* buffer, size_type index, size_type countFromStart = 0) 
+                : buffer_(buffer), index_(index), countFromStart_(countFromStart) {}
 
             // Dereference operators
-            constexpr reference operator*() { return (*buffer_)[index_]; }
-            constexpr pointer operator->() { return &(*buffer_)[index_]; }
+            constexpr reference operator*() { return buffer_->Storage::buffer[index_]; }
+            constexpr pointer operator->() { return &buffer_->Storage::buffer[index_]; }
 
             // Iterator operations
-            constexpr Iterator& operator++() { ++index_; return *this; }
+            constexpr Iterator& operator++() { 
+                index_ = (index_ + 1) % buffer_->capacity();
+                ++countFromStart_;
+                return *this; 
+            }
             constexpr Iterator operator++(int) { Iterator temp = *this; ++(*this); return temp; }
 
-            constexpr Iterator& operator--() { --index_; return *this; }
+            constexpr Iterator& operator--() { 
+                index_ = (index_ + buffer_->capacity() - 1) % buffer_->capacity();
+                --countFromStart_;
+                return *this; 
+            }
             constexpr Iterator operator--(int) { Iterator temp = *this; --(*this); return temp; }
 
             // Arithmetic operators for random access iterator
             constexpr Iterator operator+(difference_type offset) const { 
-                return Iterator(buffer_, static_cast<size_type>(static_cast<difference_type>(index_) + offset)); 
+                Iterator temp = *this;
+                temp += offset;
+                return temp;
             }
             constexpr Iterator& operator+=(difference_type n) { 
-                index_ = static_cast<size_type>(static_cast<difference_type>(index_) + n); 
+                index_ = offsetIndex(n);
+                countFromStart_ = static_cast<size_type>(static_cast<difference_type>(countFromStart_) + n);
                 return *this; 
             }
 
             constexpr Iterator operator-(difference_type offset) const { 
-                return Iterator(buffer_, static_cast<size_type>(static_cast<difference_type>(index_) - offset)); 
+                Iterator temp = *this;
+                temp -= offset;
+                return temp;
             }
             constexpr Iterator& operator-=(difference_type n) { 
-                index_ = static_cast<size_type>(static_cast<difference_type>(index_) - n); 
+                index_ = offsetIndex(-n);
+                countFromStart_ = static_cast<size_type>(static_cast<difference_type>(countFromStart_) - n);
                 return *this; 
             }
 
             // Friend function for addition with difference_type on the left
             friend constexpr Iterator operator+(difference_type n, const Iterator& it) { 
-                return Iterator(it.buffer_, static_cast<size_type>(static_cast<difference_type>(it.index_) + n)); 
+                return it + n; 
             }
 
             // Difference operator for random access iterator
             constexpr difference_type operator-(const Iterator& other) const { 
-                return static_cast<difference_type>(index_) - static_cast<difference_type>(other.index_); 
+                return static_cast<difference_type>(countFromStart_) 
+                        - static_cast<difference_type>(other.countFromStart_); 
             }
 
             // Subscript operators for random access iterator
             reference operator[](difference_type offset) { 
-                return (*buffer_)[static_cast<size_type>(static_cast<difference_type>(index_) + offset)]; 
+                return buffer_->Storage::buffer[offsetIndex(offset)]; 
             }
             const_reference operator[](difference_type offset) const { 
-                return (*buffer_)[static_cast<size_type>(static_cast<difference_type>(index_) + offset)]; 
+                return buffer_->Storage::buffer[offsetIndex(offset)]; 
             }
 
             // Equality operators for iterators
             constexpr bool operator==(const Iterator& other) const { 
-                return buffer_ == other.buffer_ && index_ == other.index_; 
+                return buffer_ == other.buffer_ && countFromStart_ == other.countFromStart_; 
             }
             constexpr bool operator!=(const Iterator& other) const { return !(*this == other); }
             
             // Comparison operators for random access iterator
             constexpr bool operator<(const Iterator& other) const { 
-                return buffer_ < other.buffer_ || (buffer_ == other.buffer_ && index_ < other.index_); 
+                return buffer_ < other.buffer_ 
+                        || (buffer_ == other.buffer_ && countFromStart_ < other.countFromStart_); 
             }
             constexpr bool operator>(const Iterator& other) const { 
-                return buffer_ > other.buffer_ || (buffer_ == other.buffer_ && index_ > other.index_); 
+                return buffer_ > other.buffer_ 
+                        || (buffer_ == other.buffer_ && countFromStart_ > other.countFromStart_); 
             }
             constexpr bool operator<=(const Iterator& other) const { 
-                return buffer_ < other.buffer_ || (buffer_ == other.buffer_ && index_ <= other.index_); 
+                return buffer_ < other.buffer_ 
+                        || (buffer_ == other.buffer_ && countFromStart_ <= other.countFromStart_); 
             }
             constexpr bool operator>=(const Iterator& other) const { 
-                return buffer_ > other.buffer_ || (buffer_ == other.buffer_ && index_ >= other.index_); 
+                return buffer_ > other.buffer_ 
+                        || (buffer_ == other.buffer_ && countFromStart_ >= other.countFromStart_); 
             }
 
         private:
-            RingBufferBase* buffer_;
-            size_type index_;
+            RingBufferBase* buffer_;        // Pointer to the ring buffer being iterated
+            size_type index_;               // Current index in the underlying buffer (physical ring-buffer slot)
+            size_type countFromStart_;      // Number of elements from the start of the buffer (logical position)
+
+            // Calculate the wrapped index based on an offset
+            constexpr size_type offsetIndex(difference_type offset) const {
+                const difference_type cap = static_cast<difference_type>(buffer_->capacity());
+                difference_type wrapped = (static_cast<difference_type>(index_) + offset) % cap;
+                if (wrapped < 0) wrapped += cap;
+                return static_cast<size_type>(wrapped);
+            }
         };
 
         // Get an iterator to the beginning of the buffer
-        constexpr Iterator begin() noexcept { return Iterator(this, 0); }
+        constexpr Iterator begin() noexcept { return Iterator(this, head_, 0); }
 
         // Get an iterator to the end of the buffer
-        constexpr Iterator end() noexcept { return Iterator(this, count_); }
+        constexpr Iterator end() noexcept { return Iterator(this, tail_, count_); }
 
         /**
          * @class RingBufferBase::ConstIterator
@@ -356,88 +424,120 @@ namespace ring_buffer::details {
             using const_reference = RingBufferBase::const_reference;
 
             // Constructor
-            constexpr explicit ConstIterator(const RingBufferBase* buffer, size_type index) 
-                : buffer_(buffer), index_(index) {}
+            constexpr explicit ConstIterator(const RingBufferBase* buffer, size_type index, size_type countFromStart = 0) 
+                : buffer_(buffer), index_(index), countFromStart_(countFromStart) {}
+
+            // Construct a const iterator from a mutable iterator
+            constexpr ConstIterator(const Iterator& other)
+                : buffer_(other.buffer_), index_(other.index_), countFromStart_(other.countFromStart_) {}
 
             // Dereference operators
-            constexpr reference operator*() const { return (*buffer_)[index_]; }
-            constexpr pointer operator->() const { return &(*buffer_)[index_]; }
+            constexpr reference operator*() const { return buffer_->Storage::buffer[index_]; }
+            constexpr pointer operator->() const { return &buffer_->Storage::buffer[index_]; }
 
             // Iterator operations
-            constexpr ConstIterator& operator++() { ++index_; return *this; }
+            constexpr ConstIterator& operator++() { 
+                index_ = (index_ + 1) % buffer_->capacity();
+                ++countFromStart_;
+                return *this; 
+            }
             constexpr ConstIterator operator++(int) { ConstIterator temp = *this; ++(*this); return temp; }
 
-            constexpr ConstIterator& operator--() { --index_; return *this; }
+            constexpr ConstIterator& operator--() { 
+                index_ = (index_ + buffer_->capacity() - 1) % buffer_->capacity();
+                --countFromStart_;
+                return *this; 
+            }
             constexpr ConstIterator operator--(int) { ConstIterator temp = *this; --(*this); return temp; }
 
             // Arithmetic operators for random access iterator
             constexpr ConstIterator operator+(difference_type offset) const { 
-                return ConstIterator(buffer_, static_cast<size_type>(static_cast<difference_type>(index_) + offset)); 
+                ConstIterator temp = *this;
+                temp += offset;
+                return temp;
             }
             constexpr ConstIterator& operator+=(difference_type n) { 
-                index_ = static_cast<size_type>(static_cast<difference_type>(index_) + n); 
+                index_ = offsetIndex(n);
+                countFromStart_ = static_cast<size_type>(static_cast<difference_type>(countFromStart_) + n);
                 return *this; 
             }
 
             constexpr ConstIterator operator-(difference_type offset) const { 
-                return ConstIterator(buffer_, static_cast<size_type>(static_cast<difference_type>(index_) - offset)); 
+                ConstIterator temp = *this;
+                temp -= offset;
+                return temp;
             }
             constexpr ConstIterator& operator-=(difference_type n) { 
-                index_ = static_cast<size_type>(static_cast<difference_type>(index_) - n); 
+                index_ = offsetIndex(-n);
+                countFromStart_ = static_cast<size_type>(static_cast<difference_type>(countFromStart_) - n);
                 return *this; 
             }
 
             // Friend function for addition with difference_type on the left
             friend constexpr ConstIterator operator+(difference_type n, const ConstIterator& it) { 
-                return ConstIterator(it.buffer_, static_cast<size_type>(static_cast<difference_type>(it.index_) + n)); 
+                return it + n; 
             }
 
             // Difference operator for random access iterator
             constexpr difference_type operator-(const ConstIterator& other) const {
-                return static_cast<difference_type>(index_) - static_cast<difference_type>(other.index_);
+                return static_cast<difference_type>(countFromStart_) 
+                        - static_cast<difference_type>(other.countFromStart_);
             }
 
             // Subscript operators for random access iterator
             reference operator[](difference_type offset) const { 
-                return (*buffer_)[static_cast<size_type>(static_cast<difference_type>(index_) + offset)]; 
+                return buffer_->Storage::buffer[offsetIndex(offset)]; 
             }
 
             // Equality operators for const iterators
             constexpr bool operator==(const ConstIterator& other) const { 
-                return buffer_ == other.buffer_ && index_ == other.index_; 
+                return buffer_ == other.buffer_ && countFromStart_ == other.countFromStart_; 
             }
             constexpr bool operator!=(const ConstIterator& other) const { return !(*this == other); }
 
             // Comparison operators for random access iterator
             constexpr bool operator<(const ConstIterator& other) const { 
-                return buffer_ < other.buffer_ || (buffer_ == other.buffer_ && index_ < other.index_); 
+                return buffer_ < other.buffer_ 
+                        || (buffer_ == other.buffer_ && countFromStart_ < other.countFromStart_); 
             }
             constexpr bool operator>(const ConstIterator& other) const { 
-                return buffer_ > other.buffer_ || (buffer_ == other.buffer_ && index_ > other.index_); 
+                return buffer_ > other.buffer_ 
+                        || (buffer_ == other.buffer_ && countFromStart_ > other.countFromStart_); 
             }
             constexpr bool operator<=(const ConstIterator& other) const { 
-                return buffer_ < other.buffer_ || (buffer_ == other.buffer_ && index_ <= other.index_); 
+                return buffer_ < other.buffer_ 
+                        || (buffer_ == other.buffer_ && countFromStart_ <= other.countFromStart_); 
             }
             constexpr bool operator>=(const ConstIterator& other) const { 
-                return buffer_ > other.buffer_ || (buffer_ == other.buffer_ && index_ >= other.index_); 
+                return buffer_ > other.buffer_ 
+                        || (buffer_ == other.buffer_ && countFromStart_ >= other.countFromStart_); 
             }
 
         private:
-            const RingBufferBase* buffer_;
-            size_type index_;
+            const RingBufferBase* buffer_;  // Pointer to the ring buffer being iterated
+            size_type index_;               // Current index in the underlying buffer (physical ring-buffer slot)
+            size_type countFromStart_;      // Number of elements from the start of the buffer (logical position)
+            
+            // Calculate the wrapped index based on an offset
+            constexpr size_type offsetIndex(difference_type offset) const {
+                const difference_type cap = static_cast<difference_type>(buffer_->capacity());
+                difference_type wrapped = (static_cast<difference_type>(index_) + offset) % cap;
+                if (wrapped < 0) wrapped += cap;
+                return static_cast<size_type>(wrapped);
+            }
         };
 
         // Get a constant iterator to the beginning of the buffer
-        constexpr ConstIterator begin() const noexcept { return ConstIterator(this, 0); }
+        constexpr ConstIterator begin() const noexcept { return ConstIterator(this, head_, 0); }
 
         // Get a constant iterator to the end of the buffer
-        constexpr ConstIterator end() const noexcept { return ConstIterator(this, count_); }
+        constexpr ConstIterator end() const noexcept { return ConstIterator(this, tail_, count_); }
 
         // Get a constant iterator to the beginning of the buffer
-        constexpr ConstIterator cbegin() const noexcept { return ConstIterator(this, 0); }
+        constexpr ConstIterator cbegin() const noexcept { return ConstIterator(this, head_, 0); }
 
         // Get a constant iterator to the end of the buffer
-        constexpr ConstIterator cend() const noexcept { return ConstIterator(this, count_); }
+        constexpr ConstIterator cend() const noexcept { return ConstIterator(this, tail_, count_); }
 
         // Get a reverse iterator to the beginning of the reversed buffer (i.e., end of the normal buffer)
         constexpr ReverseIterator rbegin() noexcept { return ReverseIterator(end()); }

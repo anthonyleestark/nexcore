@@ -32,7 +32,10 @@ NEX_CORE_NAMESPACE_BEGIN
  * 
  * @tparam T The type of elements stored in the RingBuffer.
  */
-template <typename T, ring_buffer::details::OverflowPolicy Policy = ring_buffer::details::OverflowPolicy::Overwrite>
+template <
+    typename T, 
+    ring_buffer::details::OverflowPolicy Policy = ring_buffer::details::OverflowPolicy::Overwrite
+>
 using RingBuffer = ring_buffer::details::RingBufferBase<T, ring_buffer::details::DynamicStorage<T>, Policy>;
 
 /**
@@ -67,8 +70,11 @@ using RingBuffer = ring_buffer::details::RingBufferBase<T, ring_buffer::details:
  * 
  * @see RingBuffer for a dynamic-size version of the circular buffer.
  */
-template <typename T, usize Capacity, 
-          ring_buffer::details::OverflowPolicy Policy = ring_buffer::details::OverflowPolicy::Overwrite>
+template <
+    typename T, 
+    usize Capacity, 
+    ring_buffer::details::OverflowPolicy Policy = ring_buffer::details::OverflowPolicy::Overwrite
+>
 requires (Capacity > 0) // Capacity must be greater than 0
 using StaticRingBuffer = ring_buffer::details::RingBufferBase<T, ring_buffer::details::StaticStorage<T, Capacity>, Policy>;
 

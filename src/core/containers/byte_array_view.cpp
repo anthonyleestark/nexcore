@@ -141,10 +141,10 @@ ByteArrayView::size_type
 ByteArrayView::lastIndexOf(ByteArrayView other, ByteArrayView::size_type pos /* = npos */) const noexcept {
     if (other.size() > size_) return ByteArrayView::npos;
     if (other.empty()) return (NEX_STD min)(pos, size_);
-    
+
     size_type searchLen = size_ - other.size();
     if (pos > searchLen) pos = searchLen;
-    
+
     for (size_type i = pos + 1; i > 0; --i) {
         size_type start = i - 1;
         if (NEX_STD memcmp(data_ + start, other.data_, other.size_) == 0) {
@@ -181,7 +181,7 @@ ByteArrayView::size_type
 ByteArrayView::findLastOf(ByteArrayView other, ByteArrayView::size_type pos /* = npos */) const noexcept {
     if (size_ == 0) return ByteArrayView::npos;
     if (pos >= size_) pos = size_ - 1;
-    
+
     for (size_type i = pos + 1; i > 0; --i) {
         if (other.indexOf(data_[i - 1]) != ByteArrayView::npos) {
             return i - 1;
@@ -195,7 +195,7 @@ ByteArrayView::size_type
 ByteArrayView::findLastNotOf(ByteArrayView other, ByteArrayView::size_type pos /* = npos */) const noexcept {
     if (size_ == 0) return ByteArrayView::npos;
     if (pos >= size_) pos = size_ - 1;
-    
+
     for (size_type i = pos + 1; i > 0; --i) {
         if (other.indexOf(data_[i - 1]) == ByteArrayView::npos) {
             return i - 1;

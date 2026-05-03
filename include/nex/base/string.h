@@ -82,8 +82,7 @@ NEX_NAMESPACE_END
  * 
  * @details
  * Forward declare the String and StringView types from the core layer to avoid including their full definitions
- * in this header, which helps reduce compile-time dependencies. The full definitions can be included in the 
- * implementation file (json.cpp) where they are needed.
+ * in this header, which helps reduce compile-time dependencies.
  * 
  * @see String class definition in nex/core/text/string.h
  * @see StringView class definition in nex/core/text/string_view.h

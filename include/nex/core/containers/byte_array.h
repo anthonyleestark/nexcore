@@ -47,43 +47,37 @@ public:
 
     // Default constructor
     explicit ByteArray() = default;
-    
+
     // Construct from size (filled with zeros)
     explicit ByteArray(usize size) : buffer_(size, 0) {}
-    
+
     // Construct from size and fill value
     explicit ByteArray(usize size, uint8 fillValue) : buffer_(size, fillValue) {}
-    
+
     // Construct from C-style array
     ByteArray(const_byte_ptr data, usize size);
-    
-    // Construct from C-style array (unsigned char)
-    ByteArray(const unsigned char* data, usize size);
-    
+
     // Construct from ArrayList<uint8>
     explicit ByteArray(const ArrayList<uint8>& data) : buffer_(data) {}
-    
-    // Construct from ArrayList<unsigned char>
-    explicit ByteArray(const ArrayList<unsigned char>& data);
-    
+
     // Construct from StdString (treat as binary data)
     explicit ByteArray(const StdString& str);
-    
+
     // Construct from C-string (treat as binary data)
-    explicit ByteArray(const_char_ptr str);
-    
+    explicit ByteArray(const_char_ptr str, usize len);
+
     // Copy constructor
     ByteArray(const ByteArray& other) : buffer_(other.buffer_) {}
-    
+
     // Copy assignment operator
     ByteArray& operator=(const ByteArray& other);
-    
+
     // Move constructor
     ByteArray(ByteArray&& other) noexcept;
-    
+
     // Move assignment operator
     ByteArray& operator=(ByteArray&& other) noexcept;
-    
+
     // Destructor
     ~ByteArray() = default;
 
@@ -91,13 +85,11 @@ public:
 
     // Create from raw data
     static ByteArray fromRawData(const_void_ptr data, usize size);
-    
-    // Create from hex string
-    static ByteArray fromHex(const char* hexString);
+
+    // Create from HEX string
     static ByteArray fromHex(const StdString& hexString);
-    
-    // Create from base64 string
-    static ByteArray fromBase64(const char* base64String);
+
+    // Create from Base64 string
     static ByteArray fromBase64(const StdString& base64String);
 
     // Create from ArrayList<uint8>
@@ -109,31 +101,31 @@ public:
     ArrayList<uint8> toArrayList() const noexcept {
         return buffer_;
     }
-    
+
     // Convert to StdString (treat as binary data)
     StdString toStdString() const;
-    
-    // Convert to hex string
+
+    // Convert to HEX string
     StdString toHex() const;
-    
-    // Convert to base64 string
+
+    // Convert to Base64 string
     StdString toBase64() const;
-    
+
     // Get raw data pointer
     const_byte_ptr data() const noexcept {
         return buffer_.data();
     }
-    
+
     // Get raw data pointer (non-const)
     byte_ptr data() noexcept {
         return buffer_.data();
     }
-    
+
     // Get raw data pointer as void*
     const_void_ptr rawData() const noexcept {
         return static_cast<const_void_ptr>(buffer_.data());
     }
-    
+
     // Get raw data pointer as void* (non-const)
     void_ptr rawData() noexcept {
         return static_cast<void_ptr>(buffer_.data());
@@ -145,36 +137,37 @@ public:
     constexpr usize size() const noexcept {
         return buffer_.size();
     }
-    
+
     // Get length (same as size)
     constexpr usize length() const noexcept {
         return buffer_.size();
     }
-    
+
     // Check if array is empty
     constexpr bool empty() const noexcept {
         return buffer_.empty();
     }
-    
+
     // Reserve capacity
     void reserve(usize capacity) {
         buffer_.reserve(capacity);
     }
-    
+
     // Get capacity
     constexpr usize capacity() const noexcept {
         return buffer_.capacity();
     }
-    
+
     // Resize the array
     void resize(usize newSize) {
         buffer_.resize(newSize);
     }
-    
+
+    // Resize the array with fill value
     void resize(usize newSize, uint8 fillValue) {
         buffer_.resize(newSize, fillValue);
     }
-    
+
     // Clear the array
     void clear() noexcept {
         buffer_.clear();
@@ -186,39 +179,41 @@ public:
     uint8& at(usize index) {
         return buffer_.at(index);
     }
-    
+
+    // Access byte at index (with bounds checking, read-only)
     const uint8& at(usize index) const {
         return buffer_.at(index);
     }
-    
+
     // Access byte at index (no bounds checking)
     uint8& operator[](usize index) noexcept {
         return buffer_[index];
     }
-    
+
+    // Access byte at index (no bounds checking, read-only)
     const uint8& operator[](usize index) const noexcept {
         return buffer_[index];
     }
-    
+
     // Get byte at index
     uint8 getAt(usize index) const {
         if (index >= buffer_.size()) return 0;
         return buffer_[index];
     }
-    
+
     // Set byte at index
     void setAt(usize index, uint8 value) noexcept {
         if (index < buffer_.size()) {
             buffer_[index] = value;
         }
     }
-    
-    // Get first byte
+
+    // Get the first byte
     uint8 front() const noexcept {
         return buffer_.empty() ? 0 : buffer_.front();
     }
-    
-    // Get last byte
+
+    // Get the last byte
     uint8 back() const noexcept {
         return buffer_.empty() ? 0 : buffer_.back();
     }
@@ -227,113 +222,115 @@ public:
 
     // Append another ByteArray
     ByteArray& append(const ByteArray& other);
-    
+
     // Append raw data
     ByteArray& append(const_byte_ptr data, usize size);
-    
+
     // Append single byte
     ByteArray& appendByte(uint8 byte) {
         buffer_.push_back(byte);
         return *this;
     }
-    
+
     // Append single byte (alias)
     ByteArray& pushBack(uint8 byte) {
         buffer_.push_back(byte);
         return *this;
     }
-    
+
     // Prepend another ByteArray
     ByteArray& prepend(const ByteArray& other);
-    
+
     // Prepend raw data
     ByteArray& prepend(const_byte_ptr data, usize size);
-    
+
     // Remove all occurrences of a byte
     ByteArray& remove(uint8 byte);
-    
+
     // Remove bytes at position
     int32 removeAt(usize pos, usize count = 1);
-    
+
     // Insert bytes at position
     ByteArray& insert(usize pos, const ByteArray& other);
     ByteArray& insert(usize pos, const_byte_ptr data, usize size);
     ByteArray& insert(usize pos, uint8 byte);
-    
+
     // Replace bytes
     ByteArray& replace(usize pos, usize count, const ByteArray& other);
     ByteArray& replace(usize pos, usize count, const_byte_ptr data, usize size);
 
     ////// Subarray operations -----------------------------
 
-    // Get left part of the array
+    // Get the left part of the array
     ByteArray left(usize count) const;
-    
-    // Get right part of the array
+
+    // Get the right part of the array
     ByteArray right(usize count) const;
-    
-    // Get middle part of the array
+
+    // Get the middle part of the array
     ByteArray mid(usize start, usize count = NEX_STD numeric_limits<usize>::max()) const;
 
     ////// Search operations -----------------------------
 
     // Find first occurrence of byte
     usize indexOf(uint8 byte, usize from = 0) const;
-    
+
     // Find last occurrence of byte
     usize lastIndexOf(uint8 byte, usize from = NEX_STD numeric_limits<usize>::max()) const;
-    
+
     // Find first occurrence of subarray
     usize indexOf(const ByteArray& other, usize from = 0) const;
-    
+
     // Check if array contains byte
     bool contains(uint8 byte) const;
-    
+
     // Check if array contains subarray
     bool contains(const ByteArray& other) const;
-    
+
     // Count occurrences of byte
     usize count(uint8 byte) const;
 
-    ////// Comparison operations ------------------------------
+    ////// Comparison ------------------------------
 
     // Compare with another ByteArray
     int32 compare(const ByteArray& other) const noexcept;
-    
-    // Equality operators
+
+    // Equality operator
     bool operator==(const ByteArray& other) const noexcept;
 
     // Inequality operator
     bool operator!=(const ByteArray& other) const noexcept {
         return !(*this == other);
     }
-    
-    // Lexicographical comparison operators
+
+    ////// Lexicographical comparison operators ------------------------------
 
     // Less-than operator
     bool operator<(const ByteArray& other) const noexcept {
         return compare(other) < 0;
     }
-    
+
     // Less-than or equal to operator
     bool operator<=(const ByteArray& other) const noexcept {
         return compare(other) <= 0;
     }
-    
+
     // Greater-than operator
     bool operator>(const ByteArray& other) const noexcept {
         return compare(other) > 0;
     }
-    
+
     // Greater-than or equal to operator
     bool operator>=(const ByteArray& other) const noexcept {
         return compare(other) >= 0;
     }
 
     ////// Concatenation operators ------------------------------
-    
+
     // Concatenation operator
     ByteArray operator+(const ByteArray& other) const;
+
+    // Concatenation assignment operator
     ByteArray& operator+=(const ByteArray& other) {
         return append(other);
     }
@@ -342,17 +339,18 @@ public:
 
     // Fill array with value
     ByteArray& fill(uint8 value);
-    
+
+    // Fill array with value in range
     ByteArray& fill(uint8 value, usize start, usize count);
-    
+
     // Reverse the array
     ByteArray& reverse();
-    
+
     // Swap with another ByteArray
     void swap(ByteArray& other) noexcept {
         buffer_.swap(other.buffer_);
     }
-    
+
     // Truncate to new length
     ByteArray& truncate(usize newLength) {
         if (newLength < buffer_.size()) {

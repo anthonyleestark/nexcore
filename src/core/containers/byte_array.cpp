@@ -18,7 +18,7 @@ NEX_CORE_NAMESPACE_BEGIN
 
 namespace {
     //  Convert hex character to value
-    static uint8 hexCharToValue(char c) {
+    uint8 hexCharToValue(char c) {
         if (c >= '0' && c <= '9') return static_cast<uint8>(c - '0');
         if (c >= 'A' && c <= 'F') return static_cast<uint8>(c - 'A' + 10);
         if (c >= 'a' && c <= 'f') return static_cast<uint8>(c - 'a' + 10);
@@ -26,10 +26,25 @@ namespace {
     }
 
     // Check if character is hex
-    static bool isHexChar(char c) {
+    bool isHexChar(char c) {
         return (c >= '0' && c <= '9') || (c >= 'A' && c <= 'F') || (c >= 'a' && c <= 'f');
     }
-}
+
+    // Base64 encoding table
+    static constexpr const char base64Chars[] = 
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+
+    // Find Base64 character index
+    int32 base64CharToValue(char c) {
+        if (c >= 'A' && c <= 'Z') return c - 'A';
+        if (c >= 'a' && c <= 'z') return c - 'a' + 26;
+        if (c >= '0' && c <= '9') return c - '0' + 52;
+        if (c == '+') return 62;
+        if (c == '/') return 63;
+        if (c == '=') return -1; // Padding
+        return -2; // Invalid
+    }
+} // namespace
 
 ////// Constructors --------------------------------------------------
 
@@ -40,18 +55,6 @@ ByteArray::ByteArray(const_byte_ptr data, usize size) {
     }
 }
 
-// Construct from C-style array (unsigned char)
-ByteArray::ByteArray(const unsigned char* data, usize size) {
-    if (data && size > 0) {
-        buffer_.assign(data, data + size);
-    }
-}
-
-// Construct from ArrayList<unsigned char>
-ByteArray::ByteArray(const ArrayList<unsigned char>& data) {
-    buffer_.assign(data.begin(), data.end());
-}
-
 // Construct from StdString (treat as binary data)
 ByteArray::ByteArray(const StdString& str) {
     buffer_.assign(reinterpret_cast<const_byte_ptr>(str.data()),
@@ -59,11 +62,14 @@ ByteArray::ByteArray(const StdString& str) {
 }
 
 // Construct from C-string (treat as binary data)
-ByteArray::ByteArray(const_char_ptr str) {
+ByteArray::ByteArray(const_char_ptr str, usize len) {
     if (str) {
-        usize len = NEX_STD strlen(str);
-            buffer_.assign(reinterpret_cast<const_byte_ptr>(str),
-                          reinterpret_cast<const_byte_ptr>(str + len));
+        // If length is not provided, calculate it
+        if (len == 0) {
+            len = NEX_STD strlen(str);
+        }
+        buffer_.assign(reinterpret_cast<const_byte_ptr>(str),
+                      reinterpret_cast<const_byte_ptr>(str + len));
     }
 }
 
@@ -93,29 +99,29 @@ ByteArray ByteArray::fromRawData(const_void_ptr data, usize size) {
     return ByteArray(bytes, size);
 }
 
-// Create from hex string
-ByteArray ByteArray::fromHex(const_char_ptr hexString) {
-    if (!hexString) return ByteArray();
-    
+// Create from HEX string
+ByteArray ByteArray::fromHex(const StdString& hexString) {
+    if (hexString.empty()) return ByteArray();
+
     ByteArray result;
-    usize len = NEX_STD strlen(hexString);
-    
+    usize len = hexString.size();
+
     // Skip whitespace and process pairs
     for (usize i = 0; i < len; ++i) {
         // Skip whitespace
-        if (NEX_STD isspace(static_cast<unsigned char>(hexString[i]))) {
+        if (NEX_STD isspace(static_cast<uint8>(hexString[i]))) {
             continue;
         }
-        
+
         // Check if we have a valid hex character
         if (!isHexChar(hexString[i])) {
             // Invalid character, skip or return empty
             continue;
         }
-        
+
         // Get first hex digit
         uint8 high = hexCharToValue(hexString[i]);
-        
+
         // Check if there's a second digit
         if (i + 1 < len && isHexChar(hexString[i + 1])) {
             uint8 low = hexCharToValue(hexString[i + 1]);
@@ -126,7 +132,7 @@ ByteArray ByteArray::fromHex(const_char_ptr hexString) {
             result.appendByte(high);
         }
     }
-    
+
     return result;
 }
 
@@ -135,28 +141,13 @@ ByteArray ByteArray::fromHex(const StdString& hexString) {
     return fromHex(hexString.c_str());
 }
 
-// Base64 encoding table
-static const char base64Chars[] = 
-    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-
-// Helper function to find base64 character index
-static int32 base64CharToValue(char c) {
-    if (c >= 'A' && c <= 'Z') return c - 'A';
-    if (c >= 'a' && c <= 'z') return c - 'a' + 26;
-    if (c >= '0' && c <= '9') return c - '0' + 52;
-    if (c == '+') return 62;
-    if (c == '/') return 63;
-    if (c == '=') return -1; // Padding
-    return -2; // Invalid
-}
-
-// Create from base64 string
-ByteArray ByteArray::fromBase64(const_char_ptr base64String) {
-    if (!base64String) return ByteArray();
+// Create from Base64 string
+ByteArray ByteArray::fromBase64(const StdString& base64String) {
+    if (base64String.empty()) return ByteArray();
 
     ByteArray result;
-    usize len = NEX_STD strlen(base64String);
-    
+    usize len = base64String.size();
+
     // Process in groups of 4 characters
     for (usize i = 0; i < len; i += 4) {
         // Get 4 base64 characters
@@ -165,7 +156,7 @@ ByteArray ByteArray::fromBase64(const_char_ptr base64String) {
 
         for (int32 j = 0; j < 4 && (i + j) < len; ++j) {
             char c = base64String[i + j];
-            if (NEX_STD isspace(static_cast<unsigned char>(c))) {
+            if (NEX_STD isspace(static_cast<uint8>(c))) {
                 // Skip whitespace
                 continue;
             }
@@ -186,7 +177,7 @@ ByteArray ByteArray::fromBase64(const_char_ptr base64String) {
         }
 
         if (validChars < 2) continue; // Need at least 2 characters
-        
+
         // Decode the 4 base64 characters into 3 bytes
         uint32 combined = (static_cast<uint32>(values[0]) << 18) |
                            (static_cast<uint32>(values[1]) << 12);
@@ -209,11 +200,6 @@ ByteArray ByteArray::fromBase64(const_char_ptr base64String) {
     }
 
     return result;
-}
-
-// Create from base64 string (StdString overload)
-ByteArray ByteArray::fromBase64(const StdString& base64String) {
-    return fromBase64(base64String.c_str());
 }
 
 // Create from ArrayList<uint8>
@@ -412,7 +398,7 @@ usize ByteArray::lastIndexOf(uint8 byte, usize from /* = NEX_STD numeric_limits<
     static constexpr usize npos = NEX_STD numeric_limits<usize>::max();
     if (buffer_.empty()) return npos;
     if (from >= buffer_.size()) from = buffer_.size() - 1;
-    
+
     for (usize i = from + 1; i > 0; --i) {
         if (buffer_[i - 1] == byte) {
             return i - 1;
@@ -426,7 +412,7 @@ usize ByteArray::indexOf(const ByteArray& other, usize from /* = 0 */) const {
     static constexpr usize npos = NEX_STD numeric_limits<usize>::max();
     if (other.empty() || from >= buffer_.size()) return npos;
     if (other.size() > buffer_.size() - from) return npos;
-    
+
     auto it = NEX_STD search(buffer_.begin() + from, buffer_.end(),
                             other.buffer_.begin(), other.buffer_.end());
     return (it != buffer_.end()) ? static_cast<usize>(it - buffer_.begin()) : npos;

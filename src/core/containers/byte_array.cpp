@@ -73,23 +73,6 @@ ByteArray::ByteArray(const_char_ptr str, usize len) {
     }
 }
 
-// Copy assignment operator
-ByteArray& ByteArray::operator=(const ByteArray& other) {
-    if (this != &other)
-        buffer_ = other.buffer_;
-    return *this;
-}
-
-// Move constructor
-ByteArray::ByteArray(ByteArray&& other) noexcept : buffer_(NEX_STD move(other.buffer_)) {}
-
-// Move assignment operator
-ByteArray& ByteArray::operator=(ByteArray&& other) noexcept {
-    if (this != &other)
-        buffer_ = NEX_STD move(other.buffer_);
-    return *this;
-}
-
 ////// Factory methods --------------------------------------------------
 
 // Create from raw data
@@ -134,11 +117,6 @@ ByteArray ByteArray::fromHex(const StdString& hexString) {
     }
 
     return result;
-}
-
-// Create from hex string (StdString overload)
-ByteArray ByteArray::fromHex(const StdString& hexString) {
-    return fromHex(hexString.c_str());
 }
 
 // Create from Base64 string
@@ -318,13 +296,14 @@ int32 ByteArray::removeAt(usize pos, usize count /* = 1 */) {
     return static_cast<int32>(buffer_.size());
 }
 
-// Insert bytes at position
+// Insert bytes at position (from another ByteArray)
 ByteArray& ByteArray::insert(usize pos, const ByteArray& other) {
     if (pos > buffer_.size()) pos = buffer_.size();
     buffer_.insert(buffer_.begin() + pos, other.buffer_.begin(), other.buffer_.end());
     return *this;
 }
 
+// Insert raw data at position
 ByteArray& ByteArray::insert(usize pos, const_byte_ptr data, usize size) {
     if (pos > buffer_.size()) pos = buffer_.size();
     if (data && size > 0) {
@@ -333,13 +312,14 @@ ByteArray& ByteArray::insert(usize pos, const_byte_ptr data, usize size) {
     return *this;
 }
 
+// Insert single byte at position
 ByteArray& ByteArray::insert(usize pos, uint8 byte) {
     if (pos > buffer_.size()) pos = buffer_.size();
     buffer_.insert(buffer_.begin() + pos, byte);
     return *this;
 }
 
-// Replace bytes
+// Replace bytes at position with another ByteArray
 ByteArray& ByteArray::replace(usize pos, usize count, const ByteArray& other) {
     if (pos >= buffer_.size()) return *this;
     usize actualCount = NEX_STD min(count, buffer_.size() - pos);
@@ -348,6 +328,7 @@ ByteArray& ByteArray::replace(usize pos, usize count, const ByteArray& other) {
     return *this;
 }
 
+// Replace bytes at position with raw data
 ByteArray& ByteArray::replace(usize pos, usize count, const_byte_ptr data, usize size) {
     if (pos >= buffer_.size()) return *this;
     usize actualCount = NEX_STD min(count, buffer_.size() - pos);
@@ -467,6 +448,7 @@ ByteArray& ByteArray::fill(uint8 value) {
     return *this;
 }
 
+// Fill array with value starting from position for count bytes
 ByteArray& ByteArray::fill(uint8 value, usize start, usize count) {
     if (start >= buffer_.size()) return *this;
     usize end = NEX_STD min(start + count, buffer_.size());

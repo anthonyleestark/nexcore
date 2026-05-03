@@ -5,6 +5,9 @@
 
 #pragma once
 
+#include <iterator>
+#include <limits>
+
 #include "nex/base/macros.h"
 #include "nex/base/types.h"
 #include "nex/base/linear.h"
@@ -34,36 +37,59 @@ NEX_CORE_NAMESPACE_BEGIN
  * @see BitSet for a fixed-size alternative, and ArrayList<bool> for a more flexible but less memory-efficient option.
  */
 class NEX_EXPORT BitArray {
+public:
+    // Forward declarations for nested types
+    class BitReference;
+    class Iterator;
+    class ConstIterator;
+
+    // Type aliases for compatibility with standard container conventions
+    using value_type = bool;
+    using block_type = uint8;
+    using size_type = usize;
+    using difference_type = isize;
+    using reference = BitReference;
+    using const_reference = value_type;
+    using pointer = void;
+    using const_pointer = void;
+    using iterator = Iterator;
+    using const_iterator = ConstIterator;
+    using reverse_iterator = NEX_STD reverse_iterator<iterator>;
+    using const_reverse_iterator = NEX_STD reverse_iterator<const_iterator>;
+
 private:
     // Internal buffer to store bits (8 bits per byte)
-    ArrayList<uint8> buffer_;
+    ArrayList<block_type> buffer_;
     
     // Number of bits (may be less than buffer_.size() * 8)
-    usize bitCount_;
+    size_type bitCount_;
 
 public:
+    // Special value representing "not found" for search operations
+    static constexpr size_type npos = NEX_STD numeric_limits<size_type>::max();
+
     ////// Helper functions for bit manipulation ------------------------------
 
     // Get the number of bits per byte
-    static constexpr usize bitsPerByte() noexcept { return 8; }
+    static constexpr size_type bitsPerByte() noexcept { return 8; }
     
     // Get the index of the byte in the buffer for a given bit index
-    static constexpr usize byteIndex(usize bitIndex) noexcept {
+    static constexpr size_type byteIndex(size_type bitIndex) noexcept {
         return bitIndex / bitsPerByte();
     }
     
     // Get the offset of the bit in the byte for a given bit index
-    static constexpr usize bitOffset(usize bitIndex) noexcept {
+    static constexpr size_type bitOffset(size_type bitIndex) noexcept {
         return bitIndex % bitsPerByte();
     }
     
     // Get the mask for a given bit index
-    static constexpr uint8 bitMask(usize bitIndex) noexcept {
-        return static_cast<uint8>(1U << bitOffset(bitIndex));
+    static constexpr block_type bitMask(size_type bitIndex) noexcept {
+        return static_cast<block_type>(1U << bitOffset(bitIndex));
     }
     
     // Calculate required buffer size for a given number of bits
-    static constexpr usize bufferSizeForBits(usize bitCount) noexcept {
+    static constexpr size_type bufferSizeForBits(size_type bitCount) noexcept {
         return (bitCount + bitsPerByte() - 1) / bitsPerByte();
     }
     
@@ -76,10 +102,10 @@ public:
     explicit BitArray() : bitCount_(0) {}
     
     // Construct from size (all bits initialized to false)
-    explicit BitArray(usize size);
+    explicit BitArray(size_type size);
     
     // Construct from size and fill value
-    explicit BitArray(usize size, bool fillValue);
+    explicit BitArray(size_type size, value_type fillValue);
     
     // Construct from another BitArray
     BitArray(const BitArray& other) : buffer_(other.buffer_), bitCount_(other.bitCount_) {}
@@ -99,12 +125,12 @@ public:
     ////// Capacity and size management ------------------------------
 
     // Get size of the BitArray (number of bits)
-    constexpr usize size() const noexcept {
+    constexpr size_type size() const noexcept {
         return bitCount_;
     }
     
     // Get length of the BitArray (same as size)
-    constexpr usize length() const noexcept {
+    constexpr size_type length() const noexcept {
         return bitCount_;
     }
     
@@ -113,23 +139,43 @@ public:
         return bitCount_ == 0;
     }
     
+    // Reserve capacity (in bits)
+    void reserve(size_type capacity) {
+        buffer_.reserve(bufferSizeForBits(capacity));
+    }
+
+    // Get capacity (in bits)
+    size_type capacity() const noexcept {
+        return buffer_.capacity() * bitsPerByte();
+    }
+
     // Reserve capacity (in bytes)
-    void reserve(usize capacity) {
+    void reserveBytes(size_type capacity) {
         buffer_.reserve(capacity);
     }
     
     // Get capacity (in bytes)
-    constexpr usize capacity() const noexcept {
+    size_type capacityBytes() const noexcept {
         return buffer_.capacity();
+    }
+
+    // Get size in bytes used by storage
+    size_type sizeBytes() const noexcept {
+        return buffer_.size();
+    }
+
+    // Get maximum possible size
+    size_type max_size() const noexcept {
+        return buffer_.max_size() * bitsPerByte();
     }
     
     // Resize the BitArray (newSize is number of bits)
-    void resize(usize newSize) {
+    void resize(size_type newSize) {
         resize(newSize, false);
     }
     
     // Resize the BitArray with fill value
-    void resize(usize newSize, bool fillValue);
+    void resize(size_type newSize, value_type fillValue);
     
     // Clear the BitArray (set size to 0, does not deallocate memory)
     void clear() noexcept;
@@ -137,33 +183,33 @@ public:
     ////// Conversion --------------------------------------
 
     // Create BitArray from Vector of booleans (ArrayList<bool>)
-    static BitArray fromVector(const ArrayList<bool>& vec) noexcept;
+    static BitArray fromVector(const ArrayList<value_type>& vec) noexcept;
 
     // Convert to Vector of booleans (ArrayList<bool>)
-    ArrayList<bool> toVector() const noexcept;
+    ArrayList<value_type> toVector() const noexcept;
 
     ////// Element access and modification ------------------------------
 
     // Test bit at index (returns true if set, false if clear)
-    bool testBit(usize index) const noexcept;
+    bool testBit(size_type index) const noexcept;
     
     // Set bit at index to true
-    void setBit(usize index) noexcept;
+    void setBit(size_type index) noexcept;
     
     // Set bit at index to specified value
-    void setBit(usize index, bool value) noexcept;
+    void setBit(size_type index, value_type value) noexcept;
     
     // Clear bit at index (set to false)
-    void clearBit(usize index) noexcept;
+    void clearBit(size_type index) noexcept;
     
     // Toggle bit at index
-    void toggleBit(usize index) noexcept;
+    void toggleBit(size_type index) noexcept;
     
     // Access bit at index (with bounds checking)
-    bool at(usize index) const;
+    const_reference at(size_type index) const;
     
     // Access bit at index (no bounds checking)
-    bool operator[](usize index) const noexcept {
+    const_reference operator[](size_type index) const noexcept {
         return testBit(index);
     }
     
@@ -190,11 +236,11 @@ public:
         BitArray* buffer_;
 
         // Index of the bit in the BitArray
-        usize index_;
+        size_type index_;
         
     public:
         // Constructor
-        BitReference(BitArray* buffer, usize index) 
+        BitReference(BitArray* buffer, size_type index) 
             : buffer_(buffer), index_(index) {}
         
         // Assignment operator to set the bit value
@@ -239,17 +285,258 @@ public:
     };
     
     // Access bit at index for setting (returns reference-like proxy)
-    BitReference operator[](usize index) noexcept {
+    reference operator[](size_type index) noexcept {
         return BitReference(this, index);
     }
+
+    ////// Iterator support ------------------------------
+
+    /**
+     * @class Iterator
+     * @brief Random-access iterator over mutable BitArray bits.
+     * 
+     * @details
+     * This iterator allows for iterating over the bits of the BitArray and modifying them.
+     * It supports all standard random-access iterator operations, including increment, decrement,
+     * arithmetic, and comparison. The dereference operator returns a reference-like proxy (BitReference)
+     * that allows for setting the bit value directly through the iterator.
+     * 
+     * @note 
+     * Modifying the BitArray (such as resizing) while iterating may invalidate the iterator and lead to 
+     * undefined behavior.
+     * 
+     * @see ConstIterator for a read-only version of the iterator.
+     */
+    class Iterator {
+    public:
+        // Iterator traits
+        using iterator_category = NEX_STD random_access_iterator_tag;
+        using value_type = BitArray::value_type;
+        using difference_type = BitArray::difference_type;
+        using pointer = void;
+        using reference = BitArray::reference;
+
+        // Allow ConstIterator to access private members
+        friend class ConstIterator;
+
+        // Constructs an iterator for the given BitArray and index
+        constexpr Iterator(BitArray* buffer = nullptr, size_type index = 0) noexcept
+            : buffer_(buffer), index_(index) {}
+
+        // Dereference operators
+        reference operator*() const noexcept { return (*buffer_)[index_]; }
+        reference operator[](difference_type offset) const noexcept {
+            return (*buffer_)[static_cast<size_type>(static_cast<difference_type>(index_) + offset)];
+        }
+
+        // Iterator operations
+        Iterator& operator++() noexcept { ++index_; return *this; }
+        Iterator operator++(int) noexcept { Iterator tmp = *this; ++(*this); return tmp; }
+        
+        Iterator& operator--() noexcept { --index_; return *this; }
+        Iterator operator--(int) noexcept { Iterator tmp = *this; --(*this); return tmp; }
+
+        // Athmetic operators for random access iterator
+        Iterator& operator+=(difference_type offset) noexcept {
+            index_ = static_cast<size_type>(static_cast<difference_type>(index_) + offset);
+            return *this;
+        }
+        Iterator operator+(difference_type offset) const noexcept {
+            Iterator tmp = *this;
+            tmp += offset;
+            return tmp;
+        }
+
+        Iterator& operator-=(difference_type offset) noexcept {
+            index_ = static_cast<size_type>(static_cast<difference_type>(index_) - offset);
+            return *this;
+        }
+        Iterator operator-(difference_type offset) const noexcept {
+            Iterator tmp = *this;
+            tmp -= offset;
+            return tmp;
+        }
+
+        // Difference operator for random access iterator
+        difference_type operator-(const Iterator& other) const noexcept {
+            return static_cast<difference_type>(index_) - static_cast<difference_type>(other.index_);
+        }
+
+        // Friend function for addition with difference_type on the left
+        friend Iterator operator+(difference_type offset, const Iterator& it) noexcept {
+            return it + offset;
+        }
+
+        // Equality operator
+        bool operator==(const Iterator& other) const noexcept {
+            return buffer_ == other.buffer_ && index_ == other.index_;
+        }
+
+        // Inequality operator
+        bool operator!=(const Iterator& other) const noexcept { return !(*this == other); }
+
+        // Comparison operators for random access iterator
+        bool operator<(const Iterator& other) const noexcept { return index_ < other.index_; }
+        bool operator<=(const Iterator& other) const noexcept { return index_ <= other.index_; }
+        bool operator>(const Iterator& other) const noexcept { return index_ > other.index_; }
+        bool operator>=(const Iterator& other) const noexcept { return index_ >= other.index_; }
+
+    private:
+        BitArray* buffer_;
+        size_type index_;
+    };
+
+    /**
+     * @class ConstIterator
+     * @brief Random-access iterator over read-only BitArray bits.
+     * 
+     * @details
+     * This iterator allows for iterating over the bits of the BitArray without modifying them.
+     * It supports all standard random-access iterator operations, including increment, decrement,
+     * arithmetic, and comparison. The dereference operator returns the value of the bit at the 
+     * current position.
+     * 
+     * @note 
+     * Modifying the BitArray (such as resizing) while iterating may invalidate the iterator and lead to 
+     * undefined behavior.
+     * 
+     * @see Iterator for a mutable version of the iterator.
+     */
+    class ConstIterator {
+    public:
+        // Iterator traits
+        using iterator_category = NEX_STD random_access_iterator_tag;
+        using value_type = BitArray::value_type;
+        using difference_type = BitArray::difference_type;
+        using reference = BitArray::const_reference;
+        using pointer = void;
+
+        // Constructor for ConstIterator
+        constexpr ConstIterator(const BitArray* buffer = nullptr, size_type index = 0) noexcept
+            : buffer_(buffer), index_(index) {}
+
+        // Allow conversion from Iterator to ConstIterator
+        constexpr ConstIterator(const Iterator& it) noexcept
+            : buffer_(it.buffer_), index_(it.index_) {}
+
+        // Dereference operators
+        reference operator*() const noexcept { return (*buffer_)[index_]; }
+        reference operator[](difference_type offset) const noexcept {
+            return (*buffer_)[static_cast<size_type>(static_cast<difference_type>(index_) + offset)];
+        }
+
+        // Iterator operations
+        ConstIterator& operator++() noexcept { ++index_; return *this; }
+        ConstIterator operator++(int) noexcept { ConstIterator tmp = *this; ++(*this); return tmp; }
+
+        ConstIterator& operator--() noexcept { --index_; return *this; }
+        ConstIterator operator--(int) noexcept { ConstIterator tmp = *this; --(*this); return tmp; }
+
+        // Arithmetic operators for random access iterator
+        ConstIterator& operator+=(difference_type offset) noexcept {
+            index_ = static_cast<size_type>(static_cast<difference_type>(index_) + offset);
+            return *this;
+        }
+        ConstIterator operator+(difference_type offset) const noexcept {
+            ConstIterator tmp = *this;
+            tmp += offset;
+            return tmp;
+        }
+
+        ConstIterator& operator-=(difference_type offset) noexcept {
+            index_ = static_cast<size_type>(static_cast<difference_type>(index_) - offset);
+            return *this;
+        }
+        ConstIterator operator-(difference_type offset) const noexcept {
+            ConstIterator tmp = *this;
+            tmp -= offset;
+            return tmp;
+        }
+
+        // Difference operator for random access iterator
+        difference_type operator-(const ConstIterator& other) const noexcept {
+            return static_cast<difference_type>(index_) - static_cast<difference_type>(other.index_);
+        }
+
+        // Friend function for addition with difference_type on the left
+        friend ConstIterator operator+(difference_type offset, const ConstIterator& it) noexcept {
+            return it + offset;
+        }
+
+        // Equality operator
+        bool operator==(const ConstIterator& other) const noexcept {
+            return buffer_ == other.buffer_ && index_ == other.index_;
+        }
+
+        // Inequality operator
+        bool operator!=(const ConstIterator& other) const noexcept { return !(*this == other); }
+
+        // Comparison operators for random access iterator
+        bool operator<(const ConstIterator& other) const noexcept { return index_ < other.index_; }
+        bool operator<=(const ConstIterator& other) const noexcept { return index_ <= other.index_; }
+        bool operator>(const ConstIterator& other) const noexcept { return index_ > other.index_; }
+        bool operator>=(const ConstIterator& other) const noexcept { return index_ >= other.index_; }
+
+    private:
+        const BitArray* buffer_;
+        size_type index_;
+    };
+
+    // Get iterator to the beginning of the BitArray
+    iterator begin() noexcept { return iterator(this, 0); }
+
+    // Get constant iterator to the beginning of the BitArray
+    const_iterator begin() const noexcept { return const_iterator(this, 0); }
+
+    // Get constant iterator to the beginning of the BitArray (same as begin() const)
+    const_iterator cbegin() const noexcept { return const_iterator(this, 0); }
+
+    // Get iterator to the end of the BitArray
+    iterator end() noexcept { return iterator(this, bitCount_); }
+
+    // Get constant iterator to the end of the BitArray
+    const_iterator end() const noexcept { return const_iterator(this, bitCount_); }
+
+    // Get constant iterator to the end of the BitArray (same as end() const)
+    const_iterator cend() const noexcept { return const_iterator(this, bitCount_); }
+
+    // Get reverse iterator to the beginning of the reversed BitArray
+    reverse_iterator rbegin() noexcept { return reverse_iterator(end()); }
+
+    // Get constant reverse iterator to the beginning of the reversed BitArray
+    const_reverse_iterator rbegin() const noexcept { return const_reverse_iterator(end()); }
+
+    // Get constant reverse iterator to the beginning of the reversed BitArray (same as rbegin() const)
+    const_reverse_iterator crbegin() const noexcept { return const_reverse_iterator(cend()); }
+
+    // Get reverse iterator to the end of the reversed BitArray
+    reverse_iterator rend() noexcept { return reverse_iterator(begin()); }
+
+    // Get constant reverse iterator to the end of the reversed BitArray
+    const_reverse_iterator rend() const noexcept { return const_reverse_iterator(begin()); }
+
+    // Get constant reverse iterator to the end of the reversed BitArray (same as rend() const)
+    const_reverse_iterator crend() const noexcept { return const_reverse_iterator(cbegin()); }
+
+    // Get reference to the first bit
+    reference front() noexcept { return (*this)[0]; }
+
+    // Get reference to the first bit (read-only)
+    const_reference front() const noexcept { return (*this)[0]; }
+
+    // Get reference to the last bit
+    reference back() noexcept { return (*this)[bitCount_ - 1]; }
+
+    // Get reference to the last bit (read-only)
+    const_reference back() const noexcept { return (*this)[bitCount_ - 1]; }
 
     ////// Modifiers ------------------------------
 
     // Fill all bits with value
-    BitArray& fill(bool value);
+    BitArray& fill(value_type value);
     
     // Fill bits in range with value
-    BitArray& fill(bool value, usize start, usize count);
+    BitArray& fill(value_type value, size_type start, size_type count);
     
     // Set all bits
     BitArray& setAll() {
@@ -295,35 +582,35 @@ public:
     ////// Sub-array operations ------------------------------
 
     // Get left part of the buffer
-    BitArray left(usize count) const noexcept {
+    BitArray left(size_type count) const noexcept {
         if (count == 0) return BitArray();
         if (count >= bitCount_) return *this;
         return mid(0, count);
     }
     
     // Get right part of the buffer
-    BitArray right(usize count) const noexcept {
+    BitArray right(size_type count) const noexcept {
         if (count == 0) return BitArray();
         if (count >= bitCount_) return *this;
-        usize start = bitCount_ - count;
+        size_type start = bitCount_ - count;
         return mid(start, count);
     }
     
     // Get middle part of the buffer
-    BitArray mid(usize start, usize count = NEX_STD numeric_limits<usize>::max()) const noexcept;
+    BitArray mid(size_type start, size_type count = npos) const noexcept;
 
     ////// Search operations ------------------------------
 
     // Count number of bits set to true
-    usize count(bool value = true) const noexcept {
+    size_type count(value_type value = true) const noexcept {
         return value ? countTrue() : countFalse();
     }
     
     // Count number of bits set to true
-    usize countTrue() const noexcept;
+    size_type countTrue() const noexcept;
     
     // Count number of bits set to false
-    usize countFalse() const noexcept;
+    size_type countFalse() const noexcept;
     
     // Check if any bit is set
     bool any() const noexcept;

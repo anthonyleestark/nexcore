@@ -16,7 +16,7 @@ ByteArrayView::ByteArrayView(const ByteArray& arr) noexcept
     : data_(arr.data()), size_(arr.size()) {}
 
 // Access byte at index (with bounds checking)
-ByteArrayView::const_reference ByteArrayView::at(usize pos) const {
+ByteArrayView::const_reference ByteArrayView::at(size_type pos) const {
     NEX_ASSERT_MSG(pos >= 0 && pos < size_, "Index out of range");
     return data_[pos];
 }
@@ -32,14 +32,14 @@ ByteArray ByteArrayView::toByteArray() const {
 ////// Modifiers --------------------------------------------------
 
 // Remove prefix (first n bytes)
-void ByteArrayView::removePrefix(usize n) noexcept {
+void ByteArrayView::removePrefix(size_type n) noexcept {
     if (n > size_) n = size_;
     data_ += n;
     size_ -= n;
 }
 
 // Remove suffix (last n bytes)
-void ByteArrayView::removeSuffix(usize n) noexcept {
+void ByteArrayView::removeSuffix(size_type n) noexcept {
     if (n > size_) n = size_;
     size_ -= n;
 }
@@ -53,7 +53,7 @@ void ByteArrayView::swap(ByteArrayView& other) noexcept {
 ////// Operations --------------------------------------------------
 
 // Copy bytes to destination
-ByteArrayView::size_type ByteArrayView::copy(byte_ptr dest, size_type count, size_type pos /* = 0 */) const {
+ByteArrayView::size_type ByteArrayView::copy(pointer dest, size_type count, size_type pos /* = 0 */) const {
     NEX_ASSERT_MSG(pos >= 0 && pos <= size_, "Position out of range");
     size_type rlen = (NEX_STD min)(count, size_ - pos);
     NEX_STD memcpy(dest, data_ + pos, rlen);
@@ -67,19 +67,19 @@ ByteArrayView ByteArrayView::substr(size_type pos /* = 0 */, size_type count /* 
     return ByteArrayView(data_ + pos, rlen);
 }
 
-// Get left part of the view
+// Get the left part of the view
 ByteArrayView ByteArrayView::left(size_type count) const noexcept {
     if (count >= size_) return ByteArrayView(data_, size_);
     return ByteArrayView(data_, count);
 }
 
-// Get right part of the view
+// Get the right part of the view
 ByteArrayView ByteArrayView::right(size_type count) const noexcept {
     if (count >= size_) return ByteArrayView(data_, size_);
     return ByteArrayView(data_ + size_ - count, count);
 }
 
-// Get middle part of the view
+// Get the middle part of the view
 ByteArrayView ByteArrayView::mid(size_type start, size_type count /* = npos */) const {
     if (start >= size_) return ByteArrayView();
     size_type maxCount = size_ - start;
@@ -99,7 +99,7 @@ int32 ByteArrayView::compare(const ByteArrayView& other) const noexcept {
 
 // Find first occurrence of byte
 ByteArrayView::size_type 
-ByteArrayView::indexOf(uint8 byte, ByteArrayView::size_type pos /* = 0 */) const noexcept {
+ByteArrayView::indexOf(value_type byte, ByteArrayView::size_type pos /* = 0 */) const noexcept {
     if (pos >= size_) return ByteArrayView::npos;
     const_byte_ptr result = static_cast<const_byte_ptr>(NEX_STD memchr(data_ + pos, byte, size_ - pos));
     return result ? static_cast<size_type>(result - data_) : ByteArrayView::npos;
@@ -124,7 +124,7 @@ ByteArrayView::indexOf(const ByteArrayView& other, ByteArrayView::size_type pos 
 
 // Find last occurrence of byte
 ByteArrayView::size_type 
-ByteArrayView::lastIndexOf(uint8 byte, ByteArrayView::size_type pos /* = npos */) const noexcept {
+ByteArrayView::lastIndexOf(value_type byte, ByteArrayView::size_type pos /* = npos */) const noexcept {
     if (size_ == 0) return ByteArrayView::npos;
     if (pos >= size_) pos = size_ - 1;
     
@@ -211,7 +211,7 @@ bool ByteArrayView::startsWith(ByteArrayView prefix) const noexcept {
 }
 
 // Check if view starts with byte
-bool ByteArrayView::startsWith(uint8 byte) const noexcept {
+bool ByteArrayView::startsWith(value_type byte) const noexcept {
     return !empty() && front() == byte;
 }
 
@@ -222,7 +222,7 @@ bool ByteArrayView::endsWith(ByteArrayView suffix) const noexcept {
 }
 
 // Check if view ends with byte
-bool ByteArrayView::endsWith(uint8 byte) const noexcept {
+bool ByteArrayView::endsWith(value_type byte) const noexcept {
     return !empty() && back() == byte;
 }
 
@@ -232,12 +232,12 @@ bool ByteArrayView::contains(ByteArrayView other) const noexcept {
 }
 
 // Check if view contains byte
-bool ByteArrayView::contains(uint8 byte) const noexcept {
+bool ByteArrayView::contains(value_type byte) const noexcept {
     return indexOf(byte) != ByteArrayView::npos;
 }
 
 // Count occurrences of byte
-ByteArrayView::size_type ByteArrayView::count(uint8 byte) const noexcept {
+ByteArrayView::size_type ByteArrayView::count(value_type byte) const noexcept {
     size_type cnt = 0;
     for (size_type i = 0; i < size_; ++i) {
         if (data_[i] == byte) ++cnt;

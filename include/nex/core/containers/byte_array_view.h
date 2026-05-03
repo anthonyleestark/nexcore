@@ -44,25 +44,25 @@ class ByteArray;
  */
 class NEX_EXPORT ByteArrayView {
 public:
-    // Type aliases
+    // Type aliases for compatibility with standard container conventions
     using value_type = uint8;
-    using pointer = const_byte_ptr;
-    using const_pointer = const_byte_ptr;
-    using reference = const uint8&;
-    using const_reference = const uint8&;
-    using iterator = const_byte_ptr;
-    using const_iterator = const_byte_ptr;
-    using reverse_iterator = std::reverse_iterator<iterator>;
-    using const_reverse_iterator = std::reverse_iterator<const_iterator>;
     using size_type = usize;
     using difference_type = isize;
+    using pointer = value_type*;
+    using const_pointer = const value_type*;
+    using reference = const value_type&;
+    using const_reference = const value_type&;
+    using iterator = const_pointer;
+    using const_iterator = const_pointer;
+    using reverse_iterator = NEX_STD reverse_iterator<iterator>;
+    using const_reverse_iterator = NEX_STD reverse_iterator<const_iterator>;
 
 private:
     // Pointer to the data (non-owning)
-    const_byte_ptr data_;
+    const_pointer data_;
 
     // Length of the view
-    usize size_;
+    size_type size_;
 
 public:
     // Special value representing "not found" for search operations
@@ -75,19 +75,15 @@ public:
     constexpr ByteArrayView() noexcept : data_(nullptr), size_(0) {}
 
     // Construct from pointer and length
-    constexpr ByteArrayView(const_byte_ptr data, usize size) noexcept
+    constexpr ByteArrayView(const_pointer data, size_type size) noexcept
         : data_(data), size_(size) {}
 
-    // Construct from pointer and length (unsigned char)
-    constexpr ByteArrayView(const unsigned char* data, usize size) noexcept
-        : data_(reinterpret_cast<const_byte_ptr>(data)), size_(size) {}
-
     // Construct from void pointer and length
-    constexpr ByteArrayView(const_void_ptr data, usize size) noexcept
-        : data_(static_cast<const_byte_ptr>(data)), size_(size) {}
+    constexpr ByteArrayView(const_void_ptr data, size_type size) noexcept
+        : data_(static_cast<const_pointer>(data)), size_(size) {}
 
     // Construct from ArrayList<uint8>
-    constexpr ByteArrayView(const ArrayList<uint8>& vec) noexcept
+    constexpr ByteArrayView(const ArrayList<value_type>& vec) noexcept
         : data_(vec.data()), size_(vec.size()) {}
 
     // Construct from ByteArray
@@ -139,10 +135,10 @@ public:
     ////// Element access -----------------------------
 
     // Access byte at index (with bounds checking)
-    const_reference at(usize pos) const;
+    const_reference at(size_type pos) const;
 
     // Access byte at index (no bounds checking)
-    constexpr const_reference operator[](usize pos) const noexcept {
+    constexpr const_reference operator[](size_type pos) const noexcept {
         return data_[pos];
     }
 
@@ -175,21 +171,21 @@ public:
     // Get length of the view (same as size)
     constexpr size_type length() const noexcept { return size_; }
 
-    // Get maximum possible size
-    constexpr size_type maxSize() const noexcept {
-        return (std::numeric_limits<size_type>::max() / sizeof(value_type)) - 1;
-    }
-
     // Check if view is empty
     constexpr bool empty() const noexcept { return size_ == 0; }
+
+    // Get maximum possible size
+    constexpr size_type maxSize() const noexcept {
+        return (NEX_STD numeric_limits<size_type>::max() / sizeof(value_type)) - 1;
+    }
 
     ////// Modifiers -----------------------------
 
     // Remove prefix (first n bytes)
-    void removePrefix(usize n) noexcept;
+    void removePrefix(size_type n) noexcept;
 
     // Remove suffix (last n bytes)
-    void removeSuffix(usize n) noexcept;
+    void removeSuffix(size_type n) noexcept;
 
     // Swap with another view
     void swap(ByteArrayView& other) noexcept;
@@ -197,18 +193,18 @@ public:
     ////// Operations -----------------------------
 
     // Copy bytes to destination
-    size_type copy(byte_ptr dest, size_type count, size_type pos = 0) const;
+    size_type copy(pointer dest, size_type count, size_type pos = 0) const;
 
     // Get subview
     ByteArrayView substr(size_type pos = 0, size_type count = npos) const;
 
-    // Get left part of the view
+    // Get the left part of the view
     ByteArrayView left(size_type count) const noexcept;
 
-    // Get right part of the view
+    // Get the right part of the view
     ByteArrayView right(size_type count) const noexcept;
 
-    // Get middle part of the view
+    // Get the middle part of the view
     ByteArrayView mid(size_type start, size_type count = npos) const;
 
     // Compare with another view
@@ -220,13 +216,13 @@ public:
     }
 
     // Find first occurrence of byte
-    size_type indexOf(uint8 byte, size_type pos = 0) const noexcept;
+    size_type indexOf(value_type byte, size_type pos = 0) const noexcept;
 
     // Find first occurrence of subview
     size_type indexOf(const ByteArrayView& other, size_type pos = 0) const noexcept;
 
     // Find last occurrence of byte
-    size_type lastIndexOf(uint8 byte, size_type pos = npos) const noexcept;
+    size_type lastIndexOf(value_type byte, size_type pos = npos) const noexcept;
 
     // Find last occurrence of subview
     size_type lastIndexOf(ByteArrayView other, size_type pos = npos) const noexcept;
@@ -247,22 +243,22 @@ public:
     bool startsWith(ByteArrayView prefix) const noexcept;
 
     // Check if view starts with byte
-    bool startsWith(uint8 byte) const noexcept;
+    bool startsWith(value_type byte) const noexcept;
 
     // Check if view ends with suffix
     bool endsWith(ByteArrayView suffix) const noexcept;
 
     // Check if view ends with byte
-    bool endsWith(uint8 byte) const noexcept;
+    bool endsWith(value_type byte) const noexcept;
 
     // Check if view contains subview
     bool contains(ByteArrayView other) const noexcept;
 
     // Check if view contains byte
-    bool contains(uint8 byte) const noexcept;
+    bool contains(value_type byte) const noexcept;
 
     // Count occurrences of byte
-    size_type count(uint8 byte) const noexcept;
+    size_type count(value_type byte) const noexcept;
 
     ////// Conversion methods -----------------------------
 
@@ -270,8 +266,8 @@ public:
     ByteArray toByteArray() const;
 
     // Convert to ArrayList<uint8>
-    ArrayList<uint8> toArrayList() const {
-        return ArrayList<uint8>(data_, data_ + size_);
+    ArrayList<value_type> toArrayList() const {
+        return ArrayList<value_type>(data_, data_ + size_);
     }
 
     ////// Comparison operators -----------------------------
@@ -312,7 +308,7 @@ struct ByteArrayViewHash {
     usize operator()(ByteArrayView view) const noexcept {
         // Simple hash function
         usize hash = 0;
-        for (usize i = 0; i < view.size(); ++i) {
+        for (ByteArrayView::size_type i = 0; i < view.size(); ++i) {
             hash = hash * 31 + static_cast<usize>(view[i]);
         }
         return hash;

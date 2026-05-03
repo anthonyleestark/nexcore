@@ -182,10 +182,10 @@ public:
 
     ////// Conversion --------------------------------------
 
-    // Create BitArray from Vector of booleans (ArrayList<bool>)
+    // Create BitArray from a vector of booleans (ArrayList<bool>)
     static BitArray fromVector(const ArrayList<value_type>& vec) noexcept;
 
-    // Convert to Vector of booleans (ArrayList<bool>)
+    // Convert to vector of booleans (ArrayList<bool>)
     ArrayList<value_type> toVector() const noexcept;
 
     ////// Element access and modification ------------------------------

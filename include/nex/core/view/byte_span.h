@@ -12,7 +12,6 @@
 #include "nex/base/macros.h"
 #include "nex/base/types.h"
 #include "nex/base/linear.h"
-#include "nex/base/string.h"
 
 NEX_CORE_NAMESPACE_BEGIN
 
@@ -257,10 +256,10 @@ public:
 
     ////// Comparison methods and operators -----------------------------
 
-    // Compare with another view
+    // Lexicographical compare with another ByteSpan (byte by byte)
     int32 compare(const ByteSpan& other) const noexcept;
 
-    // Compare subspan with another view
+    // Lexicographical compare with a subview of this ByteSpan
     int32 compare(size_type pos, size_type count, const ByteSpan& other) const {
         return subspan(pos, count).compare(other);
     }

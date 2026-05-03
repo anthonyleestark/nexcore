@@ -242,7 +242,7 @@ ByteSpan::size_type ByteSpan::count(value_type byte) const noexcept {
 
 ////// Comparison methods and operators -----------------------------
 
-// Compare with another view
+// Lexicographical compare with another ByteSpan (byte by byte)
 int32 ByteSpan::compare(const ByteSpan& other) const noexcept {
     size_type rlen = (NEX_STD min)(size_, other.size_);
     if (rlen > 0) {

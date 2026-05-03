@@ -75,6 +75,11 @@ ByteArray::ByteArray(const_char_ptr str, usize len) {
 
 ////// Factory methods --------------------------------------------------
 
+// Create from ByteSpan
+ByteArray ByteArray::fromByteSpan(ByteSpan view) {
+    return ByteArray(view);
+}
+
 // Create from raw data
 ByteArray ByteArray::fromRawData(const_void_ptr data, usize size) {
     if (!data || size == 0) return ByteArray();
@@ -190,6 +195,11 @@ ByteArray ByteArray::fromArrayList(const ArrayList<uint8>& vec) {
 }
 
 ////// Conversion methods --------------------------------------------------
+
+// Convert to ByteSpan (non-owning view)
+ByteSpan ByteArray::view() const noexcept {
+    return ByteSpan(buffer_.data(), buffer_.size());
+}
 
 // Convert to StdString (treat as binary data)
 StdString ByteArray::toStdString() const {

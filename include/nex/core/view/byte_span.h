@@ -15,34 +15,31 @@
 
 NEX_CORE_NAMESPACE_BEGIN
 
-// Forward declaration of ByteArray for conversion constructor
-class ByteArray;
-
 /**
- * @class ByteArrayView
+ * @class ByteSpan
  * @brief Non-owning view into binary data (bytes), similar to std::span<uint8>
  * 
  * This class provides a lightweight, non-owning view into binary data.
  * It stores a pointer to the data and its length, without owning the data.
  * 
- * ByteArrayView supports:
+ * ByteSpan supports:
  * - Construction from ByteArray, ArrayList<uint8>, uint8*, and other data sources
  * - Subarray operations (substr, left, right, mid)
  * - Byte access and iteration
  * - Comparison operations
  * - Conversion to ByteArray when needed
  * 
- * @note ByteArrayView does not own the underlying data. The user must ensure
- *       that the data remains valid for the lifetime of the ByteArrayView.
+ * @note ByteSpan does not own the underlying data. The user must ensure
+ *       that the data remains valid for the lifetime of the ByteSpan.
  * 
- * @warning Modifying the underlying data through a ByteArrayView is not allowed and may lead to undefined behavior. 
+ * @warning Modifying the underlying data through a ByteSpan is not allowed and may lead to undefined behavior. 
  *          Use ByteArray for mutable byte arrays.
  * 
  * @see ByteArray for an owning byte array class that supports mutation and ownership semantics.
  * @see Span<uint8> for a standard library alternative, but note that std::span is not available in C++17 
  *      and may not be suitable for all use cases.
  */
-class NEX_EXPORT ByteArrayView {
+class NEX_EXPORT ByteSpan {
 public:
     // Type aliases for compatibility with standard container conventions
     using value_type = uint8;
@@ -72,31 +69,28 @@ public:
     ////// Constructors -----------------------------
 
     // Default constructor (empty view)
-    constexpr ByteArrayView() noexcept : data_(nullptr), size_(0) {}
+    constexpr ByteSpan() noexcept : data_(nullptr), size_(0) {}
 
     // Construct from pointer and length
-    constexpr ByteArrayView(const_pointer data, size_type size) noexcept
+    constexpr ByteSpan(const_pointer data, size_type size) noexcept
         : data_(data), size_(size) {}
 
     // Construct from void pointer and length
-    constexpr ByteArrayView(const_void_ptr data, size_type size) noexcept
+    constexpr ByteSpan(const_void_ptr data, size_type size) noexcept
         : data_(static_cast<const_pointer>(data)), size_(size) {}
 
     // Construct from ArrayList<uint8>
-    constexpr ByteArrayView(const ArrayList<value_type>& vec) noexcept
+    constexpr ByteSpan(const ArrayList<value_type>& vec) noexcept
         : data_(vec.data()), size_(vec.size()) {}
 
-    // Construct from ByteArray
-    ByteArrayView(const ByteArray& arr) noexcept;
-
     // Copy constructor
-    constexpr ByteArrayView(const ByteArrayView& other) noexcept = default;
+    constexpr ByteSpan(const ByteSpan& other) noexcept = default;
 
     // Copy assignment operator
-    ByteArrayView& operator=(const ByteArrayView& other) noexcept = default;
+    ByteSpan& operator=(const ByteSpan& other) noexcept = default;
 
     // Destructor
-    ~ByteArrayView() = default;
+    ~ByteSpan() = default;
 
     ////// Iterator support -----------------------------
 
@@ -132,7 +126,7 @@ public:
         return const_reverse_iterator(cbegin());
     }
 
-    ////// Element access -----------------------------
+    ////// Accessors --------------------------------------------------
 
     // Access byte at index (with bounds checking)
     const_reference at(size_type pos) const;
@@ -188,7 +182,7 @@ public:
     void removeSuffix(size_type n) noexcept;
 
     // Swap with another view
-    void swap(ByteArrayView& other) noexcept;
+    void swap(ByteSpan& other) noexcept;
 
     ////// Operations -----------------------------
 
@@ -196,22 +190,22 @@ public:
     size_type copy(pointer dest, size_type count, size_type pos = 0) const;
 
     // Get subview
-    ByteArrayView substr(size_type pos = 0, size_type count = npos) const;
+    ByteSpan substr(size_type pos = 0, size_type count = npos) const;
 
     // Get the left part of the view
-    ByteArrayView left(size_type count) const noexcept;
+    ByteSpan left(size_type count) const noexcept;
 
     // Get the right part of the view
-    ByteArrayView right(size_type count) const noexcept;
+    ByteSpan right(size_type count) const noexcept;
 
     // Get the middle part of the view
-    ByteArrayView mid(size_type start, size_type count = npos) const;
+    ByteSpan mid(size_type start, size_type count = npos) const;
 
     // Compare with another view
-    int32 compare(const ByteArrayView& other) const noexcept;
+    int32 compare(const ByteSpan& other) const noexcept;
 
     // Compare substring with another view
-    int32 compare(size_type pos, size_type count, const ByteArrayView& other) const {
+    int32 compare(size_type pos, size_type count, const ByteSpan& other) const {
         return substr(pos, count).compare(other);
     }
 
@@ -219,40 +213,40 @@ public:
     size_type indexOf(value_type byte, size_type pos = 0) const noexcept;
 
     // Find first occurrence of subview
-    size_type indexOf(const ByteArrayView& other, size_type pos = 0) const noexcept;
+    size_type indexOf(const ByteSpan& other, size_type pos = 0) const noexcept;
 
     // Find last occurrence of byte
     size_type lastIndexOf(value_type byte, size_type pos = npos) const noexcept;
 
     // Find last occurrence of subview
-    size_type lastIndexOf(ByteArrayView other, size_type pos = npos) const noexcept;
+    size_type lastIndexOf(ByteSpan other, size_type pos = npos) const noexcept;
 
     // Find first occurrence of any byte in the set
-    size_type findFirstOf(ByteArrayView other, size_type pos = 0) const noexcept;
+    size_type findFirstOf(ByteSpan other, size_type pos = 0) const noexcept;
 
     // Find first occurrence of any byte not in the set
-    size_type findFirstNotOf(ByteArrayView other, size_type pos = 0) const noexcept;
+    size_type findFirstNotOf(ByteSpan other, size_type pos = 0) const noexcept;
 
     // Find last occurrence of any byte in the set
-    size_type findLastOf(ByteArrayView other, size_type pos = npos) const noexcept;
+    size_type findLastOf(ByteSpan other, size_type pos = npos) const noexcept;
 
     // Find last occurrence of any byte not in the set
-    size_type findLastNotOf(ByteArrayView other, size_type pos = npos) const noexcept;
+    size_type findLastNotOf(ByteSpan other, size_type pos = npos) const noexcept;
 
     // Check if view starts with prefix
-    bool startsWith(ByteArrayView prefix) const noexcept;
+    bool startsWith(ByteSpan prefix) const noexcept;
 
     // Check if view starts with byte
     bool startsWith(value_type byte) const noexcept;
 
     // Check if view ends with suffix
-    bool endsWith(ByteArrayView suffix) const noexcept;
+    bool endsWith(ByteSpan suffix) const noexcept;
 
     // Check if view ends with byte
     bool endsWith(value_type byte) const noexcept;
 
     // Check if view contains subview
-    bool contains(ByteArrayView other) const noexcept;
+    bool contains(ByteSpan other) const noexcept;
 
     // Check if view contains byte
     bool contains(value_type byte) const noexcept;
@@ -262,9 +256,6 @@ public:
 
     ////// Conversion methods -----------------------------
 
-    // Convert to ByteArray (creates a copy)
-    ByteArray toByteArray() const;
-
     // Convert to ArrayList<uint8>
     ArrayList<value_type> toArrayList() const {
         return ArrayList<value_type>(data_, data_ + size_);
@@ -273,42 +264,42 @@ public:
     ////// Comparison operators -----------------------------
 
     // Equality operator
-    friend bool operator==(ByteArrayView lhs, ByteArrayView rhs) noexcept {
+    friend bool operator==(ByteSpan lhs, ByteSpan rhs) noexcept {
         return lhs.compare(rhs) == 0;
     }
 
     // Inequality operator
-    friend bool operator!=(ByteArrayView lhs, ByteArrayView rhs) noexcept {
+    friend bool operator!=(ByteSpan lhs, ByteSpan rhs) noexcept {
         return !(lhs == rhs);
     }
 
     // Less-than operator
-    friend bool operator<(ByteArrayView lhs, ByteArrayView rhs) noexcept {
+    friend bool operator<(ByteSpan lhs, ByteSpan rhs) noexcept {
         return lhs.compare(rhs) < 0;
     }
 
     // Less-than-or-equal operator
-    friend bool operator<=(ByteArrayView lhs, ByteArrayView rhs) noexcept {
+    friend bool operator<=(ByteSpan lhs, ByteSpan rhs) noexcept {
         return !(rhs < lhs);
     }
 
     // Greater-than operator
-    friend bool operator>(ByteArrayView lhs, ByteArrayView rhs) noexcept {
+    friend bool operator>(ByteSpan lhs, ByteSpan rhs) noexcept {
         return rhs < lhs;
     }
 
     // Greater-than-or-equal operator
-    friend bool operator>=(ByteArrayView lhs, ByteArrayView rhs) noexcept {
+    friend bool operator>=(ByteSpan lhs, ByteSpan rhs) noexcept {
         return !(lhs < rhs);
     }
 };
 
 // Hash support (for use in hash-based containers)
 struct ByteArrayViewHash {
-    usize operator()(ByteArrayView view) const noexcept {
+    usize operator()(ByteSpan view) const noexcept {
         // Simple hash function
         usize hash = 0;
-        for (ByteArrayView::size_type i = 0; i < view.size(); ++i) {
+        for (ByteSpan::size_type i = 0; i < view.size(); ++i) {
             hash = hash * 31 + static_cast<usize>(view[i]);
         }
         return hash;
@@ -317,12 +308,12 @@ struct ByteArrayViewHash {
 
 NEX_CORE_NAMESPACE_END
 
-// Hash specialization for ByteArrayView
+// Hash specialization for ByteSpan
 NEX_STD_BEGIN
 
 template<>
-struct hash<NEX_PREPEND_CORE_NAMESPACE(ByteArrayView)> {
-    size_t operator()(NEX_PREPEND_CORE_NAMESPACE(ByteArrayView) view) const noexcept {
+struct hash<NEX_PREPEND_CORE_NAMESPACE(ByteSpan)> {
+    size_t operator()(NEX_PREPEND_CORE_NAMESPACE(ByteSpan) view) const noexcept {
         return NEX_PREPEND_CORE_NAMESPACE(ByteArrayViewHash){}(view);
     }
 };

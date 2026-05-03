@@ -14,6 +14,7 @@
 #include "nex/base/types.h"
 #include "nex/base/linear.h"
 #include "nex/base/string.h"
+#include "nex/core/view/byte_span.h"
 
 NEX_CORE_NAMESPACE_BEGIN
 
@@ -32,9 +33,9 @@ NEX_CORE_NAMESPACE_BEGIN
  * - Comparison and search operations
  * 
  * @note ByteArray owns its data and manages memory automatically. It provides mutable access to the underlying bytes.
- *       For non-owning views into byte data, consider using ByteArrayView.
+ *       For non-owning views into byte data, consider using ByteSpan.
  * 
- * @see ByteArrayView for a non-owning view into byte data that does not support mutation or ownership semantics.
+ * @see ByteSpan for a non-owning view into byte data that does not support mutation or ownership semantics.
  * @see ArrayList<uint8> for the underlying container used by ByteArray.
  */
 class NEX_EXPORT ByteArray {
@@ -74,6 +75,10 @@ public:
     // Construct from size and fill value
     explicit ByteArray(size_type size, value_type fillValue) 
         : buffer_(size, fillValue) {}
+
+    // Construct from ByteSpan
+    ByteArray(ByteSpan view) 
+        : buffer_(view.begin(), view.end()) {}
 
     // Construct from C-style array
     ByteArray(const_pointer data, size_type size);
@@ -115,6 +120,9 @@ public:
 
     ////// Factory methods -----------------------------
 
+    // Create from ByteSpan
+    static ByteArray fromByteSpan(ByteSpan view);
+
     // Create from raw data
     static ByteArray fromRawData(const_void_ptr data, size_type size);
 
@@ -148,6 +156,9 @@ public:
     const_void_ptr rawData() const noexcept {
         return static_cast<const_void_ptr>(buffer_.data());
     }
+
+    // Convert to ByteSpan (non-owning view)
+    ByteSpan view() const noexcept;
 
     // Convert to ArrayList<uint8>
     ArrayList<value_type> toArrayList() const noexcept { return buffer_; }

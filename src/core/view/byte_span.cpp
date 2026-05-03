@@ -5,47 +5,36 @@
 
 #include <algorithm>
 
-#include "nex/core/containers/byte_array_view.h"
-#include "nex/core/containers/byte_array.h"
+#include "nex/core/view/byte_span.h"
 #include "nex/base/assert_crash.h"
 
 NEX_CORE_NAMESPACE_BEGIN
 
-// Constructor from ByteArray
-ByteArrayView::ByteArrayView(const ByteArray& arr) noexcept
-    : data_(arr.data()), size_(arr.size()) {}
+////// Accessors --------------------------------------------------
 
 // Access byte at index (with bounds checking)
-ByteArrayView::const_reference ByteArrayView::at(size_type pos) const {
+ByteSpan::const_reference ByteSpan::at(size_type pos) const {
     NEX_ASSERT_MSG(pos >= 0 && pos < size_, "Index out of range");
     return data_[pos];
-}
-
-// Convert to ByteArray
-ByteArray ByteArrayView::toByteArray() const {
-    if (empty()) {
-        return ByteArray();
-    }
-    return ByteArray(data_, size_);
 }
 
 ////// Modifiers --------------------------------------------------
 
 // Remove prefix (first n bytes)
-void ByteArrayView::removePrefix(size_type n) noexcept {
+void ByteSpan::removePrefix(size_type n) noexcept {
     if (n > size_) n = size_;
     data_ += n;
     size_ -= n;
 }
 
 // Remove suffix (last n bytes)
-void ByteArrayView::removeSuffix(size_type n) noexcept {
+void ByteSpan::removeSuffix(size_type n) noexcept {
     if (n > size_) n = size_;
     size_ -= n;
 }
 
 // Swap with another view
-void ByteArrayView::swap(ByteArrayView& other) noexcept {
+void ByteSpan::swap(ByteSpan& other) noexcept {
     NEX_STD swap(data_, other.data_);
     NEX_STD swap(size_, other.size_);
 }
@@ -53,7 +42,7 @@ void ByteArrayView::swap(ByteArrayView& other) noexcept {
 ////// Operations --------------------------------------------------
 
 // Copy bytes to destination
-ByteArrayView::size_type ByteArrayView::copy(pointer dest, size_type count, size_type pos /* = 0 */) const {
+ByteSpan::size_type ByteSpan::copy(pointer dest, size_type count, size_type pos /* = 0 */) const {
     NEX_ASSERT_MSG(pos >= 0 && pos <= size_, "Position out of range");
     size_type rlen = (NEX_STD min)(count, size_ - pos);
     NEX_STD memcpy(dest, data_ + pos, rlen);
@@ -61,34 +50,34 @@ ByteArrayView::size_type ByteArrayView::copy(pointer dest, size_type count, size
 }
 
 // Get subview
-ByteArrayView ByteArrayView::substr(size_type pos /* = 0 */, size_type count /* = npos */) const {
+ByteSpan ByteSpan::substr(size_type pos /* = 0 */, size_type count /* = npos */) const {
     NEX_ASSERT_MSG(pos >= 0 && pos <= size_, "Position out of range");
     size_type rlen = (NEX_STD min)(count, size_ - pos);
-    return ByteArrayView(data_ + pos, rlen);
+    return ByteSpan(data_ + pos, rlen);
 }
 
 // Get the left part of the view
-ByteArrayView ByteArrayView::left(size_type count) const noexcept {
-    if (count >= size_) return ByteArrayView(data_, size_);
-    return ByteArrayView(data_, count);
+ByteSpan ByteSpan::left(size_type count) const noexcept {
+    if (count >= size_) return ByteSpan(data_, size_);
+    return ByteSpan(data_, count);
 }
 
 // Get the right part of the view
-ByteArrayView ByteArrayView::right(size_type count) const noexcept {
-    if (count >= size_) return ByteArrayView(data_, size_);
-    return ByteArrayView(data_ + size_ - count, count);
+ByteSpan ByteSpan::right(size_type count) const noexcept {
+    if (count >= size_) return ByteSpan(data_, size_);
+    return ByteSpan(data_ + size_ - count, count);
 }
 
 // Get the middle part of the view
-ByteArrayView ByteArrayView::mid(size_type start, size_type count /* = npos */) const {
-    if (start >= size_) return ByteArrayView();
+ByteSpan ByteSpan::mid(size_type start, size_type count /* = npos */) const {
+    if (start >= size_) return ByteSpan();
     size_type maxCount = size_ - start;
     size_type rlen = (NEX_STD min)(count, maxCount);
-    return ByteArrayView(data_ + start, rlen);
+    return ByteSpan(data_ + start, rlen);
 }
 
 // Compare with another view
-int32 ByteArrayView::compare(const ByteArrayView& other) const noexcept {
+int32 ByteSpan::compare(const ByteSpan& other) const noexcept {
     size_type rlen = (NEX_STD min)(size_, other.size_);
     int32 result = NEX_STD memcmp(data_, other.data_, rlen);
     if (result != 0) return result;
@@ -98,17 +87,17 @@ int32 ByteArrayView::compare(const ByteArrayView& other) const noexcept {
 }
 
 // Find first occurrence of byte
-ByteArrayView::size_type 
-ByteArrayView::indexOf(value_type byte, ByteArrayView::size_type pos /* = 0 */) const noexcept {
-    if (pos >= size_) return ByteArrayView::npos;
+ByteSpan::size_type 
+ByteSpan::indexOf(value_type byte, ByteSpan::size_type pos /* = 0 */) const noexcept {
+    if (pos >= size_) return ByteSpan::npos;
     const_byte_ptr result = static_cast<const_byte_ptr>(NEX_STD memchr(data_ + pos, byte, size_ - pos));
-    return result ? static_cast<size_type>(result - data_) : ByteArrayView::npos;
+    return result ? static_cast<size_type>(result - data_) : ByteSpan::npos;
 }
 
 // Find first occurrence of subview
-ByteArrayView::size_type 
-ByteArrayView::indexOf(const ByteArrayView& other, ByteArrayView::size_type pos /* = 0 */) const noexcept {
-    if (pos > size_ || other.size() > size_ - pos) return ByteArrayView::npos;
+ByteSpan::size_type 
+ByteSpan::indexOf(const ByteSpan& other, ByteSpan::size_type pos /* = 0 */) const noexcept {
+    if (pos > size_ || other.size() > size_ - pos) return ByteSpan::npos;
     if (other.empty()) return pos;
     
     const_byte_ptr start = data_ + pos;
@@ -119,13 +108,13 @@ ByteArrayView::indexOf(const ByteArrayView& other, ByteArrayView::size_type pos 
             return static_cast<size_type>(p - data_);
         }
     }
-    return ByteArrayView::npos;
+    return ByteSpan::npos;
 }
 
 // Find last occurrence of byte
-ByteArrayView::size_type 
-ByteArrayView::lastIndexOf(value_type byte, ByteArrayView::size_type pos /* = npos */) const noexcept {
-    if (size_ == 0) return ByteArrayView::npos;
+ByteSpan::size_type 
+ByteSpan::lastIndexOf(value_type byte, ByteSpan::size_type pos /* = npos */) const noexcept {
+    if (size_ == 0) return ByteSpan::npos;
     if (pos >= size_) pos = size_ - 1;
     
     for (size_type i = pos + 1; i > 0; --i) {
@@ -133,13 +122,13 @@ ByteArrayView::lastIndexOf(value_type byte, ByteArrayView::size_type pos /* = np
             return i - 1;
         }
     }
-    return ByteArrayView::npos;
+    return ByteSpan::npos;
 }
 
 // Find last occurrence of subview
-ByteArrayView::size_type 
-ByteArrayView::lastIndexOf(ByteArrayView other, ByteArrayView::size_type pos /* = npos */) const noexcept {
-    if (other.size() > size_) return ByteArrayView::npos;
+ByteSpan::size_type 
+ByteSpan::lastIndexOf(ByteSpan other, ByteSpan::size_type pos /* = npos */) const noexcept {
+    if (other.size() > size_) return ByteSpan::npos;
     if (other.empty()) return (NEX_STD min)(pos, size_);
 
     size_type searchLen = size_ - other.size();
@@ -151,93 +140,93 @@ ByteArrayView::lastIndexOf(ByteArrayView other, ByteArrayView::size_type pos /* 
             return start;
         }
     }
-    return ByteArrayView::npos;
+    return ByteSpan::npos;
 }
 
 // Find first occurrence of any byte in the set
-ByteArrayView::size_type 
-ByteArrayView::findFirstOf(ByteArrayView other, ByteArrayView::size_type pos /* = 0 */) const noexcept {
+ByteSpan::size_type 
+ByteSpan::findFirstOf(ByteSpan other, ByteSpan::size_type pos /* = 0 */) const noexcept {
     for (size_type i = pos; i < size_; ++i) {
-        if (other.indexOf(data_[i]) != ByteArrayView::npos) {
+        if (other.indexOf(data_[i]) != ByteSpan::npos) {
             return i;
         }
     }
-    return ByteArrayView::npos;
+    return ByteSpan::npos;
 }
 
 // Find first occurrence of any byte not in the set
-ByteArrayView::size_type ByteArrayView::findFirstNotOf(ByteArrayView other, 
-    ByteArrayView::size_type pos /* = 0 */) const noexcept {
+ByteSpan::size_type ByteSpan::findFirstNotOf(ByteSpan other, 
+    ByteSpan::size_type pos /* = 0 */) const noexcept {
     for (size_type i = pos; i < size_; ++i) {
-        if (other.indexOf(data_[i]) == ByteArrayView::npos) {
+        if (other.indexOf(data_[i]) == ByteSpan::npos) {
             return i;
         }
     }
-    return ByteArrayView::npos;
+    return ByteSpan::npos;
 }
 
 // Find last occurrence of any byte in the set
-ByteArrayView::size_type 
-ByteArrayView::findLastOf(ByteArrayView other, ByteArrayView::size_type pos /* = npos */) const noexcept {
-    if (size_ == 0) return ByteArrayView::npos;
+ByteSpan::size_type 
+ByteSpan::findLastOf(ByteSpan other, ByteSpan::size_type pos /* = npos */) const noexcept {
+    if (size_ == 0) return ByteSpan::npos;
     if (pos >= size_) pos = size_ - 1;
 
     for (size_type i = pos + 1; i > 0; --i) {
-        if (other.indexOf(data_[i - 1]) != ByteArrayView::npos) {
+        if (other.indexOf(data_[i - 1]) != ByteSpan::npos) {
             return i - 1;
         }
     }
-    return ByteArrayView::npos;
+    return ByteSpan::npos;
 }
 
 // Find last occurrence of any byte not in the set
-ByteArrayView::size_type 
-ByteArrayView::findLastNotOf(ByteArrayView other, ByteArrayView::size_type pos /* = npos */) const noexcept {
-    if (size_ == 0) return ByteArrayView::npos;
+ByteSpan::size_type 
+ByteSpan::findLastNotOf(ByteSpan other, ByteSpan::size_type pos /* = npos */) const noexcept {
+    if (size_ == 0) return ByteSpan::npos;
     if (pos >= size_) pos = size_ - 1;
 
     for (size_type i = pos + 1; i > 0; --i) {
-        if (other.indexOf(data_[i - 1]) == ByteArrayView::npos) {
+        if (other.indexOf(data_[i - 1]) == ByteSpan::npos) {
             return i - 1;
         }
     }
-    return ByteArrayView::npos;
+    return ByteSpan::npos;
 }
 
 // Check if view starts with prefix
-bool ByteArrayView::startsWith(ByteArrayView prefix) const noexcept {
+bool ByteSpan::startsWith(ByteSpan prefix) const noexcept {
     return size_ >= prefix.size_ &&
             NEX_STD memcmp(data_, prefix.data_, prefix.size_) == 0;
 }
 
 // Check if view starts with byte
-bool ByteArrayView::startsWith(value_type byte) const noexcept {
+bool ByteSpan::startsWith(value_type byte) const noexcept {
     return !empty() && front() == byte;
 }
 
 // Check if view ends with suffix
-bool ByteArrayView::endsWith(ByteArrayView suffix) const noexcept {
+bool ByteSpan::endsWith(ByteSpan suffix) const noexcept {
     return size_ >= suffix.size_ &&
             NEX_STD memcmp(data_ + size_ - suffix.size_, suffix.data_, suffix.size_) == 0;
 }
 
 // Check if view ends with byte
-bool ByteArrayView::endsWith(value_type byte) const noexcept {
+bool ByteSpan::endsWith(value_type byte) const noexcept {
     return !empty() && back() == byte;
 }
 
 // Check if view contains subview
-bool ByteArrayView::contains(ByteArrayView other) const noexcept {
-    return indexOf(other) != ByteArrayView::npos;
+bool ByteSpan::contains(ByteSpan other) const noexcept {
+    return indexOf(other) != ByteSpan::npos;
 }
 
 // Check if view contains byte
-bool ByteArrayView::contains(value_type byte) const noexcept {
-    return indexOf(byte) != ByteArrayView::npos;
+bool ByteSpan::contains(value_type byte) const noexcept {
+    return indexOf(byte) != ByteSpan::npos;
 }
 
 // Count occurrences of byte
-ByteArrayView::size_type ByteArrayView::count(value_type byte) const noexcept {
+ByteSpan::size_type ByteSpan::count(value_type byte) const noexcept {
     size_type cnt = 0;
     for (size_type i = 0; i < size_; ++i) {
         if (data_[i] == byte) ++cnt;

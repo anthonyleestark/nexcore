@@ -8,7 +8,7 @@
 /**
  * @file  associative.h
  * @brief Defines common associative container types used throughout the codebase, 
- *        such as Map, Set, HashMap, HashSet, and their associated type aliases.
+ *        such as TreeMap, TreeSet, HashMap, HashSet, and their associated type aliases.
  * 
  * @details
  * This header centralizes aliases for associative containers used by Nex-ecosystem, including ordered/unordered maps, 
@@ -19,7 +19,7 @@
  * aliases reduces template verbosity and improves the readability of API signatures across all architectural layers.
  *
  * Selection Guidance:
- * - **Map / Set**: Use when deterministic key ordering or ordered iteration is required.
+ * - **TreeMap / TreeSet**: Use when deterministic key ordering or ordered iteration is required.
  * - **MultiMap / MultiSet**: Use when duplicate keys or values must be explicitly permitted.
  * - **HashMap / HashSet**: Use when O(1) average-case lookup is preferred over ordering.
  * - **HashMultiMap / HashMultiSet**: Use for non-unique associations where order is irrelevant.
@@ -49,34 +49,32 @@
 #include <utility>
 
 #include "nex/base/namespace.h"
-#include "nex/base/types.h"
-#include "nex/base/string.h"
 
 NEX_NAMESPACE_BEGIN
 
 /**
- * @brief Map (key-value associative container) type aliases
+ * @brief TreeMap (key-value associative container) type aliases
  * @details
- * The Map container is a key-value associative container that stores pairs of keys and values, commonly used 
+ * The TreeMap container is a key-value associative container that stores pairs of keys and values, commonly used 
  * for storing and manipulating collections of data that have a key-value relationship.
  */
 template <typename Key, typename Value>
-using Map = NEX_STD map<Key, Value>;
+using TreeMap = NEX_STD map<Key, Value>;
 
 /**
- * @brief Set (collection of unique elements) type aliases
+ * @brief TreeSet (collection of unique elements) type aliases
  * @details
- * The Set container is a collection of unique elements that does not allow duplicate values, commonly used 
+ * The TreeSet container is a collection of unique elements that does not allow duplicate values, commonly used 
  * for storing and manipulating collections of data that require uniqueness.
  */
 template <typename T>
-using Set = NEX_STD set<T>;
+using TreeSet = NEX_STD set<T>;
 
 /**
  * @brief MultiMap (key-value associative container that allows duplicate keys) type aliases
  * @details
  * The MultiMap container is a container that stores elements formed by a combination of a key value and a mapped value.
- * Unlike Map, multiple elements can have equivalent keys. Elements are typically ordered by key.
+ * Unlike TreeMap, multiple elements can have equivalent keys. Elements are typically ordered by key.
  */
 template <typename Key, typename Value>
 using MultiMap = NEX_STD multimap<Key, Value>;
@@ -138,63 +136,5 @@ template <typename T,
           typename KeyEqual = NEX_STD equal_to<T>, 
           typename Allocator = NEX_STD allocator<T>>
 using HashMultiSet = NEX_STD unordered_multiset<T, Hasher, KeyEqual, Allocator>;
-
-/**
- * @section Common container type aliases
- * @details
- * These type aliases provide convenient names for commonly used container types with specific element types.
- * The type aliases can help to improve code readability and maintainability by providing consistent type names 
- * for commonly used container types with specific element types.
- */
-
-/**
- * @brief IntMap, UIntMap, Int64Map, UInt64Map (Maps of integers to integers) type aliases
- * @details
- * Provides convenient, fixed-width integer mapping types (32-bit and 64-bit) for consistent usage across 
- * the codebase. These aliases simplify the declaration of Map containers where both keys and values share 
- * the same integer type and signedness.
- */
-using IntMap = HashMap<int32, int32>;
-using UIntMap = HashMap<uint32, uint32>;
-
-using Int64Map = HashMap<int64, int64>;
-using UInt64Map = HashMap<uint64, uint64>;
-
-/**
- * @brief LookupTable and LookupTable64 (Maps of Strings to integers) type aliases
- * @details
- * Provides fast, hash-based mapping from strings to 32-bit or 64-bit integers. These are optimized for 
- * high-performance search operations where string keys are mapped to numeric identifiers or counts.
- */
-using LookupTable = HashMap<NEX_PREPEND_CORE_NAMESPACE(String), int32>;
-using LookupTable64 = HashMap<NEX_PREPEND_CORE_NAMESPACE(String), int64>;
-
-/**
- * @brief StringMap (Map of Strings to Strings) type alias
- * @details
- * A standard ordered map used for storing key-value pairs where both components are strings. Typically used 
- * for configuration settings, metadata, or dictionary-like structures.
- */
-using StringMap = Map<NEX_PREPEND_CORE_NAMESPACE(String), NEX_PREPEND_CORE_NAMESPACE(String)>;
-
-/**
- * @brief IntSet, UIntSet, Int64Set, UInt64Set (Sets of integers) type aliases
- * @details
- * Provides convenient names for unordered collections of unique integers. Using HashSet ensures average 
- * constant-time complexity for membership testing, making these ideal for tracking unique IDs or flags.
- */
-using IntSet = HashSet<int32>;
-using UIntSet = HashSet<uint32>;
-
-using Int64Set = HashSet<int64>;
-using UInt64Set = HashSet<uint64>;
-
-/**
- * @brief StringSet (Set of Strings) type alias
- * @details
- * A standard Set container for strings that maintains element order. Use this when uniqueness is required and 
- * you need to iterate through strings in lexicographical order.
- */
-using StringSet = Set<NEX_PREPEND_CORE_NAMESPACE(String)>;
 
 NEX_NAMESPACE_END

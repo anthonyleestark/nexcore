@@ -189,8 +189,8 @@ ByteArray ByteArray::fromBase64(const StdString& base64String) {
     return result;
 }
 
-// Create from ArrayList<uint8>
-ByteArray ByteArray::fromArrayList(const ArrayList<value_type>& vec) {
+// Create from a dynamic array of bytes (Vec<uint8>)
+ByteArray ByteArray::fromVec(const Vec<value_type>& vec) {
     ByteArray result;
     for (size_type i = 0; i < vec.size(); ++i) {
         result.appendByte(vec[i]);
@@ -275,7 +275,7 @@ ByteArray& ByteArray::append(const ByteArray& other) {
 // Append bytes from a ByteSpan
 ByteArray& ByteArray::append(ByteSpan view) {
     if (view.empty()) return *this;
-    ArrayList<value_type> bytes(view.begin(), view.end());
+    Vec<value_type> bytes(view.begin(), view.end());
     buffer_.insert(buffer_.end(), bytes.begin(), bytes.end());
     return *this;
 }
@@ -299,7 +299,7 @@ ByteArray& ByteArray::prepend(const ByteArray& other) {
 // Prepend bytes from a ByteSpan
 ByteArray& ByteArray::prepend(ByteSpan view) {
     if (view.empty()) return *this;
-    ArrayList<value_type> bytes(view.begin(), view.end());
+    Vec<value_type> bytes(view.begin(), view.end());
     buffer_.insert(buffer_.begin(), bytes.begin(), bytes.end());
     return *this;
 }
@@ -337,7 +337,7 @@ ByteArray& ByteArray::insert(size_type pos, const ByteArray& other) {
 ByteArray& ByteArray::insert(size_type pos, ByteSpan view) {
     if (pos > buffer_.size()) pos = buffer_.size();
     if (view.empty()) return *this;
-    ArrayList<value_type> bytes(view.begin(), view.end());
+    Vec<value_type> bytes(view.begin(), view.end());
     buffer_.insert(buffer_.begin() + pos, bytes.begin(), bytes.end());
     return *this;
 }
@@ -373,7 +373,7 @@ ByteArray& ByteArray::replace(size_type pos, size_type count, ByteSpan view) {
     size_type actualCount = NEX_STD min(count, buffer_.size() - pos);
     buffer_.erase(buffer_.begin() + pos, buffer_.begin() + pos + actualCount);
     if (!view.empty()) {
-        ArrayList<value_type> bytes(view.begin(), view.end());
+        Vec<value_type> bytes(view.begin(), view.end());
         buffer_.insert(buffer_.begin() + pos, bytes.begin(), bytes.end());
     }
     return *this;

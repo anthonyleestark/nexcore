@@ -160,7 +160,7 @@ using Function = NEX_STD function<T>;
 /**
  * @brief A wrapper that makes references "assignable" and "copyable".
  * @details 
- * Enables storing references in standard containers (like ArrayList) 
+ * Enables storing references in standard containers (like Vec) 
  * which otherwise require elements to be erasable/assignable. It acts as 
  * a non-nullable pointer with reference semantics.
  */

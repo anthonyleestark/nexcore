@@ -20,9 +20,9 @@ BitSpan::const_reference BitSpan::at(size_type index) const {
 
 ////// Conversion methods -----------------------------
 
-// Convert to ArrayList<bool>
-ArrayList<BitSpan::value_type> BitSpan::toVector() const noexcept {
-    ArrayList<value_type> vec;
+// Convert to dynamic array of booleans (Vec<bool>)
+Vec<BitSpan::value_type> BitSpan::toVec() const noexcept {
+    Vec<value_type> vec;
     vec.reserve(bitCount_);
     for (size_type i = 0; i < bitCount_; ++i) {
         vec.push_back(testBit(i));

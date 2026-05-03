@@ -23,7 +23,7 @@ NEX_CORE_NAMESPACE_BEGIN
  * @brief Container class for binary data (bytes)
  * 
  * This class provides a convenient way to store and manipulate binary data.
- * It uses ArrayList<uint8> as the internal buffer to store bytes.
+ * It uses Vec<uint8> as the internal buffer to store bytes.
  * 
  * ByteArray supports:
  * - Construction from owning data sources and ByteSpan views
@@ -36,7 +36,7 @@ NEX_CORE_NAMESPACE_BEGIN
  *       For non-owning views into byte data, consider using ByteSpan.
  * 
  * @see ByteSpan for a read-only non-owning view into byte data.
- * @see ArrayList<uint8> for the underlying container used by ByteArray.
+ * @see Vec<uint8> for the underlying container used by ByteArray.
  */
 class NEX_EXPORT ByteArray {
 public:
@@ -44,19 +44,19 @@ public:
     using value_type = uint8;
     using size_type = usize;
     using difference_type = isize;
-    using allocator_type = typename ArrayList<value_type>::allocator_type;
+    using allocator_type = typename Vec<value_type>::allocator_type;
     using pointer = value_type*;
     using const_pointer = const value_type*;
     using reference = value_type&;
     using const_reference = const value_type&;
-    using iterator = ArrayList<value_type>::iterator;
-    using const_iterator = ArrayList<value_type>::const_iterator;
-    using reverse_iterator = ArrayList<value_type>::reverse_iterator;
-    using const_reverse_iterator = ArrayList<value_type>::const_reverse_iterator;
+    using iterator = Vec<value_type>::iterator;
+    using const_iterator = Vec<value_type>::const_iterator;
+    using reverse_iterator = Vec<value_type>::reverse_iterator;
+    using const_reverse_iterator = Vec<value_type>::const_reverse_iterator;
 
 private:
     // Internal buffer to store bytes
-    ArrayList<value_type> buffer_;
+    Vec<value_type> buffer_;
 
 public:
     // Special value representing "not found" for search operations
@@ -83,8 +83,8 @@ public:
     // Construct from C-style array
     ByteArray(const_pointer data, size_type size);
 
-    // Construct from ArrayList<uint8>
-    explicit ByteArray(const ArrayList<value_type>& data) 
+    // Construct from a dynamic array of bytes (Vec<uint8>)
+    explicit ByteArray(const Vec<value_type>& data) 
         : buffer_(data) {}
 
     // Construct from StdString (treat as binary data)
@@ -132,8 +132,8 @@ public:
     // Create from Base64 string
     static ByteArray fromBase64(const StdString& base64String);
 
-    // Create from ArrayList<uint8>
-    static ByteArray fromArrayList(const ArrayList<value_type>& vec);
+    // Create from a dynamic array of bytes (Vec<uint8>)
+    static ByteArray fromVec(const Vec<value_type>& vec);
 
     ////// Conversion methods -----------------------------
 
@@ -160,8 +160,8 @@ public:
     // Convert to ByteSpan (non-owning view)
     ByteSpan view() const noexcept;
 
-    // Convert to ArrayList<uint8>
-    ArrayList<value_type> toArrayList() const noexcept { return buffer_; }
+    // Convert to dynamic array of bytes (Vec<uint8>)
+    Vec<value_type> toVec() const noexcept { return buffer_; }
 
     // Convert to StdString (treat as binary data)
     StdString toStdString() const;

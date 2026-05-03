@@ -23,7 +23,7 @@ NEX_CORE_NAMESPACE_BEGIN
  * and a length; it does not allocate, copy, own, or extend the lifetime of the data.
  * 
  * ByteSpan supports:
- * - Construction from raw byte data, void pointers, and ArrayList<uint8>
+ * - Construction from raw byte data, void pointers, and Vec<uint8>
  * - Subarray operations (substr, left, right, mid)
  * - Read-only byte access and iteration
  * - Comparison operations
@@ -77,8 +77,8 @@ public:
     constexpr ByteSpan(const_void_ptr data, size_type size) noexcept
         : data_(static_cast<const_pointer>(data)), size_(size) {}
 
-    // Construct from ArrayList<uint8>
-    constexpr ByteSpan(const ArrayList<value_type>& vec) noexcept
+    // Construct from a dynamic array of bytes (Vec<uint8>)
+    constexpr ByteSpan(const Vec<value_type>& vec) noexcept
         : data_(vec.data()), size_(vec.size()) {}
 
     // Copy constructor
@@ -176,8 +176,8 @@ public:
 
     ////// Conversion methods -----------------------------
 
-    // Convert to ArrayList<uint8>
-    ArrayList<value_type> toArrayList() const;
+    // Convert to dynamic array of bytes (Vec<uint8>)
+    Vec<value_type> toVec() const;
 
     ////// Modifiers -----------------------------
 

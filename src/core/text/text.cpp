@@ -53,8 +53,8 @@ bool text::isAlpha(StringView str) noexcept {
 }
 
 // Split a string into a list of substrings based on a specified delimiter character
-ArrayList<String> text::split(StringView str, char16 delimiter /* = u' ' */) {
-    ArrayList<String> result;
+Vec<String> text::split(StringView str, char16 delimiter /* = u' ' */) {
+    Vec<String> result;
     usize start = 0;
     usize end = str.find(delimiter);
 
@@ -74,7 +74,7 @@ ArrayList<String> text::split(StringView str, char16 delimiter /* = u' ' */) {
 }
 
 // Join a list of strings into a single string with a specified delimiter character between them
-String text::join(const ArrayList<String>& strings, char16 delimiter /* = u' ' */) {
+String text::join(const Vec<String>& strings, char16 delimiter /* = u' ' */) {
     if (strings.empty()) {
         return String();
     }
@@ -315,10 +315,10 @@ RegexMatch text::regexMatch(StringView str, StringView pattern, RegexOptions opt
 }
 
 // Search for all occurrences of a specified regular expression pattern in a string.
-ArrayList<RegexMatch> text::regexSearchAll(StringView text, StringView pattern, 
+Vec<RegexMatch> text::regexSearchAll(StringView text, StringView pattern, 
                                             RegexOptions options /* = RegexOptions::None */) {
     // TODO: Implement later using a simple regex engine such as CTRE or a custom implementation
-    return ArrayList<RegexMatch>();
+    return Vec<RegexMatch>();
 }
 
 // Replace all occurrences of a specified regular expression pattern in a string with a replacement string.

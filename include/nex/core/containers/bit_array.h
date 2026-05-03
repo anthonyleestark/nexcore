@@ -34,7 +34,7 @@ NEX_CORE_NAMESPACE_BEGIN
  * - Contiguous Storage: Maintains data in a single block of memory, ensuring high cache locality for linear scans 
  *   and iterations.
  * 
- * @see BitSet for a fixed-size alternative, and ArrayList<bool> for a more flexible but less memory-efficient option.
+ * @see BitSet for a fixed-size alternative, and Vec<bool> for a more flexible but less memory-efficient option.
  */
 class NEX_EXPORT BitArray {
 public:
@@ -59,7 +59,7 @@ public:
 
 private:
     // Internal buffer to store bits (8 bits per byte)
-    ArrayList<block_type> buffer_;
+    Vec<block_type> buffer_;
     
     // Number of bits (may be less than buffer_.size() * 8)
     size_type bitCount_;
@@ -165,7 +165,7 @@ public:
     }
 
     // Get maximum possible size
-    size_type max_size() const noexcept {
+    size_type maxSize() const noexcept {
         return buffer_.max_size() * bitsPerByte();
     }
     
@@ -182,11 +182,11 @@ public:
 
     ////// Conversion --------------------------------------
 
-    // Create BitArray from a vector of booleans (ArrayList<bool>)
-    static BitArray fromVector(const ArrayList<value_type>& vec) noexcept;
+    // Create BitArray from a dynamic array of booleans (Vec<bool>)
+    static BitArray fromVec(const Vec<value_type>& vec) noexcept;
 
-    // Convert to vector of booleans (ArrayList<bool>)
-    ArrayList<value_type> toVector() const noexcept;
+    // Convert to dynamic array of booleans (Vec<bool>)
+    Vec<value_type> toVec() const noexcept;
 
     ////// Element access and modification ------------------------------
 

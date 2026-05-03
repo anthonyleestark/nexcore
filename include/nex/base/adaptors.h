@@ -7,7 +7,7 @@
 
 /**
  * @file  adaptors.h
- * @brief Defines common adaptor container types used throughout the codebase, such as Stack, Queue, PriorityQueue, 
+ * @brief Defines common adaptor container types used throughout the codebase, such as Stack, Queue, Heap, 
  *        and their associated type aliases.
  * 
  * @details
@@ -22,7 +22,7 @@
  * Container selection guidance:
  * - Use Stack for depth-oriented processing, undo chains, and reverse-order consumption.
  * - Use Queue for arrival-order pipelines and producer-consumer style handoff.
- * - Use PriorityQueue when processing order is determined by priority rather than insertion time.
+ * - Use Heap when processing order is determined by priority rather than insertion time.
  *
  * These aliases keep code style consistent across modules and preserve the exact behavior of their Standard Library 
  * counterparts, without adding wrapper logic or runtime overhead.
@@ -42,7 +42,6 @@
 #include <queue>
 
 #include "nex/base/namespace.h"
-#include "nex/base/types.h"
 
 NEX_NAMESPACE_BEGIN
 
@@ -66,13 +65,13 @@ template <typename T, typename Container = NEX_STD deque<T>>
 using Queue = NEX_STD queue<T, Container>;
 
 /**
- * @brief Priority Queue (heap-based data structure) type aliases
+ * @brief Heap (heap-based data structure) type aliases
  * @details
- * The Priority Queue container is a heap-based data structure that allows elements to be added with a priority and 
+ * The Heap container is a heap-based data structure that allows elements to be added with a priority and 
  * removed based on their priority, commonly used for storing and manipulating collections of data that require 
  * priority-based behavior.
  */
 template <typename T, typename Container = NEX_STD vector<T>>
-using PriorityQueue = NEX_STD priority_queue<T, Container>;
+using Heap = NEX_STD priority_queue<T, Container>;
 
 NEX_NAMESPACE_END

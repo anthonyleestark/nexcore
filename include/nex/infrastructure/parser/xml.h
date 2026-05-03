@@ -187,7 +187,7 @@ public:
     bool hasChild(StringView name) const;
 
     // Get all child nodes with the specified name
-    ArrayList<XmlNode> children(StringView name) const;
+    Vec<XmlNode> children(StringView name) const;
 
     // Get the attribute with the specified name
     XmlAttribute attribute(StringView name) const;

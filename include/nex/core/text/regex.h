@@ -30,7 +30,7 @@ struct RegexMatch {
     usize position = 0;                     // Starting position of the match (UTF-16 code units)
     usize length = 0;                       // Length of the match (UTF-16 code units)
     String matched;                         // Full match (entire matched string)
-    StringList groups;                      // groups[0] = full match, groups[1..] = capture groups
+    Vec<String> groups;                     // groups[0] = full match, groups[1..] = capture groups
 
     ////// Optional fields for more detailed match information -----------------------
 
@@ -125,7 +125,7 @@ public:
 
     // Search for all matches of the regex in the given text and return a list of 
     // detailed match information for each match
-    ArrayList<RegexMatch> searchAll(StringView text) const;
+    Vec<RegexMatch> searchAll(StringView text) const;
 
     ////// Replace operations -----------------------
 

@@ -82,22 +82,22 @@ namespace text {
      * @brief   Split a string into a list of substrings based on a specified delimiter character.
      * 
      * @details
-     * The `split` function takes a `StringView` as input and splits it into an `ArrayList` of `String` objects 
+     * The `split` function takes a `StringView` as input and splits it into an `Vec` of `String` objects 
      * based on the specified delimiter character. It iterates through the input string, identifying segments 
      * separated by the delimiter, and adds each segment to the resulting list.
      * 
      * @param   str The input string to be split.
      * @param   delimiter The character used to split the string (default is space character).
-     * @return  An ArrayList of String objects containing the substrings resulting from the split operation.
+     * @return  An Vec of String objects containing the substrings resulting from the split operation.
      */
     NEX_EXPORT NEX_NODISCARD
-    ArrayList<String> split(StringView str, char16 delimiter = u' ');
+    Vec<String> split(StringView str, char16 delimiter = u' ');
 
     /**
      * @brief   Join a list of strings into a single string with a specified delimiter character between them.
      * 
      * @details
-     * The `join` function takes an `ArrayList` of `String` objects and concatenates them into a single `String`, 
+     * The `join` function takes an `Vec` of `String` objects and concatenates them into a single `String`, 
      * inserting the specified delimiter character between each pair of strings. It iterates through the list of 
      * strings, appending each string to the result and adding the delimiter character between them (except 
      * after the last string).
@@ -107,7 +107,7 @@ namespace text {
      * @return  A single `String` containing all the input strings separated by the specified delimiter.
      */
     NEX_EXPORT NEX_NODISCARD
-    String join(const ArrayList<String>& strings, char16 delimiter = u' ');
+    String join(const Vec<String>& strings, char16 delimiter = u' ');
 
     /**
      * @brief   Truncate a string to a specified maximum length, optionally adding an ellipsis character.
@@ -393,7 +393,7 @@ namespace text {
      * @param   options The regular expression options to use when matching the pattern.
      * @return  A list of `RegexMatch` objects containing the details of all matches found in the string.
      */
-    ArrayList<RegexMatch> regexSearchAll(StringView text, StringView pattern, 
+    Vec<RegexMatch> regexSearchAll(StringView text, StringView pattern, 
                                          RegexOptions options = RegexOptions::None);
 
     /**
@@ -411,7 +411,7 @@ namespace text {
      * @param   options The regular expression options to use when matching the pattern.
      * @return  A list of `String` objects resulting from splitting the input string by the regular expression pattern.
      */
-    ArrayList<String> regexSplit(StringView text, StringView pattern, RegexOptions options = RegexOptions::None);
+    Vec<String> regexSplit(StringView text, StringView pattern, RegexOptions options = RegexOptions::None);
 
     /**
      * @brief   Replace all occurrences of a specified regular expression pattern in a string 

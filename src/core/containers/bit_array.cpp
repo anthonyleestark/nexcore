@@ -119,8 +119,8 @@ void BitArray::clear() noexcept {
 
 ////// Conversion and serialization ------------------------------
 
-// Create BitArray from Vector of booleans (ArrayList<bool>)
-BitArray BitArray::fromVector(const ArrayList<value_type>& vec) noexcept {
+// Create BitArray from a dynamic array of booleans (Vec<bool>)
+BitArray BitArray::fromVec(const Vec<value_type>& vec) noexcept {
     BitArray result(vec.size());
     for (size_type i = 0; i < vec.size(); ++i) {
         result.setBit(i, vec[i]);
@@ -128,9 +128,9 @@ BitArray BitArray::fromVector(const ArrayList<value_type>& vec) noexcept {
     return result;
 }
 
-// Convert to Vector of booleans (ArrayList<bool>)
-ArrayList<BitArray::value_type> BitArray::toVector() const noexcept {
-    ArrayList<value_type> result(bitCount_);
+// Convert to dynamic array of booleans (Vec<bool>)
+Vec<BitArray::value_type> BitArray::toVec() const noexcept {
+    Vec<value_type> result(bitCount_);
     for (size_type i = 0; i < bitCount_; ++i) {
         result[i] = testBit(i);
     }

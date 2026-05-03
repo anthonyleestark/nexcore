@@ -7,7 +7,7 @@
 
 /**
  * @file  linked.h
- * @brief Defines common linked container types used throughout the codebase, such as List, ForwardList, 
+ * @brief Defines common linked container types used throughout the codebase, such as LinkedList, ForwardList, 
  *        and their associated type aliases.
  * 
  * @details
@@ -20,7 +20,7 @@
  * use linked structures where they are appropriate without mixing naming styles across services and domains.
  *
  * Container selection guidance:
- * - Use List when bidirectional traversal and stable iterators are needed.
+ * - Use LinkedList when bidirectional traversal and stable iterators are needed.
  * - Use ForwardList when memory footprint and forward-only traversal are sufficient.
  *
  * The aliases in this file do not add behavior; they preserve the exact semantics and complexity guarantees
@@ -40,19 +40,18 @@
 #include <forward_list>
 
 #include "nex/base/namespace.h"
-#include "nex/base/types.h"
 
 NEX_NAMESPACE_BEGIN
 
 /**
- * @brief List (Doubly linked list)
+ * @brief LinkedList (Doubly linked list)
  * @details 
  * A non-contiguous, node-based container that supports constant-time insertion and removal from any position 
  * once an iterator is obtained. Use this when frequent reordering or middle-insertions are required without 
  * invalidating pointers to other elements.
  */
 template <typename T>
-using List = NEX_STD list<T>;
+using LinkedList = NEX_STD list<T>;
 
 /**
  * @brief ForwardList (Singly linked list)

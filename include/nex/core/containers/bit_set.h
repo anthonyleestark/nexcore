@@ -39,7 +39,7 @@ NEX_CORE_NAMESPACE_BEGIN
  * 
  * @tparam N The number of bits in the BitSet (must be greater than 0).
  * 
- * @see BitBuffer for a dynamic alternative, and ArrayList<bool> for a more flexible but less memory-efficient option.
+ * @see BitBuffer for a dynamic alternative, and Vec<bool> for a more flexible but less memory-efficient option.
  */
 template <usize N> requires (N > 0)
 class NEX_EXPORT BitSet {
@@ -164,8 +164,8 @@ public:
 
     ////// Conversion -------------------------------
 
-    // Create a BitSet from a Vector of booleans (truncates if vector is larger than N)
-    static BitSet fromVector(const ArrayList<bool>& vec) noexcept {
+    // Create a BitSet from a dynamic array of booleans (truncates if vector is larger than N)
+    static BitSet fromVec(const Vec<bool>& vec) noexcept {
         BitSet result;
         usize count = vec.size() < N ? vec.size() : N;
         for (usize i = 0; i < count; ++i) {
@@ -175,9 +175,9 @@ public:
         return result;
     }
 
-    // Convert BitSet to a Vector of booleans
-    ArrayList<bool> toVector() const noexcept {
-        ArrayList<bool> vec;
+    // Convert BitSet to dynamic array of booleans
+    Vec<bool> toVec() const noexcept {
+        Vec<bool> vec;
         vec.reserve(N);
         for (usize i = 0; i < N; ++i) {
             vec.push_back(testBit(i));

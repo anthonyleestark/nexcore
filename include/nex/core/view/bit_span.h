@@ -23,7 +23,7 @@ NEX_CORE_NAMESPACE_BEGIN
  * count. It does not allocate, copy, own, or extend the lifetime of the data.
  * 
  * BitSpan supports:
- * - Construction from raw byte data, void pointers, and ArrayList<uint8>
+ * - Construction from raw byte data, void pointers, and Vec<uint8>
  * - Bit-granular subspan operations (subspan, left, right, mid)
  * - Read-only bit access and iteration
  * - Comparison operations
@@ -122,8 +122,8 @@ public:
           bitOffset_(bitStartOffset % bitsPerByte()),
           bitCount_(bitCount) {}
 
-    // Construct from ArrayList<block_type> buffer and explicit bit count
-    BitSpan(const ArrayList<block_type>& buffer, size_type bitCount) noexcept
+    // Construct from a dynamic array of bytes (Vec<block_type>) and explicit bit count
+    BitSpan(const Vec<block_type>& buffer, size_type bitCount) noexcept
         : data_(buffer.data()), bitOffset_(0), bitCount_(bitCount) {}
 
     // Copy constructor
@@ -349,8 +349,8 @@ public:
 
     ////// Conversion methods -----------------------------
 
-    // Convert to ArrayList<bool>
-    ArrayList<value_type> toVector() const noexcept;
+    // Convert to dynamic array of booleans (Vec<bool>)
+    Vec<value_type> toVec() const noexcept;
 
     ////// Modifiers -----------------------------
 

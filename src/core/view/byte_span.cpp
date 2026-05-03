@@ -20,12 +20,12 @@ ByteSpan::const_reference ByteSpan::at(size_type pos) const {
 
 ////// Conversion methods -----------------------------
 
-// Convert to ArrayList<uint8>
-ArrayList<ByteSpan::value_type> ByteSpan::toArrayList() const {
+// Convert to dynamic array of bytes (Vec<uint8>)
+Vec<ByteSpan::value_type> ByteSpan::toVec() const {
     if (empty()) {
-        return ArrayList<value_type>();
+        return Vec<value_type>();
     }
-    return ArrayList<value_type>(data_, data_ + size_);
+    return Vec<value_type>(data_, data_ + size_);
 }
 
 ////// Modifiers --------------------------------------------------

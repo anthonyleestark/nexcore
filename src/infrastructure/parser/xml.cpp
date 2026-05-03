@@ -178,8 +178,8 @@ bool XmlNode::hasChild(StringView name) const {
 }
 
 // Get all child nodes with the specified name
-ArrayList<XmlNode> XmlNode::children(StringView name) const {
-    ArrayList<XmlNode> list;
+Vec<XmlNode> XmlNode::children(StringView name) const {
+    Vec<XmlNode> list;
     if (!isValid()) return list;
     
     // Convert parameter to UTF-8 string (std::string)

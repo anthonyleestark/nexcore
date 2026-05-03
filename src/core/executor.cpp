@@ -78,7 +78,7 @@ void ThreadExecutor::execute(Function<void()> task) {
 
 // Implementation details of ThreadPool
 struct ThreadPool::Impl {
-    ArrayList<Thread>       threads_;       // The pool of worker threads
+    Vec<Thread>             threads_;       // The pool of worker threads
     Queue<Function<void()>> taskQueue_;     // Queue of tasks to be executed
     Mutex                   queueMutex_;    // Mutex to protect access to the task queue
 };

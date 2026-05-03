@@ -42,9 +42,9 @@
  */
 #if defined(__has_cpp_attribute)
     #define NEX_HAS_CPP_ATTRIBUTE(x) __has_cpp_attribute(x)
-#else
+#else  // Compiler does not support __has_cpp_attribute
     #define NEX_HAS_CPP_ATTRIBUTE(x) 0
-#endif
+#endif  // defined(__has_cpp_attribute)
 
 /**
  * @def NEX_HAS_BUILTIN(x)
@@ -56,18 +56,45 @@
  */
 #if defined(__has_builtin)
     #define NEX_HAS_BUILTIN(x) __has_builtin(x)
-#else
+#else  // Compiler does not support __has_builtin
     #define NEX_HAS_BUILTIN(x) 0
-#endif
+#endif  // defined(__has_builtin)
 
-// __has_feature and __has_attribute are not available in MSVC.
+/**
+ * @def NEX_HAS_FEATURE(x)
+ * @brief Check if a compiler feature is available
+ * 
+ * @details
+ * This is a wrapper around `__has_feature`, similar to NEX_HAS_CPP_ATTRIBUTE.
+ * If the compiler does not support `__has_feature`, this macro evaluates to 0.
+ */
+
+// __has_feature is not available in MSVC.
 #if !defined(__has_feature)
     #define __has_feature(x) 0
 #endif  // !defined(__has_feature)
 
+#if !defined(NEX_HAS_FEATURE)
+    #define NEX_HAS_FEATURE(x) __has_feature(x)
+#endif  // !defined(NEX_HAS_FEATURE)
+
+/**
+ * @def NEX_HAS_ATTRIBUTE(x)
+ * @brief Check if a compiler attribute is supported by the compiler
+ * 
+ * @details
+ * This is a wrapper around `__has_attribute`, similar to NEX_HAS_CPP_ATTRIBUTE.
+ * If the compiler does not support `__has_attribute`, this macro evaluates to 0.
+ */
+
+// __has_attribute is not available in MSVC.
 #if !defined(__has_attribute)
     #define __has_attribute(x) 0
 #endif  // !defined(__has_attribute)
+
+#if !defined(NEX_HAS_ATTRIBUTE)
+    #define NEX_HAS_ATTRIBUTE(x) __has_attribute(x)
+#endif  // !defined(NEX_HAS_ATTRIBUTE)
 
 /**
  * @def NEX_HAS_BUILTIN_FLOAT128
@@ -81,9 +108,9 @@
  */
 #if defined(__SIZEOF_FLOAT128__) && !NEX_COMPILER_IS_MSVC
     #define NEX_HAS_BUILTIN_FLOAT128 1
-#else
+#else  // Compiler does not support __float128
     #define NEX_HAS_BUILTIN_FLOAT128 0
-#endif
+#endif  // defined(__SIZEOF_FLOAT128__) && !NEX_COMPILER_IS_MSVC
 
 /**
  * @def NEX_NOINLINE
@@ -106,9 +133,9 @@
     #define NEX_NOINLINE __attribute__((noinline))
 #elif NEX_COMPILER_IS_MSVC
     #define NEX_NOINLINE __declspec(noinline)
-#else
+#else  // Compiler does not support noinline attribute
     #define NEX_NOINLINE
-#endif
+#endif  // NEX_NOINLINE
 
 /**
  * @def NEX_ALWAYS_INLINE
@@ -128,9 +155,9 @@
     #define NEX_ALWAYS_INLINE inline __attribute__((__always_inline__))
 #elif NEX_COMPILER_IS_MSVC && defined(NDEBUG)
     #define NEX_ALWAYS_INLINE __forceinline
-#else
+#else  // Compiler does not support always_inline attribute or we are in debug mode
     #define NEX_ALWAYS_INLINE inline
-#endif
+#endif  // NEX_ALWAYS_INLINE
 
 /**
  * @def NEX_NODISCARD
@@ -140,22 +167,25 @@
  * Expands to [[nodiscard]] when C++17 or later is available, otherwise empty.
  * This attribute encourages callers to use function return values.
  */
-#ifndef NEX_NODISCARD
-    #ifndef NEX_HAS_NODISCARD
-        #ifndef __has_cpp_attribute
-            #define NEX_HAS_NODISCARD 0
-        #elif __has_cpp_attribute(nodiscard) >= 201603L // TRANSITION, VSO#939899 (need toolset update)
-            #define NEX_HAS_NODISCARD 1
-        #else
-            #define NEX_HAS_NODISCARD 0
-        #endif
-    #endif // !defined NEX_HAS_NODISCARD
-    #if NEX_HAS_NODISCARD
-        #define NEX_NODISCARD [[nodiscard]]
-    #else // ^^^ CAN HAZ [[nodiscard]] / NO CAN HAZ [[nodiscard]] vvv
-        #define NEX_NODISCARD
-    #endif // NEX_HAS_NODISCARD
-#endif // !defined NEX_NODISCARD
+#ifndef NEX_HAS_NODISCARD
+    #if NEX_HAS_CPP_ATTRIBUTE(nodiscard) >= NEX_CXX17_VER_NUMBER
+        #define NEX_HAS_NODISCARD 1
+    #else // Compiler does not support [[nodiscard]] or we are in C++14 or earlier
+        #define NEX_HAS_NODISCARD 0
+    #endif  // NEX_HAS_NODISCARD
+#endif // !defined NEX_HAS_NODISCARD
+
+#if NEX_HAS_NODISCARD
+    #define NEX_NODISCARD [[nodiscard]]
+#elif NEX_COMPILER_IS_GCC
+    #define NEX_NODISCARD __attribute__((warn_unused_result))
+#elif NEX_COMPILER_IS_MSVC && NEX_COMPILER_MSVC >= 1700
+    #define NEX_NODISCARD _Check_return_
+#endif // NEX_HAS_NODISCARD
+
+#if !defined(NEX_NODISCARD)
+    #define NEX_NODISCARD   // No-op if NODISCARD is not supported
+#endif // !defined(NEX_NODISCARD)
 
 /**
  * @def NEX_ALIGNAS(byte_alignment)
@@ -183,11 +213,13 @@
  * @note Some attributes (like visibility for exported classes) must be specified
  *       before the class definition, making `alignas` unusable in those cases.
  */
-#if NEX_COMPILER_IS_MSVC
+#if NEX_CXX_VER >= NEX_CXX11_VER_NUMBER
+    #define NEX_ALIGNAS(byte_alignment) alignas(byte_alignment)
+#elif NEX_COMPILER_IS_MSVC
     #define NEX_ALIGNAS(byte_alignment) __declspec(align(byte_alignment))
 #elif NEX_COMPILER_IS_GCC
     #define NEX_ALIGNAS(byte_alignment) __attribute__((aligned(byte_alignment)))
-#endif
+#endif  // NEX_ALIGNAS
 
 /**
  * @def NEX_CONSTEXPR20
@@ -214,9 +246,9 @@
  */
 #if NEX_HAS_CXX20
     #define NEX_CONSTEXPR20 constexpr
-#else
+#else  // Compiler does not support C++20 constexpr
     #define NEX_CONSTEXPR20
-#endif
+#endif  // NEX_CONSTEXPR20
 
 /**
  * @def NEX_NO_UNIQUE_ADDRESS
@@ -242,9 +274,9 @@
  */
 #if NEX_HAS_CPP_ATTRIBUTE(no_unique_address)
     #define NEX_NO_UNIQUE_ADDRESS [[no_unique_address]]
-#else
+#else  // Compiler does not support [[no_unique_address]]
     #define NEX_NO_UNIQUE_ADDRESS
-#endif
+#endif  // NEX_NO_UNIQUE_ADDRESS
 
 /**
  * @def NEX_NORETURN
@@ -261,9 +293,9 @@
     #define NEX_NORETURN __declspec(noreturn)
 #elif NEX_COMPILER_IS_GCC
     #define NEX_NORETURN __attribute__((noreturn))
-#else
+#else  // Compiler does not support noreturn attribute
     #define NEX_NORETURN
-#endif
+#endif  // NEX_NORETURN
 
 /**
  * @def NEX_DEPRECATED(msg)
@@ -286,15 +318,41 @@
     #define NEX_DEPRECATED(msg) __declspec(deprecated(msg))
 #elif NEX_COMPILER_IS_GCC
     #define NEX_DEPRECATED(msg) __attribute__((deprecated(msg)))
-#else
+#else  // Compiler does not support deprecation attribute
     #define NEX_DEPRECATED(msg)
-#endif
+#endif  // NEX_DEPRECATED
 
 // A version of NEX_DEPRECATED that does not require a message (for compilers that support it)
-#define NEX_DEPRECATED_NO_MSG() NEX_DEPRECATED("")
+#if NEX_HAS_CPP_ATTRIBUTE(deprecated) >= NEX_CXX14_VER_NUMBER
+    #define NEX_DEPRECATED_NO_MSG() [[deprecated]]
+#else // Compiler does not support [[deprecated]] without a message, or we are in C++11 or earlier
+    #define NEX_DEPRECATED_NO_MSG() NEX_DEPRECATED("")
+#endif  // NEX_DEPRECATED_NO_MSG
 
-// Mark a function as no-opt
-#define NEX_NO_OPT {/* no-opt */}
+/**
+ * @def NEX_MAYBE_UNUSED
+ * @brief Mark a function, variable, or parameter as maybe unused to suppress compiler warnings
+ * 
+ * @details
+ * This macro can be used to indicate that a function, variable, or parameter may be intentionally unused, which can help 
+ * suppress compiler warnings about unused code. The macro expands to the appropriate compiler-specific attribute based on 
+ * the detected compiler. If the compiler does not support a maybe_unused attribute, the macro expands to nothing, allowing 
+ * the code to compile without errors.
+ * 
+ * Example usage:
+ * @code
+ *   NEX_MAYBE_UNUSED void HelperFunction() { ... }
+ *   void MainFunction(int param) {
+ *       NEX_MAYBE_UNUSED int unusedVar = 42;
+ *       // ...
+ *   }
+ * @endcode
+ */
+#if NEX_HAS_CPP_ATTRIBUTE(maybe_unused) >= NEX_CXX17_VER_NUMBER
+    #define NEX_MAYBE_UNUSED [[maybe_unused]]
+#else  // Compiler does not support [[maybe_unused]] or we are in C++14 or earlier
+    #define NEX_MAYBE_UNUSED
+#endif  // NEX_MAYBE_UNUSED
 
 // Mark a parameter as maybe unused to avoid compiler warnings
 #define NEX_UNUSED_PARAM(param) (void)(param)
@@ -306,10 +364,13 @@
 #define NEX_UNUSED(...) \
     (void)(sizeof((int[]){(NEX_UNUSED_VAR(__VA_ARGS__), 0)...}));
 
+// Mark a function as no-operations (i.e., it does nothing)
+#define NEX_NO_OP {/* no-op */}
+
 // Mark a function as pure virtual (i.e., it must be overridden by derived classes)
 #define NEX_PURE_VIRTUAL(func) \
     virtual func = 0
 
-// Mark a function as a no-opt virtual (i.e., it must be overridden by derived classes, and the base implementation does nothing)
-#define NEX_NO_OPT_VIRTUAL(func) \
-    virtual func { NEX_NO_OPT; }
+// Mark a function as a no-op virtual (i.e., it must be overridden by derived classes, and the base implementation does nothing)
+#define NEX_NO_OP_VIRTUAL(func) \
+    virtual func { NEX_NO_OP; }

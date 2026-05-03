@@ -18,6 +18,16 @@ ByteSpan::const_reference ByteSpan::at(size_type pos) const {
     return data_[pos];
 }
 
+////// Conversion methods -----------------------------
+
+// Convert to ArrayList<uint8>
+ArrayList<ByteSpan::value_type> ByteSpan::toArrayList() const {
+    if (empty()) {
+        return ArrayList<value_type>();
+    }
+    return ArrayList<value_type>(data_, data_ + size_);
+}
+
 ////// Modifiers --------------------------------------------------
 
 // Remove prefix (first n bytes)
@@ -39,20 +49,22 @@ void ByteSpan::swap(ByteSpan& other) noexcept {
     NEX_STD swap(size_, other.size_);
 }
 
-////// Operations --------------------------------------------------
+////// Subspan operations -----------------------------
 
 // Copy bytes to destination
 ByteSpan::size_type ByteSpan::copy(pointer dest, size_type count, size_type pos /* = 0 */) const {
     NEX_ASSERT_MSG(pos >= 0 && pos <= size_, "Position out of range");
     size_type rlen = (NEX_STD min)(count, size_ - pos);
+    if (rlen == 0) return 0;
     NEX_STD memcpy(dest, data_ + pos, rlen);
     return rlen;
 }
 
 // Get subview
-ByteSpan ByteSpan::substr(size_type pos /* = 0 */, size_type count /* = npos */) const {
+ByteSpan ByteSpan::subspan(size_type pos /* = 0 */, size_type count /* = npos */) const {
     NEX_ASSERT_MSG(pos >= 0 && pos <= size_, "Position out of range");
     size_type rlen = (NEX_STD min)(count, size_ - pos);
+    if (rlen == 0) return ByteSpan();
     return ByteSpan(data_ + pos, rlen);
 }
 
@@ -76,15 +88,7 @@ ByteSpan ByteSpan::mid(size_type start, size_type count /* = npos */) const {
     return ByteSpan(data_ + start, rlen);
 }
 
-// Compare with another view
-int32 ByteSpan::compare(const ByteSpan& other) const noexcept {
-    size_type rlen = (NEX_STD min)(size_, other.size_);
-    int32 result = NEX_STD memcmp(data_, other.data_, rlen);
-    if (result != 0) return result;
-    if (size_ < other.size_) return -1;
-    if (size_ > other.size_) return 1;
-    return 0;
-}
+////// Search operations -----------------------------
 
 // Find first occurrence of byte
 ByteSpan::size_type 
@@ -195,6 +199,7 @@ ByteSpan::findLastNotOf(ByteSpan other, ByteSpan::size_type pos /* = npos */) co
 
 // Check if view starts with prefix
 bool ByteSpan::startsWith(ByteSpan prefix) const noexcept {
+    if (prefix.empty()) return true;
     return size_ >= prefix.size_ &&
             NEX_STD memcmp(data_, prefix.data_, prefix.size_) == 0;
 }
@@ -206,6 +211,7 @@ bool ByteSpan::startsWith(value_type byte) const noexcept {
 
 // Check if view ends with suffix
 bool ByteSpan::endsWith(ByteSpan suffix) const noexcept {
+    if (suffix.empty()) return true;
     return size_ >= suffix.size_ &&
             NEX_STD memcmp(data_ + size_ - suffix.size_, suffix.data_, suffix.size_) == 0;
 }
@@ -232,6 +238,20 @@ ByteSpan::size_type ByteSpan::count(value_type byte) const noexcept {
         if (data_[i] == byte) ++cnt;
     }
     return cnt;
+}
+
+////// Comparison methods and operators -----------------------------
+
+// Compare with another view
+int32 ByteSpan::compare(const ByteSpan& other) const noexcept {
+    size_type rlen = (NEX_STD min)(size_, other.size_);
+    if (rlen > 0) {
+        int32 result = NEX_STD memcmp(data_, other.data_, rlen);
+        if (result != 0) return result;
+    }
+    if (size_ < other.size_) return -1;
+    if (size_ > other.size_) return 1;
+    return 0;
 }
 
 NEX_CORE_NAMESPACE_END

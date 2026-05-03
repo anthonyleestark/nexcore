@@ -46,10 +46,14 @@ namespace {
     }
 } // namespace
 
+// ============================================================================
+// ByteArray implementation
+// ============================================================================
+
 ////// Constructors --------------------------------------------------
 
 // Construct from C-style array
-ByteArray::ByteArray(const_byte_ptr data, usize size) {
+ByteArray::ByteArray(const_pointer data, size_type size) {
     if (data && size > 0) {
         buffer_.assign(data, data + size);
     }
@@ -62,7 +66,7 @@ ByteArray::ByteArray(const StdString& str) {
 }
 
 // Construct from C-string (treat as binary data)
-ByteArray::ByteArray(const_char_ptr str, usize len) {
+ByteArray::ByteArray(const_char_ptr str, size_type len) {
     if (str) {
         // If length is not provided, calculate it
         if (len == 0) {
@@ -81,7 +85,7 @@ ByteArray ByteArray::fromByteSpan(ByteSpan view) {
 }
 
 // Create from raw data
-ByteArray ByteArray::fromRawData(const_void_ptr data, usize size) {
+ByteArray ByteArray::fromRawData(const_void_ptr data, size_type size) {
     if (!data || size == 0) return ByteArray();
     const_byte_ptr bytes = static_cast<const_byte_ptr>(data);
     return ByteArray(bytes, size);
@@ -186,9 +190,9 @@ ByteArray ByteArray::fromBase64(const StdString& base64String) {
 }
 
 // Create from ArrayList<uint8>
-ByteArray ByteArray::fromArrayList(const ArrayList<uint8>& vec) {
+ByteArray ByteArray::fromArrayList(const ArrayList<value_type>& vec) {
     ByteArray result;
-    for (usize i = 0; i < vec.size(); ++i) {
+    for (size_type i = 0; i < vec.size(); ++i) {
         result.appendByte(vec[i]);
     }
     return result;
@@ -268,8 +272,16 @@ ByteArray& ByteArray::append(const ByteArray& other) {
     return *this;
 }
 
+// Append bytes from a ByteSpan
+ByteArray& ByteArray::append(ByteSpan view) {
+    if (view.empty()) return *this;
+    ArrayList<value_type> bytes(view.begin(), view.end());
+    buffer_.insert(buffer_.end(), bytes.begin(), bytes.end());
+    return *this;
+}
+
 // Append raw data
-ByteArray& ByteArray::append(const_byte_ptr data, usize size) {
+ByteArray& ByteArray::append(const_pointer data, size_type size) {
     if (data && size > 0) {
         buffer_.insert(buffer_.end(), data, data + size);
     }
@@ -284,8 +296,16 @@ ByteArray& ByteArray::prepend(const ByteArray& other) {
     return *this;
 }
 
+// Prepend bytes from a ByteSpan
+ByteArray& ByteArray::prepend(ByteSpan view) {
+    if (view.empty()) return *this;
+    ArrayList<value_type> bytes(view.begin(), view.end());
+    buffer_.insert(buffer_.begin(), bytes.begin(), bytes.end());
+    return *this;
+}
+
 // Prepend raw data
-ByteArray& ByteArray::prepend(const_byte_ptr data, usize size) {
+ByteArray& ByteArray::prepend(const_pointer data, size_type size) {
     if (data && size > 0) {
         buffer_.insert(buffer_.begin(), data, data + size);
     }
@@ -293,28 +313,37 @@ ByteArray& ByteArray::prepend(const_byte_ptr data, usize size) {
 }
 
 // Remove all occurrences of a byte
-ByteArray& ByteArray::remove(uint8 byte) {
+ByteArray& ByteArray::remove(value_type byte) {
     buffer_.erase(NEX_STD remove(buffer_.begin(), buffer_.end(), byte), buffer_.end());
     return *this;
 }
 
 // Remove bytes at position
-int32 ByteArray::removeAt(usize pos, usize count /* = 1 */) {
+int32 ByteArray::removeAt(size_type pos, size_type count /* = 1 */) {
     if (pos >= buffer_.size()) return static_cast<int32>(buffer_.size());
-    usize actualCount = NEX_STD min(count, buffer_.size() - pos);
+    size_type actualCount = NEX_STD min(count, buffer_.size() - pos);
     buffer_.erase(buffer_.begin() + pos, buffer_.begin() + pos + actualCount);
     return static_cast<int32>(buffer_.size());
 }
 
 // Insert bytes at position (from another ByteArray)
-ByteArray& ByteArray::insert(usize pos, const ByteArray& other) {
+ByteArray& ByteArray::insert(size_type pos, const ByteArray& other) {
     if (pos > buffer_.size()) pos = buffer_.size();
     buffer_.insert(buffer_.begin() + pos, other.buffer_.begin(), other.buffer_.end());
     return *this;
 }
 
+// Insert bytes at position (from a ByteSpan)
+ByteArray& ByteArray::insert(size_type pos, ByteSpan view) {
+    if (pos > buffer_.size()) pos = buffer_.size();
+    if (view.empty()) return *this;
+    ArrayList<value_type> bytes(view.begin(), view.end());
+    buffer_.insert(buffer_.begin() + pos, bytes.begin(), bytes.end());
+    return *this;
+}
+
 // Insert raw data at position
-ByteArray& ByteArray::insert(usize pos, const_byte_ptr data, usize size) {
+ByteArray& ByteArray::insert(size_type pos, const_pointer data, size_type size) {
     if (pos > buffer_.size()) pos = buffer_.size();
     if (data && size > 0) {
         buffer_.insert(buffer_.begin() + pos, data, data + size);
@@ -323,25 +352,37 @@ ByteArray& ByteArray::insert(usize pos, const_byte_ptr data, usize size) {
 }
 
 // Insert single byte at position
-ByteArray& ByteArray::insert(usize pos, uint8 byte) {
+ByteArray& ByteArray::insert(size_type pos, value_type byte) {
     if (pos > buffer_.size()) pos = buffer_.size();
     buffer_.insert(buffer_.begin() + pos, byte);
     return *this;
 }
 
 // Replace bytes at position with another ByteArray
-ByteArray& ByteArray::replace(usize pos, usize count, const ByteArray& other) {
+ByteArray& ByteArray::replace(size_type pos, size_type count, const ByteArray& other) {
     if (pos >= buffer_.size()) return *this;
-    usize actualCount = NEX_STD min(count, buffer_.size() - pos);
+    size_type actualCount = NEX_STD min(count, buffer_.size() - pos);
     buffer_.erase(buffer_.begin() + pos, buffer_.begin() + pos + actualCount);
     buffer_.insert(buffer_.begin() + pos, other.buffer_.begin(), other.buffer_.end());
     return *this;
 }
 
-// Replace bytes at position with raw data
-ByteArray& ByteArray::replace(usize pos, usize count, const_byte_ptr data, usize size) {
+// Replace bytes at position with bytes from a ByteSpan
+ByteArray& ByteArray::replace(size_type pos, size_type count, ByteSpan view) {
     if (pos >= buffer_.size()) return *this;
-    usize actualCount = NEX_STD min(count, buffer_.size() - pos);
+    size_type actualCount = NEX_STD min(count, buffer_.size() - pos);
+    buffer_.erase(buffer_.begin() + pos, buffer_.begin() + pos + actualCount);
+    if (!view.empty()) {
+        ArrayList<value_type> bytes(view.begin(), view.end());
+        buffer_.insert(buffer_.begin() + pos, bytes.begin(), bytes.end());
+    }
+    return *this;
+}
+
+// Replace bytes at position with raw data
+ByteArray& ByteArray::replace(size_type pos, size_type count, const_pointer data, size_type size) {
+    if (pos >= buffer_.size()) return *this;
+    size_type actualCount = NEX_STD min(count, buffer_.size() - pos);
     buffer_.erase(buffer_.begin() + pos, buffer_.begin() + pos + actualCount);
     if (data && size > 0) {
         buffer_.insert(buffer_.begin() + pos, data, data + size);
@@ -352,45 +393,43 @@ ByteArray& ByteArray::replace(usize pos, usize count, const_byte_ptr data, usize
 ////// Subarray operations --------------------------------------------------
 
 // Get left part of the array
-ByteArray ByteArray::left(usize count) const {
+ByteArray ByteArray::left(size_type count) const {
     if (count == 0) return ByteArray();
     if (count >= buffer_.size()) return ByteArray(buffer_.data(), buffer_.size());
     return ByteArray(buffer_.data(), count);
 }
 
 // Get right part of the array
-ByteArray ByteArray::right(usize count) const {
+ByteArray ByteArray::right(size_type count) const {
     if (count == 0) return ByteArray();
     if (count >= buffer_.size()) return ByteArray(buffer_.data(), buffer_.size());
-    usize start = buffer_.size() - count;
+    size_type start = buffer_.size() - count;
     return ByteArray(buffer_.data() + start, count);
 }
 
 // Get middle part of the array
-ByteArray ByteArray::mid(usize start, usize count /* = NEX_STD numeric_limits<usize>::max() */) const {
+ByteArray ByteArray::mid(size_type start, size_type count /* = npos */) const {
     if (start >= buffer_.size()) return ByteArray();
-    usize maxCount = buffer_.size() - start;
-    usize actualCount = (count == NEX_STD numeric_limits<usize>::max()) ? maxCount : NEX_STD min(count, maxCount);
+    size_type maxCount = buffer_.size() - start;
+    size_type actualCount = (count == npos) ? maxCount : NEX_STD min(count, maxCount);
     return ByteArray(buffer_.data() + start, actualCount);
 }
 
 ////// Search operations --------------------------------------------------
 
 // Find first occurrence of byte
-usize ByteArray::indexOf(uint8 byte, usize from /* = 0 */) const {
-    static constexpr usize npos = NEX_STD numeric_limits<usize>::max();
+ByteArray::size_type ByteArray::indexOf(value_type byte, size_type from /* = 0 */) const {
     if (from >= buffer_.size()) return npos;
     auto it = NEX_STD find(buffer_.begin() + from, buffer_.end(), byte);
-    return (it != buffer_.end()) ? static_cast<usize>(it - buffer_.begin()) : npos;
+    return (it != buffer_.end()) ? static_cast<size_type>(it - buffer_.begin()) : npos;
 }
 
 // Find last occurrence of byte
-usize ByteArray::lastIndexOf(uint8 byte, usize from /* = NEX_STD numeric_limits<usize>::max() */) const {
-    static constexpr usize npos = NEX_STD numeric_limits<usize>::max();
+ByteArray::size_type ByteArray::lastIndexOf(value_type byte, size_type from /* = npos */) const {
     if (buffer_.empty()) return npos;
     if (from >= buffer_.size()) from = buffer_.size() - 1;
 
-    for (usize i = from + 1; i > 0; --i) {
+    for (size_type i = from + 1; i > 0; --i) {
         if (buffer_[i - 1] == byte) {
             return i - 1;
         }
@@ -399,41 +438,55 @@ usize ByteArray::lastIndexOf(uint8 byte, usize from /* = NEX_STD numeric_limits<
 }
 
 // Find first occurrence of subarray
-usize ByteArray::indexOf(const ByteArray& other, usize from /* = 0 */) const {
-    static constexpr usize npos = NEX_STD numeric_limits<usize>::max();
-    if (other.empty() || from >= buffer_.size()) return npos;
-    if (other.size() > buffer_.size() - from) return npos;
+ByteArray::size_type ByteArray::indexOf(const ByteArray& other, size_type from /* = 0 */) const {
+    return indexOf(other.view(), from);
+}
 
-    auto it = NEX_STD search(buffer_.begin() + from, buffer_.end(),
-                            other.buffer_.begin(), other.buffer_.end());
-    return (it != buffer_.end()) ? static_cast<usize>(it - buffer_.begin()) : npos;
+// Find first occurrence of bytes from a ByteSpan
+ByteArray::size_type ByteArray::indexOf(ByteSpan view, size_type from /* = 0 */) const {
+    if (view.empty() || from >= buffer_.size()) return npos;
+    if (view.size() > buffer_.size() - from) return npos;
+
+    auto it = NEX_STD search(buffer_.begin() + from, buffer_.end(), view.begin(), view.end());
+    return (it != buffer_.end()) ? static_cast<size_type>(it - buffer_.begin()) : npos;
 }
     
 // Check if array contains byte
-bool ByteArray::contains(uint8 byte) const {
+bool ByteArray::contains(value_type byte) const {
     return NEX_STD find(buffer_.begin(), buffer_.end(), byte) != buffer_.end();
 }
 
 // Check if array contains subarray
 bool ByteArray::contains(const ByteArray& other) const {
-    static constexpr usize npos = NEX_STD numeric_limits<usize>::max();
     return indexOf(other) != npos;
 }
 
+// Check if array contains bytes from a ByteSpan
+bool ByteArray::contains(ByteSpan view) const {
+    return indexOf(view) != npos;
+}
+
 // Count occurrences of byte
-usize ByteArray::count(uint8 byte) const {
-    return static_cast<usize>(NEX_STD count(buffer_.begin(), buffer_.end(), byte));
+ByteArray::size_type ByteArray::count(value_type byte) const {
+    return static_cast<size_type>(NEX_STD count(buffer_.begin(), buffer_.end(), byte));
 }
 
 ////// Comparison operations --------------------------------------------------
 
 // Compare with another ByteArray
 int32 ByteArray::compare(const ByteArray& other) const noexcept {
-    usize minSize = NEX_STD min(buffer_.size(), other.buffer_.size());
-    int32 result = NEX_STD memcmp(buffer_.data(), other.buffer_.data(), minSize);
-    if (result != 0) return result;
-    if (buffer_.size() < other.buffer_.size()) return -1;
-    if (buffer_.size() > other.buffer_.size()) return 1;
+    return compare(other.view());
+}
+
+// Compare with bytes from a ByteSpan
+int32 ByteArray::compare(ByteSpan view) const noexcept {
+    size_type minSize = NEX_STD min(buffer_.size(), view.size());
+    if (minSize > 0) {
+        int32 result = NEX_STD memcmp(buffer_.data(), view.data(), minSize);
+        if (result != 0) return result;
+    }
+    if (buffer_.size() < view.size()) return -1;
+    if (buffer_.size() > view.size()) return 1;
     return 0;
 }
 
@@ -453,15 +506,15 @@ ByteArray ByteArray::operator+(const ByteArray& other) const {
 ////// Utility operations --------------------------------------------------
 
 // Fill array with value
-ByteArray& ByteArray::fill(uint8 value) {
+ByteArray& ByteArray::fill(value_type value) {
     NEX_STD fill(buffer_.begin(), buffer_.end(), value);
     return *this;
 }
 
 // Fill array with value starting from position for count bytes
-ByteArray& ByteArray::fill(uint8 value, usize start, usize count) {
+ByteArray& ByteArray::fill(value_type value, size_type start, size_type count) {
     if (start >= buffer_.size()) return *this;
-    usize end = NEX_STD min(start + count, buffer_.size());
+    size_type end = NEX_STD min(start + count, buffer_.size());
     NEX_STD fill(buffer_.begin() + start, buffer_.begin() + end, value);
     return *this;
 }

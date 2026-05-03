@@ -5,6 +5,7 @@
 
 #pragma once
 
+#include <functional>
 #include <limits>
 #include <iterator>
 
@@ -17,27 +18,25 @@ NEX_CORE_NAMESPACE_BEGIN
 
 /**
  * @class ByteSpan
- * @brief Non-owning view into binary data (bytes), similar to std::span<uint8>
+ * @brief Read-only non-owning view into contiguous byte data.
  * 
- * This class provides a lightweight, non-owning view into binary data.
- * It stores a pointer to the data and its length, without owning the data.
+ * This class provides a lightweight view over binary data. It stores only a pointer
+ * and a length; it does not allocate, copy, own, or extend the lifetime of the data.
  * 
  * ByteSpan supports:
- * - Construction from ByteArray, ArrayList<uint8>, uint8*, and other data sources
+ * - Construction from raw byte data, void pointers, and ArrayList<uint8>
  * - Subarray operations (substr, left, right, mid)
- * - Byte access and iteration
+ * - Read-only byte access and iteration
  * - Comparison operations
- * - Conversion to ByteArray when needed
+ * - Copying into caller-provided writable storage
  * 
  * @note ByteSpan does not own the underlying data. The user must ensure
  *       that the data remains valid for the lifetime of the ByteSpan.
  * 
- * @warning Modifying the underlying data through a ByteSpan is not allowed and may lead to undefined behavior. 
- *          Use ByteArray for mutable byte arrays.
+ * @warning ByteSpan intentionally exposes read-only access. Use ByteArray when ownership
+ *          or mutation is required.
  * 
- * @see ByteArray for an owning byte array class that supports mutation and ownership semantics.
- * @see Span<uint8> for a standard library alternative, but note that std::span is not available in C++17 
- *      and may not be suitable for all use cases.
+ * @see ByteArray for an owning byte array class that can create and consume ByteSpan values.
  */
 class NEX_EXPORT ByteSpan {
 public:
@@ -63,7 +62,7 @@ private:
 
 public:
     // Special value representing "not found" for search operations
-    static constexpr size_type npos = static_cast<size_type>(-1);
+    static constexpr size_type npos = NEX_STD numeric_limits<size_type>::max();
 
 public:
     ////// Constructors -----------------------------
@@ -101,10 +100,10 @@ public:
     constexpr const_iterator cbegin() const noexcept { return data_; }
 
     // Get iterator to the end of the view
-    constexpr const_iterator end() const noexcept { return data_ + size_; }
+    constexpr const_iterator end() const noexcept { return data_ ? data_ + size_ : data_; }
 
     // Get const iterator to the end of the view
-    constexpr const_iterator cend() const noexcept { return data_ + size_; }
+    constexpr const_iterator cend() const noexcept { return end(); }
 
     // Get reverse iterator to the beginning of the reversed view
     constexpr const_reverse_iterator rbegin() const noexcept {
@@ -165,6 +164,9 @@ public:
     // Get length of the view (same as size)
     constexpr size_type length() const noexcept { return size_; }
 
+    // Get size in bytes
+    constexpr size_type sizeBytes() const noexcept { return size_ * sizeof(value_type); }
+
     // Check if view is empty
     constexpr bool empty() const noexcept { return size_ == 0; }
 
@@ -172,6 +174,11 @@ public:
     constexpr size_type maxSize() const noexcept {
         return (NEX_STD numeric_limits<size_type>::max() / sizeof(value_type)) - 1;
     }
+
+    ////// Conversion methods -----------------------------
+
+    // Convert to ArrayList<uint8>
+    ArrayList<value_type> toArrayList() const;
 
     ////// Modifiers -----------------------------
 
@@ -184,13 +191,13 @@ public:
     // Swap with another view
     void swap(ByteSpan& other) noexcept;
 
-    ////// Operations -----------------------------
+    ////// Subspan operations -----------------------------
 
     // Copy bytes to destination
     size_type copy(pointer dest, size_type count, size_type pos = 0) const;
 
     // Get subview
-    ByteSpan substr(size_type pos = 0, size_type count = npos) const;
+    ByteSpan subspan(size_type pos = 0, size_type count = npos) const;
 
     // Get the left part of the view
     ByteSpan left(size_type count) const noexcept;
@@ -201,13 +208,7 @@ public:
     // Get the middle part of the view
     ByteSpan mid(size_type start, size_type count = npos) const;
 
-    // Compare with another view
-    int32 compare(const ByteSpan& other) const noexcept;
-
-    // Compare substring with another view
-    int32 compare(size_type pos, size_type count, const ByteSpan& other) const {
-        return substr(pos, count).compare(other);
-    }
+    ////// Search operations -----------------------------
 
     // Find first occurrence of byte
     size_type indexOf(value_type byte, size_type pos = 0) const noexcept;
@@ -254,14 +255,15 @@ public:
     // Count occurrences of byte
     size_type count(value_type byte) const noexcept;
 
-    ////// Conversion methods -----------------------------
+    ////// Comparison methods and operators -----------------------------
 
-    // Convert to ArrayList<uint8>
-    ArrayList<value_type> toArrayList() const {
-        return ArrayList<value_type>(data_, data_ + size_);
+    // Compare with another view
+    int32 compare(const ByteSpan& other) const noexcept;
+
+    // Compare subspan with another view
+    int32 compare(size_type pos, size_type count, const ByteSpan& other) const {
+        return subspan(pos, count).compare(other);
     }
-
-    ////// Comparison operators -----------------------------
 
     // Equality operator
     friend bool operator==(ByteSpan lhs, ByteSpan rhs) noexcept {
@@ -295,7 +297,7 @@ public:
 };
 
 // Hash support (for use in hash-based containers)
-struct ByteArrayViewHash {
+struct ByteSpanHash {
     usize operator()(ByteSpan view) const noexcept {
         // Simple hash function
         usize hash = 0;
@@ -314,7 +316,7 @@ NEX_STD_BEGIN
 template<>
 struct hash<NEX_PREPEND_CORE_NAMESPACE(ByteSpan)> {
     size_t operator()(NEX_PREPEND_CORE_NAMESPACE(ByteSpan) view) const noexcept {
-        return NEX_PREPEND_CORE_NAMESPACE(ByteArrayViewHash){}(view);
+        return NEX_PREPEND_CORE_NAMESPACE(ByteSpanHash){}(view);
     }
 };
 

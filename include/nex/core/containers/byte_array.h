@@ -26,7 +26,7 @@ NEX_CORE_NAMESPACE_BEGIN
  * It uses ArrayList<uint8> as the internal buffer to store bytes.
  * 
  * ByteArray supports:
- * - Construction from various data sources (arrays, vectors, strings, etc.)
+ * - Construction from owning data sources and ByteSpan views
  * - Append, remove, and modify operations
  * - Subarray extraction (left, right, mid)
  * - Conversion to/from various formats
@@ -35,7 +35,7 @@ NEX_CORE_NAMESPACE_BEGIN
  * @note ByteArray owns its data and manages memory automatically. It provides mutable access to the underlying bytes.
  *       For non-owning views into byte data, consider using ByteSpan.
  * 
- * @see ByteSpan for a non-owning view into byte data that does not support mutation or ownership semantics.
+ * @see ByteSpan for a read-only non-owning view into byte data.
  * @see ArrayList<uint8> for the underlying container used by ByteArray.
  */
 class NEX_EXPORT ByteArray {
@@ -76,7 +76,7 @@ public:
     explicit ByteArray(size_type size, value_type fillValue) 
         : buffer_(size, fillValue) {}
 
-    // Construct from ByteSpan
+    // Construct from ByteSpan by copying the viewed bytes
     ByteArray(ByteSpan view) 
         : buffer_(view.begin(), view.end()) {}
 
@@ -120,7 +120,7 @@ public:
 
     ////// Factory methods -----------------------------
 
-    // Create from ByteSpan
+    // Create from ByteSpan by copying the viewed bytes
     static ByteArray fromByteSpan(ByteSpan view);
 
     // Create from raw data
@@ -333,6 +333,9 @@ public:
     // Append another ByteArray
     ByteArray& append(const ByteArray& other);
 
+    // Append bytes from a ByteSpan
+    ByteArray& append(ByteSpan view);
+
     // Append raw data
     ByteArray& append(const_pointer data, size_type size);
 
@@ -355,6 +358,9 @@ public:
     // Prepend another ByteArray
     ByteArray& prepend(const ByteArray& other);
 
+    // Prepend bytes from a ByteSpan
+    ByteArray& prepend(ByteSpan view);
+
     // Prepend raw data
     ByteArray& prepend(const_pointer data, size_type size);
 
@@ -367,6 +373,9 @@ public:
     // Insert bytes at position (from another ByteArray)
     ByteArray& insert(size_type pos, const ByteArray& other);
 
+    // Insert bytes at position (from a ByteSpan)
+    ByteArray& insert(size_type pos, ByteSpan view);
+
     // Insert raw data at position
     ByteArray& insert(size_type pos, const_pointer data, size_type size);
 
@@ -375,6 +384,9 @@ public:
 
     // Replace bytes at position with another ByteArray
     ByteArray& replace(size_type pos, size_type count, const ByteArray& other);
+
+    // Replace bytes at position with bytes from a ByteSpan
+    ByteArray& replace(size_type pos, size_type count, ByteSpan view);
 
     // Replace bytes at position with raw data
     ByteArray& replace(size_type pos, size_type count, const_pointer data, size_type size);
@@ -401,11 +413,17 @@ public:
     // Find first occurrence of subarray
     size_type indexOf(const ByteArray& other, size_type from = 0) const;
 
+    // Find first occurrence of bytes from a ByteSpan
+    size_type indexOf(ByteSpan view, size_type from = 0) const;
+
     // Check if array contains byte
     bool contains(value_type byte) const;
 
     // Check if array contains subarray
     bool contains(const ByteArray& other) const;
+
+    // Check if array contains bytes from a ByteSpan
+    bool contains(ByteSpan view) const;
 
     // Count occurrences of byte
     size_type count(value_type byte) const;
@@ -414,6 +432,9 @@ public:
 
     // Compare with another ByteArray
     int32 compare(const ByteArray& other) const noexcept;
+
+    // Compare with bytes from a ByteSpan
+    int32 compare(ByteSpan view) const noexcept;
 
     // Equality operator
     bool operator==(const ByteArray& other) const noexcept;

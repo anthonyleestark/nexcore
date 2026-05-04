@@ -28,7 +28,7 @@ NEX_CORE_NAMESPACE_BEGIN
  * SmallVec<T, N> behaves like a Vec<T> (std::vector<T>) but avoids heap allocation for up to
  * N elements by keeping them directly inside the object (the "inline buffer"). When the number
  * of elements exceeds N the container transparently switches to heap storage and grows with the
- * same amortized O(1) push_back strategy as Vec.
+ * same amortized O(1) pushBack strategy as Vec.
  *
  * Optimisation characteristics:
  * - **Zero heap allocation** for ≤ N elements — creation, destruction, and copy/move are all
@@ -46,7 +46,7 @@ NEX_CORE_NAMESPACE_BEGIN
  * @note SmallVec is not allocator-aware. Heap storage uses the global operator new/delete.
  *
  * @note Iterators and pointers into a SmallVec are invalidated by any operation that changes the
- *       size or reallocates the buffer (push_back when size == capacity, insert, resize, reserve).
+ *       size or reallocates the buffer (pushBack when size == capacity, insert, resize, reserve).
  *       This matches the std::vector contract.
  *
  * @see Vec for a pure heap-based dynamic array.
@@ -60,10 +60,10 @@ public:
     using value_type = T;
     using size_type = usize;
     using difference_type = isize;
-    using reference = T&;
-    using const_reference = const T&;
-    using pointer = T*;
-    using const_pointer = const T*;
+    using reference = value_type&;
+    using const_reference = const value_type&;
+    using pointer = value_type*;
+    using const_pointer = const value_type*;
     using iterator = pointer;
     using const_iterator = const_pointer;
     using reverse_iterator = NEX_STD reverse_iterator<iterator>;
@@ -77,7 +77,7 @@ private:
     ////// Inline buffer -------------------------------------------------
 
     // Raw aligned storage that can hold N objects of type T without constructing them.
-    NEX_ALIGNAS(T) NEX_STD byte inlineBuffer_[sizeof(T) * N];
+    NEX_ALIGNAS(value_type) NEX_STD byte inlineBuffer_[sizeof(value_type) * N];
 
     ////// Heap storage --------------------------------------------------
 
@@ -107,10 +107,10 @@ private:
 
     // Move elements [first, last) to uninitialized storage at dest (source is left destroyed)
     static void moveRangeUninit(pointer dest, pointer first, pointer last) noexcept(
-        NEX_STD is_nothrow_move_constructible_v<T>) {
+        NEX_STD is_nothrow_move_constructible_v<value_type>) {
         for (; first != last; ++first, ++dest) {
-            ::new (static_cast<void*>(dest)) T(NEX_STD move(*first));
-            first->~T();
+            ::new (static_cast<void*>(dest)) value_type(NEX_STD move(*first));
+            first->~value_type();
         }
     }
 
@@ -119,13 +119,13 @@ private:
         pointer cur = dest;
         try {
             for (; first != last; ++first, ++cur) {
-                ::new (static_cast<void*>(cur)) T(*first);
+                ::new (static_cast<void*>(cur)) value_type(*first);
             }
         } catch (...) {
             // Destroy successfully constructed elements before re-throwing
             while (cur != dest) {
                 --cur;
-                cur->~T();
+                cur->~value_type();
             }
             throw;
         }
@@ -134,13 +134,13 @@ private:
     // Destroy elements in range [first, last)
     static void destroyRange(pointer first, pointer last) noexcept {
         for (; first != last; ++first) {
-            first->~T();
+            first->~value_type();
         }
     }
 
     // Allocate a raw, uninitialized heap buffer for exactly cap elements
     static pointer allocateHeap(size_type cap) {
-        return static_cast<pointer>(::operator new(cap * sizeof(T)));
+        return static_cast<pointer>(::operator new(cap * sizeof(value_type)));
     }
 
     // Free a heap buffer (does NOT destroy elements — caller must do that first)
@@ -183,10 +183,10 @@ public:
     }
 
     // Construct from initializer list
-    SmallVec(NEX_STD initializer_list<T> init) {
+    SmallVec(NEX_STD initializer_list<value_type> init) {
         reserve(init.size());
-        for (const T& v : init) {
-            push_back(v);
+        for (const value_type& v : init) {
+            pushBack(v);
         }
     }
 
@@ -194,10 +194,10 @@ public:
     template <typename InputIt,
               typename = NEX_STD enable_if_t<
                   NEX_STD is_convertible_v<
-                      typename NEX_STD iterator_traits<InputIt>::value_type, T>>>
+                      typename NEX_STD iterator_traits<InputIt>::value_type, value_type>>>
     SmallVec(InputIt first, InputIt last) {
         for (; first != last; ++first) {
-            push_back(*first);
+            pushBack(*first);
         }
     }
 
@@ -216,7 +216,7 @@ public:
     }
 
     // Move constructor
-    SmallVec(SmallVec&& other) noexcept(NEX_STD is_nothrow_move_constructible_v<T>) {
+    SmallVec(SmallVec&& other) noexcept(NEX_STD is_nothrow_move_constructible_v<value_type>) {
         if (other.isInline()) {
             // Cannot steal the inline buffer — move elements individually
             moveRangeUninit(storagePtr(), other.storagePtr(), other.storagePtr() + other.size_);
@@ -234,7 +234,7 @@ public:
     }
 
     // Move assignment operator
-    SmallVec& operator=(SmallVec&& other) noexcept(NEX_STD is_nothrow_move_constructible_v<T>) {
+    SmallVec& operator=(SmallVec&& other) noexcept(NEX_STD is_nothrow_move_constructible_v<value_type>) {
         if (this == &other) return *this;
         clear();
         if (other.isInline()) {
@@ -259,7 +259,7 @@ public:
     }
 
     // Assign from initializer list
-    SmallVec& operator=(NEX_STD initializer_list<T> init) {
+    SmallVec& operator=(NEX_STD initializer_list<value_type> init) {
         assign(init);
         return *this;
     }
@@ -282,20 +282,20 @@ public:
     template <typename InputIt,
               typename = NEX_STD enable_if_t<
                   NEX_STD is_convertible_v<
-                      typename NEX_STD iterator_traits<InputIt>::value_type, T>>>
+                      typename NEX_STD iterator_traits<InputIt>::value_type, value_type>>>
     void assign(InputIt first, InputIt last) {
         clear();
         for (; first != last; ++first) {
-            push_back(*first);
+            pushBack(*first);
         }
     }
 
     // Replace contents with an initializer list
-    void assign(NEX_STD initializer_list<T> init) {
+    void assign(NEX_STD initializer_list<value_type> init) {
         clear();
         reserve(init.size());
-        for (const T& v : init) {
-            push_back(v);
+        for (const value_type& v : init) {
+            pushBack(v);
         }
     }
 
@@ -393,7 +393,7 @@ public:
 
     // Get the maximum possible number of elements
     size_type maxSize() const noexcept {
-        return (NEX_STD numeric_limits<size_type>::max() / sizeof(T)) - 1;
+        return (NEX_STD numeric_limits<size_type>::max() / sizeof(value_type)) - 1;
     }
 
     // Check whether the container is currently using the inline buffer
@@ -437,14 +437,14 @@ public:
     // Append a copy of value
     void pushBack(const_reference value) {
         if (size_ == capacity()) growTo(size_ + 1);
-        ::new (static_cast<void*>(storagePtr() + size_)) T(value);
+        ::new (static_cast<void*>(storagePtr() + size_)) value_type(value);
         ++size_;
     }
 
     // Append a moved value
-    void pushBack(T&& value) {
+    void pushBack(value_type&& value) {
         if (size_ == capacity()) growTo(size_ + 1);
-        ::new (static_cast<void*>(storagePtr() + size_)) T(NEX_STD move(value));
+        ::new (static_cast<void*>(storagePtr() + size_)) value_type(NEX_STD move(value));
         ++size_;
     }
 
@@ -452,7 +452,8 @@ public:
     template <typename... Args>
     reference emplaceBack(Args&&... args) {
         if (size_ == capacity()) growTo(size_ + 1);
-        T* ptr = ::new (static_cast<void*>(storagePtr() + size_)) T(NEX_STD forward<Args>(args)...);
+        value_type* ptr = 
+            ::new (static_cast<void*>(storagePtr() + size_)) value_type(NEX_STD forward<Args>(args)...);
         ++size_;
         return *ptr;
     }
@@ -461,7 +462,7 @@ public:
     void popBack() noexcept {
         NEX_ASSERT_MSG(size_ > 0, "popBack called on empty SmallVec");
         --size_;
-        storagePtr()[size_].~T();
+        storagePtr()[size_].~value_type();
     }
 
     // Resize to count elements (new elements are default-constructed)
@@ -471,7 +472,7 @@ public:
         } else if (count > size_) {
             reserve(count);
             for (size_type i = size_; i < count; ++i) {
-                ::new (static_cast<void*>(storagePtr() + i)) T();
+                ::new (static_cast<void*>(storagePtr() + i)) value_type();
             }
         }
         size_ = count;
@@ -484,7 +485,7 @@ public:
         } else if (count > size_) {
             reserve(count);
             for (size_type i = size_; i < count; ++i) {
-                ::new (static_cast<void*>(storagePtr() + i)) T(value);
+                ::new (static_cast<void*>(storagePtr() + i)) value_type(value);
             }
         }
         size_ = count;
@@ -496,7 +497,7 @@ public:
     }
 
     // Insert a moved value before pos
-    iterator insert(const_iterator pos, T&& value) {
+    iterator insert(const_iterator pos, value_type&& value) {
         return emplace(pos, NEX_STD move(value));
     }
 
@@ -511,25 +512,25 @@ public:
         // Shift elements right to make room
         for (size_type i = newSize - 1; i >= idx + count; --i) {
             if (i < size_) {
-                ::new (static_cast<void*>(base + i)) T(NEX_STD move(base[i - count]));
-                base[i - count].~T();
+                ::new (static_cast<void*>(base + i)) value_type(NEX_STD move(base[i - count]));
+                base[i - count].~value_type();
             } else {
-                ::new (static_cast<void*>(base + i)) T(NEX_STD move(base[i - count]));
-                base[i - count].~T();
+                ::new (static_cast<void*>(base + i)) value_type(NEX_STD move(base[i - count]));
+                base[i - count].~value_type();
             }
         }
         // Construct new elements
         for (size_type i = idx; i < idx + count; ++i) {
-            ::new (static_cast<void*>(base + i)) T(value);
+            ::new (static_cast<void*>(base + i)) value_type(value);
         }
         size_ = newSize;
         return begin() + static_cast<difference_type>(idx);
     }
 
     // Insert elements from initializer list before pos
-    iterator insert(const_iterator pos, NEX_STD initializer_list<T> init) {
+    iterator insert(const_iterator pos, NEX_STD initializer_list<value_type> init) {
         size_type idx = static_cast<size_type>(pos - cbegin());
-        for (const T& v : init) {
+        for (const value_type& v : init) {
             insert(cbegin() + static_cast<difference_type>(idx), v);
             ++idx;
         }
@@ -545,25 +546,25 @@ public:
         pointer base = storagePtr();
         if (idx < size_) {
             // Shift elements right by one
-            ::new (static_cast<void*>(base + size_)) T(NEX_STD move(base[size_ - 1]));
+            ::new (static_cast<void*>(base + size_)) value_type(NEX_STD move(base[size_ - 1]));
             for (size_type i = size_ - 1; i > idx; --i) {
                 base[i] = NEX_STD move(base[i - 1]);
             }
-            base[idx].~T();
+            base[idx].~value_type();
         }
-        ::new (static_cast<void*>(base + idx)) T(NEX_STD forward<Args>(args)...);
+        ::new (static_cast<void*>(base + idx)) value_type(NEX_STD forward<Args>(args)...);
         ++size_;
         return begin() + static_cast<difference_type>(idx);
     }
 
     // Erase the element at pos
-    iterator erase(const_iterator pos) noexcept(NEX_STD is_nothrow_move_assignable_v<T>) {
+    iterator erase(const_iterator pos) noexcept(NEX_STD is_nothrow_move_assignable_v<value_type>) {
         return erase(pos, pos + 1);
     }
 
     // Erase elements in range [first, last)
     iterator erase(const_iterator first, const_iterator last) noexcept(
-        NEX_STD is_nothrow_move_assignable_v<T>) {
+        NEX_STD is_nothrow_move_assignable_v<value_type>) {
         size_type idxFirst = static_cast<size_type>(first - cbegin());
         size_type idxLast = static_cast<size_type>(last - cbegin());
         NEX_ASSERT_MSG(idxFirst <= idxLast && idxLast <= size_, "Iterator range out of bounds");
@@ -587,7 +588,7 @@ public:
     }
 
     // Swap contents with another SmallVec
-    void swap(SmallVec& other) noexcept(NEX_STD is_nothrow_move_constructible_v<T>) {
+    void swap(SmallVec& other) noexcept(NEX_STD is_nothrow_move_constructible_v<value_type>) {
         if (this == &other) return;
         if (!isInline() && !other.isInline()) {
             // Both on heap: swap pointers
@@ -605,16 +606,16 @@ public:
     ////// Conversion ----------------------------------
 
     // Convert to a heap-owning dynamic array (Vec<T>)
-    Vec<T> toVec() const {
-        return Vec<T>(begin(), end());
+    Vec<value_type> toVec() const {
+        return Vec<value_type>(begin(), end());
     }
 
     // Construct a SmallVec from a heap-owning dynamic array (Vec<T>)
-    static SmallVec fromVec(const Vec<T>& vec) {
+    static SmallVec fromVec(const Vec<value_type>& vec) {
         SmallVec result;
         result.reserve(vec.size());
-        for (const T& v : vec) {
-            result.push_back(v);
+        for (const value_type& v : vec) {
+            result.pushBack(v);
         }
         return result;
     }

@@ -7,6 +7,9 @@
 
 #include "nex/core/uuid.h"
 #include "nex/base/assert_crash.h"
+#include "nex/core/text/string.h"
+#include "nex/core/text/string_view.h"
+
 #include <stduuid/uuid.h>
 
 #ifndef NEX_STDUUID_SUPPORTS_V7

@@ -4,6 +4,7 @@
  */
 
 #include "nex/base/linear.h"
+#include "nex/core/text/string.h"
 #include "nex/core/text/string_view.h"
 #include "nex/core/text/encoding.h"
 #include "nex/core/text/format.h"

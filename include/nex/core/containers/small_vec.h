@@ -41,7 +41,7 @@ NEX_CORE_NAMESPACE_BEGIN
  *   that accept begin()/end() pairs work without modification.
  *
  * @tparam T The element type. Must be movable.
- * @tparam N The inline buffer capacity (must be > 0).
+ * @tparam N The inline buffer capacity (must be > 0). Default is 8.
  *
  * @note SmallVec is not allocator-aware. Heap storage uses the global operator new/delete.
  *
@@ -52,7 +52,7 @@ NEX_CORE_NAMESPACE_BEGIN
  * @see Vec for a pure heap-based dynamic array.
  * @see Array for a fixed-size stack array.
  */
-template <typename T, usize N>
+template <typename T, usize N = 8>
 requires (N > 0)
 class NEX_EXPORT SmallVec {
 public:
@@ -86,6 +86,8 @@ private:
     size_type heapCapacity_ = 0;
 
     ////// Common state --------------------------------------------------
+
+    // Current number of elements in the container (<= N if heapData_ == nullptr)
     size_type size_ = 0;
 
     ////// Private helpers -----------------------------------------------
@@ -433,14 +435,14 @@ public:
     ////// Modifiers ----------------------------------
 
     // Append a copy of value
-    void push_back(const_reference value) {
+    void pushBack(const_reference value) {
         if (size_ == capacity()) growTo(size_ + 1);
         ::new (static_cast<void*>(storagePtr() + size_)) T(value);
         ++size_;
     }
 
     // Append a moved value
-    void push_back(T&& value) {
+    void pushBack(T&& value) {
         if (size_ == capacity()) growTo(size_ + 1);
         ::new (static_cast<void*>(storagePtr() + size_)) T(NEX_STD move(value));
         ++size_;
@@ -448,7 +450,7 @@ public:
 
     // Construct an element in place at the end
     template <typename... Args>
-    reference emplace_back(Args&&... args) {
+    reference emplaceBack(Args&&... args) {
         if (size_ == capacity()) growTo(size_ + 1);
         T* ptr = ::new (static_cast<void*>(storagePtr() + size_)) T(NEX_STD forward<Args>(args)...);
         ++size_;
@@ -456,8 +458,8 @@ public:
     }
 
     // Remove the last element
-    void pop_back() noexcept {
-        NEX_ASSERT_MSG(size_ > 0, "pop_back called on empty SmallVec");
+    void popBack() noexcept {
+        NEX_ASSERT_MSG(size_ > 0, "popBack called on empty SmallVec");
         --size_;
         storagePtr()[size_].~T();
     }

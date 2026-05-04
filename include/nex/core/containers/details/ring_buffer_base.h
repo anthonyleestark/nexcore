@@ -40,13 +40,14 @@ namespace ring_buffer::details {
     template <typename T>
     struct NEX_INTERNAL DynamicStorage {
         using value_type = T;
+        using size_type = usize;
 
-        UniquePtr<value_type[]> buffer;                 // Dynamic array to hold the elements
-        usize capacity = 0;                             // Total capacity of the buffer
-        static constexpr bool is_dynamic = true;        // Flag to indicate dynamic storage
+        UniquePtr<value_type[]> buffer;                     // Dynamic array to hold the elements
+        size_type capacity = 0;                             // Total capacity of the buffer
+        static constexpr bool is_dynamic = true;            // Flag to indicate dynamic storage
 
         // Constructor to initialize dynamic storage with a specified capacity
-        DynamicStorage(usize cap) 
+        DynamicStorage(size_type cap) 
             : buffer(NEX_STD make_unique<value_type[]>(cap > 0 ? cap : 1)), capacity(cap > 0 ? cap : 1) {}
     };
 
@@ -63,10 +64,11 @@ namespace ring_buffer::details {
         static_assert(Capacity > 0, "Capacity must be greater than 0");
 
         using value_type = T;
+        using size_type = usize;
 
-        value_type buffer[Capacity] = {};               // Static array to hold the elements (default-initialized)
-        static constexpr usize capacity = Capacity;     // Total capacity of the buffer
-        static constexpr bool is_dynamic = false;       // Flag to indicate static storage
+        value_type buffer[Capacity] = {};                   // Static array to hold the elements (default-initialized)
+        static constexpr size_type capacity = Capacity;     // Total capacity of the buffer
+        static constexpr bool is_dynamic = false;           // Flag to indicate static storage
 
         // Default constructor
         StaticStorage() = default;
@@ -91,7 +93,7 @@ namespace ring_buffer::details {
 
         // Type aliases for convenience
         using value_type = typename Storage::value_type;
-        using size_type = usize;
+        using size_type = typename Storage::size_type;
         using difference_type = isize;
         using reference = value_type&;
         using const_reference = const value_type&;
@@ -147,57 +149,57 @@ namespace ring_buffer::details {
             if (newCapacity == Storage::capacity) return; // No change needed
 
             // Create a new buffer with the new capacity
-            UniquePtr<value_type[]> new_buffer = NEX_STD make_unique<value_type[]>(newCapacity);
-            size_type new_count = count_ < newCapacity ? count_ : newCapacity;
-            size_type old_capacity = Storage::capacity;
+            UniquePtr<value_type[]> newBuffer = NEX_STD make_unique<value_type[]>(newCapacity);
+            size_type newCount = count_ < newCapacity ? count_ : newCapacity;
+            size_type oldCapacity = Storage::capacity;
 
             // Copy existing elements to the new buffer (for trivially copyable types)
             if constexpr (NEX_STD is_trivially_copyable_v<value_type>) {
-                size_type first_count = new_count;
-                if (head_ + first_count > old_capacity) {
-                    first_count = old_capacity - head_;
+                size_type firstCount = newCount;
+                if (head_ + firstCount > oldCapacity) {
+                    firstCount = oldCapacity - head_;
                 }
 
                 // Copy the first contiguous block
-                if (first_count > 0) {
+                if (firstCount > 0) {
                     NEX_STD memcpy(
-                        new_buffer.get(), 
+                        newBuffer.get(), 
                         Storage::buffer.get() + head_, 
-                        first_count * sizeof(value_type)
+                        firstCount * sizeof(value_type)
                     );
                 }
 
                 // Copy the second block if needed
-                size_type second_count = new_count - first_count;
-                if (second_count > 0) {
+                size_type secondCount = newCount - firstCount;
+                if (secondCount > 0) {
                     NEX_STD memcpy(
-                        new_buffer.get() + first_count, 
+                        newBuffer.get() + firstCount, 
                         Storage::buffer.get(), 
-                        second_count * sizeof(value_type)
+                        secondCount * sizeof(value_type)
                     );
                 }
             } else {
                 // For non-trivially copyable types, we need to move or copy elements individually
-                for (size_type i = 0; i < new_count; ++i) {
+                for (size_type i = 0; i < newCount; ++i) {
                     if constexpr (NEX_STD is_nothrow_move_assignable_v<value_type> 
                                     || !NEX_STD is_copy_assignable_v<value_type>) {
                         // Move elements if it's safe to do so
-                        new_buffer[i] = NEX_STD move(Storage::buffer[(head_ + i) % old_capacity]);
+                        newBuffer[i] = NEX_STD move(Storage::buffer[(head_ + i) % oldCapacity]);
                     } else {
                         // Otherwise, copy elements
-                        new_buffer[i] = Storage::buffer[(head_ + i) % old_capacity];
+                        newBuffer[i] = Storage::buffer[(head_ + i) % oldCapacity];
                     }
                 }
             }
 
             // Replace old buffer with new buffer
-            Storage::buffer = NEX_STD move(new_buffer);
+            Storage::buffer = NEX_STD move(newBuffer);
 
             // Update capacity and reset indices
             Storage::capacity = newCapacity;
             head_ = 0;
-            tail_ = new_count % Storage::capacity;
-            count_ = new_count;
+            tail_ = newCount % Storage::capacity;
+            count_ = newCount;
         }
 
         // Shrink the buffer to fit the current number of elements (releases unused memory)

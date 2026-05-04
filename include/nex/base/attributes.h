@@ -383,7 +383,7 @@
  *   }
  * @endcode
  */
-#if NEX_HAS_CXX_17
+#if NEX_HAS_CXX17
     template <typename... Args>
     inline void NEX_UNUSED_FUNC(Args&&... args) {}
     #define NEX_UNUSED(...) NEX_UNUSED_FUNC(__VA_ARGS__)

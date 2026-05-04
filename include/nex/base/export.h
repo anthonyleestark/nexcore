@@ -93,6 +93,22 @@
 #endif  // NEX_PLATFORM_IS_WINDOWS
 
 /**
+ * @def NEX_CDECL
+ * @brief Specify the C declaration calling convention
+ * 
+ * @details
+ * Expands to `__cdecl` on Windows, empty on other platforms.
+ * Useful for writing cross-platform function pointers that use the C calling convention.
+ */
+#if !defined(NEX_CDECL)
+    #if NEX_PLATFORM_IS_WINDOWS
+        #define NEX_CDECL __cdecl
+    #else  // NEX_PLATFORM_IS_WINDOWS
+        #define NEX_CDECL
+    #endif  // NEX_PLATFORM_IS_WINDOWS
+#endif  // !defined(NEX_CDECL)
+
+/**
  * @def NEX_INTERNAL
  * @brief Mark a symbol as internal (not exported) for shared libraries
  * 

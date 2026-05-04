@@ -360,17 +360,34 @@
 // Mark a variable as maybe unused to avoid compiler warnings
 #define NEX_UNUSED_VAR(var) (void)(var)
 
-// Mark multiple variables or parameters as maybe unused to avoid compiler warnings
-#define NEX_UNUSED(...) \
-    (void)(sizeof((int[]){(NEX_UNUSED_VAR(__VA_ARGS__), 0)...}));
-
-// Mark a function as no-operations (i.e., it does nothing)
-#define NEX_NO_OP {/* no-op */}
-
-// Mark a function as pure virtual (i.e., it must be overridden by derived classes)
-#define NEX_PURE_VIRTUAL(func) \
-    virtual func = 0
-
-// Mark a function as a no-op virtual (i.e., it must be overridden by derived classes, and the base implementation does nothing)
-#define NEX_NO_OP_VIRTUAL(func) \
-    virtual func { NEX_NO_OP; }
+/** 
+ * @def NEX_UNUSED
+ * @brief Mark multiple variables or parameters as maybe unused to avoid compiler warnings
+ * 
+ * @details
+ * This macro provides a unified, cross-platform way to suppress "unused variable" warnings. 
+ * It adapts its implementation based on the available C++ standard to ensure maximum efficiency 
+ * and compatibility.
+ * - In C++17 and later: It utilizes a variadic template function (@ref NEX_UNUSED_FUNC). 
+ *   By passing the variables as forwarding references to an inline empty function, the compiler marks them 
+ *   as "accessed." Modern compilers will optimize this call away entirely, resulting in zero runtime overhead.
+ * - Pre-C++17: It employs a compile-time "sizeof" trick. It creates a zero-cost temporary array 
+ *   (compound literal) where each element is initialized by the variable being suppressed. 
+ *   Since sizeof is evaluated during compilation, no machine code is generated for the array at runtime.
+ * 
+ * Example usage:
+ * @code
+ *   void FunctionWithUnusedParams(int usedParam, int unusedParam1, int unusedParam2) {
+ *       NEX_UNUSED(unusedParam1, unusedParam2);
+ *       // Function logic using usedParam...
+ *   }
+ * @endcode
+ */
+#if NEX_HAS_CXX_17
+    template <typename... Args>
+    inline void NEX_UNUSED_FUNC(Args&&... args) {}
+    #define NEX_UNUSED(...) NEX_UNUSED_FUNC(__VA_ARGS__)
+#else
+    #define NEX_UNUSED(...) \
+        (void)(sizeof((int[]){(NEX_UNUSED_VAR(__VA_ARGS__), 0)...}));
+#endif

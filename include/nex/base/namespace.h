@@ -24,8 +24,9 @@
  * @brief   Define macros for name mangling and prepending namespaces to names, to avoid potential conflicts 
  *          and to improve readability.
  * @note    
- * The NEX_MANGLE_NAME macro is used to create a unique name by concatenating the namespace and the name with an underscore, 
- * while the NEX_PREPEND_NAME macro is used to prepend the namespace to the name using the scope resolution operator (::).
+ * The NEX_MANGLE_NAME macro is used to create a unique name by concatenating the namespace and the name 
+ * with an underscore, while the NEX_PREPEND_NAME macro is used to prepend the namespace to the name using 
+ * the scope resolution operator (::).
  * The NEX_MANGLE_JOIN macro is a helper macro used by NEX_MANGLE_NAME to concatenate the namespace and the name. 
  * These macros can be used to create unique names for functions, classes, variables, etc., to avoid potential conflicts 
  * with other libraries or with the global namespace, and to improve readability by clearly indicating the namespace to 
@@ -135,8 +136,8 @@
  * @note
  * The NEX_LAYER_NAMESPACE_BEGIN and NEX_LAYER_NAMESPACE_END macros define the beginning and end of a layer namespace, 
  * respectively. 
- * The NEX_USING_LAYER_NAMESPACE macro is a using directive for a layer namespace, and the NEX_PREPEND_LAYER_NAMESPACE macro 
- * is a helper macro used to prepend a layer namespace to a name. 
+ * The NEX_USING_LAYER_NAMESPACE macro is a using directive for a layer namespace, and the NEX_PREPEND_LAYER_NAMESPACE 
+ * macro is a helper macro used to prepend a layer namespace to a name. 
  */
 
 #define NEX_LAYER_NAMESPACE_BEGIN(layer)                            \

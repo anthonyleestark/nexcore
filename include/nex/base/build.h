@@ -20,7 +20,7 @@
 #if !defined(NEX_BUILD_DEBUG)
     #if !defined(NDEBUG) || defined(_DEBUG)
         // Check if we are NOT optimizing (only works in GCC/Clang)
-        #if defined(__GNUC__) || defined(__clang__)
+        #if NEX_COMPILER_IS_GCC || defined(__clang__)
             #if !defined(__OPTIMIZE__)
                 #define NEX_BUILD_DEBUG
             #endif
@@ -36,7 +36,7 @@
 // such as NDEBUG, _DEBUG, and optimization flags.
 #if !defined(NEX_BUILD_RELEASE) && !defined(NEX_BUILD_DEBUG)
     #if defined(NDEBUG) && !defined(_DEBUG)
-        #if defined(__GNUC__) || defined(__clang__)
+        #if NEX_COMPILER_IS_GCC || defined(__clang__)
             #if defined(__OPTIMIZE__)
                 #define NEX_BUILD_RELEASE
             #endif

@@ -17,7 +17,8 @@
  * The macros defined in this section can be used throughout the codebase to write platform-specific code 
  * and to conditionally compile code based on the target platform.
  * 
- * @note Nex-ecosystem only supports Windows, Linux, and macOS for now. Other platforms will result in a compilation error.
+ * @note 
+ * Nex-ecosystem only supports Windows, Linux, and macOS for now. Other platforms will result in a compilation error.
  */
 
 /**
@@ -46,9 +47,9 @@
     #error Nex-ecosystem does not support Android for now.
 #elif defined(__APPLE__)
     /**
-     * @note TargetConditionals.h is only included after testing for Android because
-     *       some Android builds on Mac have this header available, but it should only
-     *       be used when the target is genuinely an Apple platform.
+     * @note 
+     * TargetConditionals.h is only included after testing for Android because some Android builds on Mac 
+     * have this header available, but it should only be used when the target is genuinely an Apple platform.
      */
     #include <TargetConditionals.h>
     #if defined(TARGET_OS_IPHONE) && TARGET_OS_IPHONE

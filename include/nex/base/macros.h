@@ -6,11 +6,11 @@
 #pragma once
 
 #include "nex/base/platform.h"
-#include "nex/base/compiler.h"
 #include "nex/base/architecture.h"
+#include "nex/base/compiler.h"
 #include "nex/base/attributes.h"
-#include "nex/base/export.h"
 #include "nex/base/build.h"
+#include "nex/base/export.h"
 #include "nex/base/namespace.h"
 
 // Undefine min/max macros if defined 

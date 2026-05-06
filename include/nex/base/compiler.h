@@ -8,8 +8,8 @@
 /**
  * @file      compiler.h
  * @defgroup  compiler_detection Compiler and C++ Version Detection
- * @brief     Detects the compiler and C++ version being used to compile the code, and defines macros for conditional 
- *            compilation based on the compiler and C++ version.
+ * @brief     Detects the compiler and C++ version being used to compile the code, and defines macros for 
+ *            conditional compilation based on the compiler and C++ version.
  * 
  * @details
  * This section defines macros for various compilers (e.g., GCC, MSVC) and their versions, 
@@ -17,20 +17,33 @@
  * It also provides a set of boolean flags for compiler and C++ version detection.
  * The compiler and C++ version detection is based on predefined macros provided by the compiler.
  * 
- * @note Nex-ecosystem only supports C++20 or later. Compilers that do not support C++20 will result in a compilation error.
+ * @note 
+ * Nex-ecosystem only supports C++20 or later. Compilers that do not support C++20 will result in a compilation error.
  */
 
 /**
  * Below is a list of macros that are defined for each compiler and C++ version. 
- * Each compiler and C++ version has a corresponding macro that is set to 1 if the compiler or C++ version is detected, and 0 otherwise.
+ * Each compiler and C++ version has a corresponding macro that is set to 1 if the compiler or C++ version 
+ * is detected, and 0 otherwise.
  */
 
-#define NEX_COMPILER_IS_GCC            0
-#define NEX_COMPILER_IS_MSVC           0
+#define NEX_COMPILER_IS_CLANG          0    // Compiler is Clang (LLVM)
+#define NEX_COMPILER_IS_GCC            0    // Compiler is GCC (GNU Compiler Collection)
+#define NEX_COMPILER_IS_MSVC           0    // Compiler is MSVC (Microsoft Visual C++)
+
+/**
+ * Clang masquerades as GCC on POSIX and as MSVC on Windows, so we define compatibility macros to detect 
+ * if we are using a compiler that is compatible with GCC or MSVC, which can be useful for conditional compilation 
+ * of code that relies on specific compiler features or behaviors.
+ */
+
+#define NEX_COMPILER_GCC_COMPATIBLE    0    // Compiler is GCC-compatible (e.g., Clang on POSIX)
+#define NEX_COMPILER_MSVC_COMPATIBLE   0    // Compiler is MSVC-compatible (e.g., Clang on Windows in MSVC compatibility mode)
 
 /**
  * Below is a list of macros that define the version numbers for each C++ language standard. 
- * These macros can be used to compare against the __cplusplus macro to determine the C++ version being used to compile the code.
+ * These macros can be used to compare against the __cplusplus macro to determine the C++ version being used 
+ * to compile the code.
  */
 
 #define NEX_CXX98_VER_NUMBER           199711L

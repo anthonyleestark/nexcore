@@ -64,16 +64,40 @@
  * detected, and 0 otherwise.
  * Clang masquerades as GCC on POSIX and as MSVC on Windows.
  */
-#if defined(__GNUC__)
-    #define NEX_COMPILER_GCC 1
+#if defined (__clang__)
+    #define NEX_COMPILER_CLANG    __clang_major__
+    #undef NEX_COMPILER_IS_CLANG
+    #define NEX_COMPILER_IS_CLANG 1
+#elif defined(__GNUC__)
+    #define NEX_COMPILER_GCC    __GNUC__
     #undef NEX_COMPILER_IS_GCC
     #define NEX_COMPILER_IS_GCC 1
 #elif defined(_MSC_VER)
-    #define NEX_COMPILER_MSVC 1
+    #define NEX_COMPILER_MSVC    _MSC_VER
     #undef NEX_COMPILER_IS_MSVC
     #define NEX_COMPILER_IS_MSVC 1
 #else
     #error Compiler is not supported or not detected.
+#endif
+
+/**
+ * Define compatibility macros for GCC and MSVC
+ * In case NEX_COMPILER_IS_GCC/MSVC is not true, but the compiler is still compatible with either of them, 
+ * it means we are likely using Clang in a compatibility mode
+ */
+
+#if defined(__GNUC__)
+    #undef NEX_COMPILER_GCC_COMPATIBLE
+    #define NEX_COMPILER_GCC_COMPATIBLE 1
+    #if !defined(NEX_COMPILER_GCC)
+        #define NEX_COMPILER_GCC  __GNUC__
+    #endif
+#elif defined(_MSC_VER)
+    #undef NEX_COMPILER_MSVC_COMPATIBLE
+    #define NEX_COMPILER_MSVC_COMPATIBLE 1
+    #if !defined(NEX_COMPILER_MSVC)
+        #define NEX_COMPILER_MSVC  _MSC_VER
+    #endif
 #endif
 
 /**

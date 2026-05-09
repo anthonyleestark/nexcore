@@ -35,7 +35,7 @@
  *   without any errors.
  */
 
-#if NEX_COMPILER_IS_MSVC
+#if NEX_COMPILER_MSVC_COMPATIBLE
 
     // On MSVC, it expands to `__declspec(dllexport)` when building the shared library, and `__declspec(dllimport)` 
     // when using the shared library.
@@ -48,7 +48,7 @@
         #define NEX_EXPORT
     #endif
 
-#elif NEX_COMPILER_IS_GCC
+#elif NEX_COMPILER_GCC_COMPATIBLE
 
     // On GCC, it expands to `__attribute__((visibility("default")))` to make symbols visible for export.
     #define NEX_EXPORT __attribute__((visibility("default")))
@@ -59,7 +59,7 @@
     // without any errors.
     #define NEX_EXPORT
 
-#endif  // NEX_COMPILER_IS_MSVC
+#endif  // NEX_COMPILER_MSVC_COMPATIBLE
 
 /**
  * @def NEX_CALLBACK

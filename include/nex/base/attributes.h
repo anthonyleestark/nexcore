@@ -108,11 +108,11 @@
  * it is available, while providing fallback implementations or alternative code paths when it is not supported 
  * by the compiler.
  */
-#if defined(__SIZEOF_FLOAT128__) && !NEX_COMPILER_IS_MSVC
+#if defined(__SIZEOF_FLOAT128__) && !NEX_COMPILER_MSVC_COMPATIBLE
     #define NEX_HAS_BUILTIN_FLOAT128 1
 #else  // Compiler does not support __float128
     #define NEX_HAS_BUILTIN_FLOAT128 0
-#endif  // defined(__SIZEOF_FLOAT128__) && !NEX_COMPILER_IS_MSVC
+#endif  // defined(__SIZEOF_FLOAT128__) && !NEX_COMPILER_MSVC_COMPATIBLE
 
 /**
  * @def NEX_NOINLINE
@@ -171,7 +171,7 @@
         #define NEX_ALWAYS_INLINE [[clang::always_inline]] inline
     #elif NEX_HAS_CPP_ATTRIBUTE(gnu::always_inline)
         #define NEX_ALWAYS_INLINE [[gnu::always_inline]] inline
-    #elif NEX_COMPILER_IS_MSVC
+    #elif NEX_COMPILER_MSVC_COMPATIBLE
         #define NEX_ALWAYS_INLINE __forceinline
     #endif
 #endif
@@ -198,9 +198,9 @@
 
 #if NEX_HAS_NODISCARD
     #define NEX_NODISCARD [[nodiscard]]
-#elif NEX_COMPILER_IS_GCC
+#elif NEX_COMPILER_GCC_COMPATIBLE
     #define NEX_NODISCARD __attribute__((warn_unused_result))
-#elif NEX_COMPILER_IS_MSVC && NEX_COMPILER_MSVC >= 1700
+#elif NEX_COMPILER_MSVC_COMPATIBLE && NEX_COMPILER_MSVC >= 1700
     #define NEX_NODISCARD _Check_return_
 #endif  // NEX_HAS_NODISCARD
 
@@ -236,9 +236,9 @@
  */
 #if NEX_CXX_VER >= NEX_CXX11_VER_NUMBER
     #define NEX_ALIGNAS(byte_alignment) alignas(byte_alignment)
-#elif NEX_COMPILER_IS_MSVC
+#elif NEX_COMPILER_MSVC_COMPATIBLE
     #define NEX_ALIGNAS(byte_alignment) __declspec(align(byte_alignment))
-#elif NEX_COMPILER_IS_GCC
+#elif NEX_COMPILER_GCC_COMPATIBLE
     #define NEX_ALIGNAS(byte_alignment) __attribute__((aligned(byte_alignment)))
 #endif  // NEX_ALIGNAS
 
@@ -311,9 +311,9 @@
  * to the appropriate compiler-specific attribute based on the detected compiler. If the compiler does not 
  * support a noreturn attribute, the macro expands to nothing, allowing the code to compile without errors.
  */
-#if NEX_COMPILER_IS_MSVC
+#if NEX_COMPILER_MSVC_COMPATIBLE
     #define NEX_NORETURN __declspec(noreturn)
-#elif NEX_COMPILER_IS_GCC
+#elif NEX_COMPILER_GCC_COMPATIBLE
     #define NEX_NORETURN __attribute__((noreturn))
 #else  // Compiler does not support noreturn attribute
     #define NEX_NORETURN
@@ -337,9 +337,9 @@
  *   NEX_DEPRECATED("Use NewFunction() instead") void OldFunction() { ... }
  * @endcode
  */
-#if NEX_COMPILER_IS_MSVC
+#if NEX_COMPILER_MSVC_COMPATIBLE
     #define NEX_DEPRECATED(msg) __declspec(deprecated(msg))
-#elif NEX_COMPILER_IS_GCC
+#elif NEX_COMPILER_GCC_COMPATIBLE
     #define NEX_DEPRECATED(msg) __attribute__((deprecated(msg)))
 #else  // Compiler does not support deprecation attribute
     #define NEX_DEPRECATED(msg)
@@ -430,7 +430,7 @@
 #if !defined(NEX_UNLIKELY)
     #if NEX_HAS_CXX20
         #define NEX_UNLIKELY(x) [[unlikely]] (x)
-    #elif NEX_COMPILER_IS_GCC || defined(__clang__)
+    #elif NEX_COMPILER_GCC_COMPATIBLE || NEX_COMPILER_IS_CLANG
         #define NEX_UNLIKELY(x) __builtin_expect(!!(x), 0)
     #else  // Compiler does not support __builtin_expect
         #define NEX_UNLIKELY(x) (x)
@@ -451,7 +451,7 @@
 #if !defined(NEX_LIKELY)
     #if NEX_HAS_CXX20
         #define NEX_LIKELY(x) [[likely]] (x)
-    #elif NEX_COMPILER_IS_GCC || defined(__clang__)
+    #elif NEX_COMPILER_GCC_COMPATIBLE || NEX_COMPILER_IS_CLANG
         #define NEX_LIKELY(x) __builtin_expect(!!(x), 1)
     #else  // Compiler does not support __builtin_expect
         #define NEX_LIKELY(x) (x)

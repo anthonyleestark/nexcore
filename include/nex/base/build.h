@@ -20,7 +20,7 @@
 #if !defined(NEX_BUILD_DEBUG)
     #if !defined(NDEBUG) || defined(_DEBUG)
         // Check if we are NOT optimizing (only works in GCC/Clang)
-        #if NEX_COMPILER_IS_GCC || defined(__clang__)
+        #if NEX_COMPILER_
             #if !defined(__OPTIMIZE__)
                 #define NEX_BUILD_DEBUG
             #endif
@@ -36,7 +36,7 @@
 // such as NDEBUG, _DEBUG, and optimization flags.
 #if !defined(NEX_BUILD_RELEASE) && !defined(NEX_BUILD_DEBUG)
     #if defined(NDEBUG) && !defined(_DEBUG)
-        #if NEX_COMPILER_IS_GCC || defined(__clang__)
+        #if NEX_COMPILER_GCC_COMPATIBLE || NEX_COMPILER_IS_CLANG
             #if defined(__OPTIMIZE__)
                 #define NEX_BUILD_RELEASE
             #endif
@@ -68,11 +68,11 @@
 #define NEX_SOURCE_LINE_NUMBER __LINE__
 
 // Get the function name for source location
-#if NEX_COMPILER_IS_GCC
+#if NEX_COMPILER_GCC_COMPATIBLE
     #define NEX_SOURCE_FUNCTION_NAME __PRETTY_FUNCTION__
-#elif NEX_COMPILER_IS_MSVC && !defined(__clang__)
+#elif NEX_COMPILER_IS_MSVC
     #define NEX_SOURCE_FUNCTION_NAME __FUNCSIG__
-#elif NEX_COMPILER_IS_MSVC && defined(__clang__)
+#elif NEX_COMPILER_MSVC_COMPATIBLE
     // Clang on MSVC supports __PRETTY_FUNCTION__ and provides more detailed function signatures than __FUNCSIG__, 
     // so we use __PRETTY_FUNCTION__ for better readability and consistency with other platforms. 
     #define NEX_SOURCE_FUNCTION_NAME __PRETTY_FUNCTION__
@@ -83,7 +83,7 @@
 
 // User-configurable macro to enable/disable the use of std::source_location for capturing source location information.
 #if defined(NEX_USE_STD_SOURCE_LOCATION)
-    #if NEX_COMPILER_IS_MSVC && !defined(__clang__)
+    #if NEX_COMPILER_IS_MSVC
         // MSVC's implementation of std::source_location is incomplete and does not support all the features we need, 
         // so we disable it for now and use our own implementation instead.
         #undef NEX_USE_STD_SOURCE_LOCATION

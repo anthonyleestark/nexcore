@@ -75,14 +75,14 @@ FatalHandler getFatalHandler();
  * ```
  */
 NEX_NORETURN inline void immediateCrash() {
-#if NEX_COMPILER_IS_MSVC && !defined(__clang__)
+#if NEX_COMPILER_IS_MSVC
     // MSVC: __fastfail is a low-level intrinsic that triggers a fast fail, 
     // which is a special kind of crash that is designed to be fatal, unique, and non-allocating. 
     // It does not generate any code on its own, so we also need to trigger a trap or abort 
     // to ensure the program does not continue executing.
     __fastfail(0); // or __fastfail(FAST_FAIL_ILLEGAL_INSTRUCTION);
 
-#elif defined(__GNUC__) || defined(__clang__) || defined(__INTEL_COMPILER)
+#elif NEX_COMPILER_GCC_COMPATIBLE || NEX_COMPILER_IS_CLANG || defined(__INTEL_COMPILER)
     // GCC / Clang / ICC / AppleClang: trap immediately (illegal instruction)
     __builtin_trap();
 
@@ -98,7 +98,7 @@ NEX_NORETURN inline void immediateCrash() {
     // to terminate the program, which is a critical failure. In that case, 
     // we can call std::abort() as a last resort to ensure the program 
     // does not continue executing in an undefined state.
-#if defined(__GNUC__) || defined(__clang__)
+#if NEX_COMPILER_GCC_COMPATIBLE || NEX_COMPILER_IS_CLANG
     __builtin_unreachable();
 #endif
 }
@@ -128,7 +128,7 @@ NEX_NORETURN inline void unreachable() {
     // Uses compiler specific extensions if possible.
     // Even if no extension is used, undefined behavior is still raised by
     // an empty function body and the noreturn attribute.
-#if NEX_COMPILER_IS_MSVC && !defined(__clang__) // MSVC
+#if NEX_COMPILER_IS_MSVC // MSVC
     // __assume is a hint to the optimizer that the code path is unreachable.
     // It does not generate any code on its own, so we also need to trigger a trap 
     // or abort to ensure the program does not continue executing.

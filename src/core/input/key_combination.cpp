@@ -8,7 +8,7 @@
 #include <charconv>
 #include <string>
 
-#include "nex/core/key_combination.h"
+#include "nex/core/input/key_combination.h"
 #include "nex/core/text/string.h"
 
 NEX_CORE_NAMESPACE_BEGIN

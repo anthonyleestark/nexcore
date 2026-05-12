@@ -5,7 +5,7 @@
 
 #include <functional> // for std::hash
 
-#include "nex/core/uuid.h"
+#include "nex/core/meta/uuid.h"
 #include "nex/base/assert_crash.h"
 #include "nex/core/text/string.h"
 #include "nex/core/text/string_view.h"

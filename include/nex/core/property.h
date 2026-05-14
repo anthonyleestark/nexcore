@@ -5,12 +5,12 @@
 
 #pragma once
 
-#include <functional>
 #include <type_traits>
 #include <utility>
 
 #include "nex/base/macros.h"
 #include "nex/base/types.h"
+#include "nex/base/wrappers.h"
 
 NEX_CORE_NAMESPACE_BEGIN
 
@@ -73,8 +73,8 @@ class NEX_EXPORT Property {
 public:
     // Type aliases for the property functions based on the policy
     using NullFunction = NEX_STD monostate;
-    using ValidatorFuncType = NEX_STD function<bool(const T&)>;
-    using CallbackFuncType = NEX_STD function<void(const T&)>;
+    using ValidatorFuncType = Function<bool(const T&)>;
+    using CallbackFuncType = Function<void(const T&)>;
 
     // Type aliases for the property's attributes
     using ValueType = T;
@@ -126,7 +126,7 @@ public:
         value_ = newVal;
 
         if constexpr (Policy.hasCallback) {
-            if (onChanged_) onChanged_(newVal);
+            if (callback_) callback_(newVal);
         }
     }
 
@@ -140,7 +140,7 @@ public:
         value_ = NEX_STD move(newVal);
 
         if constexpr (Policy.hasCallback) {
-            if (onChanged_) onChanged_(value_);
+            if (callback_) callback_(value_);
         }
     }
 

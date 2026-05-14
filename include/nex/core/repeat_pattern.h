@@ -23,18 +23,14 @@ NEX_CORE_NAMESPACE_BEGIN
  * Defines the possible frequencies for repeating events such as alarms or reminders.
  * 
  * @note The default frequency is `None`, indicating no repetition.
- * @note `Daily` repeats every day, `Weekly` repeats every week on the same day,
- *       `Monthly` repeats every month on the same date, and `Yearly` repeats
- *       every year on the same date.
- * 
  * @see RepeatPattern
  */
 enum class RepeatFrequency {
     None,       // No repeat (default)
     Daily,      // Repeat every day
-    Weekly,     // Repeat every week
-    Monthly,    // Repeat every month
-    Yearly      // Repeat every year
+    Weekly,     // Repeat every week on the same day
+    Monthly,    // Repeat every month on the same date
+    Yearly      // Repeat every year on the same date
 };
 
 /**
@@ -69,27 +65,27 @@ private:
     static constexpr int32 kMinInterval = 1;                        // Minimum interval for repeating (e.g., 1 day, 1 week)
     static constexpr int32 kDefaultInterval = 1;                    // Default interval for repeating
     static constexpr int32 kForeverCount = 0;                       // Repeat forever
-    
+
 public:
     // Default constructor
     RepeatPattern() = default;
-    
+
     // Constructor with repeat enabled
     explicit RepeatPattern(bool repeatEnabled)
         : enabled_(repeatEnabled),
         frequency_(deriveFrequency(repeatEnabled, NEX_STD bitset<7>(kAllDaysMask))),
         endDate_(NEX_STD nullopt) {}
-    
+
     // Constructor with repeat enabled and active days
     RepeatPattern(bool repeatEnabled, const NEX_STD bitset<7>& activeDays)
         : enabled_(repeatEnabled),
         activeDays_(activeDays),
         frequency_(deriveFrequency(repeatEnabled, activeDays)),
         endDate_(NEX_STD nullopt) {}
-    
+
     // Check if repeat is enabled
     bool isEnabled() const { return enabled_; }
-    
+
     // Get active days
     const NEX_STD bitset<7>& activeDays() const { return activeDays_; }
 
@@ -102,13 +98,13 @@ public:
         }
         return pattern;
     }
-    
+
     // Check if repeat is active on a day
-    bool isActiveOnDay(uint8_t dayOfWeek) const { // 0=Sunday, 6=Saturday
+    bool isActiveOnDay(uint8 dayOfWeek) const { // 0=Sunday, 6=Saturday
         if (!enabled_ || dayOfWeek >= kDaysPerWeek) return false;
         return activeDays_[dayOfWeek];
     }
-    
+
     // Set day active
     RepeatPattern withDayActive(uint8 dayOfWeek, bool active) const {
         RepeatPattern pattern = *this;
@@ -120,10 +116,10 @@ public:
         }
         return pattern;
     }
-    
+
     // Check if snooze is allowed
     bool allowsSnooze() const { return allowsSnooze_; }
-    
+
     // Get snooze interval
     int snoozeIntervalSeconds() const { return snoozeIntervalSeconds_; }
     
@@ -236,15 +232,15 @@ public:
 
     // Inequality operator
     bool operator!=(const RepeatPattern& other) const { return !(*this == other); }
-    
+
 private:
     ////// Basic attributes -----------------------
 
-    bool enabled_ = false;                                 // Whether repeat is enabled
-    NEX_STD bitset<7> activeDays_{ kAllDaysMask };    // Bit 0=Sunday, bit 6=Saturday
-    bool allowsSnooze_ = false;                            // Whether snooze is allowed
-    int32 snoozeIntervalSeconds_ = kDefaultSnoozeSeconds;  // Snooze interval in seconds
-    
+    bool enabled_ = false;                                  // Whether repeat is enabled
+    NEX_STD bitset<7> activeDays_{ kAllDaysMask };          // Bit 0=Sunday, bit 6=Saturday
+    bool allowsSnooze_ = false;                             // Whether snooze is allowed
+    int32 snoozeIntervalSeconds_ = kDefaultSnoozeSeconds;   // Snooze interval in seconds
+
     ////// Advanced attributes -----------------------
 
     // Optional: "Morning Workout", "Take Medicine", etc. (for UI/debug)
@@ -267,7 +263,7 @@ private:
     bool repeatFromCompletion_ = false;
 
     ////// Helper functions -----------------------
-    
+
     // Clamp snooze interval to valid range
     static int32 clampSnoozeInterval(int32 seconds) {
         return NEX_STD clamp(seconds, kMinSnoozeSeconds, kMaxSnoozeSeconds);

@@ -6,11 +6,8 @@
 #pragma once
 
 #include <exception>
-#include <functional>
 #include <future>
-#include <optional>
 #include <tuple>
-#include <type_traits>
 #include <utility>
 
 #include "nex/base/macros.h"
@@ -535,8 +532,8 @@ auto async(Executor& executor, Fn&& fn, Args&&... args)
     using ReturnType = InvokeResult<Fn, Args...>;
     using Task = NEX_DETAIL AsyncTask<
         ReturnType,
-        NEX_STD decay_t<Fn>,
-        NEX_STD decay_t<Args>...
+        Decay<Fn>,
+        Decay<Args>...
     >;
 
     Promise<ReturnType> promise;

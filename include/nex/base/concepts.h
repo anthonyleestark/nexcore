@@ -25,8 +25,25 @@ NEX_NAMESPACE_BEGIN
  * without issues.
  */
 template <typename T>
-concept DecayCopyable = NEX_STD is_copy_constructible_v<T> && 
-                        NEX_STD is_move_constructible_v<T>;
+concept DecayCopyable = 
+    NEX_STD is_copy_constructible_v<T> && 
+    NEX_STD is_move_constructible_v<T>;
+
+/**
+ * @typedef  RegularValue
+ * @brief    A concept that checks if a type is a regular value type, meaning it is copyable, 
+ *           equality comparable, and default initializable.
+ * 
+ * @details
+ * This concept is used to constrain templates to only accept types that behave like regular values,
+ * which means they can be copied, compared for equality, and default constructed. This is useful for
+ * types that are intended to be used as values in containers or passed by value in functions.
+ */
+template <typename T>
+concept RegularValue = 
+    NEX_STD copyable<T> && 
+    NEX_STD equality_comparable<T> && 
+    NEX_STD default_initializable<T>;
 
 /**
  * @typedef  CallableReturns
@@ -39,8 +56,9 @@ concept DecayCopyable = NEX_STD is_copy_constructible_v<T> &&
  * invocation is exactly the specified return type R.
  */
 template <typename F, typename R, typename... Args>
-concept CallableReturns = NEX_STD invocable<F, Args...> && 
-                          NEX_STD same_as<InvokeResult<F, Args...>, R>;
+concept CallableReturns = 
+    NEX_STD invocable<F, Args...> && 
+    NEX_STD same_as<InvokeResult<F, Args...>, R>;
 
 /**
  * @typedef  Predicate
@@ -54,8 +72,9 @@ concept CallableReturns = NEX_STD invocable<F, Args...> &&
  * on a condition.
  */
 template <typename F, typename... Args>
-concept Predicate = NEX_STD invocable<F, Args...> && 
-                    NEX_STD convertible_to<InvokeResult<F, Args...>, bool>;
+concept Predicate = 
+    NEX_STD invocable<F, Args...> && 
+    NEX_STD convertible_to<InvokeResult<F, Args...>, bool>;
 
 /**
  * @typedef  Invocable

@@ -63,28 +63,6 @@ namespace utility {
         );
     }
 
-    ////// Type-traits for struct/class member types --------------------------------
-
-    // Member type
-    template <typename T, typename MemberT>
-    using member_type_t = MemberT;
-
-    // Pointer to member type
-    template <typename T, typename MemberT>
-    using member_pointer_t = MemberT T::*;
-
-    // Reference to member
-    template <typename T, auto MemberPtr>
-    using member_reference_t = decltype(NEX_STD declval<T&>().*MemberPtr);
-
-    // Const version
-    template <typename T, auto MemberPtr>
-    using const_member_reference_t = decltype(NEX_STD declval<const T&>().*MemberPtr);
-
-    // Rvalue reference
-    template <typename T, auto MemberPtr>
-    using member_rvalue_ref_t = decltype(NEX_STD declval<T&&>().*MemberPtr);
-
     ////// Helper functions for safe downcast and dereference -------------------------------
 
     // Safely dereference a member pointer, ensuring that the pointer type matches the member type, 

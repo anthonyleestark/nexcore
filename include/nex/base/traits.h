@@ -10,7 +10,7 @@
 #include "nex/base/macros.h"
 #include "nex/base/types.h"
 
-NEX_CORE_NAMESPACE_BEGIN
+NEX_NAMESPACE_BEGIN
 
 /**
  * @typedef InvokeResult
@@ -19,4 +19,11 @@ NEX_CORE_NAMESPACE_BEGIN
 template<typename Fn, typename... Args>
 using InvokeResult = NEX_STD invoke_result_t<Fn, Args...>;
 
-NEX_CORE_NAMESPACE_END
+/**
+ * @typedef ResolvedReturnType
+ * @brief A type alias for the resolved return type of invoking a callable with specific arguments.
+ */
+template <typename Fn, typename... Args>
+using ResolvedReturnType = NEX_STD decay_t<InvokeResult<Fn, Args...>>;
+
+NEX_NAMESPACE_END

@@ -288,6 +288,80 @@ namespace utility {
         return last;
     }
 
+    ////// Utility classes for memory blocks ---------------------------------
+
+    /**
+     * @struct MemoryBlock
+     * @brief  Non-owning mutable memory block described by pointer and byte size.
+     */
+    struct MemoryBlock {
+        void_ptr data = nullptr;    // Pointer to the start of the memory block
+        usize size = 0;             // Size of the memory block in bytes
+
+        // Default constructor
+        constexpr MemoryBlock() noexcept = default;
+
+        // Constructor with data pointer and size parameters
+        constexpr MemoryBlock(void_ptr dataValue, usize sizeValue) noexcept
+            : data(dataValue), size(sizeValue) {}
+
+        // Check if the memory block is empty (data is null or size is zero)
+        constexpr bool empty() const noexcept {
+            return data == nullptr || size == 0;
+        }
+
+        // Get a byte pointer to the start of the memory block
+        constexpr byte_ptr bytes() const noexcept {
+            return static_cast<byte_ptr>(data);
+        }
+
+        // Get a byte pointer to the end of the memory block
+        constexpr byte_ptr end() const noexcept {
+            return empty() ? nullptr : bytes() + size;
+        }
+
+        // Equality operator
+        constexpr bool operator==(const MemoryBlock&) const noexcept = default;
+    };
+
+    /**
+     * @struct ConstMemoryBlock
+     * @brief  Non-owning immutable memory block described by pointer and byte size.
+     */
+    struct ConstMemoryBlock {
+        const_void_ptr data = nullptr;    // Pointer to the start of the memory block
+        usize size = 0;                   // Size of the memory block in bytes
+
+        // Default constructor
+        constexpr ConstMemoryBlock() noexcept = default;
+
+        // Constructor with data pointer and size parameters
+        constexpr ConstMemoryBlock(const_void_ptr dataValue, usize sizeValue) noexcept
+            : data(dataValue), size(sizeValue) {}
+
+        // Constructor from a mutable MemoryBlock
+        constexpr ConstMemoryBlock(MemoryBlock block) noexcept
+            : data(block.data), size(block.size) {}
+
+        // Check if the memory block is empty (data is null or size is zero)
+        constexpr bool empty() const noexcept {
+            return data == nullptr || size == 0;
+        }
+
+        // Get a byte pointer to the start of the memory block
+        constexpr const_byte_ptr bytes() const noexcept {
+            return static_cast<const_byte_ptr>(data);
+        }
+
+        // Get a byte pointer to the end of the memory block
+        constexpr const_byte_ptr end() const noexcept {
+            return empty() ? nullptr : bytes() + size;
+        }
+
+        // Equality operator
+        constexpr bool operator==(const ConstMemoryBlock&) const noexcept = default;
+    };
+
     ////// Utility classes for RAII and generic patterns -------------------------------
 
     /**

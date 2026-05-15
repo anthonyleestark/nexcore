@@ -57,14 +57,14 @@ enum class RepeatFrequency {
 class NEX_EXPORT RepeatPattern {
 private:
     // Constants
-    static constexpr uint8 kDaysPerWeek = 7;                        // Number of days in a week
-    static constexpr unsigned long kAllDaysMask = 0b01111111UL;     // All 7 days active (bits 0-6)
-    static constexpr int32 kMinSnoozeSeconds = 60;                  // Minimum: 1 minute
-    static constexpr int32 kMaxSnoozeSeconds = 3600;                // Maximum: 1 hour
-    static constexpr int32 kDefaultSnoozeSeconds = 600;             // Default: 10 minutes
-    static constexpr int32 kMinInterval = 1;                        // Minimum interval for repeating (e.g., 1 day, 1 week)
-    static constexpr int32 kDefaultInterval = 1;                    // Default interval for repeating
-    static constexpr int32 kForeverCount = 0;                       // Repeat forever
+    static constexpr uint8 kDaysPerWeek = 7;                // Number of days in a week
+    static constexpr uintmax kAllDaysMask = 0b01111111UL;   // All 7 days active (bits 0-6)
+    static constexpr int32 kMinSnoozeSeconds = 60;          // Minimum: 1 minute
+    static constexpr int32 kMaxSnoozeSeconds = 3600;        // Maximum: 1 hour
+    static constexpr int32 kDefaultSnoozeSeconds = 600;     // Default: 10 minutes
+    static constexpr int32 kMinInterval = 1;                // Minimum interval for repeating (e.g., 1 day, 1 week)
+    static constexpr int32 kDefaultInterval = 1;            // Default interval for repeating
+    static constexpr int32 kForeverCount = 0;               // Repeat forever
 
 public:
     // Default constructor

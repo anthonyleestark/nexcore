@@ -14,25 +14,144 @@
 NEX_NAMESPACE_BEGIN
 
 /**
- * @typedef EnableIf
- * @brief A type trait that enables a template only if a boolean condition is true.
+ * @typedef IsArithmetic
+ * @brief A type trait that checks if a type Type is an arithmetic type (i.e., integral or floating-point).
  */
-template <bool B, typename T = void>
-using EnableIf = typename NEX_STD enable_if<B, T>::type;
+template <class Type>
+using IsArithmetic = NEX_STD is_arithmetic<Type>;
 
 /**
- * @typedef requires_numeric
- * @brief A type trait that enables a template only if the type T is a numeric type (arithmetic type).
+ * @typedef IsIntegral
+ * @brief A type trait that checks if a type Type is an integral type (e.g., int, char, etc.).
  */
-template <typename T>
-using RequiresNumeric = EnableIf<NEX_STD is_arithmetic_v<remove_cvref_t<T>>>;
+template <class Type>
+using IsIntegral = NEX_STD is_integral<Type>;
+
+/**
+ * @typedef IsFloatingPoint
+ * @brief A type trait that checks if a type Type is a floating-point type (i.e., float, double, or long double).
+ */
+template <class Type>
+using IsFloatingPoint = NEX_STD is_floating_point<Type>;
+
+/**
+ * @typedef IsPointer
+ * @brief A type trait that checks if a type Type is a pointer type.
+ */
+template <typename Type>
+using IsPointer = NEX_STD is_pointer<Type>;
+
+/**
+ * @typedef IsArray
+ * @brief A type trait that checks if a type Type is an array type.
+ */
+template <typename Type>
+using IsArray = NEX_STD is_array<Type>;
+
+/**
+ * @typedef IsSame
+ * @brief A type trait that checks if two types Type1 and Type2 are the same type.
+ */
+template <typename Type1, typename Type2>
+using IsSame = NEX_STD is_same<Type1, Type2>;
+
+/**
+ * @typedef IsBaseOf
+ * @brief A type trait that checks if a type Base is a base class of a type Derived.
+ */
+template <typename Base, typename Derived>
+using IsBaseOf = NEX_STD is_base_of<Base, Derived>;
+
+/**
+ * @typedef IsConstructible
+ * @brief A type trait that checks if a type Type can be constructed with the specified argument types Args.
+ */
+template <typename Type, typename... Args>
+using IsConstructible = NEX_STD is_constructible<Type, Args...>;
+
+/**
+ * @typedef IsCopyable
+ * @brief A type trait that checks if a type Type is copy constructible.
+ */
+template <typename Type>
+using IsCopyable = NEX_STD is_copy_constructible<Type>;
+
+/**
+ * @typedef IsMoveable
+ * @brief A type trait that checks if a type Type is move constructible.
+ */
+template <typename Type>
+using IsMoveable = NEX_STD is_move_constructible<Type>;
+
+/**
+ * @typedef RemoveConst
+ * @brief A type alias that removes the const qualifier from a type Type.
+ */
+template <typename Type>
+using RemoveConst = typename NEX_STD remove_const<Type>::type;
+
+/**
+ * @typedef RemoveCv
+ * @brief A type alias that removes const and volatile qualifiers from a type Type.
+ */
+template <typename Type>
+using RemoveCv = NEX_STD remove_cv_t<Type>;
+
+/**
+ * @typedef RemoveReference
+ * @brief A type alias that removes reference qualifiers from a type Type.
+ */
+template <typename Type>
+using RemoveReference = NEX_STD remove_reference_t<Type>;
+
+/**
+ * @typedef RemoveCvref
+ * @brief A type alias that removes const, volatile, and reference qualifiers from a type Type.
+ */
+template <typename Type>
+using RemoveCvref = RemoveCv<RemoveReference<Type>>;
 
 /**
  * @typedef Decay
- * @brief A type alias for the decayed type of a given type T.
+ * @brief A type alias for the decayed type of a given type Type.
  */
-template <typename T>
-using Decay = NEX_STD decay_t<T>;
+template <typename Type>
+using Decay = NEX_STD decay_t<Type>;
+
+/**
+ * @typedef EnableIf
+ * @brief A type trait that enables a template only if a boolean condition is true.
+ */
+template <bool Condition, typename Type = void>
+using EnableIf = typename NEX_STD enable_if<Condition, Type>::type;
+
+/**
+ * @typedef RequiresNumeric
+ * @brief A type trait that enables a template only if the type Type is a numeric type (arithmetic type).
+ */
+template <typename Type>
+using RequiresNumeric = EnableIf<IsArithmetic<RemoveCvref<Type>>>;
+
+/**
+ * @typedef RequiresIntegral
+ * @brief A type trait that enables a template only if the type Type is an integral type.
+ */
+template <typename Type>
+using RequiresIntegral = EnableIf<IsIntegral<RemoveCvref<Type>>>;
+
+/**
+ * @typedef RequiresFloatingPoint
+ * @brief A type trait that enables a template only if the type Type is a floating-point type.
+ */
+template <typename Type>
+using RequiresFloatingPoint = EnableIf<IsFloatingPoint<RemoveCvref<Type>>>;
+
+/**
+ * @typedef RequiresPointer
+ * @brief A type trait that enables a template only if the type Type is a pointer type.
+ */
+template <typename Type>
+using RequiresPointer = EnableIf<IsPointer<RemoveCvref<Type>>>;
 
 /**
  * @typedef InvokeResult
@@ -49,81 +168,78 @@ template <typename Fn, typename... Args>
 using ResolvedReturnType = Decay<InvokeResult<Fn, Args...>>;
 
 /**
- * @typedef RemoveCvref
- * @brief A type alias that removes const, volatile, and reference qualifiers from a type T.
- */
-template <typename T>
-using RemoveCvref = NEX_STD remove_cv_t<NEX_STD remove_reference_t<T>>;
-
-/**
  * @typedef Element
- * @brief A type alias that extracts the element type from a container type T.
- * @note The type T must have a nested value_type typedef, which is common for standard library containers.
+ * @brief A type alias that extracts the element type from a container type Type.
+ * @note The type Type must have a nested value_type typedef, which is common for standard library containers.
  */
-template <typename T>
-using Element = typename RemoveCvref<T>::value_type;
+template <typename Type>
+using Element = typename RemoveCvref<Type>::value_type;
 
 /**
  * @typedef MemberType
  * @brief A type trait that extracts the type of a member from a pointer to member.
  */
-template <typename T, typename MemberT>
+template <typename Type, typename MemberT>
 using MemberType = MemberT;
 
 /**
  * @typedef MemberPointer
  * @brief A type trait that represents a pointer to a member within a struct/class.
  */
-template <typename T, typename MemberT>
-using MemberPointer = MemberT T::*;
+template <typename Type, typename MemberT>
+using MemberPointer = MemberT Type::*;
 
 /**
  * @typedef MemberReference
  * @brief A type trait that represents a reference to a member within a struct/class.
  */
-template <typename T, auto MemberPtr>
-using MemberReference = decltype(NEX_STD declval<T&>().*MemberPtr);
+template <typename Type, auto MemberPtr>
+using MemberReference = decltype(NEX_STD declval<Type&>().*MemberPtr);
 
 /**
  * @typedef ConstMemberReference
  * @brief A type trait that represents a const reference to a member within a struct/class.
  */
-template <typename T, auto MemberPtr>
-using ConstMemberReference = decltype(NEX_STD declval<const T&>().*MemberPtr);
+template <typename Type, auto MemberPtr>
+using ConstMemberReference = decltype(NEX_STD declval<const Type&>().*MemberPtr);
 
 /**
  * @typedef MemberRvalueReference
  * @brief A type trait that represents an rvalue reference to a member within a struct/class.
  */
-template <typename T, auto MemberPtr>
-using MemberRvalueReference = decltype(NEX_STD declval<T&&>().*MemberPtr);
+template <typename Type, auto MemberPtr>
+using MemberRvalueReference = decltype(NEX_STD declval<Type&&>().*MemberPtr);
 
 /**
  * @fn IsCallable
- * @brief A type trait that checks if a type T is callable with specific argument types.
+ * @brief A type trait that checks if a type Type is callable with specific argument types.
  */
-template <typename T, typename... Args>
-inline constexpr bool IsCallable = NEX_STD is_invocable_v<T, Args...>;
+template <typename Type, typename... Args>
+inline constexpr bool IsCallable = NEX_STD is_invocable_v<Type, Args...>;
 
 /**
  * @struct IsIterable
- * @brief A type trait that checks if a type T is iterable (i.e., has begin() and end() functions).
+ * @brief A type trait that checks if a type Type is iterable (i.e., has begin() and end() functions).
  */
-template <typename T, typename = void>
+template <typename Type, typename = void>
 struct IsIterable : NEX_STD false_type {};
 
 /**
  * @struct IsIterable (specialization)
- * @brief A specialization of IsIterable that checks if a type T has valid begin() and end() functions, 
+ * @brief A specialization of IsIterable that checks if a type Type has valid begin() and end() functions, 
  *        indicating that it is iterable.
  */
-template <typename T>
-struct IsIterable<T, NEX_STD void_t<decltype(NEX_STD begin(NEX_STD declval<T&>())), 
-                                    decltype(NEX_STD end(NEX_STD declval<T&>()))>> 
-    : NEX_STD true_type {};
+template <typename Type>
+struct IsIterable<
+    Type, 
+    NEX_STD void_t<
+        decltype(NEX_STD begin(NEX_STD declval<Type&>())), 
+        decltype(NEX_STD end(NEX_STD declval<Type&>()))
+    >
+> : NEX_STD true_type {};
 
 // Forward declaration of FunctionTraits for function type introspection
-template <typename T>
+template <typename Type>
 struct FunctionTraits;
 
 /**

@@ -6,10 +6,10 @@
 #pragma once
 
 #include <utility>
-#include <type_traits>
 
 #include "nex/base/macros.h"
 #include "nex/base/types.h"
+#include "nex/base/traits.h"
 
 #if NEX_USE_STD_SOURCE_LOCATION
     #include <source_location>
@@ -47,7 +47,7 @@ namespace utility {
     // implementing container_of and other utilities that require knowledge of the layout of a struct/class.
     template <typename T, typename MemberT>
     constexpr isize offsetOf(MemberT T::*member) noexcept {
-        static_assert(NEX_STD is_standard_layout_v<T>, "offsetOf only safe for standard-layout types");
+        static_assert(IsStandardLayoutV<T>, "offsetOf only safe for standard-layout types");
         return reinterpret_cast<isize>(&reinterpret_cast<T*>(0)->*member);
     }
 
@@ -55,8 +55,8 @@ namespace utility {
     // implementing container_of and other utilities that require knowledge of the layout of a struct/class.
     template <typename T, auto MemberPtr>
     constexpr T* containerOf(decltype(MemberPtr) ptr) noexcept {
-        using MemberT = NEX_STD remove_reference_t<decltype(NEX_STD declval<T>().*MemberPtr)>;
-        static_assert(NEX_STD is_standard_layout_v<T>, "containerOf only safe for standard-layout types");
+        using MemberT = RemoveReference<decltype(NEX_STD declval<T>().*MemberPtr)>;
+        static_assert(IsStandardLayoutV<T>, "containerOf only safe for standard-layout types");
         
         return reinterpret_cast<T*>(
             reinterpret_cast<char*>(ptr) - offsetOf<T, MemberT, MemberPtr>()
@@ -83,7 +83,7 @@ namespace utility {
     // relationship at compile time, ensuring that the pointer type matches the class type.
     template <typename Derived, typename Base>
     constexpr Derived* safeDowncast(Base* base) noexcept {
-        static_assert(NEX_STD is_base_of_v<Base, Derived>);
+        static_assert(IsBaseOfV<Base, Derived>, "safeDowncast requires Derived to be a subclass of Base");
         return dynamic_cast<Derived*>(base);
     }
 
@@ -154,7 +154,7 @@ namespace utility {
     // the underlying integer value of the enum.
     template <typename Enum>
     constexpr int64 enumKeyValue(Enum key) noexcept {
-        static_assert(NEX_STD is_enum_v<Enum>, "enumKeyValue only works for enum types");
+        static_assert(IsEnumV<Enum>, "enumKeyValue only works for enum types");
         return static_cast<int64>(key);
     }
 
@@ -163,7 +163,7 @@ namespace utility {
     // the underlying integer value of the enum.
     template <typename Enum>
     constexpr auto toUnderlying(Enum key) noexcept {
-        static_assert(NEX_STD is_enum_v<Enum>, "toUnderlying only works for enum types");
+        static_assert(IsEnumV<Enum>, "toUnderlying only works for enum types");
         return static_cast<NEX_STD underlying_type_t<Enum>>(key);
     }
 
@@ -173,7 +173,7 @@ namespace utility {
     // to reduce the likelihood of hash collisions and improve the performance of lookups in hash-based containers.
     template <typename Enum>
     constexpr int64 enumKeyHash(Enum key) noexcept {
-        static_assert(NEX_STD is_enum_v<Enum>, "enumKeyHash only works for enum types");
+        static_assert(IsEnumV<Enum>, "enumKeyHash only works for enum types");
         return typeid(Enum).hash_code() ^ enumKeyValue(key);
     }
 
@@ -182,7 +182,7 @@ namespace utility {
     // of lookups in hash-based containers.
     template <typename Enum>
     constexpr int64 enumKeyHashCombined(Enum key) noexcept {
-        static_assert(NEX_STD is_enum_v<Enum>, "enumKeyHashCombined only works for enum types");
+        static_assert(IsEnumV<Enum>, "enumKeyHashCombined only works for enum types");
         int64 h1 = NEX_STD hash<usize>{}(typeid(Enum).hash_code());
         int64 h2 = NEX_STD hash<int64>{}(enumKeyValue(key));
         return combineHash(h1, h2);
@@ -192,13 +192,13 @@ namespace utility {
     // configuration flags and other utilities that require bitmask operations on enum keys. By default, bitmask operators 
     // are disabled for all enum classes, and can be enabled for specific enum classes by specializing
     template <typename Enum>
-    struct enable_bitmask_operators {
+    struct EnableBitmaskOperators {
         static constexpr bool enable = false;
     };
 
     // Bitwise OR operator for enum classes with bitmask operators enabled
     template <typename Enum>
-    constexpr NEX_STD enable_if_t<enable_bitmask_operators<Enum>::enable, Enum>
+    constexpr EnableIf<EnableBitmaskOperators<Enum>::enable, Enum>
     operator|(Enum lhs, Enum rhs) {
         using T = NEX_STD underlying_type_t<Enum>;
         return static_cast<Enum>(static_cast<T>(lhs) | static_cast<T>(rhs));
@@ -206,7 +206,7 @@ namespace utility {
 
     // Bitwise AND operator for enum classes with bitmask operators enabled
     template <typename Enum>
-    constexpr NEX_STD enable_if_t<enable_bitmask_operators<Enum>::enable, Enum>
+    constexpr EnableIf<EnableBitmaskOperators<Enum>::enable, Enum>
     operator&(Enum lhs, Enum rhs) {
         using T = NEX_STD underlying_type_t<Enum>;
         return static_cast<Enum>(static_cast<T>(lhs) & static_cast<T>(rhs));
@@ -214,7 +214,7 @@ namespace utility {
 
     // Bitwise XOR operator for enum classes with bitmask operators enabled
     template <typename Enum>
-    constexpr NEX_STD enable_if_t<enable_bitmask_operators<Enum>::enable, Enum>
+    constexpr EnableIf<EnableBitmaskOperators<Enum>::enable, Enum>
     operator^(Enum lhs, Enum rhs) {
         using T = NEX_STD underlying_type_t<Enum>;
         return static_cast<Enum>(static_cast<T>(lhs) ^ static_cast<T>(rhs));
@@ -222,7 +222,7 @@ namespace utility {
 
     // Bitwise NOT operator for enum classes with bitmask operators enabled
     template <typename Enum>
-    constexpr NEX_STD enable_if_t<enable_bitmask_operators<Enum>::enable, Enum>
+    constexpr EnableIf<EnableBitmaskOperators<Enum>::enable, Enum>
     operator~(Enum key) {
         using T = NEX_STD underlying_type_t<Enum>;
         return static_cast<Enum>(~static_cast<T>(key));
@@ -230,7 +230,7 @@ namespace utility {
 
     // Bitwise OR assignment operator for enum classes with bitmask operators enabled
     template <typename Enum>
-    constexpr NEX_STD enable_if_t<enable_bitmask_operators<Enum>::enable, Enum&>
+    constexpr EnableIf<EnableBitmaskOperators<Enum>::enable, Enum&>
     operator|=(Enum& lhs, Enum rhs) {
         lhs = lhs | rhs;
         return lhs;
@@ -238,7 +238,7 @@ namespace utility {
 
     // Bitwise AND assignment operator for enum classes with bitmask operators enabled
     template <typename Enum>
-    constexpr NEX_STD enable_if_t<enable_bitmask_operators<Enum>::enable, Enum&>
+    constexpr EnableIf<EnableBitmaskOperators<Enum>::enable, Enum&>
     operator&=(Enum& lhs, Enum rhs) {
         lhs = lhs & rhs;
         return lhs;
@@ -246,7 +246,7 @@ namespace utility {
 
     // Bitwise XOR assignment operator for enum classes with bitmask operators enabled
     template <typename Enum>
-    constexpr NEX_STD enable_if_t<enable_bitmask_operators<Enum>::enable, Enum&>
+    constexpr EnableIf<EnableBitmaskOperators<Enum>::enable, Enum&>
     operator^=(Enum& lhs, Enum rhs) {
         lhs = lhs ^ rhs;
         return lhs;
@@ -677,7 +677,7 @@ namespace utility {
     // without having to explicitly specify the type of the callable object.
     template <typename FuncType>
     NEX_NODISCARD auto makeScopeGuard(FuncType&& f) {
-        return ScopeGuard<NEX_STD decay_t<FuncType>>(NEX_STD forward<FuncType>(f));
+        return ScopeGuard<Decay<FuncType>>(NEX_STD forward<FuncType>(f));
     }
 
     // DEFER macro for scope-based excution of code blocks, similar to the DEFER statement in languages like Go

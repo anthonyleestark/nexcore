@@ -9,8 +9,8 @@
 #ifndef _USE_MATH_DEFINES
     #define _USE_MATH_DEFINES
 #endif
+
 #include <cmath>
-#include <type_traits>
 
 // Using PI constants
 #ifndef M_PI
@@ -36,6 +36,7 @@
 
 #include "nex/base/macros.h"
 #include "nex/base/types.h"
+#include "nex/base/traits.h"
 #include "nex/base/assert_crash.h"
 
 NEX_CORE_NAMESPACE_BEGIN
@@ -49,25 +50,25 @@ namespace math_utils {
     // For floating-point precision comparisons
     inline constexpr double kEpsilon = 1e-9;
     template<typename T>
-    inline typename NEX_STD enable_if<NEX_STD is_floating_point<T>::value, bool>::type
+    inline EnableIf<IsFloatingPointV<T>, bool>
     nearlyEqual(T a, T b, T epsilon = static_cast<T>(kEpsilon)) noexcept {
         return NEX_STD abs(a - b) <= epsilon * NEX_STD max(static_cast<T>(1), 
                 NEX_STD max(NEX_STD abs(a), NEX_STD abs(b)));
     }
     template<typename T>
-    inline typename NEX_STD enable_if<NEX_STD is_floating_point<T>::value, bool>::type
+    inline EnableIf<IsFloatingPointV<T>, bool>
     equalsToZero(T a, T epsilon = static_cast<T>(kEpsilon)) noexcept {
         return nearlyEqual(a, static_cast<T>(0), epsilon);
     }
 
     // Fallback: exact equal for non-floating types
     template<typename T>
-    inline typename NEX_STD enable_if<!NEX_STD is_floating_point<T>::value, bool>::type
+    inline EnableIf<!IsFloatingPointV<T>, bool>
     nearlyEqual(const T& a, const T& b) noexcept {
         return a == b;
     }
     template<typename T>
-    inline typename NEX_STD enable_if<!NEX_STD is_floating_point<T>::value, bool>::type
+    inline EnableIf<!IsFloatingPointV<T>, bool> 
     equalsToZero(const T& a) noexcept {
         return a == 0;
     }

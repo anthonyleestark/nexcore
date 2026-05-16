@@ -706,4 +706,65 @@ using FunctionArg = typename FunctionTraits<Fn>::template Arg<N>;
 template <typename Fn>
 inline constexpr usize FunctionArgCount = FunctionTraits<Fn>::argCount;
 
+/// Extracts information about an iterator type, such as its value type, reference type, and pointer type. 
+/// This primary template is designed to handle iterators by deducing the type of the expression *it, 
+/// which is the value type of the iterator.
+template <typename Ip>
+struct IteratorTraits : IteratorTraits<decltype(&RemoveReference<Type>::operator())> {};
+
+/// Extracts information about an iterator type, such as its value type, reference type, pointer type, 
+/// difference type, and iterator category.
+template <typename Ip>
+struct IteratorTraits {
+    using ValueType = typename NEX_STD iterator_traits<Ip>::value_type;
+    using Reference = typename NEX_STD iterator_traits<Ip>::reference;
+    using Pointer = typename NEX_STD iterator_traits<Ip>::pointer;
+    using DifferenceType = typename NEX_STD iterator_traits<Ip>::difference_type;
+    using IteratorCategory = typename NEX_STD iterator_traits<Ip>::iterator_category;
+};
+
+/// Represents the value type of an iterator Ip.
+template <typename Ip>
+using IteratorValueType = typename IteratorTraits<Ip>::ValueType;
+
+/// Represents the reference type of an iterator Ip.
+template <typename Ip>
+using IteratorReference = typename IteratorTraits<Ip>::Reference;
+
+/// Represents the pointer type of an iterator Ip.
+template <typename Ip>
+using IteratorPointer = typename IteratorTraits<Ip>::Pointer;
+
+/// Represents the difference type of an iterator Ip.
+template <typename Ip>
+using IteratorDifferenceType = typename IteratorTraits<Ip>::DifferenceType;
+
+/// Represents the iterator category of an iterator Ip.
+template <typename Ip>
+using IteratorCategory = typename IteratorTraits<Ip>::IteratorCategory;
+
+/// Represents the standard iterator traits (STL) for an iterator type Ip.
+template <typename Ip>
+using StdIteratorTraits = NEX_STD iterator_traits<Ip>;
+
+/// Represents the value type of an iterator Ip.
+template <typename Ip>
+using StdIteratorValueType = typename StdIteratorTraits<Ip>::value_type;
+
+/// Represents the reference type of an iterator Ip.
+template <typename Ip>
+using StdIteratorReference = typename StdIteratorTraits<Ip>::reference;
+
+/// Represents the pointer type of an iterator Ip.
+template <typename Ip>
+using StdIteratorPointer = typename StdIteratorTraits<Ip>::pointer;
+
+/// Represents the difference type of an iterator Ip.
+template <typename Ip>
+using StdIteratorDifferenceType = typename StdIteratorTraits<Ip>::difference_type;
+
+/// Represents the iterator category of an iterator Ip.
+template <typename Ip>
+using StdIteratorCategory = typename StdIteratorTraits<Ip>::iterator_category;
+
 NEX_NAMESPACE_END

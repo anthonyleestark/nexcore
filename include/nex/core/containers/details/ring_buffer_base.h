@@ -5,13 +5,13 @@
 
 #pragma once
 
-#include <type_traits>
 #include <iterator>
 #include <utility>
 #include <cstring>
 
 #include "nex/base/macros.h"
 #include "nex/base/types.h"
+#include "nex/base/traits.h"
 #include "nex/base/wrappers.h"
 #include "nex/base/assert_crash.h"
 
@@ -135,7 +135,7 @@ namespace ring_buffer::details {
         // Clear the buffer
         void clear() noexcept {
             // to avoid potential resource leaks for non-trivial types
-            if constexpr (!NEX_STD is_trivially_destructible_v<value_type>) {
+            if constexpr (!IsTriviallyDestructibleV<value_type>) {
                 for (size_type i = 0; i < count_; ++i) {
                     Storage::buffer[(head_ + i) % Storage::capacity] = value_type(); // reset to default value
                 }
@@ -154,7 +154,7 @@ namespace ring_buffer::details {
             size_type oldCapacity = Storage::capacity;
 
             // Copy existing elements to the new buffer (for trivially copyable types)
-            if constexpr (NEX_STD is_trivially_copyable_v<value_type>) {
+            if constexpr (IsTriviallyCopyableV<value_type>) {
                 size_type firstCount = newCount;
                 if (head_ + firstCount > oldCapacity) {
                     firstCount = oldCapacity - head_;
@@ -181,8 +181,8 @@ namespace ring_buffer::details {
             } else {
                 // For non-trivially copyable types, we need to move or copy elements individually
                 for (size_type i = 0; i < newCount; ++i) {
-                    if constexpr (NEX_STD is_nothrow_move_assignable_v<value_type> 
-                                    || !NEX_STD is_copy_assignable_v<value_type>) {
+                    if constexpr (IsNothrowMoveAssignableV<value_type> 
+                                    || !IsCopyAssignableV<value_type>) {
                         // Move elements if it's safe to do so
                         newBuffer[i] = NEX_STD move(Storage::buffer[(head_ + i) % oldCapacity]);
                     } else {

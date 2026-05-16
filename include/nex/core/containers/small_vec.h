@@ -10,11 +10,11 @@
 #include <iterator>
 #include <limits>
 #include <memory>
-#include <type_traits>
 #include <utility>
 
 #include "nex/base/macros.h"
 #include "nex/base/types.h"
+#include "nex/base/traits.h"
 #include "nex/base/linear.h"
 #include "nex/base/assert_crash.h"
 
@@ -107,7 +107,7 @@ private:
 
     // Move elements [first, last) to uninitialized storage at dest (source is left destroyed)
     static void moveRangeUninit(pointer dest, pointer first, pointer last) noexcept(
-        NEX_STD is_nothrow_move_constructible_v<value_type>) {
+        IsNothrowMoveConstructibleV<value_type>) {
         for (; first != last; ++first, ++dest) {
             ::new (static_cast<void*>(dest)) value_type(NEX_STD move(*first));
             first->~value_type();
@@ -192,9 +192,9 @@ public:
 
     // Construct from an iterator range [first, last)
     template <typename InputIt,
-              typename = NEX_STD enable_if_t<
-                  NEX_STD is_convertible_v<
-                      typename NEX_STD iterator_traits<InputIt>::value_type, value_type>>>
+              typename = EnableIf<
+                  IsConvertibleV<
+                      StdIteratorValueType<InputIt>, value_type>>>
     SmallVec(InputIt first, InputIt last) {
         for (; first != last; ++first) {
             pushBack(*first);
@@ -216,7 +216,7 @@ public:
     }
 
     // Move constructor
-    SmallVec(SmallVec&& other) noexcept(NEX_STD is_nothrow_move_constructible_v<value_type>) {
+    SmallVec(SmallVec&& other) noexcept(IsNothrowMoveConstructibleV<value_type>) {
         if (other.isInline()) {
             // Cannot steal the inline buffer — move elements individually
             moveRangeUninit(storagePtr(), other.storagePtr(), other.storagePtr() + other.size_);
@@ -234,7 +234,7 @@ public:
     }
 
     // Move assignment operator
-    SmallVec& operator=(SmallVec&& other) noexcept(NEX_STD is_nothrow_move_constructible_v<value_type>) {
+    SmallVec& operator=(SmallVec&& other) noexcept(IsNothrowMoveConstructibleV<value_type>) {
         if (this == &other) return *this;
         clear();
         if (other.isInline()) {
@@ -280,9 +280,9 @@ public:
 
     // Replace contents from an iterator range [first, last)
     template <typename InputIt,
-              typename = NEX_STD enable_if_t<
-                  NEX_STD is_convertible_v<
-                      typename NEX_STD iterator_traits<InputIt>::value_type, value_type>>>
+              typename = EnableIf<
+                  IsConvertibleV<
+                      StdIteratorValueType<InputIt>, value_type>>>
     void assign(InputIt first, InputIt last) {
         clear();
         for (; first != last; ++first) {
@@ -558,13 +558,13 @@ public:
     }
 
     // Erase the element at pos
-    iterator erase(const_iterator pos) noexcept(NEX_STD is_nothrow_move_assignable_v<value_type>) {
+    iterator erase(const_iterator pos) noexcept(IsNothrowMoveAssignableV<value_type>) {
         return erase(pos, pos + 1);
     }
 
     // Erase elements in range [first, last)
     iterator erase(const_iterator first, const_iterator last) noexcept(
-        NEX_STD is_nothrow_move_assignable_v<value_type>) {
+        IsNothrowMoveAssignableV<value_type>) {
         size_type idxFirst = static_cast<size_type>(first - cbegin());
         size_type idxLast = static_cast<size_type>(last - cbegin());
         NEX_ASSERT_MSG(idxFirst <= idxLast && idxLast <= size_, "Iterator range out of bounds");
@@ -588,7 +588,7 @@ public:
     }
 
     // Swap contents with another SmallVec
-    void swap(SmallVec& other) noexcept(NEX_STD is_nothrow_move_constructible_v<value_type>) {
+    void swap(SmallVec& other) noexcept(IsNothrowMoveConstructibleV<value_type>) {
         if (this == &other) return;
         if (!isInline() && !other.isInline()) {
             // Both on heap: swap pointers

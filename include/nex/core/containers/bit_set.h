@@ -6,10 +6,10 @@
 #pragma once
 
 #include <initializer_list>
-#include <type_traits>
 
 #include "nex/base/macros.h"
 #include "nex/base/types.h"
+#include "nex/base/traits.h"
 #include "nex/base/linear.h"
 #include "nex/base/assert_crash.h"
 
@@ -45,10 +45,10 @@ template <usize N> requires (N > 0)
 class NEX_EXPORT BitSet {
 public:
     // Choose the smallest native word size that fits N, up to 64-bit.
-    using Word = NEX_STD conditional_t<N <= 8,  uint8,
-                 NEX_STD conditional_t<N <= 16, uint16,
-                 NEX_STD conditional_t<N <= 32, uint32, 
-                                                uint64>>>;
+    using Word = Conditional<N <= 8,  uint8,
+                 Conditional<N <= 16, uint16,
+                 Conditional<N <= 32, uint32, 
+                                      uint64>>>;
 
     // Constants
     static constexpr usize BitsPerWord = sizeof(Word) * 8;

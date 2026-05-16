@@ -5,391 +5,20 @@
 
 #pragma once
 
-// Using math for calculations
-#ifndef _USE_MATH_DEFINES
-    #define _USE_MATH_DEFINES
-#endif
-
-#include <cmath>
-
-// Using PI constants
-#ifndef M_PI
-    #ifdef NEX_HAS_CXX20
-        #if !defined(_NUMBERS_)
-            #include <numbers>
-        #endif
-        constexpr double M_PI = NEX_STD numbers::pi;
-        constexpr double M_PI_2 = NEX_STD numbers::pi / 2;
-        constexpr double M_PI_4 = NEX_STD numbers::pi / 4;
-    #else
-        #define M_PI       3.14159265358979323846   // pi
-        #define M_PI_2     1.57079632679489661923   // pi/2
-        #define M_PI_4     0.785398163397448309616  // pi/4
-    #endif
-#endif
-
 #include <iostream>
-#include <numeric>
-#include <utility>
-#include <algorithm>
-#include <stdexcept>
 
 #include "nex/base/macros.h"
 #include "nex/base/types.h"
-#include "nex/base/traits.h"
 #include "nex/base/assert_crash.h"
+#include "nex/core/math/math.h"
 
 NEX_CORE_NAMESPACE_BEGIN
-
-/**
- * @namespace math_utils
- * @brief Utility functions for mathematical operations
- */
-namespace math_utils {
-
-    // For floating-point precision comparisons
-    inline constexpr double kEpsilon = 1e-9;
-    template<typename T>
-    inline EnableIf<IsFloatingPointV<T>, bool>
-    nearlyEqual(T a, T b, T epsilon = static_cast<T>(kEpsilon)) noexcept {
-        return NEX_STD abs(a - b) <= epsilon * NEX_STD max(static_cast<T>(1), 
-                NEX_STD max(NEX_STD abs(a), NEX_STD abs(b)));
-    }
-    template<typename T>
-    inline EnableIf<IsFloatingPointV<T>, bool>
-    equalsToZero(T a, T epsilon = static_cast<T>(kEpsilon)) noexcept {
-        return nearlyEqual(a, static_cast<T>(0), epsilon);
-    }
-
-    // Fallback: exact equal for non-floating types
-    template<typename T>
-    inline EnableIf<!IsFloatingPointV<T>, bool>
-    nearlyEqual(const T& a, const T& b) noexcept {
-        return a == b;
-    }
-    template<typename T>
-    inline EnableIf<!IsFloatingPointV<T>, bool> 
-    equalsToZero(const T& a) noexcept {
-        return a == 0;
-    }
-} // namespace math_utils 
-
-/**
- * @struct Coordinate2DValues
- * @brief Template base structure for 2D coordinate-based values
- * 
- * This template struct provides a foundation for 2D coordinate structures with x and y components.
- * It supports template type conversion and provides comparison operators with floating-point
- * tolerance using math_utils::nearlyEqual.
- * 
- * Coordinate2DValues supports:
- * - Construction from uniform value or separate x, y values
- * - Template type conversion between different numeric types
- * - Comparison operators (equality, less than, greater than, etc.) with floating-point tolerance
- * - Lexicographical ordering
- * - Stream output operators for NEX_STD ostream and NEX_STD wostream
- */
-template<typename T>
-struct Coordinate2DValues {
-    T x = {}, y = {};
-    
-    // Constructions
-    constexpr Coordinate2DValues() noexcept = default;
-    constexpr explicit Coordinate2DValues(T uniform) noexcept : x(uniform), y(uniform) {}
-    constexpr Coordinate2DValues(T xVal, T yVal) noexcept : x(xVal), y(yVal) {}
-
-    // Template conversion
-    template<typename U>
-    constexpr explicit Coordinate2DValues(const Coordinate2DValues<U>& other)
-        : x(static_cast<T>(other.x)), y(static_cast<T>(other.y)) {}
-
-    // Comparison operators
-    bool operator==(const Coordinate2DValues& other) const noexcept {
-        using math_utils::nearlyEqual;
-        return nearlyEqual(x, other.x) &&
-               nearlyEqual(y, other.y);
-    }
-    bool operator!=(const Coordinate2DValues& other) const noexcept {
-        return !(*this == other);
-    }
-
-    // Lexicographical comparison operators
-    bool operator<(const Coordinate2DValues& other) const noexcept {
-        using math_utils::nearlyEqual;
-        return (x < other.x) || (nearlyEqual(x, other.x) && y < other.y);
-    }
-    bool operator<=(const Coordinate2DValues& other) const noexcept {
-        return (*this < other) || (*this == other);
-    }
-    bool operator>(const Coordinate2DValues& other) const noexcept {
-        using math_utils::nearlyEqual;
-        return (x > other.x) || (nearlyEqual(x, other.x) && y > other.y);
-    }
-    bool operator>=(const Coordinate2DValues& other) const noexcept {
-        return !(*this < other);
-    }
-
-    // Stream Operators
-    friend NEX_STD ostream& operator<<(NEX_STD ostream& os, const Coordinate2DValues& coord) {
-        return os << "(" << coord.x << ", " << coord.y << ")";
-    }
-    friend NEX_STD wostream& operator<<(NEX_STD wostream& wos, const Coordinate2DValues& coord) {
-        return wos << L"(" << coord.x << L", " << coord.y << L")";
-    }
-};
-
-/**
- * @struct Size2DValues
- * @brief Template base structure for 2D size-based values
- * 
- * This template struct provides a foundation for 2D size structures with width and height components.
- * It supports template type conversion and provides comparison operators with floating-point
- * tolerance using math_utils::nearlyEqual.
- * 
- * Size2DValues supports:
- * - Construction from uniform value or separate width, height values
- * - Template type conversion between different numeric types
- * - Comparison operators (equality, less than, greater than, etc.) with floating-point tolerance
- * - Area calculation
- * - Zero and validity checking
- * - Stream output operators for NEX_STD ostream and NEX_STD wostream
- */
-template<typename T>
-struct Size2DValues {
-    T width = {}, height = {};
-
-    // Constructors
-    constexpr Size2DValues() noexcept = default;
-    constexpr Size2DValues(T w, T h) noexcept : width(w), height(h) {}
-    constexpr explicit Size2DValues(T uniform) noexcept : width(uniform), height(uniform) {}
-
-    // Template conversion
-    template<typename U>
-    constexpr explicit Size2DValues(const Size2DValues<U>& other)
-        : width(static_cast<T>(other.width)), height(static_cast<T>(other.height)) {}
-
-    // Comparison operators
-    bool operator==(const Size2DValues& other) const noexcept {
-        using math_utils::nearlyEqual;
-        return nearlyEqual(width, other.width) && nearlyEqual(height, other.height);
-    }
-    bool operator!=(const Size2DValues& other) const noexcept {
-        return !(*this == other);
-    }
-    bool operator<(const Size2DValues& other) const noexcept {
-        using math_utils::nearlyEqual;
-        if (!nearlyEqual(width, other.width)) return width < other.width;
-        return height < other.height;
-    }
-    bool operator<=(const Size2DValues& other) const noexcept {
-        return (*this < other) || (*this == other);
-    }
-    bool operator>(const Size2DValues& other) const noexcept {
-        using math_utils::nearlyEqual;
-        return (width > other.width) || (nearlyEqual(width, other.width) && height > other.height);
-    }
-    bool operator>=(const Size2DValues& other) const noexcept {
-        return !(*this < other);
-    }
-
-    // Stream Operators
-    friend NEX_STD ostream& operator<<(NEX_STD ostream& os, const Size2DValues& size) {
-        return os << "(" << size.width << ", " << size.height << ")";
-    }
-    friend NEX_STD wostream& operator<<(NEX_STD wostream& wos, const Size2DValues& size) {
-        return wos << L"(" << size.width << L", " << size.height << L")";
-    }
-    
-    // Area
-    double area() const noexcept {
-        return NEX_STD abs(width * height);
-    }
-    
-    // Is zero
-    bool isZero() const noexcept {
-        using math_utils::equalsToZero;
-        return equalsToZero(width) && equalsToZero(height);
-    }
-
-    // Is valid
-    constexpr bool isValid() const noexcept {
-        return width > T{} && height > T{};
-    }
-};
-
-/**
- * @enum Rotation
- * @brief Enumeration for rotation directions
- * 
- * This enum class defines standard rotation directions for 2D geometry operations.
- * It provides both clockwise and counter-clockwise rotations at 90, 180, and 270 degree increments.
- * 
- * Rotation values:
- * - Clockwise_90, Clockwise_180, Clockwise_270
- * - CounterClockwise_90, CounterClockwise_180, CounterClockwise_270
- */
-enum class Rotation {
-    Clockwise_90, Clockwise_180, Clockwise_270,
-    CounterClockwise_90, CounterClockwise_180, CounterClockwise_270,
-};
-
-/**
- * @struct RectBase
- * @brief Template base structure for rectangle-based values
- * 
- * This template struct provides a foundation for rectangle structures with x, y, width, and height components.
- * It supports template type conversion and provides comparison operators with floating-point
- * tolerance using math_utils::nearlyEqual.
- * 
- * RectBase supports:
- * - Construction from x, y, width, height values
- * - Template type conversion between different numeric types
- * - Comparison operators (equality, less than, greater than, etc.) with floating-point tolerance
- * - Empty operation to reset all values to zero
- * - Zero checking
- * - Stream output operators for NEX_STD ostream and NEX_STD wostream
- */
-template<typename T>
-struct RectBase {
-    T x = {}, y = {}, width = {}, height = {};
-
-    // Constructors
-    constexpr RectBase() noexcept = default;
-    constexpr RectBase(T xVal, T yVal, T wVal, T hVal) noexcept : 
-                        x(xVal), y(yVal), width(wVal), height(hVal) {}
-
-    // Template conversion
-    template<typename U>
-    constexpr explicit RectBase(const RectBase<U>& other)
-        : x(static_cast<T>(other.x)), y(static_cast<T>(other.y)),
-          width(static_cast<T>(other.width)), height(static_cast<T>(other.height)) {}
-          
-    // Comparison operators
-    bool operator==(const RectBase& other) const noexcept {
-        using math_utils::nearlyEqual;
-        return nearlyEqual(x, other.x) &&
-               nearlyEqual(y, other.y) &&
-               nearlyEqual(width, other.width) &&
-               nearlyEqual(height, other.height);
-    }
-    bool operator!=(const RectBase& other) const noexcept {
-        return !(*this == other);
-    }
-    bool operator<(const RectBase& other) const noexcept {
-        using math_utils::nearlyEqual;
-        if (!nearlyEqual(x, other.x)) return x < other.x;
-        if (!nearlyEqual(y, other.y)) return y < other.y;
-        if (!nearlyEqual(width, other.width)) return width < other.width;
-        return height < other.height;
-    }
-    bool operator<=(const RectBase& other) const noexcept {
-        return (*this < other || *this == other);
-    }
-    bool operator>(const RectBase& other) const noexcept {
-        return !(*this <= other);
-    }
-    bool operator>=(const RectBase& other) const noexcept {
-        return !(*this < other);
-    }
-
-    // Stream Operators
-    friend NEX_STD ostream& operator<<(NEX_STD ostream& os, const RectBase& rect) {
-        return os << "(" << rect.x << ", " << rect.y << ", " << rect.width << ", " << rect.height << ")";
-    }
-    friend NEX_STD wostream& operator<<(NEX_STD wostream& wos, const RectBase& rect) {
-        return wos << L"(" << rect.x << L", " << rect.y << L", " << rect.width << L", " << rect.height << L")";
-    }
-
-    // Empty the rect
-    void empty() noexcept {
-        x = y = width = height = T{};
-    }
-
-    // Is zero
-    bool isZero() const noexcept {
-        using math_utils::equalsToZero;
-        return equalsToZero(x) && equalsToZero(y) &&
-                equalsToZero(width) && equalsToZero(height);
-    }
-};
-
-/**
- * @struct Edge2DValues
- * @brief Template base structure for edge-based values (left, top, right, bottom)
- * 
- * This template struct provides a foundation for edge-based structures with left, top, right, and bottom components.
- * It supports template type conversion and provides comparison operators with floating-point
- * tolerance using math_utils::nearlyEqual.
- * 
- * Edge2DValues supports:
- * - Construction from uniform value or separate left, top, right, bottom values
- * - Template type conversion between different numeric types
- * - Comparison operators (equality, less than, greater than, etc.) with floating-point tolerance
- * - Empty operation to reset all values to zero
- * - Zero checking
- */
-template<typename T>
-struct Edge2DValues {
-    T left = {}, top = {}, right = {}, bottom = {};
-
-    // Constructions
-    constexpr Edge2DValues() noexcept = default;
-    constexpr explicit Edge2DValues(T uniform) noexcept
-        : left(uniform), top(uniform), right(uniform), bottom(uniform) {}
-    constexpr Edge2DValues(T leftVal, T topVal, T rightVal, T bottomVal) noexcept
-        : left(leftVal), top(topVal), right(rightVal), bottom(bottomVal) {}
-
-    // Template conversion
-    template<typename U>
-    constexpr explicit Edge2DValues(const Edge2DValues<U>& other)
-        : left(static_cast<T>(other.left)), top(static_cast<T>(other.top)),
-            right(static_cast<T>(other.right)), bottom(static_cast<T>(other.bottom)) {}
-
-    // Comparison operators
-    bool operator==(const Edge2DValues& other) const noexcept {
-        using math_utils::nearlyEqual;
-        return nearlyEqual(left, other.left) &&
-               nearlyEqual(top, other.top) &&
-               nearlyEqual(right, other.right) &&
-               nearlyEqual(bottom, other.bottom);
-    }
-    bool operator!=(const Edge2DValues& other) const noexcept {
-        return !(*this == other);
-    }
-    bool operator<(const Edge2DValues& other) const noexcept {
-        using math_utils::nearlyEqual;
-        if (!nearlyEqual(left, other.left)) return left < other.left;
-        if (!nearlyEqual(top, other.top)) return top < other.top;
-        if (!nearlyEqual(right, other.right)) return right < other.right;
-        return bottom < other.bottom;
-    }
-    bool operator<=(const Edge2DValues& other) const noexcept {
-        return (*this < other || *this == other);
-    }
-    bool operator>(const Edge2DValues& other) const noexcept {
-        return !(*this <= other);
-    }
-    bool operator>=(const Edge2DValues& other) const noexcept {
-        return !(*this < other);
-    }
-
-    // Empty the edge values
-    void empty() noexcept {
-        left = top = right = bottom = T{};
-    }
-
-    // Is zero
-    bool isZero() const noexcept {
-        using math_utils::equalsToZero;
-        return equalsToZero(left) && equalsToZero(top) &&
-                equalsToZero(right) && equalsToZero(bottom);
-    }
-};
 
 /**
  * @struct Point
  * @brief Represents a point or 2D coordinate in 2D geometry
  * 
+ * @details
  * This struct represents a point in 2D space with x and y coordinates. It inherits from
  * Coordinate2DValues<float> and provides geometric operations for point calculations.
  * 
@@ -402,8 +31,7 @@ struct Edge2DValues {
  * - Note: Addition and subtraction with other Points are intentionally disabled
  *   (use Vector2D for vector operations instead)
  */
-struct Point : public Coordinate2DValues<float>
-{
+struct Point : public math::Coordinate2DValues<float> {
 public:
     // Construction
     using Coordinate2DValues::Coordinate2DValues;
@@ -416,8 +44,7 @@ public:
         return Point(x * scalar, y * scalar);
     }
     Point operator/(double scalar) const {
-        using math_utils::equalsToZero;
-        if (!equalsToZero(scalar)) return Point(x / scalar, y / scalar);
+        if (!math::equalsToZero(scalar)) return Point(x / scalar, y / scalar);
         NEX_ASSERT_MSG(false, "Division by zero");
     }
 
@@ -429,8 +56,7 @@ public:
         return *this;
     }
     Point& operator/=(double scalar) {
-        using math_utils::equalsToZero;
-        if (!equalsToZero(scalar)) { x /= scalar; y /= scalar; return *this; }
+        if (!math::equalsToZero(scalar)) { x /= scalar; y /= scalar; return *this; }
         NEX_ASSERT_MSG(false, "Division by zero");
     }
 
@@ -462,8 +88,7 @@ public:
     double angleWith(const Point& other) const noexcept {
         double dotProd = this->dot(other);
         double magnitude1 = this->magnitude(); double magnitude2 = other.magnitude();
-        using math_utils::equalsToZero;
-        if (equalsToZero(magnitude1) || equalsToZero(magnitude2)) {
+        if (math::equalsToZero(magnitude1) || math::equalsToZero(magnitude2)) {
             NEX_ASSERT_MSG(false, "Cannot compute angle with zero-length vector");
         }
         double magnitudes = magnitude1 * magnitude2;
@@ -493,6 +118,7 @@ public:
  * @struct Vector2D
  * @brief Represents a 2D vector or line segment
  * 
+ * @details
  * This struct represents a 2D vector with x and y components. It inherits from
  * Coordinate2DValues<double> and provides comprehensive vector operations.
  * 
@@ -505,8 +131,7 @@ public:
  * - Conversion to/from Point
  * - Commonly used as Offset2D, Velocity2D, and Accelaration2D type aliases
  */
-struct Vector2D : public Coordinate2DValues<double>
-{
+struct Vector2D : public math::Coordinate2DValues<double> {
 public:
     // Construction
     using Coordinate2DValues::Coordinate2DValues;
@@ -534,8 +159,7 @@ public:
         return Vector2D(x * scalar, y * scalar);
     }
     Vector2D operator/(double scalar) const {
-        using math_utils::equalsToZero;
-        if (!equalsToZero(scalar)) return Vector2D(x / scalar, y / scalar);
+        if (!math::equalsToZero(scalar)) return Vector2D(x / scalar, y / scalar);
         NEX_ASSERT_MSG(false, "Division by zero");
     }
 
@@ -553,8 +177,7 @@ public:
         return *this;
     }
     Vector2D& operator/=(double scalar) {
-        using math_utils::equalsToZero;
-        if (equalsToZero(scalar)) {
+        if (math::equalsToZero(scalar)) {
             NEX_ASSERT_MSG(false, "Division by zero");
         }
         x /= scalar; y /= scalar;
@@ -575,8 +198,7 @@ public:
     // Normalized vector (unit length)
     Vector2D normalize() const {
         double len = length();
-        using math_utils::equalsToZero;
-        if (!equalsToZero(len)) return Vector2D(x / len, y / len);
+        if (!math::equalsToZero(len)) return Vector2D(x / len, y / len);
         NEX_ASSERT_MSG(false, "Cannot normalize zero-length vector");
     }
 
@@ -594,8 +216,7 @@ public:
     double angleTo(const Vector2D& other) const {
         double dotProd = this->dot(other);
         double length1 = this->length(); double length2 = other.length();
-        using math_utils::equalsToZero;
-        if (equalsToZero(length1) || equalsToZero(length2)) {
+        if (math::equalsToZero(length1) || math::equalsToZero(length2)) {
             NEX_ASSERT_MSG(false, "Cannot compute angle with zero-length vector");
         }
         double cosTheta = dotProd / (length1 * length2);
@@ -604,8 +225,7 @@ public:
 
     // Is zero
     bool isZero() const noexcept {
-        using math_utils::equalsToZero;
-        return equalsToZero(x) && equalsToZero(y);
+        return math::equalsToZero(x) && math::equalsToZero(y);
     }
 };
 
@@ -633,6 +253,7 @@ using Accelaration2D = Vector2D;
  * @struct Size
  * @brief Represents a geometric size in 2D geometry
  * 
+ * @details
  * This struct represents a 2D size with width and height components. It inherits from
  * Size2DValues<double> and provides size manipulation operations.
  * 
@@ -644,8 +265,7 @@ using Accelaration2D = Vector2D;
  * - Conversion to Vector2D
  * - Also available as Dimensions type alias
  */
-struct Size : public Size2DValues<double>
-{
+struct Size : public math::Size2DValues<double> {
 public:
     // Construction
     using Size2DValues::Size2DValues;
@@ -676,13 +296,11 @@ public:
         return *this;
     }
     Size operator/(double scalar) const {
-        using math_utils::equalsToZero;
-        if (!equalsToZero(scalar)) return Size(width / scalar, height / scalar);
+        if (!math::equalsToZero(scalar)) return Size(width / scalar, height / scalar);
         NEX_ASSERT_MSG(false, "Division by zero");
     }
     Size& operator/=(double scalar) {
-        using math_utils::equalsToZero;
-        if (!equalsToZero(scalar)) { width /= scalar; height /= scalar; return *this; }
+        if (!math::equalsToZero(scalar)) { width /= scalar; height /= scalar; return *this; }
         NEX_ASSERT_MSG(false, "Division by zero");
     }
 
@@ -709,6 +327,7 @@ using Dimensions = Size;
  * @struct Resolution
  * @brief Represents screen or display resolution dimensions
  * 
+ * @details
  * This struct represents resolution dimensions with width and height components. It inherits from
  * Size2DValues<double> and provides resolution-specific operations.
  * 
@@ -720,8 +339,7 @@ using Dimensions = Size;
  * - Aspect ratio calculation
  * - Simplified aspect ratio calculation (returns simplified fraction as pair)
  */
-struct Resolution : public Size2DValues<double>
-{
+struct Resolution : public math::Size2DValues<double> {
 public:
     // Construction
     using Size2DValues::Size2DValues;
@@ -752,13 +370,11 @@ public:
         return *this;
     }
     Resolution operator/(double scalar) const {
-        using math_utils::equalsToZero;
-        if (!equalsToZero(scalar)) return Resolution(width / scalar, height / scalar);
+        if (!math::equalsToZero(scalar)) return Resolution(width / scalar, height / scalar);
         NEX_ASSERT_MSG(false, "Division by zero");
     }
     Resolution& operator/=(double scalar) {
-        using math_utils::equalsToZero;
-        if (!equalsToZero(scalar)) { width /= scalar; height /= scalar; return *this; }
+        if (!math::equalsToZero(scalar)) { width /= scalar; height /= scalar; return *this; }
         NEX_ASSERT_MSG(false, "Division by zero");
     }
 
@@ -774,8 +390,7 @@ public:
 
     // Calculate aspect ratio
     double aspectRatio() const noexcept {
-        using math_utils::equalsToZero;
-        if (equalsToZero(height)) return 0.0; // invalid result, not throwing exception here
+        if (math::equalsToZero(height)) return 0.0; // invalid result, not throwing exception here
         return static_cast<double>(width) / static_cast<double>(height);
     }
     NEX_STD pair<int, int> simplifiedAspectRatio() const {
@@ -790,6 +405,7 @@ public:
  * @struct Rect
  * @brief Represents a rectangle in 2D geometry
  * 
+ * @details
  * This struct represents a rectangle with position (x, y) and size (width, height). It inherits
  * from RectBase<double> and provides comprehensive rectangle operations. The rectangle can be
  * inverted (negative width or height), and operations handle both normal and inverted rectangles.
@@ -806,8 +422,7 @@ public:
  * - Transformation operations (flip, rotate, normalize, invert)
  * - Arithmetic operations with Point and Vector2D
  */
-struct Rect : public RectBase<double>
-{
+struct Rect : public math::RectBase<double> {
 public:
     // Construction
     using RectBase::RectBase;
@@ -915,8 +530,7 @@ public:
 
     // Is a square
     bool isSquare() const noexcept {
-        using math_utils::nearlyEqual;
-        return nearlyEqual(width, height);
+        return math::nearlyEqual(width, height);
     }
 
     // Area of the rectangle
@@ -1021,7 +635,7 @@ public:
 
     // Rotation around center
     // This method only works like width/height swapping
-    Rect rotate(Rotation rotation) const noexcept;
+    Rect rotate(math::Rotation rotation) const noexcept;
 
     // Rotatition around center with an arbitary angle
     // This returns a new axis-aligned bounding rectangle,
@@ -1040,6 +654,7 @@ public:
  * @struct EdgeRect
  * @brief Represents an edge-based rectangle in 2D geometry
  * 
+ * @details
  * This struct represents a rectangle using edge coordinates (left, top, right, bottom) instead of
  * position and size. It inherits from Edge2DValues<double> and provides rectangle operations
  * similar to Rect but using edge-based representation. The rectangle can be inverted (right < left
@@ -1057,8 +672,7 @@ public:
  * - Transformation operations (flip, rotate, normalize, invert)
  * - Arithmetic operations with Point and Vector2D
  */
-struct EdgeRect : public Edge2DValues<double>
-{
+struct EdgeRect : public math::Edge2DValues<double> {
 public:
     // Construction
     using Edge2DValues::Edge2DValues;
@@ -1191,8 +805,7 @@ public:
 
     // Is a square
     bool isSquare() const noexcept {
-        using math_utils::nearlyEqual;
-        return nearlyEqual(width(), height());
+        return math::nearlyEqual(width(), height());
     }
 
     // Area of the rectangle
@@ -1295,7 +908,7 @@ public:
 
     // Rotation around center
     // This method only works like width/height swapping
-    EdgeRect rotate(Rotation rotation) const noexcept;
+    EdgeRect rotate(math::Rotation rotation) const noexcept;
 
     // Rotatition around center with an arbitary angle
     // This returns a new axis-aligned bounding rectangle,
@@ -1314,6 +927,7 @@ public:
  * @struct Margin
  * @brief Represents UI margin (space outside an element's border)
  * 
+ * @details
  * This struct represents margin values with left, top, right, and bottom components. It inherits
  * from Edge2DValues<double> and is commonly used in UI layout calculations to define spacing
  * outside an element's border.
@@ -1329,8 +943,7 @@ public:
  * - Size manipulation (shrinkSize, expandSize)
  * - Conversion to EdgeRect
  */
-struct Margin : public Edge2DValues<double>
-{
+struct Margin : public math::Edge2DValues<double> {
 public:
     // Construction
     using Edge2DValues::Edge2DValues;
@@ -1363,8 +976,7 @@ public:
         return Margin(left * scalar, top * scalar, right * scalar, bottom * scalar);
     }
     Margin operator/(double scalar) const {
-        using math_utils::equalsToZero;
-        if (!equalsToZero(scalar)) return Margin(left / scalar, top / scalar, right / scalar, bottom / scalar);
+        if (!math::equalsToZero(scalar)) return Margin(left / scalar, top / scalar, right / scalar, bottom / scalar);
         NEX_ASSERT_MSG(false, "Division by zero");
     }
     Margin& operator*=(double scalar) noexcept {
@@ -1372,8 +984,7 @@ public:
         return *this;
     }
     Margin& operator/=(double scalar) {
-        using math_utils::equalsToZero;
-        if (equalsToZero(scalar)) { 
+        if (math::equalsToZero(scalar)) { 
             NEX_ASSERT_MSG(false, "Division by zero");
         }
         left /= scalar; top /= scalar; right /= scalar; bottom /= scalar; 
@@ -1440,6 +1051,7 @@ public:
  * @struct Padding
  * @brief Represents UI padding (space inside an element's border)
  * 
+ * @details
  * This struct represents padding values with left, top, right, and bottom components. It inherits
  * from Edge2DValues<double> and is commonly used in UI layout calculations to define spacing
  * inside an element's border.
@@ -1455,8 +1067,7 @@ public:
  * - Size manipulation (shrinkSize, expandSize)
  * - Conversion to EdgeRect
  */
-struct Padding : public Edge2DValues<double>
-{
+struct Padding : public math::Edge2DValues<double> {
 public:
     // Construction
     using Edge2DValues::Edge2DValues;
@@ -1489,8 +1100,7 @@ public:
         return Padding(left * scalar, top * scalar, right * scalar, bottom * scalar);
     }
     Padding operator/(double scalar) const {
-        using math_utils::equalsToZero;
-        if (!equalsToZero(scalar)) return Padding(left / scalar, top / scalar, right / scalar, bottom / scalar);
+        if (!math::equalsToZero(scalar)) return Padding(left / scalar, top / scalar, right / scalar, bottom / scalar);
         NEX_ASSERT_MSG(false, "Division by zero");
     }
     Padding& operator*=(double scalar) noexcept {
@@ -1498,8 +1108,7 @@ public:
         return *this;
     }
     Padding& operator/=(double scalar) {
-        using math_utils::equalsToZero;
-        if (equalsToZero(scalar)) { 
+        if (math::equalsToZero(scalar)) { 
             NEX_ASSERT_MSG(false, "Division by zero");
         }
         left /= scalar; top /= scalar; right /= scalar; bottom /= scalar; 
@@ -1566,6 +1175,7 @@ public:
  * @struct Thickness
  * @brief Represents UI border thickness (width of an element's border)
  * 
+ * @details
  * This struct represents border thickness values with left, top, right, and bottom components.
  * It inherits from Edge2DValues<double> and is commonly used in UI layout calculations to define
  * the width of an element's border on each side.
@@ -1581,8 +1191,7 @@ public:
  * - Size manipulation (shrinkSize, expandSize)
  * - Conversion to EdgeRect
  */
-struct Thickness : public Edge2DValues<double>
-{
+struct Thickness : public math::Edge2DValues<double> {
 public:
     // Construction
     using Edge2DValues::Edge2DValues;
@@ -1621,8 +1230,7 @@ public:
         return Thickness(left * scalar, top * scalar, right * scalar, bottom * scalar);
     }
     Thickness operator/(double scalar) const {
-        using math_utils::equalsToZero;
-        if (!equalsToZero(scalar)) return Thickness(left / scalar, top / scalar, right / scalar, bottom / scalar);
+        if (!math::equalsToZero(scalar)) return Thickness(left / scalar, top / scalar, right / scalar, bottom / scalar);
         NEX_ASSERT_MSG(false, "Division by zero");
     }
     Thickness& operator*=(double scalar) noexcept {
@@ -1630,8 +1238,7 @@ public:
         return *this;
     }
     Thickness& operator/=(double scalar) {
-        using math_utils::equalsToZero;
-        if (equalsToZero(scalar)) { 
+        if (math::equalsToZero(scalar)) { 
             NEX_ASSERT_MSG(false, "Division by zero");
         }
         left /= scalar; top /= scalar; right /= scalar; bottom /= scalar; 

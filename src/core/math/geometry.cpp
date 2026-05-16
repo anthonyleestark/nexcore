@@ -9,18 +9,18 @@
 NEX_CORE_NAMESPACE_BEGIN
 
 // Geometry2D implementation helper functions
-namespace geometry2d
-{
+namespace geometry2d {
+
     // Rotation direction to angle radians
-    double rotationToAngle(Rotation rotation) noexcept {
+    double rotationToAngle(math::Rotation rotation) noexcept {
         double angleRadians = 0.0;
         switch (rotation) {
-            case Rotation::Clockwise_90:         angleRadians = -M_PI / 2.0;        break;
-            case Rotation::Clockwise_180:        angleRadians = -M_PI;                break;
-            case Rotation::Clockwise_270:        angleRadians = -3 * M_PI / 2.0;    break;
-            case Rotation::CounterClockwise_90:  angleRadians = M_PI / 2.0;            break;
-            case Rotation::CounterClockwise_180: angleRadians = M_PI;                break;
-            case Rotation::CounterClockwise_270: angleRadians = 3 * M_PI / 2.0;        break;
+            case math::Rotation::Clockwise_90:         angleRadians = -M_PI / 2.0;          break;
+            case math::Rotation::Clockwise_180:        angleRadians = -M_PI;                break;
+            case math::Rotation::Clockwise_270:        angleRadians = -3 * M_PI / 2.0;      break;
+            case math::Rotation::CounterClockwise_90:  angleRadians = M_PI / 2.0;           break;
+            case math::Rotation::CounterClockwise_180: angleRadians = M_PI;                 break;
+            case math::Rotation::CounterClockwise_270: angleRadians = 3 * M_PI / 2.0;       break;
         }
         return angleRadians;
     }
@@ -40,10 +40,11 @@ namespace geometry2d
         // Translate back
         return Vector2D(newX + pivot.x, newY + pivot.y);
     }
+
 } // namespace geometry2d
 
 // Rectangle rotation around center
-Rect Rect::rotate(Rotation rotation) const noexcept {
+Rect Rect::rotate(math::Rotation rotation) const noexcept {
     // Rotate around center
     double angleRadians = geometry2d::rotationToAngle(rotation);
     return rotateAround(center(), angleRadians);
@@ -91,7 +92,7 @@ Rect Rect::rotateAround(const Vector2D& pivot, double angleRadians) const noexce
 }
 
 // Rectangle rotation around center
-EdgeRect EdgeRect::rotate(Rotation rotation) const noexcept {
+EdgeRect EdgeRect::rotate(math::Rotation rotation) const noexcept {
     // Rotate around center
     double angleRadians = geometry2d::rotationToAngle(rotation);
     return rotateAround(center(), angleRadians);

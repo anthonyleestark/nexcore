@@ -5,12 +5,11 @@
 
 #pragma once
 
-#include <initializer_list>
-
 #include "nex/base/macros.h"
 #include "nex/base/types.h"
 #include "nex/base/traits.h"
 #include "nex/base/linear.h"
+#include "nex/base/wrappers.h"
 #include "nex/base/assert_crash.h"
 
 NEX_CORE_NAMESPACE_BEGIN
@@ -111,7 +110,7 @@ public:
     constexpr BitSet() = default;
 
     // Construct from initializer list of booleans
-    constexpr BitSet(NEX_STD initializer_list<bool> init) {
+    constexpr BitSet(InitList<bool> init) {
         static_assert(init.size() <= N, 
                 "Initializer list size cannot exceed the size of the BitSet"); // compile-time check
         usize i = 0;

@@ -6,7 +6,6 @@
 #pragma once
 
 #include <algorithm>
-#include <initializer_list>
 #include <iterator>
 #include <limits>
 #include <memory>
@@ -16,6 +15,7 @@
 #include "nex/base/types.h"
 #include "nex/base/traits.h"
 #include "nex/base/linear.h"
+#include "nex/base/wrappers.h"
 #include "nex/base/assert_crash.h"
 
 NEX_CORE_NAMESPACE_BEGIN
@@ -183,7 +183,7 @@ public:
     }
 
     // Construct from initializer list
-    SmallVec(NEX_STD initializer_list<value_type> init) {
+    SmallVec(InitList<value_type> init) {
         reserve(init.size());
         for (const value_type& v : init) {
             pushBack(v);
@@ -259,7 +259,7 @@ public:
     }
 
     // Assign from initializer list
-    SmallVec& operator=(NEX_STD initializer_list<value_type> init) {
+    SmallVec& operator=(InitList<value_type> init) {
         assign(init);
         return *this;
     }
@@ -291,7 +291,7 @@ public:
     }
 
     // Replace contents with an initializer list
-    void assign(NEX_STD initializer_list<value_type> init) {
+    void assign(InitList<value_type> init) {
         clear();
         reserve(init.size());
         for (const value_type& v : init) {
@@ -528,7 +528,7 @@ public:
     }
 
     // Insert elements from initializer list before pos
-    iterator insert(const_iterator pos, NEX_STD initializer_list<value_type> init) {
+    iterator insert(const_iterator pos, InitList<value_type> init) {
         size_type idx = static_cast<size_type>(pos - cbegin());
         for (const value_type& v : init) {
             insert(cbegin() + static_cast<difference_type>(idx), v);

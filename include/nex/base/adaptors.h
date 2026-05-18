@@ -46,7 +46,7 @@
 NEX_NAMESPACE_BEGIN
 
 /**
- * @brief Stack (LIFO data structure) type aliases
+ * @brief Stack (LIFO data structure)
  * @details
  * The Stack container is a Last-In-First-Out (LIFO) data structure that allows elements to be added and removed 
  * from the top of the stack, commonly used for storing and manipulating collections of data that require LIFO behavior.
@@ -55,7 +55,7 @@ template <typename T, typename Container = NEX_STD deque<T>>
 using Stack = NEX_STD stack<T, Container>;
 
 /**
- * @brief Queue (FIFO data structure) type aliases
+ * @brief Queue (FIFO data structure)
  * @details
  * The Queue container is a First-In-First-Out (FIFO) data structure that allows elements to be added at the back 
  * of the queue and removed from the front of the queue, commonly used for storing and manipulating collections 
@@ -65,7 +65,7 @@ template <typename T, typename Container = NEX_STD deque<T>>
 using Queue = NEX_STD queue<T, Container>;
 
 /**
- * @brief Heap (heap-based data structure) type aliases
+ * @brief Heap (heap-based data structure)
  * @details
  * The Heap container is a heap-based data structure that allows elements to be added with a priority and 
  * removed based on their priority, commonly used for storing and manipulating collections of data that require 

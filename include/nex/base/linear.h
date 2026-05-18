@@ -47,25 +47,30 @@
 NEX_NAMESPACE_BEGIN
 
 /**
- * @brief Array (fixed-size array) type aliases
- * @details A wrapper around a stack-allocated (usually) fixed-size array. 
+ * @brief Array (fixed-size array)
+ * @details 
+ * Array is a wrapper around a stack-allocated (usually) fixed-size array. 
  * Use this when the number of elements is known at compile-time to avoid dynamic allocation.
  */
 template <typename T, usize Size>
 using Array = NEX_STD array<T, Size>;
 
 /**
- * @brief Vec (dynamic array) type aliases
- * @details A dynamic array that provides fast indexed access and efficient insertion/deletion at the end. 
- * Elements are stored contiguously in memory.
+ * @brief Vec (dynamic array)
+ * @details 
+ * Vec is a dynamic array that provides fast indexed access and efficient insertion/deletion at the end. 
+ * Elements are stored contiguously in memory, making it ideal for cases where the size may change over time 
+ * and random access is required.
  */
 template <typename T, typename Allocator = NEX_STD allocator<T>>
 using Vec = NEX_STD vector<T, Allocator>;
 
 /**
- * @brief Deque (double-ended queue) type aliases
- * @details An indexed sequence container that allows fast insertion and deletion at both its beginning and its end. 
- * Unlike Vec, storage is not guaranteed to be contiguous.
+ * @brief Deque (double-ended queue)
+ * @details 
+ * Deque is an indexed sequence container that allows fast insertion and deletion at both its beginning and its end. 
+ * Unlike Vec, storage is not guaranteed to be contiguous, but it provides efficient access to both ends of the sequence, 
+ * making it suitable for use cases like queues or stacks where elements are frequently added and removed from both ends.
  */
 template <typename T, typename Allocator = NEX_STD allocator<T>>
 using Deque = NEX_STD deque<T, Allocator>;

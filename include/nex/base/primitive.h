@@ -52,9 +52,8 @@ NEX_NAMESPACE_BEGIN
 /**
  * @brief Template for thread-safe, atomic operations on a value.
  * @details 
- * Provides atomic access to a shared variable without the overhead 
- * of a mutex. It guarantees that operations are indivisible and prevents 
- * data races in multi-threaded environments.
+ * Provides atomic access to a shared variable without the overhead of a mutex. 
+ * It guarantees that operations are indivisible and prevents data races in multi-threaded environments.
  */
 template <typename T>
 using Atomic = NEX_STD atomic<T>;
@@ -62,35 +61,32 @@ using Atomic = NEX_STD atomic<T>;
 /**
  * @brief A lock-free atomic boolean flag.
  * @details 
- * The simplest atomic type, guaranteed to be lock-free on all 
- * supported platforms. Ideal for building low-level synchronization 
- * primitives like spinlocks or simple "stop" signals.
+ * The simplest atomic type, guaranteed to be lock-free on all supported platforms. 
+ * Ideal for building low-level synchronization primitives like spinlocks or simple "stop" signals.
  */
 using AtomicFlag = NEX_STD atomic_flag;
 
 /**
  * @brief Standard mutual exclusion primitive.
  * @details 
- * Basic synchronization object used to protect shared data from 
- * concurrent access. Only one thread can own the mutex at any given time.
+ * Basic synchronization object used to protect shared data from concurrent access. 
+ * Only one thread can own the mutex at any given time.
  */
 using Mutex = NEX_STD mutex;
 
 /**
  * @brief Shared mutex for Reader-Writer scenarios.
  * @details 
- * Supports two levels of access: 'shared' (multiple threads can read 
- * simultaneously) and 'exclusive' (only one thread can write). Optimized for 
- * workloads where reads are more frequent than writes.
+ * Supports two levels of access: 'shared' (multiple threads can read simultaneously) and 'exclusive' 
+ * (only one thread can write). Optimized for workloads where reads are more frequent than writes.
  */
 using SharedMutex = NEX_STD shared_mutex;
 
 /**
  * @brief Mutex that can be locked multiple times by the same thread.
  * @details 
- * Prevents deadlocks when a thread calls a sequence of functions 
- * that each require locking the same mutex. Use sparingly as it often 
- * indicates a need for refactoring.
+ * Prevents deadlocks when a thread calls a sequence of functions that each require locking the same mutex. 
+ * Use sparingly as it often indicates a need for refactoring.
  */
 using RecursiveMutex = NEX_STD recursive_mutex;
 
@@ -148,9 +144,8 @@ using Barrier = NEX_STD barrier<Func>;
 
 /**
  * @brief Thread-safe integer aliases for concurrent counters and flags.
- * @details Provides atomic primitives for common integer types. These ensure 
- * that modifications (like increments or exchanges) are safe across multiple 
- * threads without requiring a Mutex.
+ * @details Provides atomic primitives for common integer types. These ensure that modifications (like increments 
+ * or exchanges) are safe across multiple threads without requiring a Mutex.
  */
 using AtomicInt = Atomic<int32>;
 using AtomicUInt = Atomic<uint32>;

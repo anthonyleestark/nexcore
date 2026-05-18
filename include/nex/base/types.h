@@ -168,6 +168,7 @@ using c32       = char32;                   // 32-bit character type (UTF-32)
 
 using boolean   = bool;                     // Boolean value (true or false)
 using bool8     = uint8;                    // 8-bit boolean storage value (0 = false, non-zero = true)
+using bool16    = uint16;                   // 16-bit boolean storage value (0 = false, non-zero = true)
 using bool32    = uint32;                   // 32-bit boolean storage value (0 = false, non-zero = true)
 
 // ============================================================================
@@ -175,6 +176,7 @@ using bool32    = uint32;                   // 32-bit boolean storage value (0 =
 // ============================================================================
 
 using b8    = uint8;                        // 8-bit boolean storage value (0 = false, non-zero = true)
+using b16   = uint16;                       // 16-bit boolean storage value (0 = false, non-zero = true)
 using b32   = uint32;                       // 32-bit boolean storage value (0 = false, non-zero = true)
 
 // ============================================================================

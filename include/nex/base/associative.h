@@ -53,7 +53,7 @@
 NEX_NAMESPACE_BEGIN
 
 /**
- * @brief TreeMap (key-value associative container) type aliases
+ * @brief TreeMap (key-value associative container)
  * @details
  * The TreeMap container is a key-value associative container that stores pairs of keys and values, commonly used 
  * for storing and manipulating collections of data that have a key-value relationship.
@@ -62,7 +62,7 @@ template <typename Key, typename Value>
 using TreeMap = NEX_STD map<Key, Value>;
 
 /**
- * @brief TreeSet (collection of unique elements) type aliases
+ * @brief TreeSet (collection of unique elements)
  * @details
  * The TreeSet container is a collection of unique elements that does not allow duplicate values, commonly used 
  * for storing and manipulating collections of data that require uniqueness.
@@ -71,7 +71,7 @@ template <typename T>
 using TreeSet = NEX_STD set<T>;
 
 /**
- * @brief MultiMap (key-value associative container that allows duplicate keys) type aliases
+ * @brief MultiMap (key-value associative container that allows duplicate keys)
  * @details
  * The MultiMap container is a container that stores elements formed by a combination of a key value and a mapped value.
  * Unlike TreeMap, multiple elements can have equivalent keys. Elements are typically ordered by key.
@@ -80,7 +80,7 @@ template <typename Key, typename Value>
 using MultiMap = NEX_STD multimap<Key, Value>;
 
 /**
- * @brief MultiSet (collection of unique elements that allows duplicate values) type aliases
+ * @brief MultiSet (collection of unique elements that allows duplicate values)
  * @details
  * The MultiSet container is a container that stores elements in a specific order, where multiple elements can have 
  * equivalent values.
@@ -89,9 +89,9 @@ template <typename T>
 using MultiSet = NEX_STD multiset<T>;
 
 /**
- * @brief Hash Map (hash table based key-value associative container) type aliases
+ * @brief HashMap (hash table based key-value associative container)
  * @details
- * The Hash Map container is an unordered associative container that maps keys to values. It provides average 
+ * The HashMap container is an unordered associative container that maps keys to values. It provides average 
  * constant-time complexity for insertions and lookups using hashing.
  */
 template <typename Key, typename Value, 
@@ -101,9 +101,9 @@ template <typename Key, typename Value,
 using HashMap = NEX_STD unordered_map<Key, Value, Hasher, KeyEqual, Allocator>;
 
 /**
- * @brief Hash Set (hash table based collection of unique elements) type aliases
+ * @brief HashSet (hash table based collection of unique elements)
  * @details
- * The Hash Set container is an unordered container that stores unique elements. Fast retrieval is achieved 
+ * The HashSet container is an unordered container that stores unique elements. Fast retrieval is achieved 
  * through hashing, and no particular order is guaranteed for the stored elements.
  */
 template <typename T, 
@@ -113,9 +113,9 @@ template <typename T,
 using HashSet = NEX_STD unordered_set<T, Hasher, KeyEqual, Allocator>;
 
 /**
- * @brief Hash MultiMap (hash table based key-value associative container that allows duplicate keys) type aliases
+ * @brief HashMultiMap (hash table based key-value associative container that allows duplicate keys)
  * @details
- * The Hash MultiMap is an unordered associative container that maps a single key to multiple values. 
+ * The HashMultiMap is an unordered associative container that maps a single key to multiple values. 
  * Unlike a standard Map, it allows for duplicate keys and does not guarantee any specific element ordering.
  */
 template <typename Key, typename Value, 
@@ -125,9 +125,9 @@ template <typename Key, typename Value,
 using HashMultiMap = NEX_STD unordered_multimap<Key, Value, Hasher, KeyEqual, Allocator>;
 
 /**
- * @brief Hash MultiSet (hash table based collection of unique elements that allows duplicate values) type aliases
+ * @brief HashMultiSet (hash table based collection of unique elements that allows duplicate values)
  * @details
- * The Hash MultiSet container is a container that stores a collection of elements where multiple instances 
+ * The HashMultiSet container is a container that stores a collection of elements where multiple instances 
  * of the same value are permitted. Unlike MultiSet, elements are not stored in any particular order, but offer 
  * average constant-time complexity for operations.
  */

@@ -23,12 +23,12 @@ NEX_NAMESPACE_BEGIN
  * Result supports:
  * - Construction for success and failure cases
  * - Checking success/failure status
- * - Retrieving the value or error code
+ * - Retrieving the return value or error code
  * - Comparison operations
  * - Utility functions for common patterns
  * 
- * @tparam T The type of the value on success
- * @tparam E The type of the error on failure
+ * @tparam ReturnType The type of the return value on success
+ * @tparam ErrorType The type of the error on failure
  * 
  * @note This class is similar in concept to std::expected (C++23) or Result types in other languages.
  * 
@@ -42,22 +42,22 @@ NEX_NAMESPACE_BEGIN
  * }
  * ```
  */
-template<typename T, typename E = Error>
+template<typename ReturnType, typename ErrorType = Error>
 class NEX_EXPORT NEX_NODISCARD Result {
 public:
     // Create a successful result
-    static Result ok(T value) {
+    static Result ok(ReturnType value) {
         Result result;
         result.isOk_ = true;
-        new (&result.value_) T(NEX_STD move(value));
+        ::new (&result.value_) ReturnType(NEX_STD move(value));
         return result;
     }
     
     // Create an error result
-    static Result error(E error) {
+    static Result error(ErrorType error) {
         Result result;
         result.isOk_ = false;
-        new (&result.error_) E(NEX_STD move(error));
+        ::new (&result.error_) ErrorType(NEX_STD move(error));
         return result;
     }
     
@@ -66,7 +66,7 @@ public:
     explicit operator bool() const noexcept { return isOk_; }
     
     // Get the success value (crash if error)
-    T& value() {
+    ReturnType& value() {
         if (!isOk_) {
             NEX_FATAL(
                 "Attempted to access value of error Result");
@@ -75,7 +75,7 @@ public:
     }
     
     // Get the success value (const, crash if error)
-    const T& value() const {
+    const ReturnType& value() const {
         if (!isOk_) {
             NEX_FATAL(
                 "Attempted to access value of error Result");
@@ -84,7 +84,7 @@ public:
     }
 
     // Get the success value or a default
-    T valueOr(T defaultValue) const {
+    ReturnType valueOr(ReturnType defaultValue) const {
         if (isOk_) {
             return value_;
         }
@@ -92,7 +92,7 @@ public:
     }
     
     // Get the error value (crash if success)
-    E& error() {
+    ErrorType& error() {
         if (isOk_) {
             NEX_FATAL(
                 "Attempted to access error of success Result");
@@ -101,7 +101,7 @@ public:
     }
     
     // Get the error value (const, crash if success)
-    const E& error() const {
+    const ErrorType& error() const {
         if (isOk_) {
             NEX_FATAL(
                 "Attempted to access error of success Result");
@@ -110,21 +110,21 @@ public:
     }
 
     // Try to get the success value pointer (returns a nullptr if error)
-    const T* tryValue() const noexcept {
+    const ReturnType* tryValue() const noexcept {
         return isOk_ ? &value_ : nullptr;
     }
 
     // Try to get the error value pointer (returns a nullptr if success)
-    const E* tryError() const noexcept {
+    const ErrorType* tryError() const noexcept {
         return isOk_ ? nullptr : &error_;
     }
 
     // Properly destroy active union member
     ~Result() {
         if (isOk_) {
-            value_.~T();
+            value_.~ReturnType();
         } else {
-            error_.~E();
+            error_.~ErrorType();
         }
     }
 
@@ -148,21 +148,21 @@ private:
     // This provides a clearer memory layout, reduced overhead,
     // and prevents invalid states.
     union {
-        T value_;
-        E error_;
+        ReturnType value_;
+        ErrorType error_;
     };
 };
 
 /**
- * @class Result<void, E>
+ * @class Result<void, ErrorType>
  * @brief Specialization of Result class for void type
  * 
  * This specialization of the Result class handles operations that do not return a value.
  * It encapsulates only the success/failure status and the error code.
  * 
- * @tparam E The type of the error on failure
+ * @tparam ErrorType The type of the error on failure
  * 
- * @note This class is similar in concept to std::expected<void, E> (C++23) or Result types in other languages.
+ * @note This class is similar in concept to std::expected<void, ErrorType> (C++23) or Result types in other languages.
  * 
  * Example usage:
  * ```
@@ -174,19 +174,19 @@ private:
  * }
  * ```
  */
-template<typename E>
-class NEX_EXPORT NEX_NODISCARD Result<void, E> {
+template<typename ErrorType>
+class NEX_EXPORT NEX_NODISCARD Result<void, ErrorType> {
 public:
     // Create a successful result
-    static Result<void, E> ok() {
-        Result<void, E> result;
+    static Result<void, ErrorType> ok() {
+        Result<void, ErrorType> result;
         result.isOk_ = true;
         return result;
     }
     
     // Create an error result
-    static Result<void, E> error(E error) {
-        Result<void, E> result;
+    static Result<void, ErrorType> error(ErrorType error) {
+        Result<void, ErrorType> result;
         result.error_ = error;
         result.isOk_ = false;
         return result;
@@ -197,7 +197,7 @@ public:
     explicit operator bool() const noexcept { return isOk_; }
     
     // Get the error value (crash if success)
-    E& error() {
+    ErrorType& error() {
         if (isOk_) {
             NEX_FATAL(
                 "Attempted to access error of success Result");
@@ -206,7 +206,7 @@ public:
     }
     
     // Get the error value (const, crash if success)
-    const E& error() const {
+    const ErrorType& error() const {
         if (isOk_) {
             NEX_FATAL(
                 "Attempted to access error of success Result");
@@ -215,7 +215,7 @@ public:
     }
 
     // Try to get the error value pointer (returns a nullptr if success)
-    const E* tryError() const noexcept {
+    const ErrorType* tryError() const noexcept {
         return isOk_ ? nullptr : &error_;
     }
 
@@ -236,7 +236,7 @@ private:
     // We only need to store the error in this specialization
     // since there is no success value. We do not use std::optional
     // here either to avoid unnecessary overhead.
-    E error_;
+    ErrorType error_;
 };
 
 NEX_NAMESPACE_END

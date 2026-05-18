@@ -238,12 +238,12 @@ XmlDocument::XmlDocument()
 NEX_DEFINE_DEFAULT_DTOR(XmlDocument);
 
 // Load XML from file
-Result<void, Error> XmlDocument::loadFromFile(StringView path) {
+Result<void> XmlDocument::loadFromFile(StringView path) {
     // Convert StringView to UTF-8 std::string
     Utf8String utf8;
     const auto success = toUtf8String(path, utf8);
     if (!success || utf8.empty()) {
-        return Result<void, Error>::error({
+        return Result<void>::error({
             ErrorCode::DeserializationFailed,
             "Failed to convert file path to UTF-8 for XML parsing"
         });
@@ -253,21 +253,21 @@ Result<void, Error> XmlDocument::loadFromFile(StringView path) {
     pugi::xml_parse_result pr = impl_->doc.load_file(utf8.c_str());
     impl_->loaded = static_cast<bool>(pr);
     if (impl_->loaded) {
-        return Result<void, Error>::ok();
+        return Result<void>::ok();
     } else {
-        return Result<void, Error>::error({
+        return Result<void>::error({
             ErrorCode::DeserializationFailed, "Failed to parse XML file"
         });
     }
 }
 
 // Load XML from string
-Result<void, Error> XmlDocument::loadFromString(const StringView content) {
+Result<void> XmlDocument::loadFromString(const StringView content) {
     // Convert StringView to UTF-8 std::string
     Utf8String utf8;
     const auto success = toUtf8String(content, utf8);
     if (!success || utf8.empty()) {
-        return Result<void, Error>::error({
+        return Result<void>::error({
             ErrorCode::DeserializationFailed,
             "Failed to convert input string to UTF-8 for XML parsing"
         });
@@ -277,9 +277,9 @@ Result<void, Error> XmlDocument::loadFromString(const StringView content) {
     pugi::xml_parse_result pr = impl_->doc.load_string(utf8.c_str());
     impl_->loaded = static_cast<bool>(pr);
     if (impl_->loaded) {
-        return Result<void, Error>::ok();
+        return Result<void>::ok();
     } else {
-        return Result<void, Error>::error({
+        return Result<void>::error({
             ErrorCode::DeserializationFailed, "Failed to parse XML string"
         });
     }

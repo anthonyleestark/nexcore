@@ -174,8 +174,8 @@ public:
     String toString(StringFormat format = StringFormat::HumanReadable) const;
 
     // Parse from string (e.g. "Ctrl+Alt+K", "Shift+VK112")
-    static Result<KeyCombination, ErrorCode> fromString(const String& text);
-    static Result<KeyCombination, ErrorCode> fromString(StringView text);
+    static Result<KeyCombination> fromString(const String& text);
+    static Result<KeyCombination> fromString(StringView text);
 
     ////// Comparison operators ------------------------
     

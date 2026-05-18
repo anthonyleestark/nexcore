@@ -124,10 +124,10 @@ namespace {
     }
 
     // Parse from a UTF-8 string view and return a KeyCombination result
-    Result<KeyCombination, ErrorCode> parseFromUtf8String(Utf8StringView text) {
+    Result<KeyCombination> parseFromUtf8String(Utf8StringView text) {
         const Utf8String trimmed = trimAscii(text);
         if (trimmed.empty()) {
-            return Result<KeyCombination, ErrorCode>::ok(KeyCombination::none());
+            return Result<KeyCombination>::ok(KeyCombination::none());
         }
 
         uint32 modifiers = 0;
@@ -141,7 +141,9 @@ namespace {
                 Utf8StringView(trimmed).substr(start, tokenEnd - start));
 
             if (token.empty()) {
-                return Result<KeyCombination, ErrorCode>::error(ErrorCode::InvalidArgument);
+                return Result<KeyCombination>::error({
+                    ErrorCode::InvalidArgument, "Empty token in key combination string"
+                });
             }
 
             // Check if the token is a modifier or a virtual key
@@ -157,7 +159,9 @@ namespace {
             } else {
                 uint32 parsedKey = 0;
                 if (!parseVirtualKeyToken(token, parsedKey)) {
-                    return Result<KeyCombination, ErrorCode>::error(ErrorCode::InvalidArgument);
+                    return Result<KeyCombination>::error({
+                        ErrorCode::InvalidArgument, "Invalid virtual key token"
+                    });
                 }
                 virtualKey = parsedKey;
             }
@@ -170,10 +174,12 @@ namespace {
 
         KeyCombination combination(modifiers, virtualKey);
         if (!combination.isValid()) {
-            return Result<KeyCombination, ErrorCode>::error(ErrorCode::InvalidArgument);
+            return Result<KeyCombination>::error({
+                ErrorCode::InvalidArgument, "Invalid key combination"
+            });
         }
 
-        return Result<KeyCombination, ErrorCode>::ok(combination.normalized());
+        return Result<KeyCombination>::ok(combination.normalized());
     }
 
 } // namespace
@@ -207,16 +213,18 @@ String KeyCombination::toString(StringFormat format /* = StringFormat::HumanRead
 }
 
 // Parse a string representation of a key combination and return the corresponding KeyCombination object
-Result<KeyCombination, ErrorCode> KeyCombination::fromString(const String& text) {
+Result<KeyCombination> KeyCombination::fromString(const String& text) {
     const auto utf8Result = text.toUtf8();
     if (!utf8Result.isOk()) {
-        return Result<KeyCombination, ErrorCode>::error(ErrorCode::InvalidArgument);
+        return Result<KeyCombination>::error({
+            ErrorCode::InvalidArgument, "Invalid string: Failed to convert to UTF-8"
+        });
     }
     return parseFromUtf8String(utf8Result.value());
 }
 
 // Parse a string view representation of a key combination and return the corresponding KeyCombination object
-Result<KeyCombination, ErrorCode> KeyCombination::fromString(StringView text) {
+Result<KeyCombination> KeyCombination::fromString(StringView text) {
     return fromString(text.toString());
 }
 

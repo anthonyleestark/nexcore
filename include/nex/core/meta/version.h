@@ -109,7 +109,7 @@ struct NEX_EXPORT Version {
     static bool isValidVersionString(StringView versionStr) noexcept;
 
     // Validate a string representation of a version, returning a Result containing an Error if invalid
-    static Result<void, Error> validateVersionString(StringView versionStr) noexcept;
+    static Result<void> validateVersionString(StringView versionStr) noexcept;
 
     // Returns a string representation of the version in the format "major.minor.patch"
     String toString() const;

@@ -74,7 +74,7 @@ public:
     // Parse a Uuid from a string representation
     // The string should be in the standard UUID format (e.g., "123e4567-e89b-12d3-a456-426614174000").
     // Returns a Result containing the parsed Uuid if successful, or an Error if the string is not a valid UUID.
-    static Result<Uuid, Error> fromString(StringView str) noexcept;
+    static Result<Uuid> fromString(StringView str) noexcept;
 
     ////// Accessors and validation -----------------------
 

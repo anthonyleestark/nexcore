@@ -58,10 +58,10 @@ public:
     ////// Load/Parse JSON from external sources -----------------------
 
     // Load JSON from file
-    Result<void, Error> loadFromFile(StringView filePath);
+    Result<void> loadFromFile(StringView filePath);
 
     // Load JSON from string
-    Result<void, Error> loadFromString(StringView jsonString);
+    Result<void> loadFromString(StringView jsonString);
 
     ////// Accessors -----------------------
 

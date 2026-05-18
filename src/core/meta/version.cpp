@@ -74,10 +74,10 @@ namespace {
     }
 
     // Basic validation for version string format (e.g., "1.2.3", "1.2.3-alpha", "1.2.3+build")
-    Result<Version, Error> doValidateVersionString(StringView versionStr) {
+    Result<Version> doValidateVersionString(StringView versionStr) {
         //// 0. Check for empty string
         if (versionStr.empty()) {
-            return Result<Version, Error>::error({
+            return Result<Version>::error({
                 ErrorCode::InvalidFormat, "Version string is empty"
             });
         }
@@ -107,7 +107,7 @@ namespace {
             if (c == '.') dots++;
         }
         if (dots != 2) {
-            return Result<Version, Error>::error({
+            return Result<Version>::error({
                 ErrorCode::InvalidFormat, "Invalid core version format"
             });
         }
@@ -115,18 +115,18 @@ namespace {
         // Split core into major, minor, patch and validate each
         auto coreParts = text::split(core, u'.');
         if (coreParts.size() != 3) {
-            return Result<Version, Error>::error({
+            return Result<Version>::error({
                 ErrorCode::InvalidFormat, "Core version must have three parts"
             });
         }
         for (const auto& part : coreParts) {
             if (!isValidVersionNumber(part)) {
-                return Result<Version, Error>::error({
+                return Result<Version>::error({
                     ErrorCode::InvalidFormat, "Version number parts must be valid unsigned integers"
                 });
             }
             if (hasLeadingZero(part)) {
-                return Result<Version, Error>::error({
+                return Result<Version>::error({
                     ErrorCode::InvalidFormat, "Version number parts must not have leading zeros"
                 });
             }
@@ -134,12 +134,12 @@ namespace {
 
         //// 4. Validate Pre-release and Build Metadata
         if (!pre.empty() && !doValidateIdentifier(pre, false)) {
-            return Result<Version, Error>::error({
+            return Result<Version>::error({
                 ErrorCode::InvalidFormat, "Invalid pre-release identifier format"
             });
         }
         if (!build.empty() && !doValidateIdentifier(build, true)) {
-            return Result<Version, Error>::error({
+            return Result<Version>::error({
                 ErrorCode::InvalidFormat, "Invalid build metadata identifier format"
             });
         }
@@ -159,20 +159,20 @@ namespace {
         // A version like 0.0.0 is still considered valid if it has at least a valid pre-release or build metadata
         if (version.major == 0 && version.minor == 0 && version.patch == 0 
             && version.preRelease.empty() && version.buildMetadata.empty()) {
-            return Result<Version, Error>::error({
+            return Result<Version>::error({
                 ErrorCode::InvalidFormat, "Version is all zeros and has no metadata"
             });
         }
         // A version is considered valid if major, minor, and patch are within the allowed range
         // (0 to 65535 for uint16) and pre-release/build metadata are properly formatted if present
         if (version.major > 0xFFFF || version.minor > 0xFFFF || version.patch > 0xFFFF) {
-            return Result<Version, Error>::error({
+            return Result<Version>::error({
                 ErrorCode::InvalidFormat, "Version numbers exceed maximum allowed values"
             });
         }
 
         // If we reach here, the version is valid, so we return it as a successful result
-        return Result<Version, Error>::ok(version);
+        return Result<Version>::ok(version);
     }
 
 } // namespace
@@ -216,12 +216,12 @@ bool Version::isValidVersionString(StringView versionStr) noexcept {
 }
 
 // Validate a string representation of a version, returning a Result containing an Error if invalid
-Result<void, Error> Version::validateVersionString(StringView versionStr) noexcept {
+Result<void> Version::validateVersionString(StringView versionStr) noexcept {
     auto result = validateVersionString(versionStr);
     if (result.isOk()) {
-        return Result<void, Error>::ok();
+        return Result<void>::ok();
     } else {
-        return Result<void, Error>::error(result.error());
+        return Result<void>::error(result.error());
     }
 }
 

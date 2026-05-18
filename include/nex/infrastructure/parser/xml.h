@@ -251,10 +251,10 @@ public:
     ////// Load XML from external sources -----------------------
 
     // Load XML from file
-    Result<void, Error> loadFromFile(StringView path);
+    Result<void> loadFromFile(StringView path);
 
     // Load XML from string
-    Result<void, Error> loadFromString(StringView content);
+    Result<void> loadFromString(StringView content);
 
     ////// Accessors -----------------------
 

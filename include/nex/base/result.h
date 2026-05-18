@@ -15,17 +15,20 @@ NEX_NAMESPACE_BEGIN
 
 /**
  * @class Result
- * @brief Template class to encapsulate operation results with success/failure status
+ * @brief Represents the result of an operation that can either succeed with a value or fail with an error.
  * 
- * This class provides a convenient way to represent the result of an operation,
- * including whether it succeeded or failed, along with an optional value or error code.
+ * @details
+ * This template class provides a convenient way to represent the result of an operation, including whether 
+ * it succeeded or failed, along with an optional value on success or an error on failure. It is designed 
+ * to be used in functions that may fail and need to return detailed error information without using exceptions.
  * 
  * Result supports:
- * - Construction for success and failure cases
- * - Checking success/failure status
- * - Retrieving the return value or error code
- * - Comparison operations
- * - Utility functions for common patterns
+ * - Construction of successful results with a value.
+ * - Construction of error results with an error.
+ * - Checking if the result is successful or an error.
+ * - Accessing the value or error, with safety checks that will crash if accessed incorrectly.
+ * - A specialization for void return type, which only indicates success or failure without returning any value.
+ * - Try-get methods that return pointers to the value or error, allowing for safe access without crashing.
  * 
  * @tparam ReturnType The type of the return value on success
  * @tparam ErrorType The type of the error on failure
@@ -34,11 +37,13 @@ NEX_NAMESPACE_BEGIN
  * 
  * Example usage:
  * ```
- * Result<int, Error> divide(int a, int b) {
+ * Result<int> divide(int a, int b) {
  *     if (b == 0) {
- *         return Result<int, ErrorCode>::error(ErrorCode::InvalidArgument);
+ *         return Result<int>::error({
+ *             ErrorCode::InvalidArgument, "Division by zero is not allowed"
+ *         });
  *     }
- *     return Result<int, ErrorCode>::ok(a / b);
+ *     return Result<int>::ok(a / b);
  * }
  * ```
  */
@@ -65,7 +70,7 @@ public:
     bool isOk() const { return isOk_; }
     explicit operator bool() const noexcept { return isOk_; }
     
-    // Get the success value (crash if error)
+    // Get the success value (crash if result is an error)
     ReturnType& value() {
         if (!isOk_) {
             NEX_FATAL(
@@ -74,7 +79,7 @@ public:
         return value_;
     }
     
-    // Get the success value (const, crash if error)
+    // Get the success value (const, crash if result is an error)
     const ReturnType& value() const {
         if (!isOk_) {
             NEX_FATAL(
@@ -91,7 +96,7 @@ public:
         return defaultValue;
     }
     
-    // Get the error value (crash if success)
+    // Get the error value (crash if result is successful)
     ErrorType& error() {
         if (isOk_) {
             NEX_FATAL(
@@ -100,7 +105,7 @@ public:
         return error_;
     }
     
-    // Get the error value (const, crash if success)
+    // Get the error value (const, crash if result is successful)
     const ErrorType& error() const {
         if (isOk_) {
             NEX_FATAL(
@@ -109,17 +114,17 @@ public:
         return error_;
     }
 
-    // Try to get the success value pointer (returns a nullptr if error)
+    // Try to get the success value pointer (returns a nullptr if result is an error)
     const ReturnType* tryValue() const noexcept {
         return isOk_ ? &value_ : nullptr;
     }
 
-    // Try to get the error value pointer (returns a nullptr if success)
+    // Try to get the error value pointer (returns a nullptr if result is successful)
     const ErrorType* tryError() const noexcept {
         return isOk_ ? nullptr : &error_;
     }
 
-    // Properly destroy active union member
+    // Destroy the Result and its contained value or error
     ~Result() {
         if (isOk_) {
             value_.~ReturnType();
@@ -139,14 +144,12 @@ private:
     Result(Result&&) = default;
     Result& operator=(Result&&) = default;
 
-    // Success or error flag
+    // A flag to indicate whether the result is successful (true) or an error (false)
     bool isOk_ = false;
 
-    // We use a union to store either the value or the error,
-    // along with a flag indicating which is active,
-    // instead of std::variant or two std::optionals.
-    // This provides a clearer memory layout, reduced overhead,
-    // and prevents invalid states.
+    // We use a union to store either the value or the error, but not both at the same time. 
+    // This allows us to avoid the overhead of std::optional and manage the lifetime of 
+    // the contained objects manually.
     union {
         ReturnType value_;
         ErrorType error_;
@@ -155,10 +158,13 @@ private:
 
 /**
  * @class Result<void, ErrorType>
- * @brief Specialization of Result class for void type
+ * @brief Specialization of Result for operations that do not return a value, only success/failure status and error.
  * 
- * This specialization of the Result class handles operations that do not return a value.
- * It encapsulates only the success/failure status and the error code.
+ * @details
+ * This specialization of Result is designed for functions that do not return a value on success, but still need to 
+ * indicate success or failure and provide error information. It provides the same interface for checking success 
+ * and accessing errors, but does not store a value on success. This is useful for operations that are primarily 
+ * about side effects and do not produce a meaningful return value.
  * 
  * @tparam ErrorType The type of the error on failure
  * 
@@ -166,11 +172,11 @@ private:
  * 
  * Example usage:
  * ```
- * Result<void, Error> performOperation() {
+ * Result<void, ErrorCode> performOperation() {
  *    if (someConditionFails) {
- *       return Result<void, Error>::error(ErrorCode::OperationFailed);
+ *       return Result<void, ErrorCode>::error(ErrorCode::OperationFailed);
  *   }
- *   return Result<void, Error>::ok();
+ *   return Result<void, ErrorCode>::ok();
  * }
  * ```
  */
@@ -196,7 +202,7 @@ public:
     bool isOk() const { return isOk_; }
     explicit operator bool() const noexcept { return isOk_; }
     
-    // Get the error value (crash if success)
+    // Get the error value (crash if result is successful)
     ErrorType& error() {
         if (isOk_) {
             NEX_FATAL(
@@ -205,7 +211,7 @@ public:
         return error_;
     }
     
-    // Get the error value (const, crash if success)
+    // Get the error value (const, crash if result is successful)
     const ErrorType& error() const {
         if (isOk_) {
             NEX_FATAL(
@@ -214,9 +220,16 @@ public:
         return error_;
     }
 
-    // Try to get the error value pointer (returns a nullptr if success)
+    // Try to get the error value pointer (returns a nullptr if result is successful)
     const ErrorType* tryError() const noexcept {
         return isOk_ ? nullptr : &error_;
+    }
+
+    // Destroy the Result and its contained error
+    ~Result() {
+        if (!isOk_) {
+            error_.~ErrorType();
+        }
     }
 
 private:
@@ -230,12 +243,11 @@ private:
     Result(Result&&) = default;
     Result& operator=(Result&&) = default;
 
-    // Success flag
+    // A flag to indicate whether the result is successful (true) or an error (false)
     bool isOk_ = false;
 
-    // We only need to store the error in this specialization
-    // since there is no success value. We do not use std::optional
-    // here either to avoid unnecessary overhead.
+    // We only need to store the error in this specialization since there is no success value. 
+    // We do not use std::optional here either to avoid unnecessary overhead.
     ErrorType error_;
 };
 

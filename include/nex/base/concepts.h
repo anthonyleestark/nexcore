@@ -17,13 +17,13 @@
  */
 
 #include <concepts>
+#include <type_traits>
 #include <functional>
 #include <iterator>
 #include <ranges>
 
 #include "nex/base/macros.h"
 #include "nex/base/types.h"
-#include "nex/base/traits.h"
 
 NEX_NAMESPACE_BEGIN
 
@@ -126,8 +126,8 @@ concept Regular = NEX_STD regular<Type>;
 /// Checks whether the decayed type is copy constructible and move constructible.
 template <typename Type>
 concept DecayCopyable =
-    NEX_STD copy_constructible<Decay<Type>> &&
-    NEX_STD move_constructible<Decay<Type>>;
+    NEX_STD copy_constructible<NEX_STD decay_t<Type>> &&
+    NEX_STD move_constructible<NEX_STD decay_t<Type>>;
 
 /// Alias kept for existing code that uses RegularValue.
 template <typename Type>
@@ -169,13 +169,13 @@ concept RegularInvocable = NEX_STD regular_invocable<Fn, Args...>;
 template <typename Fn, typename Return, typename... Args>
 concept CallableReturns =
     Invocable<Fn, Args...> &&
-    SameAs<InvokeResult<Fn, Args...>, Return>;
+    SameAs<NEX_STD invoke_result_t<Fn, Args...>, Return>;
 
 /// Checks whether Fn can be invoked with Args and returns a type convertible to Return.
 template <typename Fn, typename Return, typename... Args>
 concept CallableConvertibleTo =
     Invocable<Fn, Args...> &&
-    ConvertibleTo<InvokeResult<Fn, Args...>, Return>;
+    ConvertibleTo<NEX_STD invoke_result_t<Fn, Args...>, Return>;
 
 /// Checks whether Fn can be used as a predicate for Args.
 template <typename Fn, typename... Args>
@@ -302,7 +302,7 @@ template <typename Type>
 concept ContainerLike =
     RangeLike<Type> &&
     requires(Type& value) {
-        typename RemoveCvref<Type>::value_type;
+        typename NEX_STD remove_cvref_t<Type>::value_type;
         { value.size() } -> ConvertibleTo<usize>;
     };
 
@@ -320,15 +320,15 @@ concept Indexable =
 
 /// Checks whether Type is a raw pointer.
 template <typename Type>
-concept RawPointer = IsPointerV<RemoveCvref<Type>>;
+concept RawPointer = NEX_STD is_pointer_v<NEX_STD remove_cvref_t<Type>>;
 
 /// Checks whether Type is an enum.
 template <typename Type>
-concept Enum = IsEnumV<RemoveCvref<Type>>;
+concept Enum = NEX_STD is_enum_v<NEX_STD remove_cvref_t<Type>>;
 
 /// Checks whether Type is class-like.
 template <typename Type>
-concept Class = IsClassV<RemoveCvref<Type>>;
+concept Class = NEX_STD is_class_v<NEX_STD remove_cvref_t<Type>>;
 
 /// Checks whether Type can be dereferenced.
 template <typename Type>
@@ -342,15 +342,15 @@ concept PointerLike =
     Dereferenceable<Type> &&
     (
         RawPointer<Type> ||
-        requires(RemoveReference<Type>& value) {
+        requires(NEX_STD remove_reference_t<Type>& value) {
             value.operator->();
         }
     );
 
 /// Checks whether Type can be hashed by std::hash.
 template <typename Type>
-concept Hashable = requires(const RemoveCvref<Type>& value) {
-    { NEX_STD hash<RemoveCvref<Type>>{}(value) } -> ConvertibleTo<usize>;
+concept Hashable = requires(const NEX_STD remove_cvref_t<Type>& value) {
+    { NEX_STD hash<NEX_STD remove_cvref_t<Type>>{}(value) } -> ConvertibleTo<usize>;
 };
 
 NEX_NAMESPACE_END

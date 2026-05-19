@@ -24,24 +24,38 @@
 
 #include "nex/base/macros.h"
 #include "nex/base/types.h"
+#include "nex/base/concepts.h"
 
 NEX_NAMESPACE_BEGIN
 
+/// A type trait that provides a compile-time constant boolean value indicating 
+/// whether a type is an integral type.
+using TrueType = NEX_STD true_type;
+
+/// A type trait that provides a compile-time constant boolean value indicating 
+/// whether a type is not an integral type.
+using FalseType = NEX_STD false_type;
+
+/// A type trait that provides a compile-time constant boolean value indicating
+/// whether a type is an integral type.
+template <bool BoolValue>
+using BoolConstant = NEX_STD bool_constant<BoolValue>;
+
 /// Checks whether Type is an arithmetic type (i.e., integral or floating-point).
 template <class Type>
-using IsArithmetic = NEX_STD is_arithmetic<Type>;
+using IsArithmetic = BoolConstant<Arithmetic<Type>>;
 template <class Type>
 inline constexpr bool IsArithmeticV = IsArithmetic<Type>::value;
 
 /// Checks whether Type is an integral type (e.g., int, char, etc.).
 template <class Type>
-using IsIntegral = NEX_STD is_integral<Type>;
+using IsIntegral = BoolConstant<Integral<Type>>;
 template <class Type>
 inline constexpr bool IsIntegralV = IsIntegral<Type>::value;
 
 /// Checks whether Type is a floating-point type (i.e., float, double, or long double).
 template <class Type>
-using IsFloatingPoint = NEX_STD is_floating_point<Type>;
+using IsFloatingPoint = BoolConstant<FloatingPoint<Type>>;
 template <class Type>
 inline constexpr bool IsFloatingPointV = IsFloatingPoint<Type>::value;
 
@@ -180,19 +194,19 @@ inline constexpr bool IsVolatileV = IsVolatile<Type>::value;
 
 /// Checks whether Type is signed.
 template <typename Type>
-using IsSigned = NEX_STD is_signed<Type>;
+using IsSigned = BoolConstant<SignedIntegral<Type>>;
 template <typename Type>
 inline constexpr bool IsSignedV = IsSigned<Type>::value;
 
 /// Checks whether Type is an unsigned type (i.e., an integral type that is not signed).
 template <typename Type>
-using IsUnsigned = NEX_STD is_unsigned<Type>;
+using IsUnsigned = BoolConstant<UnsignedIntegral<Type>>;
 template <typename Type>
 inline constexpr bool IsUnsignedV = IsUnsigned<Type>::value;
 
 /// Checks whether Type1 and Type2 are the same type.
 template <typename Type1, typename Type2>
-using IsSame = NEX_STD is_same<Type1, Type2>;
+using IsSame = BoolConstant<SameAs<Type1, Type2>>;
 template <typename Type1, typename Type2>
 inline constexpr bool IsSameV = IsSame<Type1, Type2>::value;
 
@@ -529,27 +543,27 @@ using EnableIf = typename NEX_STD enable_if<Condition, Type>::type;
 
 /// A type trait that enables a template only if the Type is a numeric type (arithmetic type).
 template <typename Type>
-using RequiresNumeric = EnableIf<IsArithmeticV<RemoveCvref<Type>>>;
+using RequiresNumeric = EnableIf<Arithmetic<RemoveCvref<Type>>>;
 
 /// A type trait that enables a template only if the Type is an integral type.
 template <typename Type>
-using RequiresIntegral = EnableIf<IsIntegralV<RemoveCvref<Type>>>;
+using RequiresIntegral = EnableIf<Integral<RemoveCvref<Type>>>;
 
 /// A type trait that enables a template only if the Type is a floating-point type.
 template <typename Type>
-using RequiresFloatingPoint = EnableIf<IsFloatingPointV<RemoveCvref<Type>>>;
+using RequiresFloatingPoint = EnableIf<FloatingPoint<RemoveCvref<Type>>>;
 
 /// A type trait that enables a template only if the Type is a pointer type.
 template <typename Type>
-using RequiresPointer = EnableIf<IsPointerV<RemoveCvref<Type>>>;
+using RequiresPointer = EnableIf<RawPointer<Type>>;
 
 /// A type trait that enables a template only if the Type is an enumeration type (i.e., an enum).
 template <typename Type>
-using RequiresEnum = EnableIf<IsEnumV<RemoveCvref<Type>>>;
+using RequiresEnum = EnableIf<Enum<Type>>;
 
 /// A type trait that enables a template only if the Type is a class type (i.e., a struct or class).
 template <typename Type>
-using RequiresClass = EnableIf<IsClassV<RemoveCvref<Type>>>;
+using RequiresClass = EnableIf<Class<Type>>;
 
 /// A type alias for the result type of invoking a callable with specific arguments.
 template<typename Fn, typename... Args>
@@ -561,7 +575,7 @@ using UnderlyingType = NEX_STD underlying_type_t<Type>;
 
 /// Checks whether Fn can be invoked with Args.
 template <typename Fn, typename... Args>
-using IsInvocable = NEX_STD is_invocable<Fn, Args...>;
+using IsInvocable = BoolConstant<Invocable<Fn, Args...>>;
 template <typename Fn, typename... Args>
 inline constexpr bool IsInvocableV = IsInvocable<Fn, Args...>::value;
 
@@ -629,22 +643,11 @@ using MemberRvalueReference = decltype(NEX_STD declval<Type&&>().*MemberPtr);
 
 /// Checks whether Type is callable with specific argument types.
 template <typename Type, typename... Args>
-inline constexpr bool IsCallable = NEX_STD is_invocable_v<Type, Args...>;
+inline constexpr bool IsCallable = Invocable<Type, Args...>;
 
 /// Checks whether Type is iterable (i.e., has begin() and end() functions).
 template <typename Type, typename = void>
-struct IsIterable : NEX_STD false_type {};
-
-/// A specialization of IsIterable that checks if a Type has valid begin() and end() functions, 
-/// indicating that it is iterable.
-template <typename Type>
-struct IsIterable<
-    Type, 
-    NEX_STD void_t<
-        decltype(NEX_STD begin(NEX_STD declval<Type&>())), 
-        decltype(NEX_STD end(NEX_STD declval<Type&>()))
-    >
-> : NEX_STD true_type {};
+struct IsIterable : BoolConstant<Iterable<Type>> {};
 
 template <typename Type>
 inline constexpr bool IsIterableV = IsIterable<Type>::value;
@@ -665,30 +668,48 @@ struct FunctionTraits<R(Args...)> {
     using Arg = NEX_STD tuple_element_t<N, NEX_STD tuple<Args...>>;
 };
 
+/// A specialization of FunctionTraits for function pointer types, 
+/// which inherits from the primary template to extract the return type and argument types.
 template <typename R, typename... Args>
 struct FunctionTraits<R(*)(Args...)> : FunctionTraits<R(Args...)> {};
 
+/// A specialization of FunctionTraits for function reference types, 
+/// which inherits from the primary template to extract the return type and argument types.
 template <typename R, typename... Args>
 struct FunctionTraits<R(&)(Args...)> : FunctionTraits<R(Args...)> {};
 
+/// A specialization of FunctionTraits for rvalue function reference types, 
+/// which inherits from the primary template to extract the return type and argument types.
 template <typename R, typename... Args>
 struct FunctionTraits<R(&&)(Args...)> : FunctionTraits<R(Args...)> {};
 
+/// A specialization of FunctionTraits for member function pointer types, 
+/// which inherits from the primary template to extract the return type and argument types, 
+/// and also defines the ClassType representing the class that the member function belongs to.
 template <typename Class, typename R, typename... Args>
 struct FunctionTraits<R(Class::*)(Args...)> : FunctionTraits<R(Args...)> {
     using ClassType = Class;
 };
 
+/// A specialization of FunctionTraits for const member function pointer types, 
+/// which inherits from the primary template to extract the return type and argument types, 
+/// and also defines the ClassType representing the class that the member function belongs to.
 template <typename Class, typename R, typename... Args>
 struct FunctionTraits<R(Class::*)(Args...) const> : FunctionTraits<R(Args...)> {
     using ClassType = Class;
 };
 
+/// A specialization of FunctionTraits for noexcept member function pointer types, 
+/// which inherits from the primary template to extract the return type and argument types, 
+/// and also defines the ClassType representing the class that the member function belongs to.
 template <typename Class, typename R, typename... Args>
 struct FunctionTraits<R(Class::*)(Args...) noexcept> : FunctionTraits<R(Args...)> {
     using ClassType = Class;
 };
 
+/// A specialization of FunctionTraits for const noexcept member function pointer types, 
+/// which inherits from the primary template to extract the return type and argument types, 
+/// and also defines the ClassType representing the class that the member function belongs to.
 template <typename Class, typename R, typename... Args>
 struct FunctionTraits<R(Class::*)(Args...) const noexcept> : FunctionTraits<R(Args...)> {
     using ClassType = Class;

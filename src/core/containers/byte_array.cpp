@@ -10,7 +10,7 @@
 #include "nex/base/types.h"
 #include "nex/core/containers/byte_array.h"
 
-NEX_CORE_NAMESPACE_BEGIN
+NEX_NAMESPACE_BEGIN
 
 // ============================================================================
 // Internal helper functions for ByteArray
@@ -525,4 +525,4 @@ ByteArray& ByteArray::reverse() {
     return *this;
 }
 
-NEX_CORE_NAMESPACE_END
+NEX_NAMESPACE_END

@@ -17,7 +17,7 @@
 #include "nex/base/assert_crash.h"
 #include "nex/core/text/string_view.h"
 
-NEX_CORE_NAMESPACE_BEGIN
+NEX_NAMESPACE_BEGIN
 
 /**
  * @class String
@@ -569,22 +569,5 @@ public:
     // - 1 if this string is greater than the other string
     int compare(StringView other) const noexcept;
 };
-
-NEX_CORE_NAMESPACE_END
-
-/**
- * @brief Alias-lifting to make String available in the public API namespace without the core qualifier
- * @details 
- * This allows users to use nex::String instead of nex::core::String, while still keeping the implementation 
- * details hidden in the core namespace.
- */
-
-NEX_NAMESPACE_BEGIN
-
-/**
- * @class String
- * @brief A multi-encoding Unicode string class that supports UTF-8 and UTF-16.
- */
-NEX_ALIAS_TYPE_FROM_LAYER(core, String)
 
 NEX_NAMESPACE_END

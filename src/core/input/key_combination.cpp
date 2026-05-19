@@ -11,7 +11,7 @@
 #include "nex/core/input/key_combination.h"
 #include "nex/core/text/string.h"
 
-NEX_CORE_NAMESPACE_BEGIN
+NEX_NAMESPACE_BEGIN
 
 // Helper functions for parsing and formatting key combinations
 namespace {
@@ -228,4 +228,4 @@ Result<KeyCombination> KeyCombination::fromString(StringView text) {
     return fromString(text.toString());
 }
 
-NEX_CORE_NAMESPACE_END
+NEX_NAMESPACE_END

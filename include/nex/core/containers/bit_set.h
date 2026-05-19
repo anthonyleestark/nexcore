@@ -12,7 +12,7 @@
 #include "nex/base/wrappers.h"
 #include "nex/base/assert_crash.h"
 
-NEX_CORE_NAMESPACE_BEGIN
+NEX_NAMESPACE_BEGIN
 
 /**
  * @class BitSet
@@ -578,4 +578,4 @@ public:
     }
 };
 
-NEX_CORE_NAMESPACE_END
+NEX_NAMESPACE_END

@@ -12,7 +12,7 @@
 #include "nex/base/types.h"
 #include "nex/base/linear.h"
 
-NEX_CORE_NAMESPACE_BEGIN
+NEX_NAMESPACE_BEGIN
 
 /**
  * @class BitSpan
@@ -470,15 +470,15 @@ struct BitSpanHash {
     }
 };
 
-NEX_CORE_NAMESPACE_END
+NEX_NAMESPACE_END
 
 // Hash specialization for BitSpan
 NEX_STD_BEGIN
 
 template<>
-struct hash<NEX_PREPEND_CORE_NAMESPACE(BitSpan)> {
-    size_t operator()(NEX_PREPEND_CORE_NAMESPACE(BitSpan) view) const noexcept {
-        return NEX_PREPEND_CORE_NAMESPACE(BitSpanHash){}(view);
+struct hash<NEX_PREPEND_NAMESPACE(BitSpan)> {
+    size_t operator()(NEX_PREPEND_NAMESPACE(BitSpan) view) const noexcept {
+        return NEX_PREPEND_NAMESPACE(BitSpanHash){}(view);
     }
 };
 

@@ -14,7 +14,7 @@
 #include "nex/core/text/string.h"
 #include "nex/core/chrono/time.h"
 
-NEX_CORE_NAMESPACE_BEGIN
+NEX_NAMESPACE_BEGIN
 
 /**
  * @enum    RepeatFrequency
@@ -298,4 +298,4 @@ private:
     }
 };
 
-NEX_CORE_NAMESPACE_END
+NEX_NAMESPACE_END

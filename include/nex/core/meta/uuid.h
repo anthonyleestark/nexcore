@@ -11,7 +11,7 @@
 #include "nex/base/result.h"
 #include "nex/base/wrappers.h"
 
-NEX_CORE_NAMESPACE_BEGIN
+NEX_NAMESPACE_BEGIN
 
 /**
  * @class   Uuid
@@ -109,7 +109,7 @@ private:
     UniquePtr<Impl> impl_;
 };
 
-NEX_CORE_NAMESPACE_END
+NEX_NAMESPACE_END
 
 // Hash specialization for Uuid 
 // to enable use in hash-based containers like std::unordered_map
@@ -117,8 +117,8 @@ NEX_CORE_NAMESPACE_END
 NEX_STD_BEGIN
 
 template<>
-struct hash<NEX_PREPEND_CORE_NAMESPACE(Uuid)> {
-    size_t operator()(const NEX_PREPEND_CORE_NAMESPACE(Uuid)& uuid) const noexcept {
+struct hash<NEX_PREPEND_NAMESPACE(Uuid)> {
+    size_t operator()(const NEX_PREPEND_NAMESPACE(Uuid)& uuid) const noexcept {
         return uuid.hash();
     }
 };

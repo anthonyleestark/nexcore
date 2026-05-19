@@ -10,7 +10,9 @@
 #include "nex/base/result.h"
 #include "nex/core/text/string_view.h"
 
-NEX_CORE_NAMESPACE_BEGIN
+NEX_NAMESPACE_BEGIN
+
+NEX_SUBNAMESPACE_BEGIN(input)
 
 /**
  * @class   KeyCombination
@@ -198,7 +200,9 @@ private:
     uint32 virtualKey_ = 0;
 };
 
-NEX_CORE_NAMESPACE_END
+NEX_SUBNAMESPACE_END(input)
+
+NEX_NAMESPACE_END
 
 // Hash specialization for KeyCombination to allow usage in unordered containers
 // Combines the modifiers and virtual key into a single hash value
@@ -206,8 +210,9 @@ NEX_CORE_NAMESPACE_END
 NEX_STD_BEGIN
 
 template<>
-struct hash<NEX_PREPEND_CORE_NAMESPACE(KeyCombination)> {
-    constexpr size_t operator()(const NEX_PREPEND_CORE_NAMESPACE(KeyCombination)& value) const noexcept {
+struct hash<NEX_PREPEND_NAMESPACE(NEX_PREPEND_SUBNAMESPACE(input, KeyCombination))> {
+    constexpr size_t 
+    operator()(const NEX_PREPEND_NAMESPACE(NEX_PREPEND_SUBNAMESPACE(input, KeyCombination))& value) const noexcept {
         return (static_cast<size_t>(value.modifiers()) << 32)
             ^ static_cast<size_t>(value.virtualKey());
     }

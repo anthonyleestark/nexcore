@@ -15,7 +15,7 @@
 #include "nex/base/wrappers.h"
 #include "nex/base/assert_crash.h"
 
-NEX_CORE_NAMESPACE_BEGIN
+NEX_NAMESPACE_BEGIN
 
 /**
  * @namespace ring_buffer::details
@@ -614,4 +614,4 @@ namespace ring_buffer::details {
 
 } // namespace ring_buffer
 
-NEX_CORE_NAMESPACE_END
+NEX_NAMESPACE_END

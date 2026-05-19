@@ -33,47 +33,98 @@
  * which the name belongs.
  */
 
-#define NEX_MANGLE_JOIN(a, b)                                       a##_##b
-#define NEX_MANGLE_NAME(a, b)                                       NEX_MANGLE_JOIN(a, b)
-#define NEX_PREPEND_NAME(a, b)                                      ::a::b
+#define NEX_MANGLE_JOIN(a, b)                           a##_##b
+#define NEX_MANGLE_NAME(a, b)                           NEX_MANGLE_JOIN(a, b)
+#define NEX_PREPEND_NAME(a, b)                          a::b
+#define NEX_PREPEND_GLOBAL_NAME(name)                   ::name
 
 /**
- * @section Nex-ecosystem foundation namespace macros
- * @brief   Define macros for the Nex-ecosystem global namespace and helper macros for namespace usage
+ * @section Nex-ecosystem public namespace macros
+ * @brief   Define macros for the Nex-ecosystem public namespace and helper macros for namespace usage
  * @note
- * The NEX_NAMESPACE macro defines the name of the global namespace for the Nex-ecosystem, while the NEX_NAMESPACE_BEGIN 
- * and NEX_NAMESPACE_END macros define the beginning and end of the global namespace, respectively. 
- * The NEX_USING_NAMESPACE macro is a using directive for the global namespace, and the NEX_PREPEND_NAMESPACE macro is 
- * a helper macro used to prepend the global namespace to a name.
+ * The NEX_NAMESPACE macro defines the name of the public namespace for the Nex-ecosystem. 
+ * The NEX_NAMESPACE_BEGIN/END macros define the beginning and end of the public namespace, respectively. 
+ * The NEX_USING_NAMESPACE macro is a using directive for the public namespace, and the NEX_PREPEND_NAMESPACE macro is 
+ * a helper macro used to prepend the public namespace to a name.
  */
 
-#define NEX_NAMESPACE                                               nex
-#define NEX_NAMESPACE_BEGIN                                         namespace NEX_NAMESPACE {
-#define NEX_NAMESPACE_END                                           } // namespace nex
-#define NEX_USING_NAMESPACE                                         using namespace NEX_NAMESPACE;
-#define NEX_PREPEND_NAMESPACE(name)                                 NEX_PREPEND_NAME(NEX_NAMESPACE, name)
+#define NEX_NAMESPACE                                   nex
+#define NEX_NAMESPACE_BEGIN                             namespace NEX_NAMESPACE {
+#define NEX_NAMESPACE_END                               } // namespace nex
+#define NEX_USING_NAMESPACE                             using namespace NEX_NAMESPACE;
+#define NEX_PREPEND_NAMESPACE(name)                     NEX_PREPEND_GLOBAL_NAME(NEX_PREPEND_NAME(NEX_NAMESPACE, name))
 
 /**
  * @section Inline namespace macros
  * @brief   Define inline namespace macros for versioning and internal implementation details
  * @note
- * The NEX_INLINE_NAMESPACE_BEGIN and NEX_INLINE_NAMESPACE_END macros define the beginning and end of an inline 
- * namespace, respectively. 
+ * The NEX_INLINE_NAMESPACE_BEGIN/END macros define the beginning and end of an inline namespace, respectively. 
  * Inline namespaces are used for versioning and for internal implementation details that should not be exposed 
  * in the public API. 
  * By using inline namespaces, we can ensure that the public API remains clean and consistent, while still allowing 
  * for internal changes and improvements without breaking the public API.
  */
 
-#define NEX_INLINE_NAMESPACE_BEGIN(name)                            inline namespace name {
-#define NEX_INLINE_NAMESPACE_END(name)                              } // inline namespace
+#define NEX_INLINE_NAMESPACE_BEGIN(name)                inline namespace name {
+#define NEX_INLINE_NAMESPACE_END(name)                  } // inline namespace
+
+/** 
+ * @section Using global ::std:: namespace
+ * @brief   Define macros for using the global ::std:: namespace in public APIs and implementation files
+ * @note 
+ * Do not expose std:: anywhere in the public API of Nex-ecosystem. 
+ * Only use std:: in the implementation files and private members of classes.
+ * This is to avoid potential conflicts with other libraries that may be used by the users 
+ * of Nex-ecosystem, and to keep the public API clean and consistent.
+ */
+
+#define NEX_STD                                         NEX_PREPEND_GLOBAL_NAME(std::)
+#define NEX_STD_BEGIN                                   namespace std {
+#define NEX_STD_END                                     } // namespace std
+#define NEX_USING_STD_NAMESPACE                         using namespace std;
+
+/**
+ * @section Nested namespace macros for convenience
+ * @brief   Define macros for nested namespaces to simplify the declaration of nested namespaces
+ * @note
+ * The NEX_NAMESPACE_BEGIN2/END2 macros define the beginning and end of a nested namespace with two levels, 
+ * while the NEX_NAMESPACE_BEGIN3/END3 macros define the beginning and end of a nested namespace with three levels.
+ */
+
+#define NEX_SUBNAMESPACE_BEGIN(name)                                \
+    namespace name {
+#define NEX_SUBNAMESPACE_END(name)                                  \
+    } // namespace name
+#define NEX_USING_SUBNAMESPACE(name)                                \
+    using namespace name;
+#define NEX_PREPEND_SUBNAMESPACE(subns_name, name)                  \
+    NEX_PREPEND_NAME(subns_name, name)
+
+#define NEX_NAMESPACE_BEGIN2(ns1, ns2)                              \
+    NEX_NAMESPACE_BEGIN                                             \
+        NEX_SUBNAMESPACE_BEGIN(ns1)                                 \
+            NEX_SUBNAMESPACE_BEGIN(ns2)
+#define NEX_NAMESPACE_END2(ns1, ns2)                                \
+            NEX_SUBNAMESPACE_END(ns2)                               \
+        NEX_SUBNAMESPACE_END(ns1)                                   \
+    NEX_NAMESPACE_END
+
+#define NEX_NAMESPACE_BEGIN3(ns1, ns2, ns3)                         \
+    NEX_NAMESPACE_BEGIN                                             \
+        NEX_SUBNAMESPACE_BEGIN(ns1)                                 \
+            NEX_SUBNAMESPACE_BEGIN(ns2)                             \
+                NEX_SUBNAMESPACE_BEGIN(ns3)
+#define NEX_NAMESPACE_END3(ns1, ns2, ns3)                           \
+                NEX_SUBNAMESPACE_END(ns3)                           \
+            NEX_SUBNAMESPACE_END(ns2)                               \
+        NEX_SUBNAMESPACE_END(ns1)                                   \
+    NEX_NAMESPACE_END
 
 /**
  * @section Detail namespace macros
  * @brief   Define macros for the detail namespace used for internal implementation details
  * @note
- * The NEX_DETAIL_NAMESPACE_BEGIN and NEX_DETAIL_NAMESPACE_END macros define the beginning and end of the detail 
- * namespace, respectively. 
+ * The NEX_DETAIL_NAMESPACE_BEGIN/END macros define the beginning and end of the detail namespace, respectively. 
  * The detail namespace is used for internal implementation details that should not be exposed in the public API. 
  * By using a separate namespace for these details, we can keep the public API clean and consistent, while still 
  * allowing for internal changes and improvements without breaking the public API.
@@ -86,65 +137,23 @@
  */
 
 #define NEX_DETAIL                                                  detail::
-#define NEX_DETAIL_NAMESPACE_BEGIN                                  namespace detail {
-#define NEX_DETAIL_NAMESPACE_END                                    } // namespace detail
-
-/** 
- * @section Using global ::std:: namespace
- * @brief   Define macros for using the global ::std:: namespace in public APIs and implementation files
- * @note 
- * Do not expose std:: anywhere in the public API of Nex-ecosystem. 
- * Only use std:: in the implementation files and private members of classes.
- * This is to avoid potential conflicts with other libraries that may be used by the users 
- * of Nex-ecosystem, and to keep the public API clean and consistent.
- */
-
-#define NEX_STD                                                     ::std::
-#define NEX_STD_BEGIN                                               namespace std {
-#define NEX_STD_END                                                 } // namespace std
-#define NEX_USING_STD_NAMESPACE                                     using namespace std;
-
-/**
- * @section Nested namespace macros for convenience
- * @brief   Define macros for nested namespaces to simplify the declaration of nested namespaces
- * @note
- * The NEX_NAMESPACE_BEGIN2 and NEX_NAMESPACE_END2 macros define the beginning and end of a nested namespace with 
- * two levels, while the NEX_NAMESPACE_BEGIN3 and NEX_NAMESPACE_END3 macros define the beginning and end of a nested 
- * namespace with three levels.
- */
-
-#define NEX_NAMESPACE_BEGIN2(ns1, ns2)                              \
-    NEX_NAMESPACE_BEGIN                                             \
-        namespace ns1 {                                             \
-            namespace ns2 {
-#define NEX_NAMESPACE_END2(ns1, ns2)                                \
-    } }                                                             \
-    NEX_NAMESPACE_END
-
-#define NEX_NAMESPACE_BEGIN3(ns1, ns2, ns3)                         \
-    NEX_NAMESPACE_BEGIN                                             \
-        namespace ns1 {                                             \
-            namespace ns2 {                                         \
-                namespace ns3 {
-#define NEX_NAMESPACE_END3(ns1, ns2, ns3)                           \
-    } } }                                                           \
-    NEX_NAMESPACE_END
+#define NEX_DETAIL_NAMESPACE_BEGIN                                  NEX_SUBNAMESPACE_BEGIN(detail)
+#define NEX_DETAIL_NAMESPACE_END                                    NEX_SUBNAMESPACE_END(detail)
 
 /**
  * @section Nex-ecosystem foundation layer namespace macros
  * @brief   Define macros for the Nex-ecosystem foundation layer namespaces and helper macros for namespace usage
  * @note
- * The NEX_LAYER_NAMESPACE_BEGIN and NEX_LAYER_NAMESPACE_END macros define the beginning and end of a layer namespace, 
- * respectively. 
+ * The NEX_LAYER_NAMESPACE_BEGIN/END macros define the beginning and end of a layer namespace, respectively. 
  * The NEX_USING_LAYER_NAMESPACE macro is a using directive for a layer namespace, and the NEX_PREPEND_LAYER_NAMESPACE 
  * macro is a helper macro used to prepend a layer namespace to a name. 
  */
 
 #define NEX_LAYER_NAMESPACE_BEGIN(layer)                            \
     NEX_NAMESPACE_BEGIN                                             \
-    namespace layer {
+     NEX_SUBNAMESPACE_BEGIN(layer)
 #define NEX_LAYER_NAMESPACE_END(layer)                              \
-    }                                                               \
+        NEX_SUBNAMESPACE_END(layer)                                 \
     NEX_NAMESPACE_END
 #define NEX_USING_LAYER_NAMESPACE(layer)                            \
     NEX_USING_NAMESPACE                                             \
@@ -156,11 +165,10 @@
  * @section Nex-ecosystem project/layer namespace macros
  * @brief   Define macros for project/layer namespaces and helper macros for namespace usage
  * @note
- * The NEX_PROJECT_NAMESPACE_BEGIN and NEX_PROJECT_NAMESPACE_END macros define the start and end of a project namespace. 
+ * The NEX_PROJECT_NAMESPACE_BEGIN/END macros define the start and end of a project namespace. 
  * The NEX_USING_PROJECT_NAMESPACE macro provides a using directive for the project namespace, while the 
  * NEX_PREPEND_PROJECT_NAMESPACE is a helper to prepend the project namespace to a name. 
- * The NEX_PROJECT_LAYER_NAMESPACE_BEGIN and NEX_PROJECT_LAYER_NAMESPACE_END macros define the start and end of a 
- * project/layer namespace.
+ * The NEX_PROJECT_LAYER_NAMESPACE_BEGIN/END macros define the start and end of a project/layer namespace.
  * The NEX_USING_PROJECT_LAYER_NAMESPACE and NEX_PREPEND_PROJECT_LAYER_NAMESPACE macros serve similar purposes for 
  * project/layer namespaces.
  */
@@ -280,19 +288,6 @@
  * @section NexCore module/layer namespace macros
  * @brief   Define macros for the NexCore module/layer namespace and helper macros for namespace usage
  */
-
-/**
- * @brief  NexCore's core module/layer namespace macros
- */
-
-#define NEX_CORE_NAMESPACE_BEGIN                                                  \
-    NEX_LAYER_NAMESPACE_BEGIN(core)
-#define NEX_CORE_NAMESPACE_END                                                    \
-    NEX_LAYER_NAMESPACE_END(core)
-#define NEX_USING_CORE_NAMESPACE                                                  \
-    NEX_USING_LAYER_NAMESPACE(core)
-#define NEX_PREPEND_CORE_NAMESPACE(name)                                          \
-    NEX_PREPEND_LAYER_NAMESPACE(core, name)
 
 /**
  * @brief  NexCore's infrastructure module/layer namespace macros

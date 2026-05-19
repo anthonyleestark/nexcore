@@ -75,8 +75,6 @@ using Utf16StringView = NEX_STD u16string_view;
 using Utf32String = NEX_STD u32string;
 using Utf32StringView = NEX_STD u32string_view;
 
-NEX_NAMESPACE_END
-
 /**
  * @brief Forward declarations of core String types
  * 
@@ -88,10 +86,8 @@ NEX_NAMESPACE_END
  * @see StringView class definition in nex/core/text/string_view.h
  */
 
-NEX_CORE_NAMESPACE_BEGIN
-
 // Forward declare common core types
 class String;
 class StringView;
 
-NEX_CORE_NAMESPACE_END
+NEX_NAMESPACE_END

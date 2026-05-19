@@ -11,7 +11,7 @@
 #include "nex/base/macros.h"
 #include "nex/base/types.h"
 
-NEX_CORE_NAMESPACE_BEGIN
+NEX_NAMESPACE_BEGIN
 
 /**
  * @class Span
@@ -160,23 +160,5 @@ private:
     // Use STL span as underlying buffer
     NEX_STD span<const value_type> buffer_;
 };
-
-NEX_CORE_NAMESPACE_END
-
-/**
- * @brief Alias-lifting to make Span available in the public API namespace without the core qualifier
- * @details 
- * This allows users to use nex::Span instead of nex::core::Span, while still keeping the implementation 
- * details hidden in the core namespace.
- */
-
-NEX_NAMESPACE_BEGIN
-
-/**
- * @class Span
- * @brief A non-owning view over a contiguous sequence of bytes
- */
-template <typename T>
-NEX_ALIAS_TYPE_FROM_LAYER(core, Span)
 
 NEX_NAMESPACE_END

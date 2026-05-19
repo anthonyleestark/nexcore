@@ -16,7 +16,7 @@
 #include "nex/base/string.h"
 #include "nex/core/view/byte_span.h"
 
-NEX_CORE_NAMESPACE_BEGIN
+NEX_NAMESPACE_BEGIN
 
 /**
  * @class ByteArray
@@ -501,4 +501,4 @@ public:
     }
 };
 
-NEX_CORE_NAMESPACE_END
+NEX_NAMESPACE_END

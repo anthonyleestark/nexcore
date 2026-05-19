@@ -12,7 +12,7 @@
 #include "nex/base/types.h"
 #include "nex/base/linear.h"
 
-NEX_CORE_NAMESPACE_BEGIN
+NEX_NAMESPACE_BEGIN
 
 /**
  * @class BitArray
@@ -657,4 +657,4 @@ public:
     }
 };
 
-NEX_CORE_NAMESPACE_END
+NEX_NAMESPACE_END

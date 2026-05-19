@@ -12,7 +12,7 @@
 #include "nex/base/primitives.h"
 #include "nex/core/text/string.h"
 
-NEX_CORE_NAMESPACE_BEGIN
+NEX_NAMESPACE_BEGIN
 
 /**
  * @class   RuntimeId
@@ -122,7 +122,7 @@ private:
     uint64 value_;
 };
 
-NEX_CORE_NAMESPACE_END
+NEX_NAMESPACE_END
 
 // Implicit hash specialization for RuntimeId
 // to allow usage in hash-based containers like std::unordered_map
@@ -130,8 +130,8 @@ NEX_CORE_NAMESPACE_END
 NEX_STD_BEGIN
 
 template<>
-struct hash<NEX_PREPEND_CORE_NAMESPACE(RuntimeId)> {
-    constexpr size_t operator()(const NEX_PREPEND_CORE_NAMESPACE(RuntimeId)& id) const noexcept {
+struct hash<NEX_PREPEND_NAMESPACE(RuntimeId)> {
+    constexpr size_t operator()(const NEX_PREPEND_NAMESPACE(RuntimeId)& id) const noexcept {
         return NEX_STD hash<NEX_PREPEND_NAMESPACE(uint64)>{}(id.get());
     }
 };

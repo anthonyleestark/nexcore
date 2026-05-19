@@ -14,7 +14,7 @@
 #include "nex/base/error.h"
 #include "nex/core/text/regex.h"
 
-NEX_CORE_NAMESPACE_BEGIN
+NEX_NAMESPACE_BEGIN
 
 /**
  * @namespace   text
@@ -584,4 +584,4 @@ namespace text {
 
 } // namespace text
 
-NEX_CORE_NAMESPACE_END
+NEX_NAMESPACE_END

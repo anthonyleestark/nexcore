@@ -6,7 +6,7 @@
 #include "nex/core/math/geometry.h"
 #include "nex/base/linear.h"
 
-NEX_CORE_NAMESPACE_BEGIN
+NEX_NAMESPACE_BEGIN
 
 // Geometry2D implementation helper functions
 namespace geometry2d {
@@ -133,4 +133,4 @@ EdgeRect EdgeRect::rotateAround(const Vector2D& pivot, double angleRadians) cons
     return EdgeRect(newLeft, newTop, newRight, newBottom);
 }
 
-NEX_CORE_NAMESPACE_END
+NEX_NAMESPACE_END

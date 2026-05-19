@@ -9,7 +9,7 @@
 #include "nex/core/containers/bit_array.h"
 #include "nex/base/assert_crash.h"
 
-NEX_CORE_NAMESPACE_BEGIN
+NEX_NAMESPACE_BEGIN
 
 ////// Helper functions for bit manipulation ------------------------
 
@@ -390,4 +390,4 @@ bool BitArray::operator==(const BitArray& other) const noexcept {
     return true;
 }
 
-NEX_CORE_NAMESPACE_END
+NEX_NAMESPACE_END

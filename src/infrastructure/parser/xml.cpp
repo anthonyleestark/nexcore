@@ -15,7 +15,7 @@ namespace {
 
     // Convert StringView to UTF-8 string (std::string) (returns string)
     Utf8String toUtf8String(StringView value) {
-        using namespace NEX_PREPEND_CORE_NAMESPACE(encoding);
+        using namespace NEX_PREPEND_NAMESPACE(encoding);
         const auto result = utf16ToUtf8(Utf16StringView(value.data(), value.size()));
         return result.isOk() ? result.value() : Utf8String();
     }

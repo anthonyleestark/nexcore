@@ -17,7 +17,7 @@
 #include "nex/base/wrappers.h"
 #include "nex/core/executor.h"
 
-NEX_CORE_NAMESPACE_BEGIN
+NEX_NAMESPACE_BEGIN
 
 // Forward declaration
 template<typename T>
@@ -556,4 +556,4 @@ auto async(Executor& executor, Fn&& fn, Args&&... args)
     return future;
 }
 
-NEX_CORE_NAMESPACE_END
+NEX_NAMESPACE_END

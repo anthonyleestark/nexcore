@@ -12,7 +12,7 @@
 #include "nex/base/assert_crash.h"
 #include "nex/core/math/math.h"
 
-NEX_CORE_NAMESPACE_BEGIN
+NEX_NAMESPACE_BEGIN
 
 /**
  * @struct Point
@@ -1301,4 +1301,4 @@ public:
     }
 };
 
-NEX_CORE_NAMESPACE_END
+NEX_NAMESPACE_END

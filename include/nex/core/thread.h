@@ -17,7 +17,7 @@
 #include "nex/base/error.h"
 #include "nex/base/result.h"
 
-NEX_CORE_NAMESPACE_BEGIN
+NEX_NAMESPACE_BEGIN
 
 /**
  * @typedef ThreadId
@@ -311,4 +311,4 @@ private:
     bool startWithTask(Fn&& callable, Args&&... args);
 };
 
-NEX_CORE_NAMESPACE_END
+NEX_NAMESPACE_END

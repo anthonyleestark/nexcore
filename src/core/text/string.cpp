@@ -10,7 +10,7 @@
 #include "nex/core/text/string_view.h"
 #include "nex/core/text/encoding.h"
 
-NEX_CORE_NAMESPACE_BEGIN
+NEX_NAMESPACE_BEGIN
 
 ////// Construction ------------------------
 
@@ -286,4 +286,4 @@ int String::compare(StringView other) const noexcept {
     return 0; 
 }
 
-NEX_CORE_NAMESPACE_END
+NEX_NAMESPACE_END

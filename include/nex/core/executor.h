@@ -10,7 +10,7 @@
 #include "nex/base/wrappers.h"
 #include "nex/core/thread.h"
 
-NEX_CORE_NAMESPACE_BEGIN
+NEX_NAMESPACE_BEGIN
 
 /**
  * @class Executor
@@ -126,4 +126,4 @@ private:
     UniquePtr<Impl> impl_;
 };
 
-NEX_CORE_NAMESPACE_END
+NEX_NAMESPACE_END

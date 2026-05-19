@@ -14,7 +14,7 @@
 #include "nex/base/string.h"
 #include "nex/base/assert_crash.h"
 
-NEX_CORE_NAMESPACE_BEGIN
+NEX_NAMESPACE_BEGIN
 
 /**
  * @class StringView
@@ -346,29 +346,6 @@ struct StringViewHash {
         return hash;
     }
 };
-
-NEX_CORE_NAMESPACE_END
-
-/**
- * @brief Alias-lifting to make StringView available in the public API namespace without the core qualifier
- * @details 
- * This allows users to use nex::StringView instead of nex::core::StringView, while still keeping the implementation 
- * details hidden in the core namespace.
- */
-
-NEX_NAMESPACE_BEGIN
-
-/**
- * @class StringView
- * @brief A non-owning view into a UTF-16 string
- */
-NEX_ALIAS_TYPE_FROM_LAYER(core, StringView)
-
-/**
- * @struct StringViewHash
- * @brief Hash function for StringView to allow usage in unordered containers
- */
-NEX_ALIAS_TYPE_FROM_LAYER(core, StringViewHash)
 
 NEX_NAMESPACE_END
 

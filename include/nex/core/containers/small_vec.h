@@ -18,7 +18,7 @@
 #include "nex/base/wrappers.h"
 #include "nex/base/assert_crash.h"
 
-NEX_CORE_NAMESPACE_BEGIN
+NEX_NAMESPACE_BEGIN
 
 /**
  * @class SmallVec
@@ -657,19 +657,5 @@ public:
         return !(lhs < rhs);
     }
 };
-
-NEX_CORE_NAMESPACE_END
-
-// Alias-lifting to make SmallVec available in the public API namespace without the core qualifier
-// This allows users to write SmallVec<T, N> instead of core::SmallVec<T, N>.
-
-NEX_NAMESPACE_BEGIN
-
-/**
- * @class SmallVec
- * @brief An optimized dynamic array with inline (stack-allocated) small-buffer storage.
- */
-template <typename T, usize N>
-NEX_ALIAS_TYPE_FROM_LAYER(core, SmallVec)
 
 NEX_NAMESPACE_END

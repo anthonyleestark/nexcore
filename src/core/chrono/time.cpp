@@ -12,7 +12,7 @@
 #include "nex/core/chrono/time.h"
 #include "nex/base/string.h"
 
-NEX_CORE_NAMESPACE_BEGIN
+NEX_NAMESPACE_BEGIN
 
 // ============================================================================
 // Internal helper functions
@@ -694,4 +694,4 @@ DateTime DateTime::fromString(const String& str) {
     return DateTime();
 }
 
-NEX_CORE_NAMESPACE_END
+NEX_NAMESPACE_END

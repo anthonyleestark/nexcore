@@ -6,7 +6,7 @@
 #include "nex/core/text/text.h"
 #include "nex/core/text/encoding.h"
 
-NEX_CORE_NAMESPACE_BEGIN
+NEX_NAMESPACE_BEGIN
 
 // ========================================================
 // Implementation of text manipulation functions
@@ -491,4 +491,4 @@ String text::mask(StringView str, usize start, usize end, char16 maskChar /* = u
     return result;
 }
 
-NEX_CORE_NAMESPACE_END
+NEX_NAMESPACE_END

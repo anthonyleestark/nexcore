@@ -8,7 +8,7 @@
 #include "nex/core/view/byte_span.h"
 #include "nex/base/assert_crash.h"
 
-NEX_CORE_NAMESPACE_BEGIN
+NEX_NAMESPACE_BEGIN
 
 ////// Accessors --------------------------------------------------
 
@@ -254,4 +254,4 @@ int32 ByteSpan::compare(const ByteSpan& other) const noexcept {
     return 0;
 }
 
-NEX_CORE_NAMESPACE_END
+NEX_NAMESPACE_END

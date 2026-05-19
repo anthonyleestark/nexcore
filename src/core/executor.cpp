@@ -8,7 +8,7 @@
 #include "nex/base/adaptors.h"
 #include "nex/base/linear.h"
 
-NEX_CORE_NAMESPACE_BEGIN
+NEX_NAMESPACE_BEGIN
 
 // ======================================================================
 // ThreadExecutor Implementations
@@ -141,4 +141,4 @@ uint32 ThreadPool::threadCount() const noexcept {
     return static_cast<uint32>(impl_->threads_.size());
 }
 
-NEX_CORE_NAMESPACE_END
+NEX_NAMESPACE_END

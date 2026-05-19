@@ -8,7 +8,7 @@
 #include "nex/core/view/bit_span.h"
 #include "nex/base/assert_crash.h"
 
-NEX_CORE_NAMESPACE_BEGIN
+NEX_NAMESPACE_BEGIN
 
 ////// Bit accessors --------------------------------------------------
 
@@ -225,4 +225,4 @@ int32 BitSpan::compare(const BitSpan& other) const noexcept {
     return 0;
 }
 
-NEX_CORE_NAMESPACE_END
+NEX_NAMESPACE_END

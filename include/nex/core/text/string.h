@@ -21,7 +21,7 @@ NEX_CORE_NAMESPACE_BEGIN
 
 /**
  * @class String
- * @brief String class, using UTF-16 as the internal encoding
+ * @brief A muti-encoding Unicode string class that supports UTF-8 and UTF-16.
  * 
  * This class provides a convenient way to store and manipulate Unicode strings.
  * It uses std::u16string (UTF-16) as the internal buffer to store string data.
@@ -571,3 +571,20 @@ public:
 };
 
 NEX_CORE_NAMESPACE_END
+
+/**
+ * @brief Alias-lifting to make String available in the public API namespace without the core qualifier
+ * @details 
+ * This allows users to use nex::String instead of nex::core::String, while still keeping the implementation 
+ * details hidden in the core namespace.
+ */
+
+NEX_NAMESPACE_BEGIN
+
+/**
+ * @class String
+ * @brief A multi-encoding Unicode string class that supports UTF-8 and UTF-16.
+ */
+NEX_ALIAS_TYPE_FROM_LAYER(core, String)
+
+NEX_NAMESPACE_END

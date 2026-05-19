@@ -18,7 +18,7 @@ NEX_CORE_NAMESPACE_BEGIN
 
 /**
  * @class StringView
- * @brief Non-owning view into a UTF-16 string, similar to std::u16string_view
+ * @brief A non-owning view into a UTF-16 string
  * 
  * This class provides a lightweight, non-owning view into a UTF-16 encoded string.
  * It stores a pointer to the string data and its length, without owning the data.
@@ -325,8 +325,10 @@ public:
     }
 };
 
-// Explicit hash specialization for StringView, 
-// which can be used in unordered containers like HashMap or HashSet
+/**
+ * @struct StringViewHash
+ * @brief Hash function for StringView to allow usage in unordered containers
+ */
 struct StringViewHash {
     constexpr usize operator()(StringView sv) const noexcept {
         constexpr usize kOffsetBasis =
@@ -347,15 +349,40 @@ struct StringViewHash {
 
 NEX_CORE_NAMESPACE_END
 
-// Implicit hash specialization for StringView to allow usage in unordered containers 
-// without needing to specify the hash function
+/**
+ * @brief Alias-lifting to make StringView available in the public API namespace without the core qualifier
+ * @details 
+ * This allows users to use nex::StringView instead of nex::core::StringView, while still keeping the implementation 
+ * details hidden in the core namespace.
+ */
+
+NEX_NAMESPACE_BEGIN
+
+/**
+ * @class StringView
+ * @brief A non-owning view into a UTF-16 string
+ */
+NEX_ALIAS_TYPE_FROM_LAYER(core, StringView)
+
+/**
+ * @struct StringViewHash
+ * @brief Hash function for StringView to allow usage in unordered containers
+ */
+NEX_ALIAS_TYPE_FROM_LAYER(core, StringViewHash)
+
+NEX_NAMESPACE_END
+
+/**
+ * @brief Explicit specialization of std::hash for StringView to allow usage in unordered containers 
+ *        without needing to specify the hash function
+ */
 
 NEX_STD_BEGIN
 
 template<>
-struct hash<NEX_PREPEND_CORE_NAMESPACE(StringView)> {
-    constexpr size_t operator()(NEX_PREPEND_CORE_NAMESPACE(StringView) sv) const noexcept {
-        return NEX_PREPEND_CORE_NAMESPACE(StringViewHash){}(sv);
+struct hash<NEX_PREPEND_NAMESPACE(StringView)> {
+    constexpr size_t operator()(NEX_PREPEND_NAMESPACE(StringView) sv) const noexcept {
+        return NEX_PREPEND_NAMESPACE(StringViewHash){}(sv);
     }
 };
 

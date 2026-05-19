@@ -16,10 +16,6 @@
 
 NEX_INFRA_NAMESPACE_BEGIN
 
-// Access common core types
-NEX_IMPORT_TYPE_FROM_LAYER(core, String);
-NEX_IMPORT_TYPE_FROM_LAYER(core, StringView);
-
 // Forward declarations
 class XmlAttribute;
 class XmlNode;

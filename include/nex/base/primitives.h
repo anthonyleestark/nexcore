@@ -7,42 +7,33 @@
 
 /**
  * @file  primitives.h
- * @brief Defines core synchronization and hardware-level primitive types, such as Atomics, Mutexes, 
- *        Condition Variables, Semaphores, and their associated type aliases.
+ * @brief Defines fundamental concurrency primitives such as mutexes, condition variables, and atomic types.
  * 
  * @details
- * This header centralizes aliases for fundamental building blocks used by Nex-ecosystem for concurrency control, 
- * thread synchronization, and atomic memory operations. Unlike wrappers that manage lifetimes, primitives provide 
- * the underlying mechanisms for mutual exclusion, signaling, and lock-free programming. It establishes a uniform 
- * naming convention for these low-level structures so that core infrastructure components can interact with hardware 
- * and OS scheduling features consistently. 
- * Primitives are foundational for protecting critical sections, coordinating task execution between threads, 
- * and ensuring memory consistency across multi-core systems. Grouping these aliases in one place ensures that 
- * threading policies remain cohesive across infrastructure, platform, and service layers.
+ * This header defines fundamental concurrency primitives such as mutexes, condition variables, and atomic types.
+ * These primitives are the building blocks for thread synchronization and communication in concurrent programming.
+ * The primitives defined in this header are designed to be used in multi-threaded environments to ensure thread safety
+ * and prevent data races. They provide mechanisms for mutual exclusion, thread synchronization, and atomic operations 
+ * on shared data. It is important to use these primitives correctly to avoid issues such as deadlocks, race conditions, 
+ * and other concurrency-related bugs.
  * 
  * @note
- * The primitive types defined in this file are mapped to standard C++ synchronization primitives. These types 
- * represent the most basic units of concurrency and should typically be managed by RAII wrappers (like lock_guard) 
- * at the application level to ensure exception safety.
+ * The primitive types defined in this file are mapped to standard C++ synchronization primitives.
+ * These primitives are typically used in conjunction with higher-level abstractions (like lock guards, scoped locks, etc.)
+ * to manage resource acquisition and release in a safe and exception-friendly manner.
  * 
  * @see https://en.cppreference.com/w/cpp/atomic/atomic for more information on std::atomic.
  * @see https://en.cppreference.com/w/cpp/thread/mutex for more information on std::mutex.
  * @see https://en.cppreference.com/w/cpp/thread/recursive_mutex for more information on std::recursive_mutex.
  * @see https://en.cppreference.com/w/cpp/thread/shared_mutex for more information on std::shared_mutex.
  * @see https://en.cppreference.com/w/cpp/thread/condition_variable for more information on std::condition_variable.
- * @see https://en.cppreference.com/w/cpp/thread/counting_semaphore for more information on std::counting_semaphore.
- * @see https://en.cppreference.com/w/cpp/thread/binary_semaphore for more information on std::binary_semaphore.
- * @see https://en.cppreference.com/w/cpp/thread/latch for more information on std::latch.
- * @see https://en.cppreference.com/w/cpp/thread/barrier for more information on std::barrier.
+ * @see https://en.cppreference.com/w/cpp/thread/condition_variable_any for more information on std::condition_variable_any.
  */
 
 #include <atomic>
 #include <mutex>
 #include <shared_mutex>
 #include <condition_variable>
-#include <semaphore>
-#include <latch>
-#include <barrier>
 
 #include "nex/base/namespace.h"
 #include "nex/base/types.h"
@@ -75,6 +66,14 @@ using AtomicFlag = NEX_STD atomic_flag;
 using Mutex = NEX_STD mutex;
 
 /**
+ * @brief Mutual exclusion primitive that can be locked multiple times by the same thread.
+ * @details 
+ * Allows a thread to acquire the same mutex multiple times without causing a deadlock. 
+ * Useful for recursive function calls that require locking the same mutex.
+ */
+using TimedMutex = NEX_STD timed_mutex;
+
+/**
  * @brief Shared mutex for Reader-Writer scenarios.
  * @details 
  * Supports two levels of access: 'shared' (multiple threads can read simultaneously) and 'exclusive' 
@@ -83,12 +82,29 @@ using Mutex = NEX_STD mutex;
 using SharedMutex = NEX_STD shared_mutex;
 
 /**
+ * @brief Shared timed mutex for Reader-Writer scenarios with timeout capabilities.
+ * @details 
+ * Similar to SharedMutex but allows threads to attempt to acquire locks with a timeout, preventing indefinite blocking. 
+ * Ideal for scenarios where responsiveness is critical and waiting indefinitely is not acceptable.
+ */
+using SharedTimedMutex = NEX_STD shared_timed_mutex;
+
+/**
  * @brief Mutex that can be locked multiple times by the same thread.
  * @details 
  * Prevents deadlocks when a thread calls a sequence of functions that each require locking the same mutex. 
  * Use sparingly as it often indicates a need for refactoring.
  */
 using RecursiveMutex = NEX_STD recursive_mutex;
+
+/**
+ * @brief Mutex that can be locked multiple times by the same thread with timeout capabilities.
+ * @details 
+ * Similar to RecursiveMutex but allows threads to attempt to acquire locks with a timeout, 
+ * preventing indefinite blocking. Useful for scenarios where a thread may need to wait for a resource 
+ * but should not block indefinitely.
+ */
+using RecursiveTimedMutex = NEX_STD recursive_timed_mutex;
 
 /**
  * @brief Condition variable for thread synchronization.
@@ -100,39 +116,13 @@ using RecursiveMutex = NEX_STD recursive_mutex;
 using ConditionVariable = NEX_STD condition_variable;
 
 /**
- * @brief Counting semaphore for controlling access to a resource pool.
+ * @brief Condition variable that can work with any lock type.
  * @details 
- * Maintains a count of available resources and blocks threads when the count reaches zero. 
- * Ideal for managing a fixed number of identical resources (like a connection pool).
+ * More flexible than ConditionVariable as it can be used with any basic-lockable type, 
+ * such as UniqueLock<SharedMutex>. This allows for more complex synchronization patterns.
+ * @note Always use condition variables with a predicate to avoid missed notifications and spurious wakeups.
  */
-template <isize LeastMaxValue = 1024>
-using CountingSemaphore = NEX_STD counting_semaphore<LeastMaxValue>;
-
-/**
- * @brief Binary semaphore for simple signaling between threads.
- * @details
- * A special case of counting semaphore that can only be in two states: "available" (count = 1) 
- * or "unavailable" (count = 0). Useful for simple synchronization scenarios where one thread needs 
- * to signal another to proceed.
- */
-using BinarySemaphore = NEX_STD binary_semaphore;
-
-/**
- * @brief Latch for one-time synchronization.
- * @details 
- * A latch allows threads to wait until a certain number of events have occurred. 
- * Once the count reaches zero, all waiting threads are released and the latch cannot be reused.
- */
-using Latch = NEX_STD latch;
-
-/**
- * @brief Barrier for reusable thread synchronization.
- * @details 
- * A barrier allows a group of threads to wait for each other at a certain point in the code. 
- * Once all threads have reached the barrier, they are all released and the barrier can be reused.
- */
-template <typename Func = void(*)()>
-using Barrier = NEX_STD barrier<Func>;
+using ConditionVariableAny = NEX_STD condition_variable_any;
 
 /**
  * @brief Common primitive type aliases
@@ -144,8 +134,9 @@ using Barrier = NEX_STD barrier<Func>;
 
 /**
  * @brief Thread-safe integer aliases for concurrent counters and flags.
- * @details Provides atomic primitives for common integer types. These ensure that modifications (like increments 
- * or exchanges) are safe across multiple threads without requiring a Mutex.
+ * @details 
+ * Provides atomic primitives for common integer types. These ensure that modifications (like increments or exchanges) 
+ * are safe across multiple threads without requiring a Mutex.
  */
 using AtomicInt = Atomic<int32>;
 using AtomicUInt = Atomic<uint32>;

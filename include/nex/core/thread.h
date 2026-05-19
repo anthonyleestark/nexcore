@@ -10,7 +10,7 @@
 
 #include "nex/base/macros.h"
 #include "nex/base/types.h"
-#include "nex/base/primitive.h"
+#include "nex/base/primitives.h"
 #include "nex/base/wrappers.h"
 #include "nex/core/meta/runtime_id.h"
 #include "nex/core/text/string_view.h"

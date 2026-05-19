@@ -9,7 +9,7 @@
 
 #include "nex/base/macros.h"
 #include "nex/base/types.h"
-#include "nex/base/primitive.h"
+#include "nex/base/primitives.h"
 #include "nex/core/text/string.h"
 
 NEX_CORE_NAMESPACE_BEGIN

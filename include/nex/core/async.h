@@ -13,7 +13,7 @@
 #include "nex/base/macros.h"
 #include "nex/base/types.h"
 #include "nex/base/traits.h"
-#include "nex/base/primitive.h"
+#include "nex/base/primitives.h"
 #include "nex/base/wrappers.h"
 #include "nex/core/executor.h"
 

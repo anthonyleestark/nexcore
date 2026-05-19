@@ -4,7 +4,7 @@
  */
 
 #include "nex/core/executor.h"
-#include "nex/base/primitive.h"
+#include "nex/base/primitives.h"
 #include "nex/base/adaptors.h"
 #include "nex/base/linear.h"
 

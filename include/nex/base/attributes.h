@@ -6,9 +6,9 @@
 #pragma once
 
 /**
- * @file      attributes.h
- * @brief     Defines macros for common attributes and annotations used in the codebase, such as deprecation, 
- *            nodiscard, noinline, and noreturn.
+ * @file   attributes.h
+ * @brief  Defines macros for common attributes and annotations used in the codebase, such as deprecation, 
+ *         nodiscard, noinline, and noreturn.
  * 
  * @details
  * This section defines macros for marking functions and classes with attributes such as export/import 
@@ -98,6 +98,90 @@
 #endif  // !defined(NEX_HAS_ATTRIBUTE)
 
 /**
+ * @def NEX_HAS_CLANG_ATTRIBUTE(x)
+ * @brief Check if a Clang-specific attribute is supported by the compiler
+ * 
+ * @details
+ * This macro checks for the presence of a Clang-specific attribute using `__has_cpp_attribute`. 
+ * It evaluates to 1 if the attribute is supported and the compiler is Clang, otherwise it evaluates to 0.
+ */
+#if NEX_COMPILER_IS_CLANG
+    #define NEX_HAS_CLANG_ATTRIBUTE(x) NEX_HAS_CPP_ATTRIBUTE(clang::x)
+#else
+    #define NEX_HAS_CLANG_ATTRIBUTE(x) 0
+#endif  // NEX_COMPILER_IS_CLANG
+
+/**
+ * @def NEX_CLANG_ATTRIBUTE(x)
+ * @brief Annotate code with a Clang-specific attribute
+ * 
+ * @details
+ * This macro allows you to annotate code with a Clang-specific attribute. It expands to the appropriate 
+ * attribute syntax if the compiler is Clang, and expands to nothing on other compilers.
+ */
+#if NEX_COMPILER_IS_CLANG
+    #define NEX_CLANG_ATTRIBUTE(x) [[clang::x]]
+#else
+    #define NEX_CLANG_ATTRIBUTE(x)
+#endif  // NEX_COMPILER_IS_CLANG
+
+/**
+ * @def NEX_HAS_GCC_ATTRIBUTE(x)
+ * @brief Check if a GCC-specific attribute is supported by the compiler
+ * 
+ * @details
+ * This macro checks for the presence of a GCC-specific attribute using `__has_cpp_attribute`. 
+ * It evaluates to 1 if the attribute is supported and the compiler is GCC-compatible, otherwise it evaluates to 0.
+ */
+#if NEX_COMPILER_GCC_COMPATIBLE
+    #define NEX_HAS_GCC_ATTRIBUTE(x) NEX_HAS_CPP_ATTRIBUTE(gnu::x)
+#else
+    #define NEX_HAS_GCC_ATTRIBUTE(x) 0
+#endif  // NEX_COMPILER_GCC_COMPATIBLE
+
+/**
+ * @def NEX_GCC_ATTRIBUTE(x)
+ * @brief Annotate code with a GCC-specific attribute
+ * 
+ * @details
+ * This macro allows you to annotate code with a GCC-specific attribute. It expands to the appropriate 
+ * attribute syntax if the compiler is GCC-compatible, and expands to nothing on other compilers.
+ */
+#if NEX_COMPILER_GCC_COMPATIBLE
+    #define NEX_GCC_ATTRIBUTE(x) [[gnu::x]]
+#else
+    #define NEX_GCC_ATTRIBUTE(x)
+#endif  // NEX_COMPILER_GCC_COMPATIBLE
+
+/**
+ * @def NEX_HAS_MSVC_ATTRIBUTE(x)
+ * @brief Check if a Microsoft-specific attribute is supported by the compiler
+ * 
+ * @details
+ * This macro checks for the presence of a Microsoft-specific attribute using `__has_cpp_attribute`. 
+ * It evaluates to 1 if the attribute is supported and the compiler is MSVC-compatible, otherwise it evaluates to 0.
+ */
+#if NEX_COMPILER_MSVC_COMPATIBLE
+    #define NEX_HAS_MSVC_ATTRIBUTE(x) NEX_HAS_CPP_ATTRIBUTE(msvc::x)
+#else
+    #define NEX_HAS_MSVC_ATTRIBUTE(x) 0
+#endif  // NEX_COMPILER_MSVC_COMPATIBLE
+
+/**
+ * @def NEX_MSVC_ATTRIBUTE(x)
+ * @brief Annotate code with a Microsoft-specific attribute
+ * 
+ * @details
+ * This macro allows you to annotate code with a Microsoft-specific attribute. It expands to the appropriate 
+ * attribute syntax if the compiler is MSVC-compatible, and expands to nothing on other compilers.
+ */
+#if NEX_COMPILER_MSVC_COMPATIBLE
+    #define NEX_MSVC_ATTRIBUTE(x) [[msvc::x]]
+#else
+    #define NEX_MSVC_ATTRIBUTE(x)
+#endif  // NEX_COMPILER_MSVC_COMPATIBLE
+
+/**
  * @def NEX_HAS_BUILTIN_FLOAT128
  * @brief This macro indicates whether the compiler supports the built-in `__float128` type
  *       (available in GCC and Clang on platforms with 128-bit floating-point support).
@@ -135,12 +219,12 @@
  *   }
  * @endcode
  */
-#if NEX_HAS_CPP_ATTRIBUTE(clang::noinline)
-    #define NEX_NOINLINE [[clang::noinline]]
-#elif NEX_HAS_CPP_ATTRIBUTE(gnu::noinline)
-    #define NEX_NOINLINE [[gnu::noinline]]
-#elif NEX_HAS_CPP_ATTRIBUTE(msvc::noinline)
-    #define NEX_NOINLINE [[msvc::noinline]]
+#if NEX_HAS_CLANG_ATTRIBUTE(noinline)
+    #define NEX_NOINLINE NEX_CLANG_ATTRIBUTE(noinline)
+#elif NEX_HAS_GCC_ATTRIBUTE(noinline)
+    #define NEX_NOINLINE NEX_GCC_ATTRIBUTE(noinline)
+#elif NEX_HAS_MSVC_ATTRIBUTE(noinline)
+    #define NEX_NOINLINE NEX_MSVC_ATTRIBUTE(noinline)
 #else  // Compiler does not support [[noinline]] attribute
     #define NEX_NOINLINE
 #endif  // NEX_NOINLINE
@@ -167,10 +251,10 @@
  * @endcode
  */
 #if defined(NDEBUG)
-    #if NEX_HAS_CPP_ATTRIBUTE(clang::always_inline)
-        #define NEX_ALWAYS_INLINE [[clang::always_inline]] inline
-    #elif NEX_HAS_CPP_ATTRIBUTE(gnu::always_inline)
-        #define NEX_ALWAYS_INLINE [[gnu::always_inline]] inline
+    #if NEX_HAS_CLANG_ATTRIBUTE(always_inline)
+        #define NEX_ALWAYS_INLINE NEX_CLANG_ATTRIBUTE(always_inline) inline
+    #elif NEX_HAS_GCC_ATTRIBUTE(always_inline)
+        #define NEX_ALWAYS_INLINE NEX_GCC_ATTRIBUTE(always_inline) inline
     #elif NEX_COMPILER_MSVC_COMPATIBLE
         #define NEX_ALWAYS_INLINE __forceinline
     #endif
@@ -292,8 +376,8 @@
  * @see https://en.cppreference.com/w/cpp/language/attributes/no_unique_address
  * @see https://wg21.link/dcl.attr.nouniqueaddr
  */
-#if NEX_HAS_CPP_ATTRIBUTE(msvc::no_unique_address)
-    #define NEX_NO_UNIQUE_ADDRESS [[msvc::no_unique_address]]
+#if NEX_HAS_MSVC_ATTRIBUTE(no_unique_address)
+    #define NEX_NO_UNIQUE_ADDRESS NEX_MSVC_ATTRIBUTE(no_unique_address)
 #elif NEX_HAS_CPP_ATTRIBUTE(no_unique_address)
     #define NEX_NO_UNIQUE_ADDRESS [[no_unique_address]]
 #else  // Compiler does not support [[no_unique_address]]
@@ -478,8 +562,8 @@
  *   }
  * @endcode
  */
-#if NEX_HAS_CPP_ATTRIBUTE(clang::nomerge)
-    #define NEX_NOMERGE [[clang::nomerge]]
+#if NEX_HAS_CLANG_ATTRIBUTE(nomerge)
+    #define NEX_NOMERGE NEX_CLANG_ATTRIBUTE(nomerge)
 #else  // Compiler does not support [[nomerge]] attribute
     #define NEX_NOMERGE
 #endif
@@ -520,10 +604,10 @@
  * @note 
  * Please document platform, bot, benchmark, or test name when using this attribute to help future cleanup efforts.
  */
-#if NEX_HAS_CPP_ATTRIBUTE(clang::uninitialized)
-    #define NEX_STACK_UNINITIALIZED [[clang::uninitialized]]
-#elif NEX_HAS_CPP_ATTRIBUTE(gnu::uninitialized)
-    #define NEX_STACK_UNINITIALIZED [[gnu::uninitialized]]
+#if NEX_HAS_CLANG_ATTRIBUTE(uninitialized)
+    #define NEX_STACK_UNINITIALIZED NEX_CLANG_ATTRIBUTE(uninitialized)
+#elif NEX_HAS_GCC_ATTRIBUTE(uninitialized)
+    #define NEX_STACK_UNINITIALIZED NEX_GCC_ATTRIBUTE(uninitialized)
 #else  // Compiler does not support uninitialized attribute
     #define NEX_STACK_UNINITIALIZED
 #endif  // NEX_STACK_UNINITIALIZED
@@ -549,10 +633,10 @@
  * 
  * @see https://crbug.com/40181003 for details on fork behavior
  */
-#if NEX_HAS_CPP_ATTRIBUTE(gnu::no_stack_protector)
-    #define NEX_NO_STACK_PROTECTOR [[gnu::no_stack_protector]]
-#elif NEX_HAS_CPP_ATTRIBUTE(gnu::optimize)
-    #define NEX_NO_STACK_PROTECTOR [[gnu::optimize("-fno-stack-protector")]]
+#if NEX_HAS_GCC_ATTRIBUTE(no_stack_protector)
+    #define NEX_NO_STACK_PROTECTOR NEX_GCC_ATTRIBUTE(no_stack_protector)
+#elif NEX_HAS_GCC_ATTRIBUTE(optimize)
+    #define NEX_NO_STACK_PROTECTOR NEX_GCC_ATTRIBUTE(optimize("-fno-stack-protector"))
 #else  // Compiler does not support [[no_stack_protector]] attribute
     #define NEX_NO_STACK_PROTECTOR
 #endif  // NEX_NO_STACK_PROTECTOR
@@ -584,8 +668,8 @@
  *   }
  * @endcode
  */
-#if NEX_HAS_CPP_ATTRIBUTE(clang::reinitializes)
-    #define NEX_REINITIALIZES_AFTER_MOVE [[clang::reinitializes]]
+#if NEX_HAS_CLANG_ATTRIBUTE(reinitializes)
+    #define NEX_REINITIALIZES_AFTER_MOVE NEX_CLANG_ATTRIBUTE(reinitializes)
 #else  // Compiler does not support [[reinitializes]] attribute, or we are not using Clang
     #define NEX_REINITIALIZES_AFTER_MOVE
 #endif  // NEX_REINITIALIZES_AFTER_MOVE

@@ -16,35 +16,37 @@ NEX_NAMESPACE_BEGIN
 // Internal helper functions for ByteArray
 // ============================================================================
 
-namespace {
-    //  Convert hex character to value
-    uint8 hexCharToValue(char c) {
-        if (c >= '0' && c <= '9') return static_cast<uint8>(c - '0');
-        if (c >= 'A' && c <= 'F') return static_cast<uint8>(c - 'A' + 10);
-        if (c >= 'a' && c <= 'f') return static_cast<uint8>(c - 'a' + 10);
-        return 0;
-    }
+NEX_ANONYMOUS_NAMESPACE_BEGIN
 
-    // Check if character is hex
-    bool isHexChar(char c) {
-        return (c >= '0' && c <= '9') || (c >= 'A' && c <= 'F') || (c >= 'a' && c <= 'f');
-    }
+//  Convert hex character to value
+uint8 hexCharToValue(char c) {
+    if (c >= '0' && c <= '9') return static_cast<uint8>(c - '0');
+    if (c >= 'A' && c <= 'F') return static_cast<uint8>(c - 'A' + 10);
+    if (c >= 'a' && c <= 'f') return static_cast<uint8>(c - 'a' + 10);
+    return 0;
+}
 
-    // Base64 encoding table
-    static constexpr const char base64Chars[] = 
-        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+// Check if character is hex
+bool isHexChar(char c) {
+    return (c >= '0' && c <= '9') || (c >= 'A' && c <= 'F') || (c >= 'a' && c <= 'f');
+}
 
-    // Find Base64 character index
-    int32 base64CharToValue(char c) {
-        if (c >= 'A' && c <= 'Z') return c - 'A';
-        if (c >= 'a' && c <= 'z') return c - 'a' + 26;
-        if (c >= '0' && c <= '9') return c - '0' + 52;
-        if (c == '+') return 62;
-        if (c == '/') return 63;
-        if (c == '=') return -1; // Padding
-        return -2; // Invalid
-    }
-} // namespace
+// Base64 encoding table
+static constexpr const char base64Chars[] = 
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+
+// Find Base64 character index
+int32 base64CharToValue(char c) {
+    if (c >= 'A' && c <= 'Z') return c - 'A';
+    if (c >= 'a' && c <= 'z') return c - 'a' + 26;
+    if (c >= '0' && c <= '9') return c - '0' + 52;
+    if (c == '+') return 62;
+    if (c == '/') return 63;
+    if (c == '=') return -1; // Padding
+    return -2; // Invalid
+}
+
+NEX_ANONYMOUS_NAMESPACE_END
 
 // ============================================================================
 // ByteArray implementation

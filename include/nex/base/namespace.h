@@ -68,6 +68,17 @@
 #define NEX_INLINE_NAMESPACE_BEGIN(name)                inline namespace name {
 #define NEX_INLINE_NAMESPACE_END(name)                  } // inline namespace
 
+/**
+ * @section Anonymous namespace macros
+ * @brief   Define macros for anonymous namespaces
+ * @note
+ * Anonymous namespaces are used to limit the scope of functions, variables, and classes to the current translation unit.
+ * This helps to avoid name conflicts and to encapsulate implementation details that should not be exposed outside the file.
+ */
+
+#define NEX_ANONYMOUS_NAMESPACE_BEGIN                   namespace {
+#define NEX_ANONYMOUS_NAMESPACE_END                     } // anonymous namespace
+
 /** 
  * @section Using global ::std:: namespace
  * @brief   Define macros for using the global ::std:: namespace in public APIs and implementation files

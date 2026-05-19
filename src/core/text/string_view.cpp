@@ -13,9 +13,11 @@
 
 NEX_NAMESPACE_BEGIN
 
+// =================================================================================
+// Internal helper functions and types for StringView class
+// =================================================================================
+
 /** 
- * @brief Internal helper functions for optimized character lookup in contains() method
- * 
  * @details
  *  For small substrings, a linear search is sufficient. For larger substrings, we build a lookup table for O(1) character checks.
  *  The lookup table is a bitset that can represent the presence of any UTF-16 code unit (0 to 65535) in the substring.
@@ -29,38 +31,42 @@ NEX_NAMESPACE_BEGIN
  *  The implementation of the contains() method will use these helper functions to efficiently determine 
  *  if a character is present in the substring, which is a common operation in string searching algorithms.
  */
-namespace {
+NEX_ANONYMOUS_NAMESPACE_BEGIN
 
-    // Threshold for deciding when to use linear search vs. lookup table
-    constexpr StringView::size_type kLinearSearchThreshold = 16;
+// Threshold for deciding when to use linear search vs. lookup table
+constexpr StringView::size_type kLinearSearchThreshold = 16;
 
-    // Number of bits in a uint64_t, used for the lookup table
-    constexpr StringView::size_type kBitsPerWord = 64;
+// Number of bits in a uint64_t, used for the lookup table
+constexpr StringView::size_type kBitsPerWord = 64;
 
-    // Maximum number of UTF-16 code units (0 to 65535) that can be represented in the lookup table
-    constexpr StringView::size_type kCodeUnitCount = 1u << 16;
+// Maximum number of UTF-16 code units (0 to 65535) that can be represented in the lookup table
+constexpr StringView::size_type kCodeUnitCount = 1u << 16;
 
-    // Type alias for the character lookup table, which is an array of uint64_t 
-    // where each bit represents the presence of a UTF-16 code unit in the substring
-    using CharLookupTable = NEX_STD array<NEX_STD uint64_t, kCodeUnitCount / kBitsPerWord>;
+// Type alias for the character lookup table, which is an array of uint64_t 
+// where each bit represents the presence of a UTF-16 code unit in the substring
+using CharLookupTable = NEX_STD array<NEX_STD uint64_t, kCodeUnitCount / kBitsPerWord>;
 
-    // Build a lookup table for the characters in the input substring
-    inline CharLookupTable buildCharLookupTable(StringView input) {
-        CharLookupTable table{};
-        for (StringView::size_type i = 0; i < input.size(); ++i) {
-            const auto ch = static_cast<NEX_STD uint16_t>(input[i]);
-            table[ch / kBitsPerWord] |= NEX_STD uint64_t{1} << (ch % kBitsPerWord);
-        }
-        return table;
+// Build a lookup table for the characters in the input substring
+inline CharLookupTable buildCharLookupTable(StringView input) {
+    CharLookupTable table{};
+    for (StringView::size_type i = 0; i < input.size(); ++i) {
+        const auto ch = static_cast<NEX_STD uint16_t>(input[i]);
+        table[ch / kBitsPerWord] |= NEX_STD uint64_t{1} << (ch % kBitsPerWord);
     }
+    return table;
+}
 
-    // Check if the character is present in the substring using the lookup table
-    inline bool lookupContains(const CharLookupTable& table, StringView::value_type ch) {
-        const auto codeUnit = static_cast<NEX_STD uint16_t>(ch);
-        return (table[codeUnit / kBitsPerWord] & (NEX_STD uint64_t{1} << (codeUnit % kBitsPerWord))) != 0;
-    }
+// Check if the character is present in the substring using the lookup table
+inline bool lookupContains(const CharLookupTable& table, StringView::value_type ch) {
+    const auto codeUnit = static_cast<NEX_STD uint16_t>(ch);
+    return (table[codeUnit / kBitsPerWord] & (NEX_STD uint64_t{1} << (codeUnit % kBitsPerWord))) != 0;
+}
 
-} // namespace
+NEX_ANONYMOUS_NAMESPACE_END
+
+// =================================================================================
+// Implementation of StringView class methods
+// =================================================================================
 
 ////// Construction ------------------------
 

@@ -15,6 +15,10 @@
 
 NEX_INFRA_NAMESPACE_BEGIN
 
+// =================================================================================
+// Internal definitions for Json class
+// =================================================================================
+
 // Define the opaque node handle used by navigatePath()
 struct Json::NodeHandle {
     const nlohmann::json* node = nullptr;
@@ -27,49 +31,56 @@ struct Json::Impl {
     UniquePtr<NodeHandle> nodeHandle;
 };
 
+// =================================================================================
 // Helper utilities for JSON parser implementation
-namespace {
+// =================================================================================
 
-    // Convert StringView to UTF-8 string (std::string)
-    Utf8String toUtf8String(StringView value) {
-        using namespace NEX_PREPEND_NAMESPACE(encoding);
-        const auto result = utf16ToUtf8(Utf16StringView(value.data(), value.size()));
-        return result.isOk() ? result.value() : Utf8String();
+NEX_ANONYMOUS_NAMESPACE_BEGIN
+
+// Convert StringView to UTF-8 string (std::string)
+Utf8String toUtf8String(StringView value) {
+    using namespace NEX_PREPEND_NAMESPACE(encoding);
+    const auto result = utf16ToUtf8(Utf16StringView(value.data(), value.size()));
+    return result.isOk() ? result.value() : Utf8String();
+}
+
+// Convert UTF-8 string (std::string) to String
+String fromUtf8String(const Utf8String& value) {
+    return String::fromUtf8(value);
+}
+
+// Navigate JSON using dot-separated key path (e.g., "application.name")
+const nlohmann::json* navigatePathImpl(const nlohmann::json& root, const Utf8String& keyPath) {
+    if (keyPath.empty()) {
+        return nullptr;
     }
 
-    // Convert UTF-8 string (std::string) to String
-    String fromUtf8String(const Utf8String& value) {
-        return String::fromUtf8(value);
-    }
+    const nlohmann::json* current = &root;
 
-    // Navigate JSON using dot-separated key path (e.g., "application.name")
-    const nlohmann::json* navigatePathImpl(const nlohmann::json& root, const Utf8String& keyPath) {
-        if (keyPath.empty()) {
+    NEX_STD stringstream ss(keyPath);
+    Utf8String segment;
+
+    while (NEX_STD getline(ss, segment, '.')) {
+        if (segment.empty()) {
+            continue;
+        }
+
+        // Check if current node is an object and contains the segment as a key
+        if (!current->is_object() || !current->contains(segment)) {
             return nullptr;
         }
 
-        const nlohmann::json* current = &root;
-
-        NEX_STD stringstream ss(keyPath);
-        Utf8String segment;
-
-        while (NEX_STD getline(ss, segment, '.')) {
-            if (segment.empty()) {
-                continue;
-            }
-
-            // Check if current node is an object and contains the segment as a key
-            if (!current->is_object() || !current->contains(segment)) {
-                return nullptr;
-            }
-
-            current = &(*current)[segment];
-        }
-
-        return current;
+        current = &(*current)[segment];
     }
 
-} // namespace
+    return current;
+}
+
+NEX_ANONYMOUS_NAMESPACE_END
+
+// =================================================================================
+// Implementation of Json class methods
+// =================================================================================
 
 // Constructor
 Json::Json() 

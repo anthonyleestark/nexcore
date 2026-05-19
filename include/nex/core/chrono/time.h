@@ -30,45 +30,47 @@ NEX_NAMESPACE_BEGIN
  * @note The type aliases are based on the `std::chrono` library and may be used in conjunction 
  *       with other chrono types and functions.
  */
-namespace time {
-    ////// Type aliases for chrono components ------------------------
+NEX_SUBNAMESPACE_BEGIN(time)
 
-    using TimePoint     = NEX_STD chrono::system_clock::time_point;
-    using Duration      = NEX_STD chrono::system_clock::duration;
-    using Date          = NEX_STD chrono::year_month_day;
-    using Year          = NEX_STD chrono::year;
-    using Years         = NEX_STD chrono::years;
-    using Month         = NEX_STD chrono::month;
-    using Months        = NEX_STD chrono::months;
-    using Day           = NEX_STD chrono::day;
-    using Days          = NEX_STD chrono::days;
-    using Weekday       = NEX_STD chrono::weekday;
-    using Hours         = NEX_STD chrono::hours;
-    using Minutes       = NEX_STD chrono::minutes;
-    using Seconds       = NEX_STD chrono::seconds;
-    using Milliseconds  = NEX_STD chrono::milliseconds;
-    using SysTime       = NEX_STD chrono::sys_time<Duration>;
-    using SysDays       = NEX_STD chrono::sys_days;
+////// Type aliases for chrono components ------------------------
 
-    ////// Helper functions for time validation ------------------------
+using TimePoint     = NEX_STD chrono::system_clock::time_point;
+using Duration      = NEX_STD chrono::system_clock::duration;
+using Date          = NEX_STD chrono::year_month_day;
+using Year          = NEX_STD chrono::year;
+using Years         = NEX_STD chrono::years;
+using Month         = NEX_STD chrono::month;
+using Months        = NEX_STD chrono::months;
+using Day           = NEX_STD chrono::day;
+using Days          = NEX_STD chrono::days;
+using Weekday       = NEX_STD chrono::weekday;
+using Hours         = NEX_STD chrono::hours;
+using Minutes       = NEX_STD chrono::minutes;
+using Seconds       = NEX_STD chrono::seconds;
+using Milliseconds  = NEX_STD chrono::milliseconds;
+using SysTime       = NEX_STD chrono::sys_time<Duration>;
+using SysDays       = NEX_STD chrono::sys_days;
 
-    // Validate hour value (0-23)
-    constexpr bool isValidHour(int hour) noexcept {
-        return (hour >= 0 && hour <= 23);
-    }
-    // Validate minute value (0-59)
-    constexpr bool isValidMinute(int minute) noexcept {
-        return (minute >= 0 && minute <= 59);
-    }
-    // Validate second value (0-59)
-    constexpr bool isValidSecond(int second) noexcept {
-        return (second >= 0 && second <= 59);
-    }
-    // Validate millisecond value (0-999)
-    constexpr bool isValidMillisecs(int millisecs) noexcept {
-        return (millisecs >= 0 && millisecs <= 999);
-    }
+////// Helper functions for time validation ------------------------
+
+// Validate hour value (0-23)
+constexpr bool isValidHour(int hour) noexcept {
+    return (hour >= 0 && hour <= 23);
 }
+// Validate minute value (0-59)
+constexpr bool isValidMinute(int minute) noexcept {
+    return (minute >= 0 && minute <= 59);
+}
+// Validate second value (0-59)
+constexpr bool isValidSecond(int second) noexcept {
+    return (second >= 0 && second <= 59);
+}
+// Validate millisecond value (0-999)
+constexpr bool isValidMillisecs(int millisecs) noexcept {
+    return (millisecs >= 0 && millisecs <= 999);
+}
+
+NEX_SUBNAMESPACE_END(time)
 
 /**
  * @class   TimeSpan

@@ -10,36 +10,39 @@
 
 NEX_INFRA_NAMESPACE_BEGIN
 
+// =================================================================================
 // Helper utilities for XML parser implementation
-namespace {
+// =================================================================================
 
-    // Convert StringView to UTF-8 string (std::string) (returns string)
-    Utf8String toUtf8String(StringView value) {
-        using namespace NEX_PREPEND_NAMESPACE(encoding);
-        const auto result = utf16ToUtf8(Utf16StringView(value.data(), value.size()));
-        return result.isOk() ? result.value() : Utf8String();
+NEX_ANONYMOUS_NAMESPACE_BEGIN
+
+// Convert StringView to UTF-8 string (std::string) (returns string)
+Utf8String toUtf8String(StringView value) {
+    using namespace NEX_PREPEND_NAMESPACE(encoding);
+    const auto result = utf16ToUtf8(Utf16StringView(value.data(), value.size()));
+    return result.isOk() ? result.value() : Utf8String();
+}
+
+// Convert StringView to UTF-8 string (std::string) (output parameter; returns boolean)
+bool toUtf8String(StringView value, Utf8String& out) {
+    const Utf8String result = toUtf8String(value);
+    if (result.empty() && !value.empty()) {
+        return false;
     }
+    out = NEX_STD move(result);
+    return true;
+}
 
-    // Convert StringView to UTF-8 string (std::string) (output parameter; returns boolean)
-    bool toUtf8String(StringView value, Utf8String& out) {
-        const Utf8String result = toUtf8String(value);
-        if (result.empty() && !value.empty()) {
-            return false;
-        }
-        out = NEX_STD move(result);
-        return true;
-    }
+// Convert UTF-8 string (std::string) to String
+String fromUtf8String(const Utf8String& value) {
+    return String::fromUtf8(value);
+}
 
-    // Convert UTF-8 string (std::string) to String
-    String fromUtf8String(const Utf8String& value) {
-        return String::fromUtf8(value);
-    }
+NEX_ANONYMOUS_NAMESPACE_END
 
-} // namespace
-
-// =============================================
-// XmlAttribute Implementation
-// =============================================
+// =================================================================================
+// Implementation of XmlAttribute class methods
+// =================================================================================
 
 // Internal implementation of XmlAttribute
 struct XmlAttribute::Impl {
@@ -90,9 +93,9 @@ bool XmlAttribute::asBool(bool defaultValue) const {
     return impl_->attr.as_bool(defaultValue);
 }
 
-// =============================================
-// XmlNode Implementation
-// =============================================
+// =================================================================================
+// Implementation of XmlNode class methods
+// =================================================================================
 
 // Internal implementation of XmlNode
 struct XmlNode::Impl {
@@ -220,9 +223,9 @@ XmlAttribute XmlNode::attribute(StringView name) const {
     return attr;
 }
 
-// =============================================
-// XmlDocument Implementation
-// =============================================
+// =================================================================================
+// Implementation of XmlDocument class methods
+// =================================================================================
 
 // Internal implementation of XmlDocument
 struct XmlDocument::Impl {

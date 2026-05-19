@@ -46,8 +46,8 @@ NEX_NAMESPACE_BEGIN
  * Provides atomic access to a shared variable without the overhead of a mutex. 
  * It guarantees that operations are indivisible and prevents data races in multi-threaded environments.
  */
-template <typename T>
-using Atomic = NEX_STD atomic<T>;
+template <typename Type>
+using Atomic = NEX_STD atomic<Type>;
 
 /**
  * @brief A lock-free atomic boolean flag.
@@ -124,26 +124,14 @@ using ConditionVariable = NEX_STD condition_variable;
  */
 using ConditionVariableAny = NEX_STD condition_variable_any;
 
-/**
- * @brief Common primitive type aliases
- * @details
- * These type aliases provide convenient names for commonly used primitive types with specific types of values, 
- * objects, and functions. The type aliases can help to improve code readability and maintainability by providing 
- * consistent type names for commonly used primitive types with specific types of values, objects, and functions.
- */
+// =================================================================================
+// Type aliases for atomic types with specific value types
+// =================================================================================
 
-/**
- * @brief Thread-safe integer aliases for concurrent counters and flags.
- * @details 
- * Provides atomic primitives for common integer types. These ensure that modifications (like increments or exchanges) 
- * are safe across multiple threads without requiring a Mutex.
- */
-using AtomicInt = Atomic<int32>;
-using AtomicUInt = Atomic<uint32>;
-
-using AtomicInt64 = Atomic<int64>;
-using AtomicUInt64 = Atomic<uint64>;
-
-using AtomicBool = Atomic<bool>;
+using AtomicInt = Atomic<int32>;            // Atomic 32-bit signed integer
+using AtomicUInt = Atomic<uint32>;          // Atomic 32-bit unsigned integer
+using AtomicInt64 = Atomic<int64>;          // Atomic 64-bit signed integer
+using AtomicUInt64 = Atomic<uint64>;        // Atomic 64-bit unsigned integer
+using AtomicBool = Atomic<boolean>;         // Atomic boolean flag
 
 NEX_NAMESPACE_END

@@ -50,8 +50,8 @@ NEX_NAMESPACE_BEGIN
  * once an iterator is obtained. Use this when frequent reordering or middle-insertions are required without 
  * invalidating pointers to other elements.
  */
-template <typename T>
-using LinkedList = NEX_STD list<T>;
+template <typename Type, typename Allocator = NEX_STD allocator<Type>>
+using LinkedList = NEX_STD list<Type, Allocator>;
 
 /**
  * @brief ForwardList (Singly linked list)
@@ -60,7 +60,7 @@ using LinkedList = NEX_STD list<T>;
  * forward traversal. This container has a lower memory overhead per element compared to a doubly linked List 
  * as it only stores a single next-pointer per node.
  */
-template <typename T>
-using ForwardList = NEX_STD forward_list<T>;
+template <typename Type, typename Allocator = NEX_STD allocator<Type>>
+using ForwardList = NEX_STD forward_list<Type, Allocator>;
 
 NEX_NAMESPACE_END

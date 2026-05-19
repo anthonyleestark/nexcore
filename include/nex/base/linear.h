@@ -52,8 +52,8 @@ NEX_NAMESPACE_BEGIN
  * Array is a wrapper around a stack-allocated (usually) fixed-size array. 
  * Use this when the number of elements is known at compile-time to avoid dynamic allocation.
  */
-template <typename T, usize Size>
-using Array = NEX_STD array<T, Size>;
+template <typename Type, usize Size>
+using Array = NEX_STD array<Type, Size>;
 
 /**
  * @brief Vec (dynamic array)
@@ -62,8 +62,8 @@ using Array = NEX_STD array<T, Size>;
  * Elements are stored contiguously in memory, making it ideal for cases where the size may change over time 
  * and random access is required.
  */
-template <typename T, typename Allocator = NEX_STD allocator<T>>
-using Vec = NEX_STD vector<T, Allocator>;
+template <typename Type, typename Allocator = NEX_STD allocator<Type>>
+using Vec = NEX_STD vector<Type, Allocator>;
 
 /**
  * @brief Deque (double-ended queue)
@@ -72,7 +72,7 @@ using Vec = NEX_STD vector<T, Allocator>;
  * Unlike Vec, storage is not guaranteed to be contiguous, but it provides efficient access to both ends of the sequence, 
  * making it suitable for use cases like queues or stacks where elements are frequently added and removed from both ends.
  */
-template <typename T, typename Allocator = NEX_STD allocator<T>>
-using Deque = NEX_STD deque<T, Allocator>;
+template <typename Type, typename Allocator = NEX_STD allocator<Type>>
+using Deque = NEX_STD deque<Type, Allocator>;
 
 NEX_NAMESPACE_END

@@ -18,30 +18,30 @@ NEX_NAMESPACE_BEGIN
  * The range covers values in [start, start + length).
  * This representation is useful for slices, indexes, byte windows, and other offset/count APIs.
  */
-template <typename T>
+template <typename Type>
 struct Range {
-    T start = {};       // Starting offset or index
-    T length = {};      // Length or count of the range
+    Type start = {};       // Starting offset or index
+    Type length = {};      // Length or count of the range
 
     // Default constructor
     constexpr Range() noexcept = default;
 
     // Constructor with start and length parameters
-    constexpr Range(T startValue, T lengthValue) noexcept
+    constexpr Range(Type startValue, Type lengthValue) noexcept
         : start(startValue), length(lengthValue) {}
 
     // Get the end offset of the range (exclusive)
-    constexpr T end() const noexcept {
+    constexpr Type end() const noexcept {
         return start + length;
     }
 
     // Check if the range is empty (length is zero)
     constexpr bool empty() const noexcept {
-        return length == T{};
+        return length == Type{};
     }
 
     // Check if the range contains a specific value
-    constexpr bool contains(T value) const noexcept {
+    constexpr bool contains(Type value) const noexcept {
         return value >= start && value < end();
     }
 
@@ -57,18 +57,18 @@ struct Range {
 
     // Get the intersection of the range with another range
     constexpr Range intersection(Range other) const noexcept {
-        const T newStart = start > other.start ? start : other.start;
-        const T newEnd = end() < other.end() ? end() : other.end();
-        return newEnd > newStart ? Range(newStart, newEnd - newStart) : Range(newStart, T{});
+        const Type newStart = start > other.start ? start : other.start;
+        const Type newEnd = end() < other.end() ? end() : other.end();
+        return newEnd > newStart ? Range(newStart, newEnd - newStart) : Range(newStart, Type{});
     }
 
     // Equality operator
     constexpr bool operator==(const Range&) const noexcept = default;
 };
 
-// ============================================================================
+// =================================================================================
 // Type aliases for common range types
-// ============================================================================
+// =================================================================================
 
 using IndexRange = Range<usize>;        // Range for container indexes and counts
 using SignedRange = Range<isize>;       // Range for signed offsets

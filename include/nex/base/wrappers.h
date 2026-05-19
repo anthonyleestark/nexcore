@@ -71,8 +71,8 @@ NEX_NAMESPACE_BEGIN
  * Efficiently represents an optional value without dynamic allocation. 
  * Use this to avoid "magic values" (like null or -1) in API return types.
  */
-template <typename T>
-using Optional = NEX_STD optional<T>;
+template <typename Type>
+using Optional = NEX_STD optional<Type>;
 
 /**
  * @brief Shared ownership smart pointer.
@@ -80,8 +80,8 @@ using Optional = NEX_STD optional<T>;
  * Uses reference counting to manage an object's lifetime. The object is destroyed only 
  * when the last SharedPtr is destroyed or reset.
  */
-template <typename T>
-using SharedPtr = NEX_STD shared_ptr<T>;
+template <typename Type>
+using SharedPtr = NEX_STD shared_ptr<Type>;
 
 /**
  * @brief Exclusive ownership smart pointer.
@@ -89,8 +89,8 @@ using SharedPtr = NEX_STD shared_ptr<T>;
  * Manages a dynamically allocated object with sole responsibility. 
  * Cannot be copied, only moved. This is the preferred default for resource management.
  */
-template <typename T>
-using UniquePtr = NEX_STD unique_ptr<T>;
+template <typename Type>
+using UniquePtr = NEX_STD unique_ptr<Type>;
 
 /**
  * @brief Non-owning reference to a SharedPtr-managed object.
@@ -98,20 +98,20 @@ using UniquePtr = NEX_STD unique_ptr<T>;
  * Holds a weak reference that must be "locked" into a SharedPtr to access the data. 
  * Used to break circular dependencies or observe managed objects.
  */
-template <typename T>
-using WeakPtr = NEX_STD weak_ptr<T>;
+template <typename Type>
+using WeakPtr = NEX_STD weak_ptr<Type>;
 
 /**
  * @brief Semantic alias for UniquePtr, emphasizing automatic lifecycle management.
  */
-template <typename T>
-using AutoPtr = NEX_STD unique_ptr<T>;
+template <typename Type>
+using AutoPtr = NEX_STD unique_ptr<Type>;
 
 /**
  * @brief Semantic alias for WeakPtr, emphasizing a non-owning relationship.
  */
-template <typename T>
-using NonOwningPtr = NEX_STD weak_ptr<T>;
+template <typename Type>
+using NonOwningPtr = NEX_STD weak_ptr<Type>;
 
 /**
  * @brief A raw pointer alias representing a "borrowed" reference.
@@ -120,8 +120,8 @@ using NonOwningPtr = NEX_STD weak_ptr<T>;
  * Use this for function parameters or return types where ownership is not transferred, and the pointer is 
  * guaranteed to be valid for the duration of its use.
  */
-template <typename T>
-using ObserverPtr = T*;
+template <typename Type>
+using ObserverPtr = Type*;
 
 /**
  * @brief A wrapper for a pair of values.
@@ -129,8 +129,8 @@ using ObserverPtr = T*;
  * Provides a simple structure to hold two related values together. 
  * Commonly used for returning multiple values from a function or representing key-value pairs in maps.
  */
-template <typename T, typename U>
-using Pair = NEX_STD pair<T, U>;
+template <typename Type1, typename Type2>
+using Pair = NEX_STD pair<Type1, Type2>;
 
 /**
  * @brief A wrapper for a fixed-size collection of heterogeneous values.
@@ -162,14 +162,14 @@ using Variant = NEX_STD variant<Args...>;
 /**
  * @brief A wrapper for expected values or errors.
  * @details 
- * Represents a value that may either contain a valid result (T) or an error (E). 
+ * Represents a value that may either contain a valid result (ValueType) or an error (ErrorType). 
  * Use this for functions that can fail, providing a clear way to handle success and error cases without exceptions.
  * @note This is a C++23 feature, so ensure your compiler supports it or use Result instead.
  * @see Result class in nex/base/result.h for a similar pattern that does not require C++23 support.
  */
 #if NEX_HAS_CXX23
-    template <typename T, typename E>
-    using Expected = NEX_STD expected<T, E>;
+    template <typename ValueType, typename ErrorType>
+    using Expected = NEX_STD expected<ValueType, ErrorType>;
 #endif // NEX_HAS_CXX23
 
 /**
@@ -179,8 +179,8 @@ using Variant = NEX_STD variant<Args...>;
  * initializer lists. This is particularly useful for APIs that want to support flexible argument 
  * counts without requiring variadic templates.
  */
-template <typename Ep>
-using InitList = NEX_STD initializer_list<Ep>;
+template <typename ElementType>
+using InitList = NEX_STD initializer_list<ElementType>;
 
 /**
  * @brief A wrapper for type_info to allow usage in associative containers.
@@ -204,8 +204,8 @@ using TypeInfo = NEX_STD type_info;
  * Can store, copy, and invoke any callable target—such as functions, lambda expressions, or bind expressions. 
  * Use this for callbacks or event-handling systems where the specific callable type is erased.
  */
-template <typename T>
-using Function = NEX_STD function<T>;
+template <typename Signature>
+using Function = NEX_STD function<Signature>;
 
 /**
  * @brief A wrapper that makes references "assignable" and "copyable".
@@ -213,8 +213,8 @@ using Function = NEX_STD function<T>;
  * Enables storing references in standard containers (like Vec) which otherwise require elements 
  * to be erasable/assignable. It acts as a non-nullable pointer with reference semantics.
  */
-template <typename T>
-using Reference = NEX_STD reference_wrapper<T>;
+template <typename Type>
+using Reference = NEX_STD reference_wrapper<Type>;
 
 /**
  * @brief A wrapper for constant references, ensuring read-only access.
@@ -222,8 +222,8 @@ using Reference = NEX_STD reference_wrapper<T>;
  * Similar to Reference, but holds a 'const T&'. 
  * Useful for storing collections of read-only observers without the overhead of pointers.
  */
-template <typename T>
-using ConstReference = NEX_STD reference_wrapper<const T>;
+template <typename Type>
+using ConstReference = NEX_STD reference_wrapper<const Type>;
 
 /**
  * @brief Strict RAII wrapper for a single mutex.
@@ -231,8 +231,8 @@ using ConstReference = NEX_STD reference_wrapper<const T>;
  * Automatically locks the mutex on construction and unlocks on destruction. 
  * It is non-copyable and has the least overhead among lock wrappers.
  */
-template <typename T>
-using LockGuard = NEX_STD lock_guard<T>;
+template <typename MutexType>
+using LockGuard = NEX_STD lock_guard<MutexType>;
 
 /**
  * @brief Flexible RAII wrapper with manual control.
@@ -240,8 +240,8 @@ using LockGuard = NEX_STD lock_guard<T>;
  * Unlike LockGuard, it supports deferred locking, timed attempts, and manual unlocking 
  * before the object goes out of scope. Required for use with Condition Variables.
  */
-template <typename T>
-using UniqueLock = NEX_STD unique_lock<T>;
+template <typename MutexType>
+using UniqueLock = NEX_STD unique_lock<MutexType>;
 
 /**
  * @brief RAII wrapper for shared ownership (Reading).
@@ -249,8 +249,8 @@ using UniqueLock = NEX_STD unique_lock<T>;
  * Used in conjunction with SharedMutex to acquire shared (read) access. 
  * Multiple SharedLocks can coexist for the same SharedMutex.
  */
-template <typename T>
-using SharedLock = NEX_STD shared_lock<T>;
+template <typename MutexType>
+using SharedLock = NEX_STD shared_lock<MutexType>;
 
 /**
  * @brief Deadlock-avoiding wrapper for multiple mutexes.
@@ -261,45 +261,42 @@ using SharedLock = NEX_STD shared_lock<T>;
 template <typename... Args>
 using ScopedLock = NEX_STD scoped_lock<Args...>;
 
-/**
- * @brief Common wrapper type aliases
- * @details
- * These type aliases provide convenient names for commonly used wrapper types with specific types of values, 
- * objects, and functions. The type aliases can help to improve code readability and maintainability by providing 
- * consistent type names for commonly used wrapper types with specific types of values, objects, and functions.
- */
+// ==========================================================================================================
+// Type aliases for commonly used wrapper types with specific types of values, objects, and functions.
+// ==========================================================================================================
 
 /**
- * @brief Optional integer and numeric aliases.
+ * @brief Optional integer and floating-point wrappers.
  * @details 
  * Represents values that may or may not be present, effectively replacing nullable pointers 
  * or "magic number" error codes (e.g., -1).
  */
-using MaybeInt = Optional<int32>;
-using MaybeUInt = Optional<uint32>;
 
-using MaybeInt64 = Optional<int64>;
-using MaybeUInt64 = Optional<uint64>;
+using MaybeInt = Optional<int32>;           // Optional 32-bit signed integer
+using MaybeUInt = Optional<uint32>;         // Optional 32-bit unsigned integer
 
-using MaybeFloat = Optional<float32>;
-using MaybeDouble = Optional<float64>;
+using MaybeInt64 = Optional<int64>;         // Optional 64-bit signed integer
+using MaybeUInt64 = Optional<uint64>;       // Optional 64-bit unsigned integer
+
+using MaybeFloat = Optional<float32>;       // Optional 32-bit floating point
+using MaybeDouble = Optional<float64>;      // Optional 64-bit floating point
 
 /**
  * @brief Tri-state boolean representation.
  * @details Useful for configurations where a setting can be true, false, or "not set / default".
  */
-using MaybeBool = Optional<bool>;
+using MaybeBool = Optional<boolean>;
 
 /**
- * @brief Optional string alias.
+ * @brief Optional string wrapper.
  * @details 
  * Represents a string value that may or may not be present, allowing for efficient handling of optional text data 
  * without resorting to empty strings or null pointers.
  */
-using MaybeString = Optional<NEX_PREPEND_NAMESPACE(String)>;
+using MaybeString = Optional<String>;
 
 /**
- * @brief Semantic alias for search operations.
+ * @brief Search result wrapper for index-based search operations.
  * @details 
  * A value of 'nullopt' explicitly indicates that a search failed to find a match, providing better clarity 
  * than returning an out-of-bounds index.

@@ -8,40 +8,47 @@
 
 NEX_NAMESPACE_BEGIN
 
+// =================================================================================
 // Geometry2D implementation helper functions
-namespace geometry2d {
+// =================================================================================
 
-    // Rotation direction to angle radians
-    double rotationToAngle(math::Rotation rotation) noexcept {
-        double angleRadians = 0.0;
-        switch (rotation) {
-            case math::Rotation::Clockwise_90:         angleRadians = -M_PI / 2.0;          break;
-            case math::Rotation::Clockwise_180:        angleRadians = -M_PI;                break;
-            case math::Rotation::Clockwise_270:        angleRadians = -3 * M_PI / 2.0;      break;
-            case math::Rotation::CounterClockwise_90:  angleRadians = M_PI / 2.0;           break;
-            case math::Rotation::CounterClockwise_180: angleRadians = M_PI;                 break;
-            case math::Rotation::CounterClockwise_270: angleRadians = 3 * M_PI / 2.0;       break;
-        }
-        return angleRadians;
+NEX_SUBNAMESPACE_BEGIN(geometry2d)
+
+// Rotation direction to angle radians
+double rotationToAngle(math::Rotation rotation) noexcept {
+    double angleRadians = 0.0;
+    switch (rotation) {
+        case math::Rotation::Clockwise_90:         angleRadians = -M_PI / 2.0;          break;
+        case math::Rotation::Clockwise_180:        angleRadians = -M_PI;                break;
+        case math::Rotation::Clockwise_270:        angleRadians = -3 * M_PI / 2.0;      break;
+        case math::Rotation::CounterClockwise_90:  angleRadians = M_PI / 2.0;           break;
+        case math::Rotation::CounterClockwise_180: angleRadians = M_PI;                 break;
+        case math::Rotation::CounterClockwise_270: angleRadians = 3 * M_PI / 2.0;       break;
     }
-    
-    // Rotates a point around a pivot
-    Vector2D rotatePointAround(const Vector2D& point, const Vector2D& pivot, double angle) noexcept {
-        double sin = NEX_STD sin(angle);
-        double cos = NEX_STD cos(angle);
+    return angleRadians;
+}
 
-        // Translate to origin
-        Vector2D translated = point - pivot;
+// Rotates a point around a pivot
+Vector2D rotatePointAround(const Vector2D& point, const Vector2D& pivot, double angle) noexcept {
+    double sin = NEX_STD sin(angle);
+    double cos = NEX_STD cos(angle);
 
-        // Rotate
-        double newX = translated.x * cos - translated.y * sin;
-        double newY = translated.x * sin + translated.y * cos;
+    // Translate to origin
+    Vector2D translated = point - pivot;
 
-        // Translate back
-        return Vector2D(newX + pivot.x, newY + pivot.y);
-    }
+    // Rotate
+    double newX = translated.x * cos - translated.y * sin;
+    double newY = translated.x * sin + translated.y * cos;
 
-} // namespace geometry2d
+    // Translate back
+    return Vector2D(newX + pivot.x, newY + pivot.y);
+}
+
+NEX_SUBNAMESPACE_END(geometry2d)
+
+// =================================================================================
+// Implementation of Rect class methods
+// =================================================================================
 
 // Rectangle rotation around center
 Rect Rect::rotate(math::Rotation rotation) const noexcept {
@@ -90,6 +97,10 @@ Rect Rect::rotateAround(const Vector2D& pivot, double angleRadians) const noexce
 
     return Rect(newX, newY, newW, newH);
 }
+
+// =================================================================================
+// Implementation of EdgeRect class methods
+// =================================================================================
 
 // Rectangle rotation around center
 EdgeRect EdgeRect::rotate(math::Rotation rotation) const noexcept {

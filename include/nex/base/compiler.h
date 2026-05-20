@@ -6,20 +6,25 @@
 #pragma once
 
 /**
- * @file      compiler.h
- * @defgroup  compiler_detection Compiler and C++ Version Detection
- * @brief     Detects the compiler and C++ version being used to compile the code, and defines macros for 
- *            conditional compilation based on the compiler and C++ version.
+ * @file    compiler.h
+ * @brief   Detects the compiler and C++ version being used to compile the code, and defines macros for 
+ *          conditional compilation based on the compiler and C++ version.
  * 
  * @details
- * This section defines macros for various compilers (e.g., GCC, MSVC) and their versions, 
- * as well as macros for the C++ language standard version being used (e.g., C++11, C++14, C++17, C++20).
- * It also provides a set of boolean flags for compiler and C++ version detection.
- * The compiler and C++ version detection is based on predefined macros provided by the compiler.
+ * This header centralizes compile-time compiler and language-version detection and exposes the result as a small
+ * set of macros.
+ * It distinguishes specific compiler targets such as Clang, GCC, and MSVC, compatibility modes for GCC and MSVC,
+ * and the active C++ language version.
+ * Detection is based on compiler-provided predefined macros so the rest of the codebase can rely on a single,
+ * consistent interface for conditional compilation.
  * 
  * @note 
- * Nex-ecosystem only supports C++20 or later. Compilers that do not support C++20 will result in a compilation error.
+ * Only C++20 and later are supported; earlier language modes fail fast at compile time.
  */
+
+// ======================================================================================
+// Compiler detection flags
+// ======================================================================================
 
 /**
  * Below is a list of macros that are defined for each compiler and C++ version. 
@@ -38,7 +43,7 @@
  */
 
 #define NEX_COMPILER_GCC_COMPATIBLE    0    // Compiler is GCC-compatible (e.g., Clang on POSIX)
-#define NEX_COMPILER_MSVC_COMPATIBLE   0    // Compiler is MSVC-compatible (e.g., Clang on Windows in MSVC compatibility mode)
+#define NEX_COMPILER_MSVC_COMPATIBLE   0    // Compiler is MSVC-compatible (e.g., Clang on Windows in MSVC compat. mode)
 
 /**
  * Below is a list of macros that define the version numbers for each C++ language standard. 
@@ -55,15 +60,12 @@
 #define NEX_CXX23_VER_NUMBER           202302L
 #define NEX_CXX26_VER_NUMBER           0xFFFFFL    // (not yet standardized)
 
-/**
- * @section Compiler detection macros
- * @brief   Define macros for detecting the compiler being used to compile the code
- * @note
- * The NEX_COMPILER_GCC and NEX_COMPILER_MSVC macros are defined to 1 if the corresponding compiler is detected, 
- * and the NEX_COMPILER_IS_GCC and NEX_COMPILER_IS_MSVC macros are defined to 1 if the corresponding compiler is 
- * detected, and 0 otherwise.
- * Clang masquerades as GCC on POSIX and as MSVC on Windows.
- */
+// ======================================================================================
+// Compiler detection
+// ======================================================================================
+
+// Detect the compiler being used to compile the code by checking for predefined macros 
+// that are unique to each compiler.
 #if defined (__clang__)
     #define NEX_COMPILER_CLANG    __clang_major__
     #undef NEX_COMPILER_IS_CLANG
@@ -100,16 +102,18 @@
     #endif
 #endif
 
-/**
- * @section C++ version detection macros
- * @brief   Define macros for detecting the C++ version being used to compile the code
- * @note
- * The NEX_CXX_VER macro is defined to the value of the __cplusplus macro, or the _MSVC_LANG macro if using MSVC.
- */
+// ======================================================================================
+// C++ version detection
+// ======================================================================================
+
+// Determine the active C++ version by checking the __cplusplus macro, 
+// which is defined by the compiler to indicate the C++ standard version being used.
 #ifdef __cplusplus
     #if defined(_MSVC_LANG) && (_MSVC_LANG > __cplusplus)
         #define NEX_CXX_VER _MSVC_LANG     // override with MSVC version
     #else
+        // Use the value of __cplusplus provided by the compiler, 
+        // which should reflect the C++ version being used.
         #define NEX_CXX_VER __cplusplus
     #endif
 #else

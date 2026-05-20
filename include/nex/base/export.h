@@ -11,7 +11,7 @@
  *            for specifying calling conventions for callback functions.
  * 
  * @details
- * This section defines macros for marking symbols for export or import in shared libraries and 
+ * This header defines macros for marking symbols for export or import in shared libraries and 
  * for specifying calling conventions for callback functions. 
  * The NEX_EXPORT macro is defined based on the compiler and build configuration, while the NEX_CALLBACK 
  * macro is defined based on the detected platform. 

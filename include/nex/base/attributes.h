@@ -6,28 +6,23 @@
 #pragma once
 
 /**
- * @file   attributes.h
- * @brief  Defines macros for common attributes and annotations used in the codebase, such as deprecation, 
- *         nodiscard, noinline, and noreturn.
+ * @file    attributes.h
+ * @brief   Defines macros for common attributes and annotations used in the codebase, such as deprecation, 
+ *          nodiscard, noinline, and noreturn.
  * 
  * @details
- * This section defines macros for marking functions and classes with attributes such as export/import 
- * (for shared libraries), deprecation (with or without a message), nodiscard (to indicate that the return value 
- * should not be ignored), noinline (to indicate that a function should not be inlined), and noreturn (to indicate 
- * that a function does not return).
- * The macros are defined based on the compiler being used, and they can be used throughout the codebase to provide 
- * consistent annotations and attributes for functions and classes.
+ * This header centralizes compiler- and language-level annotation helpers and exposes them as a consistent 
+ * set of macros.
+ * It covers feature detection for attributes and builtins, compiler-specific attribute wrappers, and common
+ * annotations such as deprecation, nodiscard, noinline, always-inline, and noreturn.
+ * The goal is to keep attribute usage uniform across the codebase while still adapting to the compiler in use.
  * 
- * @note When using the NEX_DEPRECATED macro, it is recommended to provide a message that explains why 
- *       the function or class is deprecated and what should be used instead.
+ * @note
+ * When using the NEX_DEPRECATED macro, it is recommended to provide a message that explains why the function 
+ * or class is deprecated and what should be used instead.
  */
 
 #include "nex/base/compiler.h"
-
-/**
- * @section Attribute and Annotation Macros
- * @brief   Defines macros for common attributes and annotations.
- */
 
 /**
  * @def NEX_HAS_CPP_ATTRIBUTE(x)

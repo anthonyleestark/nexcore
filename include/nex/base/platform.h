@@ -6,24 +6,27 @@
 #pragma once
 
 /**
- * @file      platform.h
- * @brief     Detects the target platform and defines macros accordingly for conditional compilation.
+ * @file    platform.h
+ * @brief   Detects the target platform and defines macros accordingly for conditional compilation.
  * 
  * @details
- * This section defines macros for various platforms (e.g., Windows, Linux, macOS) and their families (e.g., Apple, BSD, POSIX).
- * It also includes detection for the C++ standard library in use (e.g., glibc) and provides a set of boolean flags 
- * for platform and family detection.
- * The platform detection is based on predefined macros provided by the compiler and the operating system.
- * The macros defined in this section can be used throughout the codebase to write platform-specific code 
- * and to conditionally compile code based on the target platform.
- * 
- * @note 
- * Nex-ecosystem only supports Windows, Linux, and macOS for now. Other platforms will result in a compilation error.
+ * This header centralizes compile-time platform detection and exposes the result as a small set of boolean macros.
+ * It distinguishes between specific targets such as Windows, Linux, and macOS, broader families such as Apple, BSD, 
+ * and POSIX, and the detected libc implementation where applicable.
+ * Detection is based on compiler- and OS-provided predefined macros so the rest of the codebase can use a single,
+ * consistent interface for platform-specific compilation.
+ *
+ * @note
+ * Only Windows, Linux, and macOS are currently supported; unsupported targets fail fast at compile time.
  */
 
+// ======================================================================================
+// Platform target and broader family flags
+// ======================================================================================
+
 /**
- * Below is a list of macros that are defined for each platform. 
- * Each platform has a corresponding macro that is set to 1 if the platform is detected, and 0 otherwise.
+ * Below is a list of flags that are defined for each platform. 
+ * Each platform has a corresponding flag that is set to 1 if the target platform is detected, and 0 otherwise.
  */
 
 #define NEX_PLATFORM_IS_MAC            0
@@ -33,15 +36,17 @@
 #define NEX_LIBC_IS_GLIBC              0
 
 /**
- * Below is a list of macros that are defined for each platform family. 
- * Each platform family has a corresponding macro that is set to 1 if the platform belongs to that family, and 0 otherwise.
+ * Below is a list of flags that are defined for each platform family. 
+ * Each family has a corresponding flag that is set to 1 if the target platform belongs to that family, and 0 otherwise.
  */
 
 #define NEX_PLATFORM_FAMILY_IS_APPLE   0
 #define NEX_PLATFORM_FAMILY_IS_BSD     0
 #define NEX_PLATFORM_FAMILY_IS_POSIX   0
 
-////// Platform detection =========================================================
+// ======================================================================================
+// Platform detection
+// ======================================================================================
 
 #if defined(ANDROID)
     #error Nex-ecosystem does not support Android for now.
@@ -88,6 +93,10 @@
     #error Platform is not supported or not detected.
 #endif
 
+// ======================================================================================
+// Platform family detection
+// ======================================================================================
+
 // For Apple ecosystem
 #if defined(NEX_PLATFORM_MAC) || defined(NEX_PLATFORM_IOS)
     #define NEX_PLATFORM_APPLE 1
@@ -95,16 +104,14 @@
     #define NEX_PLATFORM_FAMILY_IS_APPLE 1
 #endif
 
-// For access to standard BSD features, use NEX_PLATFORM_BSD instead of a
-// more specific macro.
+// For access to standard BSD features, use NEX_PLATFORM_BSD instead of a more specific macro.
 #if defined(NEX_PLATFORM_FREEBSD) || defined(NEX_PLATFORM_NETBSD) || defined(NEX_PLATFORM_OPENBSD)
     #define NEX_PLATFORM_BSD 1
     #undef NEX_PLATFORM_FAMILY_IS_BSD
     #define NEX_PLATFORM_FAMILY_IS_BSD 1
 #endif
 
-// For access to standard POSIXish features, use NEX_PLATFORM_POSIX instead of a
-// more specific macro.
+// For access to standard POSIXish features, use NEX_PLATFORM_POSIX instead of a more specific macro.
 #if defined(NEX_PLATFORM_AIX) || defined(NEX_PLATFORM_ANDROID) || defined(NEX_PLATFORM_ASMJS) ||  \
     defined(NEX_PLATFORM_FREEBSD) || defined(NEX_PLATFORM_IOS) || defined(NEX_PLATFORM_LINUX) ||  \
     defined(NEX_PLATFORM_CHROMEOS) || defined(NEX_PLATFORM_MAC) || defined(NEX_PLATFORM_NACL) ||  \

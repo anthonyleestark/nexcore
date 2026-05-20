@@ -6,12 +6,16 @@
 #pragma once
 
 /**
- * @file  architecture.h
- * @brief CPU architecture detection and feature macros
+ * @file    architecture.h
+ * @brief   CPU architecture detection and feature macros
  * 
- * This file provides preprocessor macros that identify the current CPU architecture
- * and its characteristics. These macros enable conditional compilation based on
- * processor type, family, bit-width, and endianness.
+ * @details
+ * This header centralizes compile-time CPU architecture detection and exposes the result as a small set of macros.
+ * It distinguishes specific processor targets such as ARM64, ARMEL, x86, and x86_64, broader families such as ARM
+ * and x86, and basic architecture traits including bit-width and endianness.
+ * The detection logic relies on compiler-provided predefined macros so the rest of the codebase can use a single,
+ * consistent interface for architecture-specific compilation.
+ * Unsupported targets fail fast at compile time.
  * 
  * @section arch_processors Processor Architecture Macros
  * The following macros identify specific processor architectures:

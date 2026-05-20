@@ -373,6 +373,21 @@
 #endif  // NEX_CONSTEXPR20
 
 /**
+ * @def NEX_MSVC_INTRINSIC
+ * @brief Marks a function as an intrinsic when compiling with MSVC
+ * 
+ * @details
+ * This macro expands to `[[msvc::intrinsic]]` when compiling with MSVC if the compiler supports this attribute,
+ * and expands to nothing on other compilers. It can be used to annotate functions that are intended to be treated as 
+ * intrinsics by the MSVC compiler, which may enable certain optimizations or special handling for those functions.
+ */
+#if NEX_HAS_MSVC_ATTRIBUTE(intrinsic)
+    #define NEX_MSVC_INTRINSIC NEX_MSVC_ATTRIBUTE(intrinsic)
+#else // Compiler does not support [[msvc::intrinsic]]
+    #define NEX_MSVC_INTRINSIC
+#endif  // NEX_MSVC_INTRINSIC
+
+/**
  * @def NEX_NO_UNIQUE_ADDRESS
  * @brief Allow data members to share addresses (C++20)
  * 

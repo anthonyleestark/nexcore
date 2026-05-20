@@ -37,6 +37,16 @@ using int32     = NEX_STD int32_t;          // 32-bit signed integer
 using uint32    = NEX_STD uint32_t;         // 32-bit unsigned integer
 using int64     = NEX_STD int64_t;          // 64-bit signed integer
 using uint64    = NEX_STD uint64_t;         // 64-bit unsigned integer
+#if NEX_HAS_BUILTIN_INT128
+    using int128 = __int128;                 // 128-bit signed integer
+    using uint128 = unsigned __int128;       // 128-bit unsigned integer
+#else
+    using int128 = int64;                   // No support for 128-bit signed integer - fallback to 64-bit
+    using uint128 = uint64;                 // No support for 128-bit unsigned integer - fallback to 64-bit
+#endif
+
+using longlong  = int64;                    // 64-bit signed integer (int64)
+using ulonglong = uint64;                   // 64-bit unsigned integer (uint64)
 
 // ============================================================================
 // Short aliases for standard fixed-width integer types (Rust-style)
@@ -50,6 +60,11 @@ using i32       = int32;                    // 32-bit signed integer (int32)
 using u32       = uint32;                   // 32-bit unsigned integer (uint32)
 using i64       = int64;                    // 64-bit signed integer (int64)
 using u64       = uint64;                   // 64-bit unsigned integer (uint64)
+using i128      = int128;                   // 128-bit signed integer (int128)
+using u128      = uint128;                  // 128-bit unsigned integer (uint128)
+
+using ll        = longlong;                 // 64-bit signed integer (long long)
+using ull       = ulonglong;                // 64-bit unsigned integer (unsigned long long)
 
 // ============================================================================
 // Include standard pointer-sized integer types
@@ -83,35 +98,52 @@ using umax      = uintmax;                  // Maximum-width unsigned integer (u
 // Include standard minimum-width integer types
 // ============================================================================
 
-using int_least8        = NEX_STD int_least8_t;         // Minimum 8-bit signed integer
-using uint_least8       = NEX_STD uint_least8_t;        // Minimum 8-bit unsigned integer
-using int_least16       = NEX_STD int_least16_t;        // Minimum 16-bit signed integer
-using uint_least16      = NEX_STD uint_least16_t;       // Minimum 16-bit unsigned integer
-using int_least32       = NEX_STD int_least32_t;        // Minimum 32-bit signed integer
-using uint_least32      = NEX_STD uint_least32_t;       // Minimum 32-bit unsigned integer
-using int_least64       = NEX_STD int_least64_t;        // Minimum 64-bit signed integer
-using uint_least64      = NEX_STD uint_least64_t;       // Minimum 64-bit unsigned integer
+using int_least8        = NEX_STD int_least8_t;     // Minimum 8-bit signed integer
+using uint_least8       = NEX_STD uint_least8_t;    // Minimum 8-bit unsigned integer
+using int_least16       = NEX_STD int_least16_t;    // Minimum 16-bit signed integer
+using uint_least16      = NEX_STD uint_least16_t;   // Minimum 16-bit unsigned integer
+using int_least32       = NEX_STD int_least32_t;    // Minimum 32-bit signed integer
+using uint_least32      = NEX_STD uint_least32_t;   // Minimum 32-bit unsigned integer
+using int_least64       = NEX_STD int_least64_t;    // Minimum 64-bit signed integer
+using uint_least64      = NEX_STD uint_least64_t;   // Minimum 64-bit unsigned integer
+#if NEX_HAS_BUILTIN_INT128
+    using int_least128   = int128;                  // Minimum 128-bit signed integer
+    using uint_least128  = uint128;                 // Minimum 128-bit unsigned integer
+#else
+    using int_least128   = int_least64;             // No support for 128-bit signed integer - fallback to 64-bit
+    using uint_least128  = uint_least64;            // No support for 128-bit unsigned integer - fallback to 64-bit
+#endif
 
 // ============================================================================
 // Include standard fastest minimum-width integer types
 // ============================================================================
 
-using int_fast8         = NEX_STD int_fast8_t;          // Fastest minimum 8-bit signed integer
-using uint_fast8        = NEX_STD uint_fast8_t;         // Fastest minimum 8-bit unsigned integer
-using int_fast16        = NEX_STD int_fast16_t;         // Fastest minimum 16-bit signed integer
-using uint_fast16       = NEX_STD uint_fast16_t;        // Fastest minimum 16-bit unsigned integer
-using int_fast32        = NEX_STD int_fast32_t;         // Fastest minimum 32-bit signed integer
-using uint_fast32       = NEX_STD uint_fast32_t;        // Fastest minimum 32-bit unsigned integer
-using int_fast64        = NEX_STD int_fast64_t;         // Fastest minimum 64-bit signed integer
-using uint_fast64       = NEX_STD uint_fast64_t;        // Fastest minimum 64-bit unsigned integer
+using int_fast8         = NEX_STD int_fast8_t;      // Fastest minimum 8-bit signed integer
+using uint_fast8        = NEX_STD uint_fast8_t;     // Fastest minimum 8-bit unsigned integer
+using int_fast16        = NEX_STD int_fast16_t;     // Fastest minimum 16-bit signed integer
+using uint_fast16       = NEX_STD uint_fast16_t;    // Fastest minimum 16-bit unsigned integer
+using int_fast32        = NEX_STD int_fast32_t;     // Fastest minimum 32-bit signed integer
+using uint_fast32       = NEX_STD uint_fast32_t;    // Fastest minimum 32-bit unsigned integer
+using int_fast64        = NEX_STD int_fast64_t;     // Fastest minimum 64-bit signed integer
+using uint_fast64       = NEX_STD uint_fast64_t;    // Fastest minimum 64-bit unsigned integer
+#if NEX_HAS_BUILTIN_INT128
+    using int_fast128    = int128;                  // Fastest minimum 128-bit signed integer
+    using uint_fast128   = uint128;                 // Fastest minimum 128-bit unsigned integer
+#else
+    using int_fast128    = int_fast64;              // No support for 128-bit signed integer - fallback to 64-bit
+    using uint_fast128   = uint_fast64;             // No support for 128-bit unsigned integer - fallback to 64-bit
+#endif
 
 // ============================================================================
 // Include standard size types
 // ============================================================================
 
-using usize         = NEX_STD size_t;       // Unsigned integer type used for sizes and array indexing
-using isize         = NEX_STD ptrdiff_t;    // Signed integer type used for pointer arithmetic and array indexing
-using max_align     = NEX_STD max_align_t;  // Type with alignment at least as strict as any scalar type
+using sizetype      = NEX_STD size_t;           // Unsigned integer type used for sizes and array indexing
+using ptrdiff       = NEX_STD ptrdiff_t;        // Signed integer type used for pointer arithmetic and array indexing
+using max_align     = NEX_STD max_align_t;      // Type with alignment at least as strict as any scalar type
+
+using usize         = sizetype;                 // Unsigned integer type used for sizes and array indexing
+using isize         = ptrdiff;                  // Signed integer type used for pointer arithmetic and array indexing
 
 // ============================================================================
 // Short aliases for standard size types (Rust-style)
@@ -131,7 +163,7 @@ using floatmax      = long double;          // Widest standard floating-point ty
 #if NEX_HAS_BUILTIN_FLOAT128
     using float128  = __float128;           // 128-bit floating point
 #else
-    using float128  = long double;          // Widest built-in floating-point fallback
+    using float128  = floatmax;             // Widest built-in floating-point fallback
 #endif
 
 // ============================================================================

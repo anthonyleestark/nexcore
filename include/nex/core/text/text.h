@@ -343,7 +343,8 @@ bool containsAny(StringView str, StringView chars);
  *          otherwise `false`.
  */
 NEX_EXPORT NEX_NODISCARD
-bool containsRegex(StringView str, StringView pattern, RegexOptions options = RegexOptions::None);
+bool containsRegex(StringView str, StringView pattern, 
+                   RegexOptions options = RegexOptions::None);
 
 /**
  * @brief   Search for a specified regular expression pattern in a string and return details of the match.
@@ -360,7 +361,8 @@ bool containsRegex(StringView str, StringView pattern, RegexOptions options = Re
  * @return  A `RegexMatch` object containing the details of the first match found in the string, 
  *          or an unsuccessful match if not found.
  */
-RegexMatch regexSearch(StringView text, StringView pattern, RegexOptions options = RegexOptions::None);
+RegexMatch regexSearch(StringView text, StringView pattern, 
+                       RegexOptions options = RegexOptions::None);
 
 /**
  * @brief   Check if a string fully matches a specified regular expression pattern.
@@ -378,7 +380,8 @@ RegexMatch regexSearch(StringView text, StringView pattern, RegexOptions options
  *          the `success` field will be `false` and other fields may be default or empty.
  */
 NEX_EXPORT NEX_NODISCARD
-RegexMatch regexMatch(StringView str, StringView pattern, RegexOptions options = RegexOptions::None);
+RegexMatch regexMatch(StringView str, StringView pattern, 
+                      RegexOptions options = RegexOptions::None);
 
 /**
  * @brief   Search for all occurrences of a specified regular expression pattern in a string.
@@ -394,7 +397,7 @@ RegexMatch regexMatch(StringView str, StringView pattern, RegexOptions options =
  * @return  A list of `RegexMatch` objects containing the details of all matches found in the string.
  */
 Vec<RegexMatch> regexSearchAll(StringView text, StringView pattern, 
-                                        RegexOptions options = RegexOptions::None);
+                               RegexOptions options = RegexOptions::None);
 
 /**
  * @brief   Split a string into a list of substrings based on a specified regular expression pattern.
@@ -411,7 +414,8 @@ Vec<RegexMatch> regexSearchAll(StringView text, StringView pattern,
  * @param   options The regular expression options to use when matching the pattern.
  * @return  A list of `String` objects resulting from splitting the input string by the regular expression pattern.
  */
-Vec<String> regexSplit(StringView text, StringView pattern, RegexOptions options = RegexOptions::None);
+Vec<String> regexSplit(StringView text, StringView pattern, 
+                       RegexOptions options = RegexOptions::None);
 
 /**
  * @brief   Replace all occurrences of a specified regular expression pattern in a string 

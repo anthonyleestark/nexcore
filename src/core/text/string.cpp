@@ -51,7 +51,7 @@ String::String(StringView view) {
 ////// Create string from numbers -----------------------
 
 // Create string from a signed integer with specified base (default is 10)
-String String::fromInt(int64 value, int base /* = 10 */) {
+String String::fromInt(int64 value, int32 base /* = 10 */) {
     char buffer[64];
     auto result = NEX_STD to_chars(buffer, buffer+64, value, base);
     if (result.ec == NEX_STD errc()) {
@@ -66,7 +66,7 @@ String String::fromInt(int64 value, int base /* = 10 */) {
 }
 
 // Create string from an unsigned integer with specified base (default is 10)
-String String::fromUInt(uint64 value, int base /* = 10 */) {
+String String::fromUInt(uint64 value, int32 base /* = 10 */) {
     char buffer[64];
     auto result = NEX_STD to_chars(buffer, buffer+64, value, base);
     if (result.ec == NEX_STD errc()) {
@@ -81,7 +81,7 @@ String String::fromUInt(uint64 value, int base /* = 10 */) {
 }
 
 // Create string from a floating-point number
-String String::fromFloat(double value, char format /* = 'g' */, int precision /* = 6 */) {
+String String::fromFloat(double value, char format /* = 'g' */, int32 precision /* = 6 */) {
     // Determine the chars_format based on the given format character
     NEX_STD chars_format charsFormat = NEX_STD chars_format::general;
     switch (format) {
@@ -110,7 +110,7 @@ String String::fromFloat(double value, char format /* = 'g' */, int precision /*
 
     // First try to convert using a small stack buffer
     char stackBuffer[128];
-    const int safePrecision = precision < 0 ? 0 : precision;
+    const int32 safePrecision = precision < 0 ? 0 : precision;
     auto result = NEX_STD to_chars(stackBuffer, stackBuffer + sizeof(stackBuffer), value, charsFormat, safePrecision);
     if (result.ec == NEX_STD errc()) {
         // Successfully converted floating-point number to string

@@ -7,10 +7,10 @@
 
 #include <string>
 #include <string_view>
-#include <iterator>
 
 #include "nex/base/macros.h"
 #include "nex/base/types.h"
+#include "nex/base/iterator.h"
 #include "nex/base/string.h"
 #include "nex/base/assert_crash.h"
 
@@ -45,8 +45,8 @@ public:
     using const_pointer = const char16*;
     using const_iterator = const_pointer;
     using iterator = const_iterator;
-    using reverse_iterator = NEX_STD reverse_iterator<const_iterator>;
-    using const_reverse_iterator = NEX_STD reverse_iterator<const_iterator>;
+    using reverse_iterator = ReverseIterator<const_iterator>;
+    using const_reverse_iterator = ReverseIterator<const_iterator>;
 
 private:
     // Internal pointer to the string data (non-owning; UTF-16 encoded)
@@ -340,7 +340,7 @@ struct StringViewHash {
 
         usize hash = kOffsetBasis;
         for (usize i = 0; i < sv.size(); ++i) {
-            hash ^= static_cast<unsigned char>(sv[i]);
+            hash ^= static_cast<uchar>(sv[i]);
             hash *= kPrime;
         }
         return hash;

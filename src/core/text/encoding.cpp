@@ -112,7 +112,7 @@ bool encoding::isUnicodeAlpha(char16 ch) noexcept {
     return iswalpha(static_cast<wint_t>(ch)) != 0;
 #else
     // On non-Windows platforms, we can use the standard library function to check for alphabetic characters
-    return std::iswalpha(static_cast<wint_t>(ch)) != 0;
+    return NEX_STD iswalpha(static_cast<wint_t>(ch)) != 0;
 #endif
 }
 
@@ -122,12 +122,12 @@ bool encoding::isUnicodeAlpha(char16 ch) noexcept {
 
 // Check if a UTF-8 string contains invalid sequences
 bool encoding::containsInvalidUtf8Sequences(Utf8StringView input) noexcept {
-    const char* ptr = input.data();
-    const char* end = ptr + input.size();
+    const_char_ptr ptr = input.data();
+    const_char_ptr end = ptr + input.size();
 
     while (ptr < end) {
         // Get the first byte to determine the length of the UTF-8 sequence
-        unsigned char byte = static_cast<unsigned char>(*ptr);
+        uchar byte = static_cast<uchar>(*ptr);
         usize expectedLength = utf8SequenceLength(byte);
 
         if (expectedLength == 0 || ptr + expectedLength > end) {
@@ -136,7 +136,7 @@ bool encoding::containsInvalidUtf8Sequences(Utf8StringView input) noexcept {
 
         // Validate continuation bytes
         for (usize i = 1; i < expectedLength; ++i) {
-            if ((static_cast<unsigned char>(ptr[i]) & 0xC0) != 0x80) {
+            if ((static_cast<uchar>(ptr[i]) & 0xC0) != 0x80) {
                 return true; // Invalid continuation byte found
             }
         }
@@ -159,7 +159,7 @@ bool encoding::isValidUtf8Sequence(Utf8StringView input) noexcept {
     }
 
     // Get the first byte to determine the length of the UTF-8 sequence
-    unsigned char firstByte = static_cast<unsigned char>(input[0]);
+    uchar firstByte = static_cast<uchar>(input[0]);
     usize expectedLength = utf8SequenceLength(firstByte);
     if (expectedLength == 0 || expectedLength > input.size()) {
         return false; // Invalid first byte or not enough bytes in the input
@@ -167,7 +167,7 @@ bool encoding::isValidUtf8Sequence(Utf8StringView input) noexcept {
 
     // Check continuation bytes
     for (usize i = 1; i < expectedLength; ++i) {
-        if ((static_cast<unsigned char>(input[i]) & 0xC0) != 0x80) {
+        if ((static_cast<uchar>(input[i]) & 0xC0) != 0x80) {
             return false; // Invalid continuation byte
         }
     }
@@ -186,7 +186,7 @@ Result<char32> encoding::decodeUtf8CodePoint(Utf8StringView input, usize& advanc
     }
 
     // Get the first byte to determine the length of the UTF-8 sequence
-    unsigned char b0 = static_cast<unsigned char>(input[0]);
+    uchar b0 = static_cast<uchar>(input[0]);
     usize len = utf8SequenceLength(b0);
 
     if (len == 0 || len > input.size()) {
@@ -204,7 +204,7 @@ Result<char32> encoding::decodeUtf8CodePoint(Utf8StringView input, usize& advanc
         // First, validate the continuation bytes before decoding 
         // to prevent invalid memory access and ensure the sequence is well-formed.
         for (usize i = 1; i < len; ++i) {
-            if ((static_cast<unsigned char>(input[i]) & 0xC0) != 0x80) {
+            if ((static_cast<uchar>(input[i]) & 0xC0) != 0x80) {
                 return Result<char32>::error({ 
                     ErrorCode::InvalidFormat, "Invalid continuation byte" 
                 });
@@ -214,15 +214,15 @@ Result<char32> encoding::decodeUtf8CodePoint(Utf8StringView input, usize& advanc
         // Decode the code point from the UTF-8 sequence based on the length determined by the first byte
 
         if (len == 2) {
-            cp = ((b0 & 0x1F) << 6) | (static_cast<unsigned char>(input[1]) & 0x3F);
+            cp = ((b0 & 0x1F) << 6) | (static_cast<uchar>(input[1]) & 0x3F);
             min_cp = 0x80;
         } else if (len == 3) {
-            cp = ((b0 & 0x0F) << 12) | ((static_cast<unsigned char>(input[1]) & 0x3F) << 6) 
-                 | (static_cast<unsigned char>(input[2]) & 0x3F);
+            cp = ((b0 & 0x0F) << 12) | ((static_cast<uchar>(input[1]) & 0x3F) << 6) 
+                 | (static_cast<uchar>(input[2]) & 0x3F);
             min_cp = 0x800;
         } else if (len == 4) {
-            cp = ((b0 & 0x07) << 18) | ((static_cast<unsigned char>(input[1]) & 0x3F) << 12) 
-                 | ((static_cast<unsigned char>(input[2]) & 0x3F) << 6) | (static_cast<unsigned char>(input[3]) & 0x3F);
+            cp = ((b0 & 0x07) << 18) | ((static_cast<uchar>(input[1]) & 0x3F) << 12) 
+                 | ((static_cast<uchar>(input[2]) & 0x3F) << 6) | (static_cast<uchar>(input[3]) & 0x3F);
             min_cp = 0x10000;
         }
     }
@@ -253,7 +253,7 @@ Result<char32> encoding::decodeUtf8CodePoint(Utf8StringView input, usize& advanc
 
 // Get the byte number of a UTF-8 code point
 usize encoding::utf8SequenceLength(char8 firstByte) {
-    unsigned char byte = static_cast<unsigned char>(firstByte);
+    uchar byte = static_cast<uchar>(firstByte);
     if (byte <= 0x7F) {
         return 1; // ASCII character (1 byte)
     } else if ((byte & 0xE0) == 0xC0) {
@@ -293,13 +293,13 @@ usize encoding::encodeUtf8CodePoint(char32 cp, char8* out) {
 // Count the number of Unicode code points in a UTF-8 string
 Result<usize> encoding::countUtf8CodePoints(Utf8StringView input) noexcept {
     usize count = 0;
-    const char* ptr = input.data();
-    const char* end = ptr + input.size();
+    const_char_ptr ptr = input.data();
+    const_char_ptr end = ptr + input.size();
 
     while (ptr < end) {
         // Get the first byte to determine the length of the UTF-8 sequence,
         // and validate the sequence before counting to ensure we don't count invalid sequences.
-        unsigned char byte = static_cast<unsigned char>(*ptr);
+        uchar byte = static_cast<uchar>(*ptr);
         usize expectedLength = utf8SequenceLength(byte);
         if (expectedLength == 0 || ptr + expectedLength > end) {
             return Result<usize>::error({ 
@@ -441,9 +441,9 @@ Result<usize> encoding::countUtf32CodePoints(Utf32StringView input) noexcept {
 
 #if NEX_PLATFORM_IS_WINDOWS
     // Helper function to safely cast size_t to int for Windows API calls, with overflow check
-    int safeStaticCastInt(usize size) {
-        if (size > static_cast<usize>((NEX_STD numeric_limits<int>::max)())) return -1;
-        return static_cast<int>(size);
+    int32 safeStaticCastInt(usize size) {
+        if (size > static_cast<usize>((NEX_STD numeric_limits<int32>::max)())) return -1;
+        return static_cast<int32>(size);
     }
 #endif
 
@@ -456,14 +456,14 @@ Result<Utf16String> encoding::ansiToUtf16(Utf8StringView ansi) {
 #if NEX_PLATFORM_IS_WINDOWS
     // Windows-specific implementation using MultiByteToWideChar
 
-    int len = safeStaticCastInt(ansi.size());
+    int32 len = safeStaticCastInt(ansi.size());
     if (len < 0) {
         // Input size is too large to fit in an int, return an error result
         return Result<Utf16String>::error({
                 ErrorCode::InvalidFormat, "Input string is too large" 
             });
     }
-    int requiredSize = MultiByteToWideChar(CP_ACP, 0, ansi.data(), len, nullptr, 0);
+    int32 requiredSize = MultiByteToWideChar(CP_ACP, 0, ansi.data(), len, nullptr, 0);
     if (requiredSize <= 0) {
         // Failed to convert ANSI to UTF-16, return an error result
         return Result<Utf16String>::error({
@@ -472,7 +472,7 @@ Result<Utf16String> encoding::ansiToUtf16(Utf8StringView ansi) {
     }
     Utf16String utf16(requiredSize, '\0');
     MultiByteToWideChar(CP_ACP, 0, ansi.data(), len, 
-                        reinterpret_cast<wchar_t*>(utf16.data()), 
+                        reinterpret_cast<wchar*>(utf16.data()), 
                         requiredSize);
 
     // Successfully converted ANSI to UTF-16, return the result
@@ -489,14 +489,14 @@ Result<Utf8String> encoding::utf16ToAnsi(Utf16StringView utf16) {
 #if NEX_PLATFORM_IS_WINDOWS
     // Windows-specific implementation using WideCharToMultiByte
 
-    int len = safeStaticCastInt(utf16.size());
+    int32 len = safeStaticCastInt(utf16.size());
     if (len < 0) {
         // Input size is too large to fit in an int, return an error result
         return Result<Utf8String>::error({
                 ErrorCode::InvalidFormat, "Input string is too large" 
             });
     }
-    int requiredSize = WideCharToMultiByte(CP_ACP, 0, reinterpret_cast<LPCWCH>(utf16.data()), 
+    int32 requiredSize = WideCharToMultiByte(CP_ACP, 0, reinterpret_cast<LPCWCH>(utf16.data()), 
                             len, nullptr, 0, nullptr, nullptr);
     if (requiredSize <= 0) {
         // Failed to convert UTF-16 to ANSI, return an error result
@@ -557,14 +557,14 @@ Result<Utf16String> encoding::utf8ToUtf16(Utf8StringView utf8) {
 #if NEX_PLATFORM_IS_WINDOWS
     // Windows-specific implementation using MultiByteToWideChar
 
-    int len = safeStaticCastInt(utf8.size());
+    int32 len = safeStaticCastInt(utf8.size());
     if (len < 0) {
         // Input size is too large to fit in an int, return an error result
         return Result<Utf16String>::error({
                 ErrorCode::InvalidFormat, "Input string is too large" 
             });
     }
-    int requiredSize = MultiByteToWideChar(CP_UTF8, 0, utf8.data(), len, nullptr, 0);
+    int32 requiredSize = MultiByteToWideChar(CP_UTF8, 0, utf8.data(), len, nullptr, 0);
     if (requiredSize <= 0) {
         // Failed to convert UTF-8 to UTF-16, return an error result
         return Result<Utf16String>::error({
@@ -573,7 +573,7 @@ Result<Utf16String> encoding::utf8ToUtf16(Utf8StringView utf8) {
     }
     Utf16String utf16(requiredSize, '\0');
     MultiByteToWideChar(CP_UTF8, 0, utf8.data(), len, 
-                        reinterpret_cast<wchar_t*>(utf16.data()), 
+                        reinterpret_cast<wchar*>(utf16.data()), 
                         requiredSize);
 
     // Successfully converted UTF-8 to UTF-16, return the result
@@ -587,8 +587,8 @@ Result<Utf16String> encoding::utf8ToUtf16(Utf8StringView utf8) {
     // Reserve enough space to avoid multiple reallocations (worst case: all ASCII characters)
     result.reserve(utf8.size());
     
-    const char* ptr = utf8.data();
-    const char* end = ptr + utf8.size();
+    const_char_ptr ptr = utf8.data();
+    const_char_ptr end = ptr + utf8.size();
     
     while (ptr < end) {
         usize advance = 0;
@@ -616,14 +616,14 @@ Result<Utf16String> encoding::utf8ToUtf16(Utf8StringView utf8) {
 Result<Utf8String> encoding::utf16ToUtf8(Utf16StringView utf16) {
 #if NEX_PLATFORM_IS_WINDOWS
     // Windows-specific implementation using WideCharToMultiByte
-    int len = safeStaticCastInt(utf16.size());
+    int32 len = safeStaticCastInt(utf16.size());
     if (len < 0) {
         // Input size is too large to fit in an int, return an error result
         return Result<Utf8String>::error({
                 ErrorCode::InvalidFormat, "Input string is too large" 
             });
     }
-    int requiredSize = WideCharToMultiByte(CP_UTF8, 0, reinterpret_cast<LPCWCH>(utf16.data()), 
+    int32 requiredSize = WideCharToMultiByte(CP_UTF8, 0, reinterpret_cast<LPCWCH>(utf16.data()), 
                             len, nullptr, 0, nullptr, nullptr);
     if (requiredSize <= 0) {
         // Failed to convert UTF-16 to UTF-8, return an error result
@@ -670,7 +670,7 @@ Result<Utf8String> encoding::utf16ToUtf8(Utf16StringView utf16) {
             });
         }
 
-        result.append(reinterpret_cast<const char*>(u8buf), u8len);
+        result.append(reinterpret_cast<const_char_ptr>(u8buf), u8len);
         i += advance;
     }
 

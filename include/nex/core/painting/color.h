@@ -7,7 +7,6 @@
 
 #include <cmath>
 #include <algorithm>
-#include <string>
 #include <cctype>
 #include <sstream>
 #include <iomanip>
@@ -147,13 +146,13 @@ NEX_NODISCARD inline constexpr RGBEColor RGBEColorSet(uint8 r, uint8 g, uint8 b,
 // XYZ was designed to represent all colors visible to the human eye
 // Unlike RGB, which varies by device, XYZ is a fixed, standard space. 
 struct XYZAColor {
-    float x = 0.0f;
-    float y = 0.0f;
-    float z = 0.0f;
-    float a = 1.0f;
+    float32 x = 0.0f;
+    float32 y = 0.0f;
+    float32 z = 0.0f;
+    float32 a = 1.0f;
 
     constexpr XYZAColor() = default;
-    constexpr XYZAColor(float xVal, float yVal, float zVal, float aVal = 1.0f)
+    constexpr XYZAColor(float32 xVal, float32 yVal, float32 zVal, float32 aVal = 1.0f)
         : x(xVal), y(yVal), z(zVal), a(aVal) {};
 };
 
@@ -162,47 +161,47 @@ struct XYZAColor {
 // The abbreviation CMYK refers to the four ink plates used: cyan, magenta, yellow, and key (most often black).
 // Each component's value must be within the range [0.0, 1.0].
 struct CMYKColor {
-    float cyan = 0.0f;
-    float magenta = 0.0f;
-    float yellow = 0.0f;
-    float key = 0.0f;
+    float32 cyan = 0.0f;
+    float32 magenta = 0.0f;
+    float32 yellow = 0.0f;
+    float32 key = 0.0f;
 
     constexpr CMYKColor() = default;
-    constexpr CMYKColor(float c, float m, float y, float k) : cyan(c), magenta(m), yellow(y), key(k) {};
+    constexpr CMYKColor(float32 c, float32 m, float32 y, float32 k) : cyan(c), magenta(m), yellow(y), key(k) {};
 };
 
 // HSV/HSL are the two most common cylindrical-coordinate representations of points in an RGB color model.
 // The two representations rearrange the geometry of RGB in an attempt to be more intuitive and perceptually 
 // relevant than the cartesian (cube) representation. Commonly used in color pickers and in image editing software.
 struct HSVColor {
-    float hue = 0;           // value in range [0, 360)
-    float saturation = 0;    // value in range [0, 1]
-    float value = 0;         // value in range [0, 1]
+    float32 hue = 0;           // value in range [0, 360)
+    float32 saturation = 0;    // value in range [0, 1]
+    float32 value = 0;         // value in range [0, 1]
     
     constexpr HSVColor() = default;
-    constexpr HSVColor(float h, float s, float v) : hue(h), saturation(s), value(v) {};
+    constexpr HSVColor(float32 h, float32 s, float32 v) : hue(h), saturation(s), value(v) {};
 };
 
 // HSL (Hue, Saturation, Lightness) color model is similar to HSV but uses lightness instead of value.
 // HSL is often more intuitive for artists as lightness directly represents how much white or black is mixed in.
 struct HSLColor {
-    float hue = 0;           // value in range [0, 360)
-    float saturation = 0;    // value in range [0, 1]
-    float lightness = 0;     // value in range [0, 1]
+    float32 hue = 0;           // value in range [0, 360)
+    float32 saturation = 0;    // value in range [0, 1]
+    float32 lightness = 0;     // value in range [0, 1]
     
     constexpr HSLColor() = default;
-    constexpr HSLColor(float h, float s, float l) : hue(h), saturation(s), lightness(l) {};
+    constexpr HSLColor(float32 h, float32 s, float32 l) : hue(h), saturation(s), lightness(l) {};
 };
 
 // YUV/YCbCr color is a family of color spaces used as a part of the color image pipeline in digital video, 
 // broadcasting and photography systems; and it is based on RGB primaries.
 // Y is the luma component, Cb/Cr are the blue/red offset chroma channels.
 struct YCbCrColor {
-    float y = 0.0f;                 // Luma
-    float cb = 0.0f, cr = 0.0f;     // Chrominance (blue/red offset)
+    float32 y = 0.0f;                 // Luma
+    float32 cb = 0.0f, cr = 0.0f;     // Chrominance (blue/red offset)
     
     constexpr YCbCrColor() = default;
-    constexpr YCbCrColor(float yVal, float cbVal, float crVal) : y(yVal), cb(cbVal), cr(crVal) {};
+    constexpr YCbCrColor(float32 yVal, float32 cbVal, float32 crVal) : y(yVal), cb(cbVal), cr(crVal) {};
 };
 
 /**
@@ -259,29 +258,29 @@ public:
 
     // Named color constants
 public:
-    static constexpr Color Transparent() { return Color(0, 0, 0, 0); }
-    static constexpr Color Black() { return Color(0, 0, 0, 255); }
-    static constexpr Color White() { return Color(255, 255, 255, 255); }
-    static constexpr Color Red() { return Color(255, 0, 0, 255); }
-    static constexpr Color Green() { return Color(0, 255, 0, 255); }
-    static constexpr Color Blue() { return Color(0, 0, 255, 255); }
-    static constexpr Color Yellow() { return Color(255, 255, 0, 255); }
-    static constexpr Color Cyan() { return Color(0, 255, 255, 255); }
-    static constexpr Color Magenta() { return Color(255, 0, 255, 255); }
-    static constexpr Color Gray() { return Color(128, 128, 128, 255); }
-    static constexpr Color LightGray() { return Color(192, 192, 192, 255); }
-    static constexpr Color DarkGray() { return Color(64, 64, 64, 255); }
-    static constexpr Color Orange() { return Color(255, 165, 0, 255); }
-    static constexpr Color Pink() { return Color(255, 192, 203, 255); }
-    static constexpr Color Purple() { return Color(128, 0, 128, 255); }
-    static constexpr Color Brown() { return Color(165, 42, 42, 255); }
-    static constexpr Color Navy() { return Color(0, 0, 128, 255); }
-    static constexpr Color Olive() { return Color(128, 128, 0, 255); }
-    static constexpr Color Lime() { return Color(0, 255, 0, 255); }
-    static constexpr Color Aqua() { return Color(0, 255, 255, 255); }
-    static constexpr Color Silver() { return Color(192, 192, 192, 255); }
-    static constexpr Color Maroon() { return Color(128, 0, 0, 255); }
-    static constexpr Color Teal() { return Color(0, 128, 128, 255); }
+    static constexpr Color Transparent()    { return Color(0, 0, 0, 0); }
+    static constexpr Color Black()          { return Color(0, 0, 0, 255); }
+    static constexpr Color White()          { return Color(255, 255, 255, 255); }
+    static constexpr Color Red()            { return Color(255, 0, 0, 255); }
+    static constexpr Color Green()          { return Color(0, 255, 0, 255); }
+    static constexpr Color Blue()           { return Color(0, 0, 255, 255); }
+    static constexpr Color Yellow()         { return Color(255, 255, 0, 255); }
+    static constexpr Color Cyan()           { return Color(0, 255, 255, 255); }
+    static constexpr Color Magenta()        { return Color(255, 0, 255, 255); }
+    static constexpr Color Gray()           { return Color(128, 128, 128, 255); }
+    static constexpr Color LightGray()      { return Color(192, 192, 192, 255); }
+    static constexpr Color DarkGray()       { return Color(64, 64, 64, 255); }
+    static constexpr Color Orange()         { return Color(255, 165, 0, 255); }
+    static constexpr Color Pink()           { return Color(255, 192, 203, 255); }
+    static constexpr Color Purple()         { return Color(128, 0, 128, 255); }
+    static constexpr Color Brown()          { return Color(165, 42, 42, 255); }
+    static constexpr Color Navy()           { return Color(0, 0, 128, 255); }
+    static constexpr Color Olive()          { return Color(128, 128, 0, 255); }
+    static constexpr Color Lime()           { return Color(0, 255, 0, 255); }
+    static constexpr Color Aqua()           { return Color(0, 255, 255, 255); }
+    static constexpr Color Silver()         { return Color(192, 192, 192, 255); }
+    static constexpr Color Maroon()         { return Color(128, 0, 0, 255); }
+    static constexpr Color Teal()           { return Color(0, 128, 128, 255); }
 
     // Factory method to create Color from other color formats
 public:
@@ -339,12 +338,12 @@ public:
     // Uses sRGB D65 white point conversion matrix
     static Color fromXYZA(const XYZAColor& xyza) {
         // XYZ to sRGB conversion matrix (D65 white point)
-        float r =  3.2404542f * xyza.x - 1.5371385f * xyza.y - 0.4985314f * xyza.z;
-        float g = -0.9692660f * xyza.x + 1.8760108f * xyza.y + 0.0415560f * xyza.z;
-        float b =  0.0556434f * xyza.x - 0.2040259f * xyza.y + 1.0572252f * xyza.z;
+        float32 r =  3.2404542f * xyza.x - 1.5371385f * xyza.y - 0.4985314f * xyza.z;
+        float32 g = -0.9692660f * xyza.x + 1.8760108f * xyza.y + 0.0415560f * xyza.z;
+        float32 b =  0.0556434f * xyza.x - 0.2040259f * xyza.y + 1.0572252f * xyza.z;
 
         // Apply gamma correction (sRGB gamma)
-        auto gammaCorrect = [](float c) -> float {
+        auto gammaCorrect = [](float32 c) -> float32 {
             if (c <= 0.0f) return 0.0f;
             if (c >= 1.0f) return 1.0f;
             if (c <= 0.0031308f) {
@@ -376,10 +375,10 @@ public:
     }
     // Create Color from HSVColor
     static Color fromHSV(const HSVColor& hsv) {
-        float c = hsv.value * hsv.saturation;
-        float x = c * (1 - fabs(fmod(hsv.hue / 60.0f, 2) - 1));
-        float m = hsv.value - c;
-        float r1, g1, b1;
+        float32 c = hsv.value * hsv.saturation;
+        float32 x = c * (1 - fabs(fmod(hsv.hue / 60.0f, 2) - 1));
+        float32 m = hsv.value - c;
+        float32 r1, g1, b1;
 
         if (hsv.hue < 60) { r1 = c; g1 = x; b1 = 0; }
         else if (hsv.hue < 120) { r1 = x; g1 = c; b1 = 0; }
@@ -396,10 +395,10 @@ public:
     }
     // Create Color from HSLColor
     static Color fromHSL(const HSLColor& hsl) {
-        float c = (1.0f - fabs(2.0f * hsl.lightness - 1.0f)) * hsl.saturation;
-        float x = c * (1.0f - fabs(fmod(hsl.hue / 60.0f, 2.0f) - 1.0f));
-        float m = hsl.lightness - c / 2.0f;
-        float r1, g1, b1;
+        float32 c = (1.0f - fabs(2.0f * hsl.lightness - 1.0f)) * hsl.saturation;
+        float32 x = c * (1.0f - fabs(fmod(hsl.hue / 60.0f, 2.0f) - 1.0f));
+        float32 m = hsl.lightness - c / 2.0f;
+        float32 r1, g1, b1;
 
         if (hsl.hue < 60.0f) { r1 = c; g1 = x; b1 = 0.0f; }
         else if (hsl.hue < 120.0f) { r1 = x; g1 = c; b1 = 0.0f; }
@@ -416,9 +415,9 @@ public:
     }
     // Create Color from YCbCrColor
     static Color fromYCbCr(const YCbCrColor& ycbcr) {
-        float r = ycbcr.y + 1.402f * (ycbcr.cr - 128.0f);
-        float g = ycbcr.y - 0.344136f * (ycbcr.cb - 128.0f) - 0.714136f * (ycbcr.cr - 128.0f);
-        float b = ycbcr.y + 1.772f * (ycbcr.cb - 128.0f);
+        float32 r = ycbcr.y + 1.402f * (ycbcr.cr - 128.0f);
+        float32 g = ycbcr.y - 0.344136f * (ycbcr.cb - 128.0f) - 0.714136f * (ycbcr.cr - 128.0f);
+        float32 b = ycbcr.y + 1.772f * (ycbcr.cb - 128.0f);
 
         uint8 r8 = static_cast<uint8>(NEX_STD clamp(r, 0.0f, 255.0f));
         uint8 g8 = static_cast<uint8>(NEX_STD clamp(g, 0.0f, 255.0f));
@@ -435,10 +434,10 @@ public:
         }
         // Convert to uppercase for easier parsing
         for (char& c : hexClean) {
-            c = static_cast<char>(NEX_STD toupper(static_cast<unsigned char>(c)));
+            c = static_cast<char>(NEX_STD toupper(static_cast<uchar>(c)));
         }
         // Parse hex string
-        unsigned long value = 0;
+        ulong value = 0;
         try {
             value = NEX_STD stoul(hexClean, nullptr, 16);
         } catch (...) {
@@ -475,7 +474,7 @@ public:
     static Color fromName(const Utf8String& name) {
         Utf8String nameLower = name;
         for (char& c : nameLower) {
-            c = static_cast<char>(NEX_STD tolower(static_cast<unsigned char>(c)));
+            c = static_cast<char>(NEX_STD tolower(static_cast<uchar>(c)));
         }
         // Common color names
         if (nameLower == "transparent") return Transparent();
@@ -553,7 +552,7 @@ public:
     // Uses sRGB D65 white point conversion matrix
     XYZAColor toXYZA() const {
         // Convert sRGB to linear RGB (inverse gamma correction)
-        auto linearize = [](float c) -> float {
+        auto linearize = [](float32 c) -> float32 {
             if (c <= 0.0f) return 0.0f;
             if (c >= 1.0f) return 1.0f;
             if (c <= 0.04045f) {
@@ -563,42 +562,42 @@ public:
             }
         };
 
-        float r = linearize(static_cast<float>(RGBAColor_GetR(clr_)) / 255.0f);
-        float g = linearize(static_cast<float>(RGBAColor_GetG(clr_)) / 255.0f);
-        float b = linearize(static_cast<float>(RGBAColor_GetB(clr_)) / 255.0f);
+        float32 r = linearize(static_cast<float32>(RGBAColor_GetR(clr_)) / 255.0f);
+        float32 g = linearize(static_cast<float32>(RGBAColor_GetG(clr_)) / 255.0f);
+        float32 b = linearize(static_cast<float32>(RGBAColor_GetB(clr_)) / 255.0f);
 
         // sRGB to XYZ conversion matrix (D65 white point)
-        float x = 0.4124564f * r + 0.3575761f * g + 0.1804375f * b;
-        float y = 0.2126729f * r + 0.7151522f * g + 0.0721750f * b;
-        float z = 0.0193339f * r + 0.1191920f * g + 0.9503041f * b;
-        float a = static_cast<float>(RGBAColor_GetA(clr_)) / 255.0f;
+        float32 x = 0.4124564f * r + 0.3575761f * g + 0.1804375f * b;
+        float32 y = 0.2126729f * r + 0.7151522f * g + 0.0721750f * b;
+        float32 z = 0.0193339f * r + 0.1191920f * g + 0.9503041f * b;
+        float32 a = static_cast<float32>(RGBAColor_GetA(clr_)) / 255.0f;
 
         return XYZAColor(x, y, z, a);
     }
     // Convert to CMYKColor
     CMYKColor toCMYK() const {
-        float r = static_cast<float>(RGBAColor_GetR(clr_)) / 255.0f;
-        float g = static_cast<float>(RGBAColor_GetG(clr_)) / 255.0f;
-        float b = static_cast<float>(RGBAColor_GetB(clr_)) / 255.0f;
+        float32 r = static_cast<float32>(RGBAColor_GetR(clr_)) / 255.0f;
+        float32 g = static_cast<float32>(RGBAColor_GetG(clr_)) / 255.0f;
+        float32 b = static_cast<float32>(RGBAColor_GetB(clr_)) / 255.0f;
 
-        float k = 1.0f - NEX_STD max({ r, g, b });
-        float c = (1.0f - r - k) / (1.0f - k + 1e-10f);
-        float m = (1.0f - g - k) / (1.0f - k + 1e-10f);
-        float y = (1.0f - b - k) / (1.0f - k + 1e-10f);
+        float32 k = 1.0f - NEX_STD max({ r, g, b });
+        float32 c = (1.0f - r - k) / (1.0f - k + 1e-10f);
+        float32 m = (1.0f - g - k) / (1.0f - k + 1e-10f);
+        float32 y = (1.0f - b - k) / (1.0f - k + 1e-10f);
 
         return CMYKColor(c, m, y, k);
     }
     // Convert to HSVColor
     HSVColor toHSV() const {
-        float r = static_cast<float>(RGBAColor_GetR(clr_)) / 255.0f;
-        float g = static_cast<float>(RGBAColor_GetG(clr_)) / 255.0f;
-        float b = static_cast<float>(RGBAColor_GetB(clr_)) / 255.0f;
+        float32 r = static_cast<float32>(RGBAColor_GetR(clr_)) / 255.0f;
+        float32 g = static_cast<float32>(RGBAColor_GetG(clr_)) / 255.0f;
+        float32 b = static_cast<float32>(RGBAColor_GetB(clr_)) / 255.0f;
 
-        float max = NEX_STD max({ r, g, b });
-        float min = NEX_STD min({ r, g, b });
-        float delta = max - min;
+        float32 max = NEX_STD max({ r, g, b });
+        float32 min = NEX_STD min({ r, g, b });
+        float32 delta = max - min;
 
-        float h = 0.0f;
+        float32 h = 0.0f;
         if (delta != 0.0f) {
             if (max == r) {
                 h = 60.0f * fmod(((g - b) / delta), 6.0f);
@@ -610,22 +609,22 @@ public:
         }
         if (h < 0.0f) h += 360.0f;
 
-        float s = (max == 0.0f) ? 0.0f : (delta / max);
-        float v = max;
+        float32 s = (max == 0.0f) ? 0.0f : (delta / max);
+        float32 v = max;
 
         return HSVColor(h, s, v);
     }
     // Convert to HSLColor
     HSLColor toHSL() const {
-        float r = static_cast<float>(RGBAColor_GetR(clr_)) / 255.0f;
-        float g = static_cast<float>(RGBAColor_GetG(clr_)) / 255.0f;
-        float b = static_cast<float>(RGBAColor_GetB(clr_)) / 255.0f;
+        float32 r = static_cast<float32>(RGBAColor_GetR(clr_)) / 255.0f;
+        float32 g = static_cast<float32>(RGBAColor_GetG(clr_)) / 255.0f;
+        float32 b = static_cast<float32>(RGBAColor_GetB(clr_)) / 255.0f;
 
-        float max = NEX_STD max({ r, g, b });
-        float min = NEX_STD min({ r, g, b });
-        float delta = max - min;
+        float32 max = NEX_STD max({ r, g, b });
+        float32 min = NEX_STD min({ r, g, b });
+        float32 delta = max - min;
 
-        float h = 0.0f;
+        float32 h = 0.0f;
         if (delta != 0.0f) {
             if (max == r) {
                 h = 60.0f * fmod(((g - b) / delta), 6.0f);
@@ -637,20 +636,20 @@ public:
         }
         if (h < 0.0f) h += 360.0f;
 
-        float l = (max + min) / 2.0f;
-        float s = (delta == 0.0f) ? 0.0f : (delta / (1.0f - fabs(2.0f * l - 1.0f)));
+        float32 l = (max + min) / 2.0f;
+        float32 s = (delta == 0.0f) ? 0.0f : (delta / (1.0f - fabs(2.0f * l - 1.0f)));
 
         return HSLColor(h, s, l);
     }
     // Convert to YCbCrColor
     YCbCrColor toYCbCr() const {
-        float r = static_cast<float>(RGBAColor_GetR(clr_));
-        float g = static_cast<float>(RGBAColor_GetG(clr_));
-        float b = static_cast<float>(RGBAColor_GetB(clr_));
+        float32 r = static_cast<float32>(RGBAColor_GetR(clr_)) / 255.0f;
+        float32 g = static_cast<float32>(RGBAColor_GetG(clr_)) / 255.0f;
+        float32 b = static_cast<float32>(RGBAColor_GetB(clr_)) / 255.0f;
 
-        float y = 0.299f * r + 0.587f * g + 0.114f * b;
-        float cb = 128.0f - 0.168736f * r - 0.331264f * g + 0.5f * b;
-        float cr = 128.0f + 0.5f * r - 0.460525f * g - 0.081475f * b;
+        float32 y = 0.299f * r + 0.587f * g + 0.114f * b;
+        float32 cb = 128.0f - 0.168736f * r - 0.331264f * g + 0.5f * b;
+        float32 cr = 128.0f + 0.5f * r - 0.460525f * g - 0.081475f * b;
 
         return YCbCrColor(y, cb, cr);
     }
@@ -658,19 +657,19 @@ public:
     Utf8String toHex() const {
         NEX_STD ostringstream oss;
         oss << "#" << NEX_STD hex << NEX_STD uppercase << NEX_STD setfill('0') 
-            << NEX_STD setw(2) << static_cast<int>(getR())
-            << NEX_STD setw(2) << static_cast<int>(getG())
-            << NEX_STD setw(2) << static_cast<int>(getB());
+            << NEX_STD setw(2) << static_cast<int32>(getR())
+            << NEX_STD setw(2) << static_cast<int32>(getG())
+            << NEX_STD setw(2) << static_cast<int32>(getB());
         return oss.str();
     }
     // Convert to hex string with alpha (#AARRGGBB format)
     Utf8String toHexWithAlpha() const {
         NEX_STD ostringstream oss;
         oss << "#" << NEX_STD hex << NEX_STD uppercase << NEX_STD setfill('0')
-            << NEX_STD setw(2) << static_cast<int>(getA())
-            << NEX_STD setw(2) << static_cast<int>(getR())
-            << NEX_STD setw(2) << static_cast<int>(getG())
-            << NEX_STD setw(2) << static_cast<int>(getB());
+            << NEX_STD setw(2) << static_cast<int32>(getA())
+            << NEX_STD setw(2) << static_cast<int32>(getR())
+            << NEX_STD setw(2) << static_cast<int32>(getG())
+            << NEX_STD setw(2) << static_cast<int32>(getB());
         return oss.str();
     }
     
@@ -733,19 +732,19 @@ public:
         uint8 a1 = this->getA();
         uint8 a2 = other.getA();
         // Compute output alpha (integer math)
-        int aOutInt = static_cast<int>(a1) + (static_cast<int>(a2) * (255 - static_cast<int>(a1)) / 255);
+        int32 aOutInt = static_cast<int32>(a1) + (static_cast<int32>(a2) * (255 - static_cast<int32>(a1)) / 255);
         if (aOutInt <= 0) {
             return Color(0, 0, 0, 0);
         }
         uint8 aOut = static_cast<uint8>(aOutInt);
 
         // Blend each channel, protect against division by zero
-        int rNum = (static_cast<int>(this->getR()) * static_cast<int>(a1)) +
-                   (static_cast<int>(other.getR()) * static_cast<int>(a2) * (255 - static_cast<int>(a1)) / 255);
-        int gNum = (static_cast<int>(this->getG()) * static_cast<int>(a1)) +
-                   (static_cast<int>(other.getG()) * static_cast<int>(a2) * (255 - static_cast<int>(a1)) / 255);
-        int bNum = (static_cast<int>(this->getB()) * static_cast<int>(a1)) +
-                   (static_cast<int>(other.getB()) * static_cast<int>(a2) * (255 - static_cast<int>(a1)) / 255);
+        int32 rNum = (static_cast<int32>(this->getR()) * static_cast<int32>(a1)) +
+                     (static_cast<int32>(other.getR()) * static_cast<int32>(a2) * (255 - static_cast<int32>(a1)) / 255);
+        int32 gNum = (static_cast<int32>(this->getG()) * static_cast<int32>(a1)) +
+                     (static_cast<int32>(other.getG()) * static_cast<int32>(a2) * (255 - static_cast<int32>(a1)) / 255);
+        int32 bNum = (static_cast<int32>(this->getB()) * static_cast<int32>(a1)) +
+                     (static_cast<int32>(other.getB()) * static_cast<int32>(a2) * (255 - static_cast<int32>(a1)) / 255);
 
         uint8 rOut = static_cast<uint8>(NEX_STD clamp(rNum / aOutInt, 0, 255));
         uint8 gOut = static_cast<uint8>(NEX_STD clamp(gNum / aOutInt, 0, 255));
@@ -771,7 +770,7 @@ public:
         return *this;
     }
     // Scale color components by a scalar
-    Color operator*(float scalar) const noexcept {
+    Color operator*(float32 scalar) const noexcept {
         uint8 rOut = static_cast<uint8>(NEX_STD clamp(this->getR() * scalar, 0.0f, 255.0f));
         uint8 gOut = static_cast<uint8>(NEX_STD clamp(this->getG() * scalar, 0.0f, 255.0f));
         uint8 bOut = static_cast<uint8>(NEX_STD clamp(this->getB() * scalar, 0.0f, 255.0f));
@@ -779,12 +778,12 @@ public:
 
         return Color::fromRGBA(RGBAColorSet(rOut, gOut, bOut, aOut));
     }
-    Color& operator*=(float scalar) noexcept {
+    Color& operator*=(float32 scalar) noexcept {
         *this = *this * scalar;
         return *this;
     }
     // Divide color components by a scalar
-    Color operator/(float scalar) const noexcept {
+    Color operator/(float32 scalar) const noexcept {
         if (scalar == 0.0f) {
             return Color::fromRGBA(RGBAColorSet(0, 0, 0, 0));
         }
@@ -795,7 +794,7 @@ public:
 
         return Color::fromRGBA(RGBAColorSet(rOut, gOut, bOut, aOut));
     }
-    Color& operator/=(float scalar) noexcept {
+    Color& operator/=(float32 scalar) noexcept {
         *this = *this / scalar;
         return *this;
     }
@@ -803,7 +802,7 @@ public:
     // Color manipulation methods
 public:
     // Darken the color by a factor (0.0 = no change, 1.0 = completely black)
-    Color darken(float factor) const noexcept {
+    Color darken(float32 factor) const noexcept {
         factor = NEX_STD clamp(factor, 0.0f, 1.0f);
         HSLColor hsl = toHSL();
         hsl.lightness = NEX_STD max(0.0f, hsl.lightness - factor * hsl.lightness);
@@ -813,7 +812,7 @@ public:
     }
 
     // Lighten the color by a factor (0.0 = no change, 1.0 = completely white)
-    Color lighten(float factor) const noexcept {
+    Color lighten(float32 factor) const noexcept {
         factor = NEX_STD clamp(factor, 0.0f, 1.0f);
         HSLColor hsl = toHSL();
         hsl.lightness = NEX_STD min(1.0f, hsl.lightness + factor * (1.0f - hsl.lightness));
@@ -823,25 +822,25 @@ public:
     }
 
     // Brighten the color by adding a fixed amount to lightness
-    Color brighten(int amount) const noexcept {
+    Color brighten(int32 amount) const noexcept {
         HSLColor hsl = toHSL();
-        hsl.lightness = NEX_STD min(1.0f, hsl.lightness + static_cast<float>(amount) / 255.0f);
+        hsl.lightness = NEX_STD min(1.0f, hsl.lightness + static_cast<float32>(amount) / 255.0f);
         Color result = fromHSL(hsl);
         result.setA(getA());
         return result;
     }
 
     // Dim the color by subtracting a fixed amount from lightness
-    Color dim(int amount) const noexcept {
+    Color dim(int32 amount) const noexcept {
         HSLColor hsl = toHSL();
-        hsl.lightness = NEX_STD max(0.0f, hsl.lightness - static_cast<float>(amount) / 255.0f);
+        hsl.lightness = NEX_STD max(0.0f, hsl.lightness - static_cast<float32>(amount) / 255.0f);
         Color result = fromHSL(hsl);
         result.setA(getA());
         return result;
     }
 
     // Adjust saturation by a factor (negative values desaturate, positive values saturate)
-    Color adjustSaturation(float factor) const noexcept {
+    Color adjustSaturation(float32 factor) const noexcept {
         HSLColor hsl = toHSL();
         hsl.saturation = NEX_STD clamp(hsl.saturation * (1.0f + factor), 0.0f, 1.0f);
         Color result = fromHSL(hsl);
@@ -850,7 +849,7 @@ public:
     }
 
     // Adjust hue by degrees (positive = clockwise, negative = counter-clockwise)
-    Color adjustHue(float degrees) const noexcept {
+    Color adjustHue(float32 degrees) const noexcept {
         HSLColor hsl = toHSL();
         hsl.hue = fmod(hsl.hue + degrees + 360.0f, 360.0f);
         Color result = fromHSL(hsl);
@@ -878,12 +877,12 @@ public:
     // Color interpolation
 public:
     // Linear interpolation between two colors (t should be in range [0.0, 1.0])
-    static Color lerp(const Color& color1, const Color& color2, float t) noexcept {
+    static Color lerp(const Color& color1, const Color& color2, float32 t) noexcept {
         t = NEX_STD clamp(t, 0.0f, 1.0f);
-        float r = color1.getR() * (1.0f - t) + color2.getR() * t;
-        float g = color1.getG() * (1.0f - t) + color2.getG() * t;
-        float b = color1.getB() * (1.0f - t) + color2.getB() * t;
-        float a = color1.getA() * (1.0f - t) + color2.getA() * t;
+        float32 r = color1.getR() * (1.0f - t) + color2.getR() * t;
+        float32 g = color1.getG() * (1.0f - t) + color2.getG() * t;
+        float32 b = color1.getB() * (1.0f - t) + color2.getB() * t;
+        float32 a = color1.getA() * (1.0f - t) + color2.getA() * t;
         return Color(
             static_cast<uint8>(r),
             static_cast<uint8>(g),
@@ -896,10 +895,10 @@ public:
 public:
     // Calculate relative luminance (for accessibility, returns value in range [0.0, 1.0])
     // Uses sRGB relative luminance formula from WCAG 2.0
-    float luminance() const noexcept {
-        float r = static_cast<float>(getR()) / 255.0f;
-        float g = static_cast<float>(getG()) / 255.0f;
-        float b = static_cast<float>(getB()) / 255.0f;
+    float32 luminance() const noexcept {
+        float32 r = static_cast<float32>(getR()) / 255.0f;
+        float32 g = static_cast<float32>(getG()) / 255.0f;
+        float32 b = static_cast<float32>(getB()) / 255.0f;
         
         // Apply gamma correction
         r = (r <= 0.03928f) ? (r / 12.92f) : NEX_STD pow((r + 0.055f) / 1.055f, 2.4f);
@@ -913,11 +912,11 @@ public:
     // Calculate contrast ratio between two colors (for accessibility)
     // Returns a value typically between 1.0 (no contrast) and 21.0 (maximum contrast)
     // WCAG 2.0 requires at least 4.5:1 for normal text and 3:1 for large text
-    static float contrastRatio(const Color& color1, const Color& color2) noexcept {
-        float lum1 = color1.luminance();
-        float lum2 = color2.luminance();
-        float lighter = NEX_STD max(lum1, lum2);
-        float darker = NEX_STD min(lum1, lum2);
+    static float32 contrastRatio(const Color& color1, const Color& color2) noexcept {
+        float32 lum1 = color1.luminance();
+        float32 lum2 = color2.luminance();
+        float32 lighter = NEX_STD max(lum1, lum2);
+        float32 darker = NEX_STD min(lum1, lum2);
         // Avoid division by zero
         if (darker == 0.0f) return (lighter > 0.0f) ? 21.0f : 1.0f;
         return (lighter + 0.05f) / (darker + 0.05f);

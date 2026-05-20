@@ -7,11 +7,11 @@
 
 #include <string>
 #include <string_view>
-#include <iterator>
 #include <utility>
 
 #include "nex/base/macros.h"
 #include "nex/base/types.h"
+#include "nex/base/iterator.h"
 #include "nex/base/string.h"
 #include "nex/base/result.h"
 #include "nex/base/assert_crash.h"
@@ -43,8 +43,6 @@ public:
     // Forward declaration of iterators
     class Iterator;
     class ConstIterator;
-    using ReverseIterator = NEX_STD reverse_iterator<Iterator>;
-    using ConstReverseIterator = NEX_STD reverse_iterator<ConstIterator>;
 
     // Type aliases for compatibility with standard container conventions
     using value_type = char16;
@@ -56,8 +54,8 @@ public:
     using const_pointer = const value_type*;
     using iterator = Iterator;
     using const_iterator = ConstIterator;
-    using reverse_iterator = ReverseIterator;
-    using const_reverse_iterator = ConstReverseIterator;
+    using reverse_iterator = ReverseIterator<iterator>;
+    using const_reverse_iterator = ReverseIterator<const_iterator>;
 
 private:
     // Using UTF-16 as the internal buffer
@@ -114,13 +112,13 @@ public:
     ////// Create string from numbers -----------------------
 
     // Create string from a signed integer with specified base (default is 10)
-    static String fromInt(int64 value, int base = 10);
+    static String fromInt(int64 value, int32 base = 10);
 
     // Create string from an unsigned integer with specified base (default is 10)
-    static String fromUInt(uint64 value, int base = 10);
+    static String fromUInt(uint64 value, int32 base = 10);
 
     // Create string from a floating-point number
-    static String fromFloat(double value, char format = 'g', int precision = 6);
+    static String fromFloat(double value, char format = 'g', int32 precision = 6);
 
     ////// Create string from specified encoding -----------------------
 
@@ -281,7 +279,7 @@ public:
     class Iterator {
     public:
         // Type aliases for iterator traits (compatible with standard library iterators)
-        using iterator_category = NEX_STD random_access_iterator_tag;
+        using iterator_category = RandomAccessIteratorTag;
         using value_type = String::value_type;
         using difference_type = String::difference_type;
         using pointer = String::pointer;
@@ -348,13 +346,13 @@ public:
     };
 
     // Get an iterator to the beginning of the string
-    constexpr Iterator begin() noexcept {
-        return Iterator(buffer_.data());
+    constexpr iterator begin() noexcept {
+        return iterator(buffer_.data());
     }
 
     // Get an iterator to the end of the string
-    constexpr Iterator end() noexcept {
-        return Iterator(buffer_.data() + buffer_.size());
+    constexpr iterator end() noexcept {
+        return iterator(buffer_.data() + buffer_.size());
     }
 
     /**
@@ -372,7 +370,7 @@ public:
 
     public:
          // Type aliases for iterator traits (compatible with standard library iterators)
-        using iterator_category = NEX_STD random_access_iterator_tag;
+        using iterator_category = RandomAccessIteratorTag;
         using value_type = String::value_type;
         using difference_type = String::difference_type;
         using pointer = String::const_pointer;
@@ -438,53 +436,53 @@ public:
     };
 
     // Get a const iterator to the beginning of the string
-    constexpr ConstIterator begin() const noexcept {
-        return ConstIterator(buffer_.data());
+    constexpr const_iterator begin() const noexcept {
+        return const_iterator(buffer_.data());
     }
 
     // Get a const iterator to the end of the string
-    constexpr ConstIterator end() const noexcept {
-        return ConstIterator(buffer_.data() + buffer_.size());
+    constexpr const_iterator end() const noexcept {
+        return const_iterator(buffer_.data() + buffer_.size());
     }
 
     // Get a const iterator to the beginning of the string
-    constexpr ConstIterator cbegin() const noexcept {
-        return ConstIterator(buffer_.data());
+    constexpr const_iterator cbegin() const noexcept {
+        return const_iterator(buffer_.data());
     }
 
     // Get a const iterator to the end of the string
-    constexpr ConstIterator cend() const noexcept {
-        return ConstIterator(buffer_.data() + buffer_.size());
+    constexpr const_iterator cend() const noexcept {
+        return const_iterator(buffer_.data() + buffer_.size());
     }
 
     // Get a reverse iterator to the beginning of the reversed string (i.e., end of the normal string)
-    constexpr ReverseIterator rbegin() noexcept {
-        return ReverseIterator(end());
+    constexpr reverse_iterator rbegin() noexcept {
+        return reverse_iterator(end());
     }
 
     // Get a reverse iterator to the end of the reversed string (i.e., beginning of the normal string)
-    constexpr ReverseIterator rend() noexcept {
-        return ReverseIterator(begin());
+    constexpr reverse_iterator rend() noexcept {
+        return reverse_iterator(begin());
     }
     
     // Get a const reverse iterator to the beginning of the reversed string (i.e., end of the normal string)
-    constexpr ConstReverseIterator rbegin() const noexcept {
-        return ConstReverseIterator(end());
+    constexpr const_reverse_iterator rbegin() const noexcept {
+        return const_reverse_iterator(end());
     }
 
     // Get a const reverse iterator to the end of the reversed string (i.e., beginning of the normal string)
-    constexpr ConstReverseIterator rend() const noexcept {
-        return ConstReverseIterator(begin());
+    constexpr const_reverse_iterator rend() const noexcept {
+        return const_reverse_iterator(begin());
     }
 
     // Get a const reverse iterator to the beginning of the reversed string (i.e., end of the normal string)
-    constexpr ConstReverseIterator crbegin() const noexcept {
-        return ConstReverseIterator(cend());
+    constexpr const_reverse_iterator crbegin() const noexcept {
+        return const_reverse_iterator(cend());
     }
 
     // Get a const reverse iterator to the end of the reversed string (i.e., beginning of the normal string)
-    constexpr ConstReverseIterator crend() const noexcept {
-        return ConstReverseIterator(cbegin());
+    constexpr const_reverse_iterator crend() const noexcept {
+        return const_reverse_iterator(cbegin());
     }
 
     ////// Size and capacity management -----------------------

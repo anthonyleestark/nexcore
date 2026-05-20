@@ -52,15 +52,19 @@ NEX_NAMESPACE_BEGIN
 #endif  // defined(NEX_BASE_TYPES_NO_STD)
 
 #if NEX_HAS_BUILTIN_INT128
-    using int128  = __int128;               // 128-bit signed integer
-    using uint128 = unsigned __int128;      // 128-bit unsigned integer
+    using int128    = __int128;             // 128-bit signed integer
+    using uint128   = unsigned __int128;    // 128-bit unsigned integer
 #else
-    using int128  = int64;                  // No support for 128-bit signed integer, fallback to 64-bit
-    using uint128 = uint64;                 // No support for 128-bit unsigned integer, fallback to 64-bit
+    using int128    = int64;                // No support for 128-bit signed integer, fallback to 64-bit
+    using uint128   = uint64;               // No support for 128-bit unsigned integer, fallback to 64-bit
 #endif
 
-using longlong  = int64;                    // 64-bit signed integer (int64)
-using ulonglong = uint64;                   // 64-bit unsigned integer (uint64)
+using ushort        = unsigned short;       // 16-bit unsigned integer (alternative name)
+using uint          = unsigned int;         // 32-bit unsigned integer (alternative name)
+using ulong         = unsigned long;        // 32 or 64-bit unsigned integer (alternative name, platform-dependent)
+
+using longlong      = int64;                // 64-bit signed integer (int64)
+using ulonglong     = uint64;               // 64-bit unsigned integer (uint64)
 
 // ============================================================================
 // Short aliases for standard fixed-width integer types (Rust-style)

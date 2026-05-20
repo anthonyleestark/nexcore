@@ -20,6 +20,8 @@
 #if !defined(NEX_BASE_TYPES_NO_STD)
     #include <cstddef>
     #include <cstdint>
+    #include <limits>
+    #include <cwchar>
 #endif  // !defined(NEX_BASE_TYPES_NO_STD)
 
 #include "nex/base/attributes.h"
@@ -27,9 +29,9 @@
 
 NEX_NAMESPACE_BEGIN
 
-// ============================================================================
+// =================================================================================
 // Include standard fixed-width integer types
-// ============================================================================
+// =================================================================================
 
 #if !defined(NEX_BASE_TYPES_NO_STD)
     using int8      = NEX_STD int8_t;       // 8-bit signed integer
@@ -66,9 +68,9 @@ using ulong         = unsigned long;        // 32 or 64-bit unsigned integer (al
 using longlong      = int64;                // 64-bit signed integer (int64)
 using ulonglong     = uint64;               // 64-bit unsigned integer (uint64)
 
-// ============================================================================
+// =================================================================================
 // Short aliases for standard fixed-width integer types (Rust-style)
-// ============================================================================
+// =================================================================================
 
 using i8        = int8;                     // 8-bit signed integer (int8)
 using u8        = uint8;                    // 8-bit unsigned integer (uint8)
@@ -84,9 +86,9 @@ using u128      = uint128;                  // 128-bit unsigned integer (uint128
 using ll        = longlong;                 // 64-bit signed integer (long long)
 using ull       = ulonglong;                // 64-bit unsigned integer (unsigned long long)
 
-// ============================================================================
+// =================================================================================
 // Include standard pointer-sized integer types
-// ============================================================================
+// =================================================================================
 
 #if !defined(NEX_BASE_TYPES_NO_STD)
     using intptr    = NEX_STD intptr_t;     // Pointer-sized signed integer
@@ -96,16 +98,16 @@ using ull       = ulonglong;                // 64-bit unsigned integer (unsigned
     using uintptr   = unsigned __int64;     // Pointer-sized unsigned integer
 #endif  // !defined(NEX_BASE_TYPES_NO_STD)
 
-// ============================================================================
+// =================================================================================
 // Short aliases for standard pointer-sized integer types (Rust-style)
-// ============================================================================
+// =================================================================================
 
 using iptr  = intptr;                       // Pointer-sized signed integer (intptr)
 using uptr  = uintptr;                      // Pointer-sized unsigned integer (uintptr)
 
-// ============================================================================
+// =================================================================================
 // Include standard maximum-width integer types
-// ============================================================================
+// =================================================================================
 
 #if !defined(NEX_BASE_TYPES_NO_STD)
     using intmax    = NEX_STD intmax_t;     // Maximum-width signed integer
@@ -115,16 +117,16 @@ using uptr  = uintptr;                      // Pointer-sized unsigned integer (u
     using uintmax   = unsigned long long;   // Maximum-width unsigned integer
 #endif  // !defined(NEX_BASE_TYPES_NO_STD)
 
-// ============================================================================
+// =================================================================================
 // Short aliases for standard maximum-width integer types (Rust-style)
-// ============================================================================
+// =================================================================================
 
 using imax  = intmax;                       // Maximum-width signed integer (intmax)
 using umax  = uintmax;                      // Maximum-width unsigned integer (uintmax)
 
-// ============================================================================
+// =================================================================================
 // Include standard minimum-width integer types
-// ============================================================================
+// =================================================================================
 
 #if !defined(NEX_BASE_TYPES_NO_STD)
     using int_least8    = NEX_STD int_least8_t;     // Minimum 8-bit signed integer
@@ -154,9 +156,9 @@ using umax  = uintmax;                      // Maximum-width unsigned integer (u
     using uint_least128  = uint_least64;            // No support for 128-bit unsigned integer, fallback to 64-bit
 #endif
 
-// ============================================================================
+// =================================================================================
 // Include standard fastest minimum-width integer types
-// ============================================================================
+// =================================================================================
 
 #if !defined(NEX_BASE_TYPES_NO_STD)
     using int_fast8     = NEX_STD int_fast8_t;      // Fastest minimum 8-bit signed integer
@@ -186,9 +188,9 @@ using umax  = uintmax;                      // Maximum-width unsigned integer (u
     using uint_fast128   = uint_fast64;             // No support for 128-bit unsigned integer, fallback to 64-bit
 #endif
 
-// ============================================================================
+// =================================================================================
 // Include standard size types
-// ============================================================================
+// =================================================================================
 
 #if !defined(NEX_BASE_TYPES_NO_STD)
     using sizetype  = NEX_STD size_t;       // Unsigned integer type used for sizes and array indexing
@@ -203,16 +205,16 @@ using umax  = uintmax;                      // Maximum-width unsigned integer (u
 using usize         = sizetype;             // Unsigned integer type used for sizes and array indexing
 using isize         = ptrdiff;              // Signed integer type used for pointer arithmetic and array indexing
 
-// ============================================================================
+// =================================================================================
 // Short aliases for standard size types (Rust-style)
-// ============================================================================
+// =================================================================================
 
 using size          = usize;        // Unsigned integer type used for sizes and array indexing (usize)
 using ssize         = isize;        // Signed integer type used for pointer arithmetic and array indexing (isize)
 
-// ============================================================================
+// =================================================================================
 // Include standard floating-point types
-// ============================================================================
+// =================================================================================
 
 using float32       = float;                // 32-bit floating point
 using float64       = double;               // 64-bit floating point
@@ -224,17 +226,17 @@ using floatmax      = long double;          // Widest standard floating-point ty
     using float128  = floatmax;             // Widest built-in floating-point fallback
 #endif
 
-// ============================================================================
+// =================================================================================
 // Short aliases for standard floating-point types (Rust-style)
-// ============================================================================
+// =================================================================================
 
 using f32       = float32;                  // 32-bit floating point (float32)
 using f64       = float64;                  // 64-bit floating point (float64)
 using f128      = float128;                 // 128-bit floating point (float128)
 
-// ============================================================================
+// =================================================================================
 // Include standard character types (encoding-aware; C++20)
-// ============================================================================
+// =================================================================================
 
 using char8     = char8_t;                  // 8-bit character type (UTF-8)
 using char16    = char16_t;                 // 16-bit character type (UTF-16)
@@ -244,34 +246,40 @@ using schar     = signed char;              // Signed narrow character storage t
 using uchar     = unsigned char;            // Unsigned narrow character storage type
 using codepoint = char32;                   // Unicode code point storage type
 
-// ============================================================================
+#if !defined(NEX_BASE_TYPES_NO_STD)
+    using wint  = NEX_STD wint_t;           // Wide character type for I/O functions
+#else
+    using wint  = uint16;                   // Wide character type for I/O functions
+#endif
+
+// =================================================================================
 // Short aliases for standard character types (Rust-style)
-// ============================================================================
+// =================================================================================
 
 using c8        = char8;                    // 8-bit character type (UTF-8)
 using c16       = char16;                   // 16-bit character type (UTF-16)
 using c32       = char32;                   // 32-bit character type (UTF-32)
 
-// ============================================================================
+// =================================================================================
 // Include boolean types (using uint8 and uint32 for boolean storage)
-// ============================================================================
+// =================================================================================
 
 using boolean   = bool;                     // Boolean value (true or false)
 using bool8     = uint8;                    // 8-bit boolean storage value (0 = false, non-zero = true)
 using bool16    = uint16;                   // 16-bit boolean storage value (0 = false, non-zero = true)
 using bool32    = uint32;                   // 32-bit boolean storage value (0 = false, non-zero = true)
 
-// ============================================================================
+// =================================================================================
 // Short aliases for boolean types (Rust-style)
-// ============================================================================
+// =================================================================================
 
 using b8    = uint8;                        // 8-bit boolean storage value (0 = false, non-zero = true)
 using b16   = uint16;                       // 16-bit boolean storage value (0 = false, non-zero = true)
 using b32   = uint32;                       // 32-bit boolean storage value (0 = false, non-zero = true)
 
-// ============================================================================
+// =================================================================================
 // Include pointer and address-related types
-// ============================================================================
+// =================================================================================
 
 #if !defined(NEX_BASE_TYPES_NO_STD)
     using null_ptr  = NEX_STD nullptr_t;            // Null pointer type
@@ -463,9 +471,9 @@ using void_ptr              = void*;                // Pointer to void
 using const_void_ptr        = const void*;          // Pointer to const void
 using address               = uintptr;              // Memory address (pointer-sized unsigned integer)
 
-// ============================================================================
+// =================================================================================
 // Include character pointer types (encoding-aware; C++20)
-// ============================================================================
+// =================================================================================
 
 using char_ptr              = char*;                // Pointer to char
 using const_char_ptr        = const char*;          // Pointer to const char
@@ -478,14 +486,151 @@ using const_char32_ptr      = const char32*;        // Pointer to const char32
 using wchar_ptr             = wchar_t*;             // Pointer to wide character
 using const_wchar_ptr       = const wchar_t*;       // Pointer to const wide character
 
-// ============================================================================
+// =================================================================================
 // Include C-style null-terminated string types (encoding-aware; C++20)
-// ============================================================================
+// =================================================================================
 
 using cstring           = const_char_ptr;           // Null-terminated const char string
 using utf8_cstring      = const_char8_ptr;          // Null-terminated const UTF-8 string
 using utf16_cstring     = const_char16_ptr;         // Null-terminated const UTF-16 string
 using utf32_cstring     = const_char32_ptr;         // Null-terminated const UTF-32 string
 using wide_cstring      = const_wchar_ptr;          // Null-terminated const wide string
+
+// =================================================================================
+// Define constants for minimum and maximum values of fixed-width integer types
+// =================================================================================
+
+struct Constants {
+    // Minimum and maximum values for fixed-width integer types
+    // These constants are defined as constexpr to allow for compile-time evaluation and optimization.
+
+#if !defined(NEX_BASE_TYPES_NO_STD)
+    static constexpr int8   i8min         = NEX_STD numeric_limits<int8>::min();
+    static constexpr int16  i16min        = NEX_STD numeric_limits<int16>::min();
+    static constexpr int32  i32min        = NEX_STD numeric_limits<int32>::min();
+    static constexpr int64  i64min        = NEX_STD numeric_limits<int64>::min();
+    static constexpr int8   i8max         = NEX_STD numeric_limits<int8>::max();
+    static constexpr int16  i16max        = NEX_STD numeric_limits<int16>::max();
+    static constexpr int32  i32max        = NEX_STD numeric_limits<int32>::max();
+    static constexpr int64  i64max        = NEX_STD numeric_limits<int64>::max();
+    static constexpr uint8  u8max         = NEX_STD numeric_limits<uint8>::max();
+    static constexpr uint16 u16max        = NEX_STD numeric_limits<uint16>::max();
+    static constexpr uint32 u32max        = NEX_STD numeric_limits<uint32>::max();
+    static constexpr uint64 u64max        = NEX_STD numeric_limits<uint64>::max();
+
+    static constexpr uint64 sizemax       = NEX_STD numeric_limits<sizetype>::max();
+    static constexpr uint16 wcharmin      = NEX_STD numeric_limits<wchar>::min();
+    static constexpr uint16 wcharmax      = NEX_STD numeric_limits<wchar>::max();
+    static constexpr uint16 wintmin       = NEX_STD numeric_limits<wint>::min();
+    static constexpr uint16 wintmax       = NEX_STD numeric_limits<wint>::max();
+#else
+    static constexpr int8   i8min         = (-127i8 - 1);
+    static constexpr int16  i16min        = (-32767i16 - 1);
+    static constexpr int32  i32min        = (-2147483647i32 - 1);
+    static constexpr int64  i64min        = (-9223372036854775807i64 - 1);
+    static constexpr int8   i8max         = 127i8;
+    static constexpr int16  i16max        = 32767i16;
+    static constexpr int32  i32max        = 2147483647i32;
+    static constexpr int64  i64max        = 9223372036854775807i64;
+    static constexpr uint8  u8max         = 0xffui8;
+    static constexpr uint16 u16max        = 0xffffui16;
+    static constexpr uint32 u32max        = 0xffffffffui32;
+    static constexpr uint64 u64max        = 0xffffffffffffffffui64;
+
+    static constexpr uint64 sizemax       = 0xffffffffffffffffui64;
+    static constexpr uint16 wcharmin      = 0x0000;
+    static constexpr uint16 wcharmax      = 0xffff;
+    static constexpr uint16 wintmin       = 0x0000;
+    static constexpr uint16 wintmax       = 0xffff;
+#endif
+};
+
+// =================================================================================
+// Define macros for minimum and maximum values of fixed-width integer types
+// =================================================================================
+
+/**
+ * @note
+ * These macros are defined to match those value in the platform SDK, ensuring compatibility 
+ * with platform APIs and conventions, while also ensuring consistency across the Nex-ecosystem.
+ */
+
+#define NEX_INT8_MIN            NEX_PREPEND_NAMESPACE(Constants::i8min)
+#define NEX_INT16_MIN           NEX_PREPEND_NAMESPACE(Constants::i16min)
+#define NEX_INT32_MIN           NEX_PREPEND_NAMESPACE(Constants::i32min)
+#define NEX_INT64_MIN           NEX_PREPEND_NAMESPACE(Constants::i64min)
+#define NEX_INT8_MAX            NEX_PREPEND_NAMESPACE(Constants::i8max)
+#define NEX_INT16_MAX           NEX_PREPEND_NAMESPACE(Constants::i16max)
+#define NEX_INT32_MAX           NEX_PREPEND_NAMESPACE(Constants::i32max)
+#define NEX_INT64_MAX           NEX_PREPEND_NAMESPACE(Constants::i64max)
+#define NEX_UINT8_MAX           NEX_PREPEND_NAMESPACE(Constants::u8max)
+#define NEX_UINT16_MAX          NEX_PREPEND_NAMESPACE(Constants::u16max)
+#define NEX_UINT32_MAX          NEX_PREPEND_NAMESPACE(Constants::u32max)
+#define NEX_UINT64_MAX          NEX_PREPEND_NAMESPACE(Constants::u64max)
+
+#define NEX_INT_LEAST8_MIN      NEX_INT8_MIN
+#define NEX_INT_LEAST16_MIN     NEX_INT16_MIN
+#define NEX_INT_LEAST32_MIN     NEX_INT32_MIN
+#define NEX_INT_LEAST64_MIN     NEX_INT64_MIN
+#define NEX_INT_LEAST8_MAX      NEX_INT8_MAX
+#define NEX_INT_LEAST16_MAX     NEX_INT16_MAX
+#define NEX_INT_LEAST32_MAX     NEX_INT32_MAX
+#define NEX_INT_LEAST64_MAX     NEX_INT64_MAX
+#define NEX_UINT_LEAST8_MAX     NEX_UINT8_MAX
+#define NEX_UINT_LEAST16_MAX    NEX_UINT16_MAX
+#define NEX_UINT_LEAST32_MAX    NEX_UINT32_MAX
+#define NEX_UINT_LEAST64_MAX    NEX_UINT64_MAX
+
+#define NEX_INT_FAST8_MIN       NEX_INT8_MIN
+#define NEX_INT_FAST16_MIN      NEX_INT16_MIN
+#define NEX_INT_FAST32_MIN      NEX_INT32_MIN
+#define NEX_INT_FAST64_MIN      NEX_INT64_MIN
+#define NEX_INT_FAST8_MAX       NEX_INT8_MAX
+#define NEX_INT_FAST16_MAX      NEX_INT16_MAX
+#define NEX_INT_FAST32_MAX      NEX_INT32_MAX
+#define NEX_INT_FAST64_MAX      NEX_INT64_MAX
+#define NEX_UINT_FAST8_MAX      NEX_UINT8_MAX
+#define NEX_UINT_FAST16_MAX     NEX_UINT16_MAX
+#define NEX_UINT_FAST32_MAX     NEX_UINT32_MAX
+#define NEX_UINT_FAST64_MAX     NEX_UINT64_MAX
+
+#define NEX_INTPTR_MIN          NEX_INT64_MIN
+#define NEX_INTPTR_MAX          NEX_INT64_MAX
+#define NEX_UINTPTR_MAX         NEX_UINT64_MAX
+
+#define NEX_INTMAX_MIN          NEX_INT64_MIN
+#define NEX_INTMAX_MAX          NEX_INT64_MAX
+#define NEX_UINTMAX_MAX         NEX_UINT64_MAX
+
+#define NEX_PTRDIFF_MIN         NEX_INTPTR_MIN
+#define NEX_PTRDIFF_MAX         NEX_INTPTR_MAX
+
+#define NEX_SIZE_MAX            NEX_PREPEND_NAMESPACE(Constants::sizemax)
+
+#define NEX_SIG_ATOMIC_MIN      NEX_PREPEND_NAMESPACE(Constants::i32min)
+#define NEX_SIG_ATOMIC_MAX      NEX_PREPEND_NAMESPACE(Constants::i32max)
+
+#define NEX_WCHAR_MIN           NEX_PREPEND_NAMESPACE(Constants::wcharmin)
+#define NEX_WCHAR_MAX           NEX_PREPEND_NAMESPACE(Constants::wcharmax)
+
+#define NEX_WINT_MIN            NEX_PREPEND_NAMESPACE(Constants::wintmin)
+#define NEX_WINT_MAX            NEX_PREPEND_NAMESPACE(Constants::wintmax)
+
+// =================================================================================
+// Define macros for integer constant expressions
+// =================================================================================
+
+#define NEX_INT8_C(x)           (x)
+#define NEX_INT16_C(x)          (x)
+#define NEX_INT32_C(x)          (x)
+#define NEX_INT64_C(x)          (x ## LL)
+
+#define NEX_UINT8_C(x)          (x)
+#define NEX_UINT16_C(x)         (x)
+#define NEX_UINT32_C(x)         (x ## U)
+#define NEX_UINT64_C(x)         (x ## ULL)
+
+#define NEX_INTMAX_C(x)         NEX_INT64_C(x)
+#define NEX_UINTMAX_C(x)        NEX_UINT64_C(x)
 
 NEX_NAMESPACE_END

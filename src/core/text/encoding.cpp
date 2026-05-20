@@ -109,10 +109,10 @@ bool encoding::isUnicodeAlpha(char16 ch) noexcept {
     // we can use the OS-provided functions to check for alphabetic characters based on Unicode properties,
     // which will be more comprehensive and accurate than hardcoding specific ranges.
 #if NEX_PLATFORM_IS_WINDOWS
-    return iswalpha(static_cast<wint_t>(ch)) != 0;
+    return iswalpha(static_cast<wint>(ch)) != 0;
 #else
     // On non-Windows platforms, we can use the standard library function to check for alphabetic characters
-    return NEX_STD iswalpha(static_cast<wint_t>(ch)) != 0;
+    return NEX_STD iswalpha(static_cast<wint>(ch)) != 0;
 #endif
 }
 

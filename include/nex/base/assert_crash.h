@@ -269,7 +269,7 @@ NEX_NAMESPACE_END
  * NEX_ASSERT(index >= 0 && index < count);
  * ```
  */
-#if defined(NEX_BUILD_DEBUG)
+#if defined(NEX_BUILD_MODE_DEBUG)
     #define NEX_ASSERT(expr) \
         do { \
             if (!(expr)) { \
@@ -302,7 +302,7 @@ NEX_NAMESPACE_END
  * NEX_ASSERT_MSG(buffer != nullptr, "Buffer allocation failed");
  * ```
  */
-#if defined(NEX_BUILD_DEBUG)
+#if defined(NEX_BUILD_MODE_DEBUG)
     #define NEX_ASSERT_MSG(expr, msg) \
         do { \
             if (!(expr)) { \

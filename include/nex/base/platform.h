@@ -85,7 +85,7 @@
         #undef NEX_LIBC_IS_GLIBC
         #define NEX_LIBC_IS_GLIBC 1
     #endif
-#elif defined(_WIN32)
+#elif defined(_WIN32) || defined(_WIN64)
     #define NEX_PLATFORM_WINDOWS 1
     #undef NEX_PLATFORM_IS_WINDOWS
     #define NEX_PLATFORM_IS_WINDOWS 1

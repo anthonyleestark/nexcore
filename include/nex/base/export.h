@@ -6,26 +6,26 @@
 #pragma once
 
 /**
- * @file      export.h
- * @brief     Define mecros for marking symbols for export or import in shared libraries and 
- *            for specifying calling conventions for callback functions.
+ * @file   export.h
+ * @brief  Define macros for marking symbols for export or import in shared libraries and 
+ *         for specifying calling conventions for callback functions.
  * 
  * @details
  * This header defines macros for marking symbols for export or import in shared libraries and 
  * for specifying calling conventions for callback functions. 
  * The NEX_EXPORT macro is defined based on the compiler and build configuration, while the NEX_CALLBACK 
- * macro is defined based on the detected platform. 
- * These macros can be used throughout the codebase to provide consistent annotations for shared library 
- * symbols and callback functions, improving portability and maintainability.
+ * macro is defined based on the detected platform.
  */
 
 #include "nex/base/platform.h"
 #include "nex/base/compiler.h"
+#include "nex/base/build.h"
+
+// ======================================================================================
+// Shared Library Export/Import Macros
+// ======================================================================================
 
 /**
- * @section Export/Import Macros
- * @brief   Defines the NEX_EXPORT macro for marking symbols for export or import in shared libraries.
- * 
  * @details
  * The NEX_EXPORT macro is defined based on the compiler and build configuration.
  * - On MSVC, it expands to `__declspec(dllexport)` when building the shared library, and `__declspec(dllimport)` 
@@ -36,30 +36,27 @@
  */
 
 #if NEX_COMPILER_MSVC_COMPATIBLE
-
     // On MSVC, it expands to `__declspec(dllexport)` when building the shared library, and `__declspec(dllimport)` 
     // when using the shared library.
-
-    #if defined(NEX_BUILDING_SHARED)
+    #if NEX_BUILDING_SHARED_LIBRARY
         #define NEX_EXPORT __declspec(dllexport)
-    #elif defined(NEX_USING_SHARED)
+    #elif NEX_USING_SHARED_LIBRARY
         #define NEX_EXPORT __declspec(dllimport)
     #else
         #define NEX_EXPORT
     #endif
-
 #elif NEX_COMPILER_GCC_COMPATIBLE
-
     // On GCC, it expands to `__attribute__((visibility("default")))` to make symbols visible for export.
     #define NEX_EXPORT __attribute__((visibility("default")))
-
 #else
-
     // If the compiler does not support these attributes, it expands to nothing, allowing the code to compile 
     // without any errors.
     #define NEX_EXPORT
-
 #endif  // NEX_COMPILER_MSVC_COMPATIBLE
+
+// ======================================================================================
+// Calling Convention Macros
+// ======================================================================================
 
 /**
  * @def NEX_CALLBACK
@@ -79,17 +76,13 @@
  */
 
 #if NEX_PLATFORM_IS_WINDOWS
-
     // On Windows, use __stdcall calling convention for compatibility with Windows API 
     // and consistent calling convention across the framework.
     #define NEX_CALLBACK __stdcall
-
 #else
-
     // On non-Windows platforms, the default calling convention is typically used, 
     // so no special attributes are needed.
     #define NEX_CALLBACK
-    
 #endif  // NEX_PLATFORM_IS_WINDOWS
 
 /**
@@ -108,6 +101,10 @@
     #endif  // NEX_PLATFORM_IS_WINDOWS
 #endif  // !defined(NEX_CDECL)
 
+// ======================================================================================
+// Symbol Modifiers
+// ======================================================================================
+
 /**
  * @def NEX_INTERNAL
  * @brief Mark a symbol as internal (not exported) for shared libraries
@@ -122,13 +119,9 @@
  */
 
 #if NEX_PLATFORM_IS_WINDOWS
-
     // On Windows, there is no direct equivalent to marking symbols as internal, so we can simply leave it empty.
     #define NEX_INTERNAL
-    
 #else
-
     // On macOS/Linux (GCC/Clang), we can use the visibility attribute to hide symbols from being exported.
     #define NEX_INTERNAL __attribute__((visibility("hidden")))
-
 #endif  // NEX_PLATFORM_IS_WINDOWS

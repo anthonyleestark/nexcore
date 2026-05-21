@@ -37,7 +37,7 @@ NEX_NAMESPACE_BEGIN
  * 
  * @see ByteArray for an owning byte array class that can create and consume ByteSpan values.
  */
-class NEX_EXPORT ByteSpan {
+class NEX_API ByteSpan {
 public:
     // Type aliases for compatibility with standard container conventions
     using value_type = uint8;

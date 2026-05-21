@@ -67,7 +67,7 @@ public:
  * @see Executor for the base class interface.
  * @see Thread for the underlying thread management.
  */
-class NEX_EXPORT ThreadExecutor : public Executor {
+class NEX_API ThreadExecutor : public Executor {
 public:
     // Constructor and destructor
     ThreadExecutor();
@@ -102,7 +102,7 @@ private:
  * @see Executor for the base class interface.
  * @see Thread for the underlying thread management.
  */
-class NEX_EXPORT ThreadPool : public Executor {
+class NEX_API ThreadPool : public Executor {
 public:
     // Constructor that initializes the thread pool with a specified number of threads.
     explicit ThreadPool(uint32 threadCount = Thread::hardwareConcurrency());

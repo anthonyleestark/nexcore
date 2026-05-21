@@ -61,7 +61,7 @@ class XmlDocument;
  * }
  * ```
  */
-class NEX_EXPORT XmlAttribute {
+class NEX_API XmlAttribute {
 public:
     // Constructor
     XmlAttribute();
@@ -145,7 +145,7 @@ private:
  * }
  * ```
  */
-class NEX_EXPORT XmlNode {
+class NEX_API XmlNode {
 public:
     // Constructor
     XmlNode();
@@ -230,7 +230,7 @@ private:
  * } 
  * ```
  */
-class NEX_EXPORT XmlDocument {
+class NEX_API XmlDocument {
 public:
     // Constructor
     XmlDocument();

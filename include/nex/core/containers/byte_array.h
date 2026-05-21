@@ -38,7 +38,7 @@ NEX_NAMESPACE_BEGIN
  * @see ByteSpan for a read-only non-owning view into byte data.
  * @see Vec<uint8> for the underlying container used by ByteArray.
  */
-class NEX_EXPORT ByteArray {
+class NEX_API ByteArray {
 public:
     // Type aliases for compatibility with standard container conventions
     using value_type = uint8;

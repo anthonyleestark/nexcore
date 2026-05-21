@@ -398,7 +398,7 @@ struct ConstMemoryBlock {
  * @endcode
  */
 template <typename T>
-class NEX_EXPORT AutoReset {
+class NEX_API AutoReset {
 public:
     // Constructor: saves the original value of the variable
     explicit AutoReset(T& var)
@@ -467,7 +467,7 @@ private:
  * out of scope. Works on anything that looks like bool.
  */
 template <class T = bool>
-class NEX_EXPORT AutoFlag {
+class NEX_API AutoFlag {
 public:
     // Constructor: Sets referent to true.
     AutoFlag(T& ref) : referent_(ref) {
@@ -496,7 +496,7 @@ private:
  * @tparam FuncType The type of the callable object (e.g., lambda) to be executed on scope exit.
  */
 template <typename FuncType>
-class NEX_EXPORT ScopeGuard {
+class NEX_API ScopeGuard {
 public:
     // Constructor: Takes a callable object (e.g., lambda) to be called on scope exit
     explicit ScopeGuard(FuncType f) 
@@ -556,7 +556,7 @@ private:
  *       it can correctly detect whether the scope was exited successfully or due to an exception.
  */
 template <typename FuncType>
-class NEX_EXPORT OnScopeSuccess {
+class NEX_API OnScopeSuccess {
 public:
     // Constructor: Takes a callable object (e.g., lambda) to be called on scope exit 
     // if no exceptions were thrown
@@ -624,7 +624,7 @@ private:
  *       it can correctly detect whether the scope was exited successfully or due to an exception.
  */
 template <typename FuncType>
-class NEX_EXPORT OnScopeFailure {
+class NEX_API OnScopeFailure {
 public:
     // Constructor: Takes a callable object (e.g., lambda) to be called on scope exit if an exception was thrown
     explicit OnScopeFailure(FuncType f)
@@ -786,7 +786,7 @@ struct SourceLocation {
  * @endcode
  */
 template <class T>
-class NEX_EXPORT Comparable {
+class NEX_API Comparable {
 public:
     // Equality operator: returns true if objects are equal
     bool operator==(const T& other) const {
@@ -889,7 +889,7 @@ struct Immobile {
  * @endcode
  */
 template <typename Derived>
-class NEX_EXPORT Singleton : private NonCopyable, private NonMovable {
+class NEX_API Singleton : private NonCopyable, private NonMovable {
 protected:
     // Protected constructor to prevent direct instantiation while allowing construction by derived classes. 
     // The default constructor is sufficient for most cases, but can be customized if needed by the derived class.

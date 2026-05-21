@@ -108,7 +108,7 @@ NEX_SUBNAMESPACE_END(time)
  * @note All arithmetic operations maintain precision up to milliseconds
  * @see ClockTime, DateTime
  */
-class NEX_EXPORT TimeSpan {
+class NEX_API TimeSpan {
 private:
     // Private type alias for the underlying duration type from the time namespace
     using Duration = time::Duration;
@@ -434,7 +434,7 @@ public:
  * @note Comparison operations work correctly across midnight boundaries
  * @see TimeSpan, DateTime
  */
-class NEX_EXPORT ClockTime {
+class NEX_API ClockTime {
 private:
     // Private type aliases for the underlying time types from the time namespace
     using TimePoint = time::TimePoint;
@@ -902,7 +902,7 @@ enum class DayOfWeek : uint8 {
  * @note Time arithmetic correctly handles month and year boundaries
  * @see TimeSpan, ClockTime
  */
-class NEX_EXPORT DateTime {
+class NEX_API DateTime {
 private:
     // Private type aliases for the underlying time types from the time namespace
     using TimePoint = time::TimePoint;

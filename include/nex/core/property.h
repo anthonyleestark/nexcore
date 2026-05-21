@@ -69,7 +69,7 @@ constexpr PropertyPolicy WithValidatorAndCallback = { .hasValidator = true, .has
  *   based on the specified policy.
  */
 template <typename T, PropertyPolicy Policy = Default>
-class NEX_EXPORT Property {
+class NEX_API Property {
 public:
     // Type aliases for the property functions based on the policy
     using NullFunction = NEX_STD monostate;

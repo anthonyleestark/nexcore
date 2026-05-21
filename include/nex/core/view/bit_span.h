@@ -41,7 +41,7 @@ NEX_NAMESPACE_BEGIN
  * @see BitArray for an owning dynamic bit container that can create and consume BitSpan values.
  * @see BitSet for a fixed-size, compile-time bit container.
  */
-class NEX_EXPORT BitSpan {
+class NEX_API BitSpan {
 public:
     // Forward declaration of ConstIterator
     class ConstIterator;

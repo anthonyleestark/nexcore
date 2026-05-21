@@ -162,7 +162,7 @@ struct Runnable {
  * 
  * @see ThreadPriority enum for available priority levels.
  */
-class NEX_EXPORT Thread {
+class NEX_API Thread {
 public:
     ////// Construction & Destruction ---------------------------------------------------
 

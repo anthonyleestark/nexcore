@@ -44,7 +44,7 @@ NEX_SUBNAMESPACE_BEGIN(encoding)
  * @param codeUnit The UTF-16 code unit to check
  * @return `true` if the code unit is a high surrogate, `false` otherwise
  */
-NEX_EXPORT NEX_NODISCARD
+NEX_API NEX_NODISCARD
 bool isHighSurrogate(char16 codeUnit) noexcept;
 
 /**
@@ -57,7 +57,7 @@ bool isHighSurrogate(char16 codeUnit) noexcept;
  * @param codeUnit The UTF-16 code unit to check
  * @return `true` if the code unit is a low surrogate, `false` otherwise
  */
-NEX_EXPORT NEX_NODISCARD
+NEX_API NEX_NODISCARD
 bool isLowSurrogate(char16 codeUnit) noexcept;
 
 /**
@@ -71,7 +71,7 @@ bool isLowSurrogate(char16 codeUnit) noexcept;
  * @param codeUnit The UTF-16 code unit to check
  * @return `true` if the code unit is a surrogate character, `false` otherwise
  */
-NEX_EXPORT NEX_NODISCARD
+NEX_API NEX_NODISCARD
 bool isSurrogate(char16 codeUnit) noexcept {
     return isHighSurrogate(codeUnit) || isLowSurrogate(codeUnit);
 }
@@ -89,7 +89,7 @@ bool isSurrogate(char16 codeUnit) noexcept {
  * The implementation may involve checking the code point against known ranges of Unicode whitespace characters or 
  * using Unicode properties to identify them.
  */
-NEX_EXPORT NEX_NODISCARD
+NEX_API NEX_NODISCARD
 bool isUnicodeWhitespace(uint32 codePoint) noexcept;
 
 /**
@@ -103,7 +103,7 @@ bool isUnicodeWhitespace(uint32 codePoint) noexcept;
  * @param codePoint The UTF-32 code point to check
  * @return true if the code point is valid, false otherwise
  */
-NEX_EXPORT NEX_NODISCARD
+NEX_API NEX_NODISCARD
 bool isValidCodePoint(char32 codePoint) noexcept;
 
 /**
@@ -118,7 +118,7 @@ bool isValidCodePoint(char32 codePoint) noexcept;
  * The implementation may use standard library functions or custom logic to identify whitespace characters based 
  * on their Unicode properties.
  */
-NEX_EXPORT NEX_NODISCARD
+NEX_API NEX_NODISCARD
 bool isWhitespace(char16 ch) noexcept;
 
 /**
@@ -126,7 +126,7 @@ bool isWhitespace(char16 ch) noexcept;
  * @param ch The character to check
  * @return `true` if the character is an ASCII digit, `false` otherwise
  */
-NEX_EXPORT NEX_NODISCARD
+NEX_API NEX_NODISCARD
 constexpr bool isAsciiDigit(char16 ch) noexcept {
     return ch >= u'0' && ch <= u'9';
 }
@@ -136,7 +136,7 @@ constexpr bool isAsciiDigit(char16 ch) noexcept {
  * @param ch The character to check
  * @return `true` if the character is an ASCII alphabetic character, `false` otherwise
  */
-NEX_EXPORT NEX_NODISCARD
+NEX_API NEX_NODISCARD
 constexpr bool isAsciiAlpha(char16 ch) noexcept {
     return (ch >= u'A' && ch <= u'Z') || (ch >= u'a' && ch <= u'z');
 }
@@ -146,7 +146,7 @@ constexpr bool isAsciiAlpha(char16 ch) noexcept {
  * @param ch The character to check
  * @return `true` if the character is a digit character, `false` otherwise
  */
-NEX_EXPORT NEX_NODISCARD
+NEX_API NEX_NODISCARD
 bool isUnicodeDigit(char16 ch) noexcept;
 
 /**
@@ -154,7 +154,7 @@ bool isUnicodeDigit(char16 ch) noexcept;
  * @param ch The character to check
  * @return `true` if the character is an alphabetic character, `false` otherwise
  */
-NEX_EXPORT NEX_NODISCARD
+NEX_API NEX_NODISCARD
 bool isUnicodeAlpha(char16 ch) noexcept;
 
 ////// UTF-8 encoding utility functions --------------------------------------------------
@@ -168,7 +168,7 @@ bool isUnicodeAlpha(char16 ch) noexcept;
  * @param input The UTF-8 string to check
  * @return true if the input string contains invalid UTF-8 sequences, false otherwise
  */
-NEX_EXPORT NEX_NODISCARD 
+NEX_API NEX_NODISCARD 
 bool containsInvalidUtf8Sequences(Utf8StringView input) noexcept;
 
 /** 
@@ -182,7 +182,7 @@ bool containsInvalidUtf8Sequences(Utf8StringView input) noexcept;
  * @param input The UTF-8 string to validate
  * @return true if the input string is a valid UTF-8 string, false otherwise
  */
-NEX_EXPORT NEX_NODISCARD 
+NEX_API NEX_NODISCARD 
 bool isValidUtf8(Utf8StringView input) noexcept;
 
 /** 
@@ -196,7 +196,7 @@ bool isValidUtf8(Utf8StringView input) noexcept;
  * @param input The UTF-8 string containing the sequence to validate
  * @return true if the sequence at the start of the input is a valid UTF-8 sequence, false otherwise
  */
-NEX_EXPORT NEX_NODISCARD 
+NEX_API NEX_NODISCARD 
 bool isValidUtf8Sequence(Utf8StringView input) noexcept;
 
 /** 
@@ -212,7 +212,7 @@ bool isValidUtf8Sequence(Utf8StringView input) noexcept;
  * @return A Result containing the decoded Unicode code point (char32) if successful, 
  *         or an error if the input sequence is invalid or incomplete
  */
-NEX_EXPORT NEX_NODISCARD 
+NEX_API NEX_NODISCARD 
 Result<char32> decodeUtf8CodePoint(Utf8StringView input, usize& advance);
 
 /** 
@@ -239,7 +239,7 @@ Result<char32> decodeUtf8CodePoint(Utf8StringView input, usize& advance);
  *       it only checks the leading byte to determine the expected length.
  *       For comprehensive validation, use isValidSequence() or isValid() instead.
  */
-NEX_EXPORT NEX_NODISCARD 
+NEX_API NEX_NODISCARD 
 usize utf8SequenceLength(char8 firstByte);
 
 /** 
@@ -253,7 +253,7 @@ usize utf8SequenceLength(char8 firstByte);
  * @param out A pointer to a buffer where the encoded UTF-8 bytes will be written
  * @return The number of bytes written to the output buffer, or 0 if the code point is invalid
  */
-NEX_EXPORT NEX_NODISCARD 
+NEX_API NEX_NODISCARD 
 usize encodeUtf8CodePoint(char32 cp, char8* out);
 
 /**
@@ -267,7 +267,7 @@ usize encodeUtf8CodePoint(char32 cp, char8* out);
  * @return A Result containing the number of Unicode code points in the input string, 
  *         or an error if the string contains invalid sequences
  */
-NEX_EXPORT NEX_NODISCARD
+NEX_API NEX_NODISCARD
 Result<usize> countUtf8CodePoints(Utf8StringView input) noexcept;
 
 ////// UTF-16 encoding utility functions --------------------------------------------------
@@ -285,7 +285,7 @@ Result<usize> countUtf8CodePoints(Utf8StringView input) noexcept;
  * @return A Result containing the decoded Unicode code point (char32) if successful, 
  *         or an error if the input sequence is invalid or incomplete (e.g., unpaired surrogate)
  */
-NEX_EXPORT NEX_NODISCARD 
+NEX_API NEX_NODISCARD 
 Result<char32> decodeUtf16CodePoint(Utf16StringView input, usize& advance);
 
 /**
@@ -299,7 +299,7 @@ Result<char32> decodeUtf16CodePoint(Utf16StringView input, usize& advance);
 * @param out A pointer to a buffer where the encoded UTF-16 code units will be written
 * @return The number of code units written to the output buffer, or 0 if the code point is invalid
 */
-NEX_EXPORT NEX_NODISCARD
+NEX_API NEX_NODISCARD
 usize encodeUtf16CodePoint(char32 cp, char16* out);
 
 /**
@@ -314,7 +314,7 @@ usize encodeUtf16CodePoint(char32 cp, char16* out);
  * @return A Result containing the number of Unicode code points in the input string, 
  *         or an error if the string contains invalid sequences (e.g., unpaired surrogates)
  */
-NEX_EXPORT NEX_NODISCARD
+NEX_API NEX_NODISCARD
 Result<usize> countUtf16CodePoints(Utf16StringView input) noexcept;
 
 ////// UTF-32 encoding utility functions --------------------------------------------------
@@ -330,7 +330,7 @@ Result<usize> countUtf16CodePoints(Utf16StringView input) noexcept;
  * @param input The UTF-32 string to validate
  * @return true if the input string is a valid UTF-32 string, false otherwise
  */
-NEX_EXPORT NEX_NODISCARD
+NEX_API NEX_NODISCARD
 bool isValidUtf32Sequence(Utf32StringView input) noexcept;
 
 /**
@@ -346,7 +346,7 @@ bool isValidUtf32Sequence(Utf32StringView input) noexcept;
  * @return A Result containing the number of Unicode code points in the input string, 
  *         or an error if the string contains invalid code points (e.g., surrogates or out-of-range values)
  */
-NEX_EXPORT NEX_NODISCARD
+NEX_API NEX_NODISCARD
 Result<usize> countUtf32CodePoints(Utf32StringView input) noexcept;
 
 ////// Encoding conversion functions --------------------------------------------------
@@ -356,7 +356,7 @@ Result<usize> countUtf32CodePoints(Utf32StringView input) noexcept;
  * @param ansi The input ANSI string to convert
  * @return Result containing the converted UTF-16 string if successful, or an error if the conversion fails
  */
-NEX_EXPORT NEX_NODISCARD 
+NEX_API NEX_NODISCARD 
 Result<Utf16String> ansiToUtf16(Utf8StringView ansi);
 
 /**
@@ -365,7 +365,7 @@ Result<Utf16String> ansiToUtf16(Utf8StringView ansi);
  * @return Result containing the converted ANSI string if successful, 
  *         or an error if the conversion fails
  */
-NEX_EXPORT NEX_NODISCARD 
+NEX_API NEX_NODISCARD 
 Result<Utf8String> utf16ToAnsi(Utf16StringView utf16);
 
 /**
@@ -374,7 +374,7 @@ Result<Utf8String> utf16ToAnsi(Utf16StringView utf16);
  * @return Result containing the converted UTF-16 string if successful, 
  *         or an error if the conversion fails
  */
-NEX_EXPORT NEX_NODISCARD 
+NEX_API NEX_NODISCARD 
 Result<Utf16String> localToUtf16(Utf8StringView local);
 
 /**
@@ -382,7 +382,7 @@ Result<Utf16String> localToUtf16(Utf8StringView local);
  * @param utf16 The input UTF-16 string to convert
  * @return Result containing the converted local string if successful, or an error if the conversion fails
  */
-NEX_EXPORT NEX_NODISCARD 
+NEX_API NEX_NODISCARD 
 Result<Utf8String> utf16ToLocal(Utf16StringView utf16);
 
 /**
@@ -390,7 +390,7 @@ Result<Utf8String> utf16ToLocal(Utf16StringView utf16);
  * @param utf8 The input UTF-8 string to convert
  * @return Result containing the converted UTF-16 string if successful, or an error if the conversion fails
  */
-NEX_EXPORT NEX_NODISCARD 
+NEX_API NEX_NODISCARD 
 Result<Utf16String> utf8ToUtf16(Utf8StringView utf8);
 
 /**
@@ -398,7 +398,7 @@ Result<Utf16String> utf8ToUtf16(Utf8StringView utf8);
  * @param utf16 The input UTF-16 string to convert
  * @return Result containing the converted UTF-8 string if successful, or an error if the conversion fails
  */
-NEX_EXPORT NEX_NODISCARD 
+NEX_API NEX_NODISCARD 
 Result<Utf8String> utf16ToUtf8(Utf16StringView utf16);
 
 /**
@@ -406,7 +406,7 @@ Result<Utf8String> utf16ToUtf8(Utf16StringView utf16);
  * @param utf32 The input UTF-32 string to convert
  * @return Result containing the converted UTF-16 string if successful, or an error if the conversion fails
  */
-NEX_EXPORT NEX_NODISCARD
+NEX_API NEX_NODISCARD
 Result<Utf16String> utf32ToUtf16(Utf32StringView utf32);
 
 /**
@@ -414,7 +414,7 @@ Result<Utf16String> utf32ToUtf16(Utf32StringView utf32);
  * @param utf16 The input UTF-16 string to convert
  * @return Result containing the converted UTF-32 string if successful, or an error if the conversion fails
  */
-NEX_EXPORT NEX_NODISCARD
+NEX_API NEX_NODISCARD
 Result<Utf32String> utf16ToUtf32(Utf16StringView utf16);
 
 NEX_SUBNAMESPACE_END(encoding)

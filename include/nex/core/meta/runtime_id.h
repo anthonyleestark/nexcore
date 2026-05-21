@@ -43,7 +43,7 @@ NEX_NAMESPACE_BEGIN
  * @see Object management systems
  * @see Uuid class for globally unique identifiers
  */
-class NEX_EXPORT RuntimeId {
+class NEX_API RuntimeId {
 public:
     // Constants
     static constexpr uint64 kInvalidId = 0;

@@ -54,7 +54,7 @@ enum class RepeatFrequency {
  * 
  * @see Alarm, Reminder
  */
-class NEX_EXPORT RepeatPattern {
+class NEX_API RepeatPattern {
 private:
     // Constants
     static constexpr uint8 kDaysPerWeek = 7;                // Number of days in a week

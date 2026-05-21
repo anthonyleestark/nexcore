@@ -48,7 +48,7 @@ NEX_NAMESPACE_BEGIN
  * ```
  */
 template<typename ReturnType, typename ErrorType = Error>
-class NEX_EXPORT NEX_NODISCARD Result {
+class NEX_API NEX_NODISCARD Result {
 public:
     // Create a successful result
     static Result ok(ReturnType value) {
@@ -181,7 +181,7 @@ private:
  * ```
  */
 template<typename ErrorType>
-class NEX_EXPORT NEX_NODISCARD Result<void, ErrorType> {
+class NEX_API NEX_NODISCARD Result<void, ErrorType> {
 public:
     // Create a successful result
     static Result<void, ErrorType> ok() {

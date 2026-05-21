@@ -13,7 +13,7 @@
  * @details
  * This header defines macros for marking symbols for export or import in shared libraries and 
  * for specifying calling conventions for callback functions. 
- * The NEX_EXPORT macro is defined based on the compiler and build configuration, while the NEX_CALLBACK 
+ * The NEX_API macro is defined based on the compiler and build configuration, while the NEX_CALLBACK 
  * macro is defined based on the detected platform.
  */
 
@@ -27,7 +27,7 @@
 
 /**
  * @details
- * The NEX_EXPORT macro is defined based on the compiler and build configuration.
+ * The NEX_API macro is defined based on the compiler and build configuration.
  * - On MSVC, it expands to `__declspec(dllexport)` when building the shared library, and `__declspec(dllimport)` 
  *   when using the shared library.
  * - On GCC, it expands to `__attribute__((visibility("default")))` to make symbols visible for export.
@@ -39,19 +39,19 @@
     // On MSVC, it expands to `__declspec(dllexport)` when building the shared library, and `__declspec(dllimport)` 
     // when using the shared library.
     #if NEX_BUILDING_SHARED_LIBRARY
-        #define NEX_EXPORT __declspec(dllexport)
+        #define NEX_API __declspec(dllexport)
     #elif NEX_USING_SHARED_LIBRARY
-        #define NEX_EXPORT __declspec(dllimport)
+        #define NEX_API __declspec(dllimport)
     #else
-        #define NEX_EXPORT
+        #define NEX_API
     #endif
 #elif NEX_COMPILER_GCC_COMPATIBLE
     // On GCC, it expands to `__attribute__((visibility("default")))` to make symbols visible for export.
-    #define NEX_EXPORT __attribute__((visibility("default")))
+    #define NEX_API __attribute__((visibility("default")))
 #else
     // If the compiler does not support these attributes, it expands to nothing, allowing the code to compile 
     // without any errors.
-    #define NEX_EXPORT
+    #define NEX_API
 #endif  // NEX_COMPILER_MSVC_COMPATIBLE
 
 // ======================================================================================

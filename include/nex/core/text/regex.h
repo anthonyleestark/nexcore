@@ -93,7 +93,7 @@ inline constexpr RegexOptions operator|(RegexOptions a, RegexOptions b) {
  * @see RegexMatch struct for details about the result of regex match operations, including success status, position,
  *      length, matched string, and capture groups.
  */
-class NEX_EXPORT Regex {
+class NEX_API Regex {
 public:
     // Constructor
     explicit Regex(StringView pattern, RegexOptions options = RegexOptions::None);

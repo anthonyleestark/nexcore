@@ -38,7 +38,7 @@ NEX_NAMESPACE_BEGIN
  * 
  * @see StringView for non-owning string views
  */
-class NEX_EXPORT String {
+class NEX_API String {
 public:
     // Forward declaration of iterators
     class Iterator;

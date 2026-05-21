@@ -33,7 +33,7 @@ NEX_NAMESPACE_BEGIN
  * @note StringView does not own the underlying string data. The user must ensure
  *       that the data remains valid for the lifetime of the StringView.
  */
-class NEX_EXPORT StringView {
+class NEX_API StringView {
 public:
     // Type aliases for compatibility with standard container conventions
     using value_type = char16;

@@ -38,7 +38,7 @@ NEX_NAMESPACE_BEGIN
  * 
  * @see Semantic Versioning (https://semver.org/) for more details on versioning conventions.
  */
-struct NEX_EXPORT Version {
+struct NEX_API Version {
     uint16 major = 0;           // Major version number (e.g., 1 in "1.2.3")
     uint16 minor = 0;           // Minor version number (e.g., 2 in "1.2.3")
     uint16 patch = 0;           // Patch version number (e.g., 3 in "1.2.3")

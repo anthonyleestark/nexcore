@@ -37,7 +37,7 @@ NEX_INFRA_NAMESPACE_BEGIN
  * @warning 
  * `NodeHandle` references are only valid as long as the underlying adapter remains unmodified.
  */
-class NEX_EXPORT Json {
+class NEX_API Json {
 public:
     // Constructor
     Json();

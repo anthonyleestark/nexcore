@@ -29,7 +29,7 @@ NEX_NAMESPACE_BEGIN
  * }
  * ```
  */
-class NEX_EXPORT NEX_NODISCARD Status {
+class NEX_API NEX_NODISCARD Status {
 public:
     // Create a successful status
     static Status ok() noexcept {

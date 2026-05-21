@@ -316,7 +316,7 @@ enum class ErrorCode : uint32 {
  * const char* message = errorCodeToString(code);
  * ```
  */
-NEX_EXPORT const char* errorCodeToString(ErrorCode code);
+NEX_API const char* errorCodeToString(ErrorCode code);
 
 /**
  * @brief Get user-friendly message for an error code
@@ -332,7 +332,7 @@ NEX_EXPORT const char* errorCodeToString(ErrorCode code);
  * const char* userMessage = getUserMessage(code);
  * ```
  */
-NEX_EXPORT const char* getUserMessage(ErrorCode code);
+NEX_API const char* getUserMessage(ErrorCode code);
 
 /**
  * @brief Check if an error code is recoverable
@@ -352,7 +352,7 @@ NEX_EXPORT const char* getUserMessage(ErrorCode code);
  * }
  * ```
  */
-NEX_EXPORT bool isRecoverable(ErrorCode code);
+NEX_API bool isRecoverable(ErrorCode code);
 
 /**
  * @struct Error
@@ -377,7 +377,7 @@ NEX_EXPORT bool isRecoverable(ErrorCode code);
  * }
  * ```
  */
-struct NEX_EXPORT Error {
+struct NEX_API Error {
     /**
      * Error code which indicates the type of error.
      * This field is essential for identifying the specific error condition

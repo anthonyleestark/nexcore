@@ -35,7 +35,7 @@ NEX_NAMESPACE_BEGIN
  * ```
  */
 template <typename T>
-class NEX_EXPORT Span {
+class NEX_API Span {
 public:
     // Type aliases for compatibility with standard container conventions
     using value_type = T;

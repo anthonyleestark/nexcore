@@ -54,7 +54,7 @@ NEX_NAMESPACE_BEGIN
  */
 template <typename T, usize N = 8>
 requires (N > 0)
-class NEX_EXPORT SmallVec {
+class NEX_API SmallVec {
 public:
     // Type aliases for compatibility with standard container conventions
     using value_type = T;

@@ -223,7 +223,7 @@ struct YCbCrColor {
  * - Utility methods (luminance calculation, contrast ratio calculation, opacity checking)
  * - Comparison operations
  */
-class NEX_EXPORT Color {
+class NEX_API Color {
 private:
     // Internal color value in RGBA format
     RGBAColor clr_;

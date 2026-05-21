@@ -277,15 +277,21 @@
 #endif
 
 /**
- * @def NEX_NODISCARD
- * @brief Mark functions whose return values should not be discarded
+ * @def NEX_NODISCARD/NEX_NODISCARD_MSG
+ * @brief Mark functions/classes whose return values should not be discarded
  * 
  * @details
- * Expands to [[nodiscard]] when C++17 or later is available, otherwise empty.
- * This attribute encourages callers to use function return values.
+ * These macros can be used to indicate that the return value of a function should not be ignored.
+ * This is useful for functions that return error codes, status objects, or other important information 
+ * that should be checked by the caller. 
+ * The NEX_NODISCARD_MSG variant allows for a custom message to be provided, which can give more context 
+ * about why the return value should not be discarded.
  */
-#ifndef NEX_HAS_NODISCARD
+#if !defined(NEX_HAS_NODISCARD)
     #if NEX_HAS_CPP_ATTRIBUTE(nodiscard) >= NEX_CXX17_VER_NUMBER
+        #define NEX_HAS_NODISCARD 1
+    #elif NEX_COMPILER_MSVC_COMPATIBLE && NEX_COMPILER_MSVC >= 1910
+        // MSVC 2017 version 15.3 and later support [[nodiscard]]
         #define NEX_HAS_NODISCARD 1
     #else  // Compiler does not support [[nodiscard]] or we are in C++14 or earlier
         #define NEX_HAS_NODISCARD 0
@@ -295,14 +301,40 @@
 #if NEX_HAS_NODISCARD
     #define NEX_NODISCARD [[nodiscard]]
 #elif NEX_COMPILER_GCC_COMPATIBLE
-    #define NEX_NODISCARD __attribute__((warn_unused_result))
-#elif NEX_COMPILER_MSVC_COMPATIBLE && NEX_COMPILER_MSVC >= 1700
-    #define NEX_NODISCARD _Check_return_
+    // GCC supports [[gnu::warn_unused_result]] to indicate that the return value should not be ignored
+    #if NEX_HAS_GCC_ATTRIBUTE(warn_unused_result)
+        #define NEX_NODISCARD NEX_GCC_ATTRIBUTE(warn_unused_result)
+    #else  // GCC version does not support [[gnu::warn_unused_result]]
+        // Fallback to older GCC attribute syntax,
+        // which also indicates that the return value should not be ignored
+        #define NEX_NODISCARD __attribute__((warn_unused_result))
+    #endif
 #endif  // NEX_HAS_NODISCARD
 
 #if !defined(NEX_NODISCARD)
     #define NEX_NODISCARD   // No-op if NODISCARD is not supported
 #endif  // !defined(NEX_NODISCARD)
+
+#if !defined(NEX_HAS_NODISCARD_MSG)
+    #if NEX_HAS_CPP_ATTRIBUTE(nodiscard) >= 201907L
+        #define NEX_HAS_NODISCARD_MSG 1
+    #elif NEX_COMPILER_MSVC_COMPATIBLE && NEX_COMPILER_MSVC >= 1925
+        // MSVC 2019 version 16.5 and later support [[nodiscard("message")]]
+        #define NEX_HAS_NODISCARD_MSG 1
+    #else  // Compiler does not support [[nodiscard("message")]] or we are in C++17 or earlier
+        #define NEX_HAS_NODISCARD_MSG 0
+    #endif  // NEX_HAS_NODISCARD_MSG
+#endif  // !defined(NEX_HAS_NODISCARD_MSG)
+
+#if NEX_HAS_NODISCARD_MSG
+    #define NEX_NODISCARD_MSG(msg) [[nodiscard(msg)]]
+#else  // Compiler does not support [[nodiscard("message")]]
+    // Fallback to NEX_NODISCARD without the additional message, 
+    // since the compiler does not support the message variant.
+    // This will still indicate that the return value should not be discarded, 
+    // but the additional context provided by the message will be safely ignored.
+    #define NEX_NODISCARD_MSG(msg) NEX_NODISCARD
+#endif  // NEX_HAS_NODISCARD_MSG
 
 /**
  * @def NEX_ALIGNAS(byte_alignment)

@@ -29,7 +29,7 @@ NEX_NAMESPACE_BEGIN
  * and other non-exception-based error handling mechanisms where appropriate, and to reserve exceptions for 
  * truly exceptional circumstances.
  */
-class NEX_EXPORT Exception : public NEX_STD exception {
+class NEX_API Exception : public NEX_STD exception {
 private:
     // The message of the exception
     String message_;
@@ -57,7 +57,7 @@ public:
  * where a valid object is expected, providing an out-of-range index, or supplying an argument that 
  * violates the expected format or constraints.
  */
-class NEX_EXPORT InvalidArgument : public Exception {
+class NEX_API InvalidArgument : public Exception {
 public:
     // Constructor with a message
     InvalidArgument(const StringView& message) : Exception(message) {}
@@ -77,7 +77,7 @@ public:
  * situations that may trigger this exception include division by zero, out-of-memory errors, 
  * or other unexpected conditions that arise during the execution of the program.
  */
-class NEX_EXPORT RuntimeError : public Exception {
+class NEX_API RuntimeError : public Exception {
 public:
     // Constructor with a message
     RuntimeError(const StringView& message) : Exception(message) {}
@@ -95,7 +95,7 @@ public:
  * is flawed. Examples of situations that may trigger this exception include violations of preconditions, 
  * postconditions, or invariants, as well as other errors that result from incorrect program logic.
  */
-class NEX_EXPORT LogicError : public Exception {
+class NEX_API LogicError : public Exception {
 public:
     // Constructor with a message
     LogicError(const StringView& message) : Exception(message) {}
@@ -114,7 +114,7 @@ public:
  * with an invalid index, or performing arithmetic operations that result in values outside the
  * allowable range.
  */
-class NEX_EXPORT OutOfRange : public Exception {
+class NEX_API OutOfRange : public Exception {
 public:
     // Constructor with a message
     OutOfRange(const StringView& message) : Exception(message) {}
@@ -133,7 +133,7 @@ public:
  * to perform an invalid arithmetic operation, and the program cannot continue to operate correctly 
  * due to this error.
  */
-class NEX_EXPORT DivisionByZero : public InvalidArgument {
+class NEX_API DivisionByZero : public InvalidArgument {
 public:
     // Constructor with a message
     DivisionByZero(const StringView& context = u"Division by zero")
@@ -153,7 +153,7 @@ public:
  * that is not initialized or has been set to null, and the program cannot continue to operate 
  * correctly due to this error.
  */
-class NEX_EXPORT NullPointer : public InvalidArgument {
+class NEX_API NullPointer : public InvalidArgument {
 public:
     // Constructor with a message
     NullPointer(const StringView& context = u"Null pointer")
@@ -173,7 +173,7 @@ public:
  * an operation that produces a result outside the allowable range, and the program cannot continue
  * to operate correctly due to this error.
  */
-class NEX_EXPORT Overflow : public RuntimeError {
+class NEX_API Overflow : public RuntimeError {
 public:
     // Constructor with a message
     Overflow(const StringView& message = u"Overflow error")
@@ -193,7 +193,7 @@ public:
  * an operation that produces a result outside the allowable range, and the program cannot continue
  * to operate correctly due to this error.
  */
-class NEX_EXPORT Underflow : public RuntimeError {
+class NEX_API Underflow : public RuntimeError {
 public:
     // Constructor with a message
     Underflow(const StringView& message = u"Underflow error")
@@ -212,7 +212,7 @@ public:
  * the program has attempted to use a feature that is not yet available, and the program cannot
  * continue to operate correctly due to this error.
  */
-class NEX_EXPORT NotImplemented : public LogicError {
+class NEX_API NotImplemented : public LogicError {
 public:
     // Constructor with a message
     NotImplemented(const StringView& feature = u"Feature not implemented")
@@ -231,7 +231,7 @@ public:
  * program has attempted to use an operation or feature that is not supported in the current context,
  * and the program cannot continue to operate correctly due to this error.
  */
-class NEX_EXPORT NotSupported : public LogicError {
+class NEX_API NotSupported : public LogicError {
 public:
     // Constructor with a message
     NotSupported(const StringView& operation = u"Operation not supported")
@@ -250,7 +250,7 @@ public:
  * the program has encountered a state that is not allowed or expected, and the program cannot
  * continue to operate correctly due to this error.
  */
-class NEX_EXPORT InvalidState : public LogicError {
+class NEX_API InvalidState : public LogicError {
 public:
     // Constructor with a message
     InvalidState(const StringView& message = u"Invalid state")
@@ -269,7 +269,7 @@ public:
  * indicates that the program has encountered data that does not conform to the expected format, and
  * the program cannot continue to operate correctly due to this error.
  */
-class NEX_EXPORT FormatError : public InvalidArgument {
+class NEX_API FormatError : public InvalidArgument {
 public:
     // Constructor with a message
     FormatError(const StringView& message = u"Format error")

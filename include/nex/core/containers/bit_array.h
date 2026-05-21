@@ -36,7 +36,7 @@ NEX_NAMESPACE_BEGIN
  * 
  * @see BitSet for a fixed-size alternative, and Vec<bool> for a more flexible but less memory-efficient option.
  */
-class NEX_EXPORT BitArray {
+class NEX_API BitArray {
 public:
     // Forward declarations for nested types
     class BitReference;

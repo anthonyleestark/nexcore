@@ -40,7 +40,7 @@ NEX_NAMESPACE_BEGIN
  * @see stduuid library for more details on the underlying implementation of UUID generation and parsing.
  * @see RuntimeId class for generating unique identifiers in a monotonic, process-local manner.
  */
-class NEX_EXPORT Uuid {
+class NEX_API Uuid {
 public:
     ////// Construction -----------------------
 

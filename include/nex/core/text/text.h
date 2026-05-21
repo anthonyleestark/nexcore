@@ -45,7 +45,7 @@ NEX_SUBNAMESPACE_BEGIN(text)
  * @param   str The input string to be checked.
  * @return  `true` if the string is blank (empty or only whitespace), `false` otherwise.
  */
-NEX_EXPORT NEX_NODISCARD
+NEX_API NEX_NODISCARD
 bool isBlank(StringView str) noexcept;
 
 /**
@@ -60,7 +60,7 @@ bool isBlank(StringView str) noexcept;
  * @param   str The input string to be checked.
  * @return  `true` if the string is numeric (only digit characters), `false` otherwise.
  */
-NEX_EXPORT NEX_NODISCARD
+NEX_API NEX_NODISCARD
 bool isNumeric(StringView str) noexcept;
 
 /**
@@ -75,7 +75,7 @@ bool isNumeric(StringView str) noexcept;
  * @param   str The input string to be checked.
  * @return  `true` if the string is alphabetic (only alphabetic characters), `false` otherwise.
  */
-NEX_EXPORT NEX_NODISCARD
+NEX_API NEX_NODISCARD
 bool isAlpha(StringView str) noexcept;
 
 /**
@@ -90,7 +90,7 @@ bool isAlpha(StringView str) noexcept;
  * @param   delimiter The character used to split the string (default is space character).
  * @return  An Vec of String objects containing the substrings resulting from the split operation.
  */
-NEX_EXPORT NEX_NODISCARD
+NEX_API NEX_NODISCARD
 Vec<String> split(StringView str, char16 delimiter = u' ');
 
 /**
@@ -106,7 +106,7 @@ Vec<String> split(StringView str, char16 delimiter = u' ');
  * @param   delimiter The character used to separate the strings in the resulting string (default is space character).
  * @return  A single `String` containing all the input strings separated by the specified delimiter.
  */
-NEX_EXPORT NEX_NODISCARD
+NEX_API NEX_NODISCARD
 String join(const Vec<String>& strings, char16 delimiter = u' ');
 
 /**
@@ -121,7 +121,7 @@ String join(const Vec<String>& strings, char16 delimiter = u' ');
  * @param   ellipsisChar The character to indicate truncation (default is '…').
  * @return  A new `String` truncated to the specified length with an optional ellipsis character.
  */
-NEX_EXPORT NEX_NODISCARD
+NEX_API NEX_NODISCARD
 String truncate(StringView str, usize maxLength, char16 ellipsisChar = u'…');
 
 /**
@@ -137,7 +137,7 @@ String truncate(StringView str, usize maxLength, char16 ellipsisChar = u'…');
  * @param   trimChar The character to be trimmed from both sides of the string (default is space character).
  * @return  A new `String` with leading and trailing trim characters removed.
  */
-NEX_EXPORT NEX_NODISCARD
+NEX_API NEX_NODISCARD
 String trim(StringView str, char16 trimChar = u' ') noexcept;
 
 /**
@@ -153,7 +153,7 @@ String trim(StringView str, char16 trimChar = u' ') noexcept;
  * @param   trimChar The character to be trimmed from the left side of the string (default is space character).
  * @return  A new `String` with leading trim characters removed.
  */
-NEX_EXPORT NEX_NODISCARD
+NEX_API NEX_NODISCARD
 String trimLeft(StringView str, char16 trimChar = u' ') noexcept;
 
 /**
@@ -169,7 +169,7 @@ String trimLeft(StringView str, char16 trimChar = u' ') noexcept;
  * @param   trimChar The character to be trimmed from the right side of the string (default is space character).
  * @return  A new `String` with trailing trim characters removed.
  */
-NEX_EXPORT NEX_NODISCARD
+NEX_API NEX_NODISCARD
 String trimRight(StringView str, char16 trimChar = u' ') noexcept;
 
 /**
@@ -184,7 +184,7 @@ String trimRight(StringView str, char16 trimChar = u' ') noexcept;
  * @param   str The input string in which to squash spaces.
  * @return  A new `String` with consecutive whitespace characters replaced by a single space.
  */
-NEX_EXPORT NEX_NODISCARD
+NEX_API NEX_NODISCARD
 String squashSpaces(StringView str);
 
 /**
@@ -201,7 +201,7 @@ String squashSpaces(StringView str);
 * @param   str The input string to be normalized.
 * @return  A new `String` with normalized spaces (trimmed and squashed).
 */
-NEX_EXPORT NEX_NODISCARD
+NEX_API NEX_NODISCARD
 String normalizeSpaces(StringView str);
 
 /**
@@ -216,7 +216,7 @@ String normalizeSpaces(StringView str);
  * @param   str The input string to be converted to lowercase.
  * @return  A new `String` with all characters converted to lowercase.
  */
-NEX_EXPORT NEX_NODISCARD
+NEX_API NEX_NODISCARD
 String toLower(StringView str);
 
 /**
@@ -231,7 +231,7 @@ String toLower(StringView str);
  * @param   str The input string to be converted to uppercase.
  * @return  A new `String` with all characters converted to uppercase.
  */
-NEX_EXPORT NEX_NODISCARD
+NEX_API NEX_NODISCARD
 String toUpper(StringView str);
 
 /**
@@ -247,7 +247,7 @@ String toUpper(StringView str);
  * @param   str The input string to be converted to title case.
  * @return  A new `String` with the first letter of each word capitalized.
  */
-NEX_EXPORT NEX_NODISCARD
+NEX_API NEX_NODISCARD
 String toTitleCase(StringView str);
 
 /**
@@ -262,7 +262,7 @@ String toTitleCase(StringView str);
  * @param   count The number of characters to include in the left substring.
  * @return  A new `String` containing the leftmost `count` characters of the input string.
  */
-NEX_EXPORT NEX_NODISCARD
+NEX_API NEX_NODISCARD
 String left(StringView str, usize count);
 
 /**
@@ -280,7 +280,7 @@ String left(StringView str, usize count);
  * @param   count The number of characters to include in the middle substring.
  * @return  A new `String` containing the specified middle substring of the input string.
  */
-NEX_EXPORT NEX_NODISCARD
+NEX_API NEX_NODISCARD
 String mid(StringView str, usize start, usize count);
 
 /**
@@ -295,7 +295,7 @@ String mid(StringView str, usize start, usize count);
  * @param   count The number of characters to include in the right substring.
  * @return  A new `String` containing the rightmost `count` characters of the input string.
  */
-NEX_EXPORT NEX_NODISCARD
+NEX_API NEX_NODISCARD
 String right(StringView str, usize count);
 
 /**
@@ -312,7 +312,7 @@ String right(StringView str, usize count);
  * @param   close The string that marks the end of the substring to extract.
  * @return  A new `String` containing the substring between the specified delimiters, or an empty string if not found.
  */
-NEX_EXPORT NEX_NODISCARD
+NEX_API NEX_NODISCARD
 String substringBetween(StringView str, StringView open, StringView close);
 
 /**
@@ -326,7 +326,7 @@ String substringBetween(StringView str, StringView open, StringView close);
  * @param   chars The set of characters to look for in the string.
  * @return  `true` if any character from the set is found in the string, otherwise `false`.
  */
-NEX_EXPORT NEX_NODISCARD
+NEX_API NEX_NODISCARD
 bool containsAny(StringView str, StringView chars);
 
 /**
@@ -342,7 +342,7 @@ bool containsAny(StringView str, StringView chars);
  * @return  `true` if the string contains a substring that matches the regular expression pattern, 
  *          otherwise `false`.
  */
-NEX_EXPORT NEX_NODISCARD
+NEX_API NEX_NODISCARD
 bool containsRegex(StringView str, StringView pattern, 
                    RegexOptions options = RegexOptions::None);
 
@@ -379,7 +379,7 @@ RegexMatch regexSearch(StringView text, StringView pattern,
  * @return  A `RegexMatch` object containing the details of the match. If the match was not successful, 
  *          the `success` field will be `false` and other fields may be default or empty.
  */
-NEX_EXPORT NEX_NODISCARD
+NEX_API NEX_NODISCARD
 RegexMatch regexMatch(StringView str, StringView pattern, 
                       RegexOptions options = RegexOptions::None);
 
@@ -447,7 +447,7 @@ String regexReplace(StringView text, StringView pattern, StringView replacement,
  * @param   character The character to count in the string.
  * @return  The number of occurrences of the specified character in the string.
  */
-NEX_EXPORT NEX_NODISCARD
+NEX_API NEX_NODISCARD
 usize countOccurrences(StringView str, char16 character) noexcept;
 
 /**
@@ -461,7 +461,7 @@ usize countOccurrences(StringView str, char16 character) noexcept;
  * @param   substring The substring to count in the string.
  * @return  The number of occurrences of the specified substring in the string.
  */
-NEX_EXPORT NEX_NODISCARD
+NEX_API NEX_NODISCARD
 usize countOccurrences(StringView str, StringView substring) noexcept;
 
 /**
@@ -477,7 +477,7 @@ usize countOccurrences(StringView str, StringView substring) noexcept;
 * @param   charToRemove The character to be removed from the string.
 * @return  A new `String` with all occurrences of the specified character removed.
 */
-NEX_EXPORT NEX_NODISCARD
+NEX_API NEX_NODISCARD
 String erase(StringView str, char16 charToRemove);
 
 /**
@@ -493,7 +493,7 @@ String erase(StringView str, char16 charToRemove);
  * @param   substring The substring to be removed from the string.
  * @return  A new `String` with all occurrences of the specified substring removed.
  */
-NEX_EXPORT NEX_NODISCARD
+NEX_API NEX_NODISCARD
 String erase(StringView str, StringView substring);
 
 /**
@@ -511,7 +511,7 @@ String erase(StringView str, StringView substring);
  * @param   replacement The character to replace the target character with.
  * @return  A new `String` with all occurrences of the target character replaced by the replacement character.
  */
-NEX_EXPORT NEX_NODISCARD
+NEX_API NEX_NODISCARD
 String replace(StringView str, char16 target, char16 replacement);
 
 /**
@@ -529,7 +529,7 @@ String replace(StringView str, char16 target, char16 replacement);
  * @param   replacement The substring to replace the target substring with.
  * @return  A new `String` with all occurrences of the target substring replaced by the replacement substring.
  */
-NEX_EXPORT NEX_NODISCARD
+NEX_API NEX_NODISCARD
 String replace(StringView str, StringView target, StringView replacement);
 
 /**
@@ -546,7 +546,7 @@ String replace(StringView str, StringView target, StringView replacement);
  * @param   paddingChar The character to use for padding (default is space character).
  * @return  A new `String` padded on the left side to reach the specified total length.
  */
-NEX_EXPORT NEX_NODISCARD
+NEX_API NEX_NODISCARD
 String leftPad(StringView str, usize totalLength, char16 paddingChar = u' ') noexcept;
 
 /**
@@ -563,7 +563,7 @@ String leftPad(StringView str, usize totalLength, char16 paddingChar = u' ') noe
  * @param   paddingChar The character to use for padding (default is space character).
  * @return  A new `String` padded on the right side to reach the specified total length.
  */
-NEX_EXPORT NEX_NODISCARD
+NEX_API NEX_NODISCARD
 String rightPad(StringView str, usize totalLength, char16 paddingChar = u' ') noexcept;
 
 /**
@@ -583,7 +583,7 @@ String rightPad(StringView str, usize totalLength, char16 paddingChar = u' ') no
  * @param   maskChar The character to use for masking (default is '*').
  * @return  A new `String` with the specified portion masked.
  */
-NEX_EXPORT NEX_NODISCARD
+NEX_API NEX_NODISCARD
 String mask(StringView str, usize start, usize end, char16 maskChar = u'*') noexcept;
 
 NEX_SUBNAMESPACE_END(text)

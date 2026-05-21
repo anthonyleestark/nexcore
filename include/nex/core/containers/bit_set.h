@@ -41,7 +41,7 @@ NEX_NAMESPACE_BEGIN
  * @see BitBuffer for a dynamic alternative, and Vec<bool> for a more flexible but less memory-efficient option.
  */
 template <usize N> requires (N > 0)
-class NEX_EXPORT BitSet {
+class NEX_API BitSet {
 public:
     // Choose the smallest native word size that fits N, up to 64-bit.
     using Word = Conditional<N <= 8,  uint8,

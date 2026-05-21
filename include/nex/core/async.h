@@ -356,7 +356,7 @@ NEX_DETAIL_NAMESPACE_END
  * @tparam T The type of the value that will be available.
  */
 template<typename T>
-class NEX_EXPORT Future {
+class NEX_API Future {
 public:
     // Default constructor creates an empty Future that is not associated with any state.
     Future() noexcept = default;
@@ -405,7 +405,7 @@ private:
  * @tparam T The type of the value that will be set for the Future.
  */
 template<typename T>
-class NEX_EXPORT Promise {
+class NEX_API Promise {
 public:
     // Default constructor creates a new Promise with an associated Future state.
     Promise()
@@ -465,7 +465,7 @@ private:
  * It provides methods to set the completion or an exception for the associated Future.
  */
 template<>
-class NEX_EXPORT Promise<void> {
+class NEX_API Promise<void> {
 public:
     // Default constructor creates a new Promise with an associated Future state.
     Promise()

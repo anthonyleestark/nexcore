@@ -32,7 +32,7 @@ NEX_SUBNAMESPACE_BEGIN(input)
  * 
  * @see Keyboard shortcut management
  */
-class NEX_EXPORT KeyCombination {
+class NEX_API KeyCombination {
 public:
     // Supported modifiers as bit flags
     enum class Modifier : uint32 {

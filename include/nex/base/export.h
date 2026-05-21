@@ -36,23 +36,26 @@
  */
 
 #if NEX_COMPILER_MSVC_COMPATIBLE
-    // On MSVC, it expands to `__declspec(dllexport)` when building the shared library, and `__declspec(dllimport)` 
-    // when using the shared library.
+    // On MSVC, it expands to `__declspec(dllexport)` when building the shared library, 
+    // and `__declspec(dllimport)` when using the shared library.
     #if NEX_BUILDING_SHARED_LIBRARY
         #define NEX_API __declspec(dllexport)
     #elif NEX_USING_SHARED_LIBRARY
         #define NEX_API __declspec(dllimport)
-    #else
-        #define NEX_API
     #endif
 #elif NEX_COMPILER_GCC_COMPATIBLE
-    // On GCC, it expands to `__attribute__((visibility("default")))` to make symbols visible for export.
-    #define NEX_API __attribute__((visibility("default")))
-#else
-    // If the compiler does not support these attributes, it expands to nothing, allowing the code to compile 
-    // without any errors.
+    // On GCC, it expands to `__attribute__((visibility("default")))` 
+    // to make symbols visible for export, only when building the shared library.
+    #if NEX_BUILDING_SHARED_LIBRARY
+        #define NEX_API __attribute__((visibility("default")))
+    #endif
+#endif // NEX_API
+
+#if !defined(NEX_API)
+    // If the compiler does not support these attributes, it expands to nothing, 
+    // allowing the code to compile without any errors.
     #define NEX_API
-#endif  // NEX_COMPILER_MSVC_COMPATIBLE
+#endif  // !defined(NEX_API)
 
 // ======================================================================================
 // Calling Convention Macros

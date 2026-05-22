@@ -277,6 +277,35 @@
 #endif
 
 /**
+ * @def NEX_FALLTHROUGH
+ * @brief Annotate intentional fallthrough in switch statements to suppress compiler warnings
+ * 
+ * @details
+ * This macro can be used to indicate that a fallthrough in a switch statement is intentional, which can help
+ * suppress compiler warnings about implicit fallthrough. The macro expands to the appropriate attribute syntax
+ * if the compiler supports the C++17 `[[fallthrough]]` attribute, and expands to nothing on compilers that 
+ * do not support it or when compiling with C++14 or earlier.
+ * 
+ * Example usage:
+ * @code
+ * switch (value) {
+ *    case 1:
+ *        // Handle case 1
+ *        NEX_FALLTHROUGH  // Intentional fallthrough to case 2
+ *    case 2:
+ *        // Handle case 2
+ *        break;
+ * };
+ * @endcode
+ */
+#if NEX_HAS_CPP_ATTRIBUTE(fallthrough) >= 201603L
+    // this attribute needs to be followed by a semicolon, so we include it in the macro to avoid mistakes
+    #define NEX_FALLTHROUGH [[fallthrough]];
+#else  // Compiler does not support [[fallthrough]] or we are in C++14 or earlier
+    #define NEX_FALLTHROUGH
+#endif  // NEX_FALLTHROUGH
+
+/**
  * @def NEX_NODISCARD/NEX_NODISCARD_MSG
  * @brief Mark functions/classes whose return values should not be discarded
  * 
@@ -514,7 +543,7 @@
  *   }
  * @endcode
  */
-#if NEX_HAS_CPP_ATTRIBUTE(maybe_unused) >= NEX_CXX17_VER_NUMBER
+#if NEX_HAS_CPP_ATTRIBUTE(maybe_unused) >= 201603L
     #define NEX_MAYBE_UNUSED [[maybe_unused]]
 #else  // Compiler does not support [[maybe_unused]] or we are in C++14 or earlier
     #define NEX_MAYBE_UNUSED
@@ -600,6 +629,29 @@
         #define NEX_LIKELY(x) (x)
     #endif  // NEX_HAS_CXX20
 #endif  // !defined(NEX_LIKELY)
+
+/**
+ * @def NEX_EXPECTS(expr)
+ * @brief Annotate a precondition that is expected to be true for the function to operate correctly
+ * 
+ * @details
+ * This macro expands to the C++20 `[[expects(expr)]]` attribute when supported by the compiler, allowing you 
+ * to annotate preconditions for functions. If the compiler does not support this attribute or if compiling 
+ * with C++17 or earlier, the macro expands to nothing, allowing the code to compile without errors.
+ * 
+ * Example usage:
+ * @code
+ *   void ProcessData(int* data) {
+ *       NEX_EXPECTS(data != nullptr);  // Precondition: data must not be null
+ *       // Function logic...
+ *   }
+ * @endcode
+ */
+#if NEX_HAS_CPP_ATTRIBUTE(expects) >= 201907L
+    #define NEX_EXPECTS(expr) [[expects(expr)]]
+#else  // Compiler does not support [[expects]] or we are in C++17 or earlier
+    #define NEX_EXPECTS(expr)
+#endif  // NEX_EXPECTS
 
 /**
  * @def NEX_NOMERGE

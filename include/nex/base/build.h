@@ -124,14 +124,12 @@
 
 #if defined(NEX_BUILDING_SHARED)
     // We are building a shared library (DLL on Windows, .so on Linux, .dylib on macOS)
-    #define NEX_BUILDING_SHARED_LIBRARY 1
     #undef NEX_BUILDING_SHARED
     #define NEX_BUILDING_SHARED 1
     #undef NEX_USING_SHARED
     #define NEX_USING_SHARED 0
 #elif defined(NEX_USING_SHARED)
     // We are using a shared library (DLL on Windows, .so on Linux, .dylib on macOS)
-    #define NEX_USING_SHARED_LIBRARY 1
     #undef NEX_USING_SHARED
     #define NEX_USING_SHARED 1
     #undef NEX_BUILDING_SHARED

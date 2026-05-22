@@ -38,15 +38,15 @@
 #if NEX_COMPILER_MSVC_COMPATIBLE
     // On MSVC, it expands to `__declspec(dllexport)` when building the shared library, 
     // and `__declspec(dllimport)` when using the shared library.
-    #if NEX_BUILDING_SHARED_LIBRARY
+    #if NEX_BUILDING_SHARED
         #define NEX_API __declspec(dllexport)
-    #elif NEX_USING_SHARED_LIBRARY
+    #elif NEX_USING_SHARED
         #define NEX_API __declspec(dllimport)
     #endif
 #elif NEX_COMPILER_GCC_COMPATIBLE
     // On GCC, it expands to `__attribute__((visibility("default")))` 
     // to make symbols visible for export, only when building the shared library.
-    #if NEX_BUILDING_SHARED_LIBRARY
+    #if NEX_BUILDING_SHARED
         #define NEX_API __attribute__((visibility("default")))
     #endif
 #endif // NEX_API
@@ -99,7 +99,7 @@
 #if !defined(NEX_CDECL)
     #if NEX_PLATFORM_IS_WINDOWS
         #define NEX_CDECL __cdecl
-    #else  // NEX_PLATFORM_IS_WINDOWS
+    #else  // On non-Windows platforms
         #define NEX_CDECL
     #endif  // NEX_PLATFORM_IS_WINDOWS
 #endif  // !defined(NEX_CDECL)
@@ -122,7 +122,7 @@
  */
 
 #if NEX_PLATFORM_IS_WINDOWS
-    // On Windows, there is no direct equivalent to marking symbols as internal, so we can simply leave it empty.
+    // On Windows, there is no direct equivalent to marking symbols as internal.
     #define NEX_INTERNAL
 #else
     // On macOS/Linux (GCC/Clang), we can use the visibility attribute to hide symbols from being exported.

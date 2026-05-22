@@ -231,7 +231,9 @@
  *   }
  * @endcode
  */
-#if NEX_HAS_CLANG_ATTRIBUTE(noinline)
+#if NEX_HAS_CPP_ATTRIBUTE(noinline)
+    #define NEX_NOINLINE [[noinline]]
+#elif NEX_HAS_CLANG_ATTRIBUTE(noinline)
     #define NEX_NOINLINE NEX_CLANG_ATTRIBUTE(noinline)
 #elif NEX_HAS_GCC_ATTRIBUTE(noinline)
     #define NEX_NOINLINE NEX_GCC_ATTRIBUTE(noinline)
@@ -275,6 +277,23 @@
 #if !defined(NEX_ALWAYS_INLINE)
     #define NEX_ALWAYS_INLINE inline
 #endif
+
+/**
+ * @def NEX_MSVC_FLATTEN
+ * @brief Annotate a function to suggest aggressive inlining and optimization across call boundaries in MSVC
+ * 
+ * @details
+ * This macro expands to `[[msvc::flatten]]` when compiling with MSVC if the compiler supports this attribute, and
+ * expands to nothing on other compilers. The `[[msvc::flatten]]` attribute is a hint to the MSVC compiler that it should
+ * consider inlining the annotated function and its callees into the caller, even across multiple call boundaries.
+ * This can enable more aggressive optimization and better performance in hot code paths, but it may also increase
+ * compile times and code size, so it should be used judiciously on performance-critical functions.
+ */
+#if NEX_HAS_MSVC_ATTRIBUTE(flatten)
+    #define NEX_MSVC_FLATTEN NEX_MSVC_ATTRIBUTE(flatten)
+#else // Compiler does not support [[msvc::flatten]]
+    #define NEX_MSVC_FLATTEN
+#endif  // NEX_MSVC_FLATTEN
 
 /**
  * @def NEX_FALLTHROUGH
@@ -586,7 +605,7 @@
 #else  // C++14 or earlier
     #define NEX_UNUSED(...) \
         (void)(sizeof((int[]){(NEX_UNUSED_VAR(__VA_ARGS__), 0)...}));
-#endif
+#endif  // NEX_UNUSED
 
 /**
  * @def NEX_UNLIKELY(x)

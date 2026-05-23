@@ -24,6 +24,7 @@
     #include <cwchar>
 #endif  // !defined(NEX_BASE_TYPES_NO_STD)
 
+#include "nex/base/build.h"
 #include "nex/base/attributes.h"
 #include "nex/base/namespace.h"
 
@@ -91,11 +92,16 @@ using ull       = ulonglong;                // 64-bit unsigned integer (unsigned
 // =================================================================================
 
 #if !defined(NEX_BASE_TYPES_NO_STD)
-    using intptr    = NEX_STD intptr_t;     // Pointer-sized signed integer
-    using uintptr   = NEX_STD uintptr_t;    // Pointer-sized unsigned integer
+    using intptr      = NEX_STD intptr_t;   // Pointer-sized signed integer
+    using uintptr     = NEX_STD uintptr_t;  // Pointer-sized unsigned integer
 #else
-    using intptr    = __int64;              // Pointer-sized signed integer
-    using uintptr   = unsigned __int64;     // Pointer-sized unsigned integer
+    #if NEX_BUILD_ENV_IS_64_BIT
+        using intptr  = __int64;            // Pointer-sized signed integer (64-bit)
+        using uintptr = unsigned __int64;   // Pointer-sized unsigned integer (64-bit)
+    #else  // Non-64-bit environment, assume 32-bit
+        using intptr  = int;                // Pointer-sized signed integer (32-bit)
+        using uintptr = unsigned int;       // Pointer-sized unsigned integer (32-bit)
+    #endif
 #endif  // !defined(NEX_BASE_TYPES_NO_STD)
 
 // =================================================================================
@@ -193,24 +199,29 @@ using umax  = uintmax;                      // Maximum-width unsigned integer (u
 // =================================================================================
 
 #if !defined(NEX_BASE_TYPES_NO_STD)
-    using sizetype  = NEX_STD size_t;       // Unsigned integer type used for sizes and array indexing
-    using ptrdiff   = NEX_STD ptrdiff_t;    // Signed integer type used for pointer arithmetic and array indexing
-    using max_align = NEX_STD max_align_t;  // Type with alignment at least as strict as any scalar type
+    using sizetype  = NEX_STD size_t;           // Unsigned integer type used for sizes & array indexing
+    using ptrdiff   = NEX_STD ptrdiff_t;        // Signed integer type used for pointer arithmetic & array indexing
+    using max_align = NEX_STD max_align_t;      // Type with alignment at least as strict as any scalar type
 #else
-    using sizetype  = unsigned __int64;     // Unsigned integer type used for sizes and array indexing
-    using ptrdiff   = __int64;              // Signed integer type used for pointer arithmetic and array indexing
-    using max_align = double;               // Type with alignment at least as strict as any scalar type
+    #if NEX_BUILD_ENV_IS_64_BIT
+        using sizetype  = unsigned __int64;     // Unsigned integer type used for sizes & array indexing (64-bit)
+        using ptrdiff   = __int64;              // Signed integer type used for pointer arithmetic & array indexing (64-bit)
+    #else  // Non-64-bit environment, assume 32-bit
+        using sizetype  = unsigned int;         // Unsigned integer type used for sizes & array indexing (32-bit)
+        using ptrdiff   = int;                  // Signed integer type used for pointer arithmetic & array indexing (32-bit)
+    #endif
+    using max_align = double;                   // Type with alignment at least as strict as any scalar type
 #endif  // !defined(NEX_BASE_TYPES_NO_STD)
 
-using usize         = sizetype;             // Unsigned integer type used for sizes and array indexing
-using isize         = ptrdiff;              // Signed integer type used for pointer arithmetic and array indexing
+using usize         = sizetype;                 // Unsigned integer type used for sizes & array indexing
+using isize         = ptrdiff;                  // Signed integer type used for pointer arithmetic & array indexing
 
 // =================================================================================
 // Short aliases for standard size types (Rust-style)
 // =================================================================================
 
-using size          = usize;        // Unsigned integer type used for sizes and array indexing (usize)
-using ssize         = isize;        // Signed integer type used for pointer arithmetic and array indexing (isize)
+using size          = usize;        // Unsigned integer type used for sizes & array indexing (usize)
+using ssize         = isize;        // Signed integer type used for pointer arithmetic & array indexing (isize)
 
 // =================================================================================
 // Include standard floating-point types
@@ -537,7 +548,11 @@ struct Constants {
     static constexpr uint32 u32max        = 0xffffffffui32;
     static constexpr uint64 u64max        = 0xffffffffffffffffui64;
 
-    static constexpr uint64 sizemax       = 0xffffffffffffffffui64;
+    #if NEX_BUILD_ENV_IS_64_BIT
+        static constexpr uint64 sizemax   = 0xffffffffffffffffui64;
+    #else  // Non-64-bit environment, assume 32-bit
+        static constexpr uint32 sizemax   = 0xffffffffui32;
+    #endif
     static constexpr uint16 wcharmin      = 0x0000;
     static constexpr uint16 wcharmax      = 0xffff;
     static constexpr uint16 wintmin       = 0x0000;
@@ -594,9 +609,15 @@ struct Constants {
 #define NEX_UINT_FAST32_MAX     NEX_UINT32_MAX
 #define NEX_UINT_FAST64_MAX     NEX_UINT64_MAX
 
-#define NEX_INTPTR_MIN          NEX_INT64_MIN
-#define NEX_INTPTR_MAX          NEX_INT64_MAX
-#define NEX_UINTPTR_MAX         NEX_UINT64_MAX
+#if NEX_BUILD_ENV_IS_64_BIT
+    #define NEX_INTPTR_MIN      NEX_INT64_MIN
+    #define NEX_INTPTR_MAX      NEX_INT64_MAX
+    #define NEX_UINTPTR_MAX     NEX_UINT64_MAX
+#else  // Non-64-bit environment, assume 32-bit
+    #define NEX_INTPTR_MIN      NEX_INT32_MIN
+    #define NEX_INTPTR_MAX      NEX_INT32_MAX
+    #define NEX_UINTPTR_MAX     NEX_UINT32_MAX
+#endif
 
 #define NEX_INTMAX_MIN          NEX_INT64_MIN
 #define NEX_INTMAX_MAX          NEX_INT64_MAX

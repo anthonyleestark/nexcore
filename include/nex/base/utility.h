@@ -39,9 +39,9 @@ NEX_SUBNAMESPACE_BEGIN(utility)
 
 // Get the size of a statically sized array, which can be used for various purposes such as
 // implementing container_of and other utilities that require knowledge of the size of an array.
-template <typename Type, usize Capacity>
-constexpr usize arraySize(Type (&)[Capacity]) noexcept {
-    return Capacity;
+template <typename Type, usize Size>
+constexpr usize arraySize(Type (&)[Size]) noexcept {
+    return Size;
 }
 
 // Get the offset of a member within a struct/class, which can be used for various purposes such as
@@ -58,9 +58,9 @@ template <typename Type, auto MemberPtr>
 constexpr Type* containerOf(decltype(MemberPtr) ptr) noexcept {
     using MemberT = RemoveReference<decltype(NEX_STD declval<Type>().*MemberPtr)>;
     static_assert(IsStandardLayoutV<Type>, "containerOf only safe for standard-layout types");
-    
+
     return reinterpret_cast<Type*>(
-        reinterpret_cast<char*>(ptr) - offsetOf<Type, MemberT>(MemberPtr)
+        reinterpret_cast<char_ptr>(ptr) - offsetOf<Type, MemberT, MemberPtr>()
     );
 }
 
@@ -165,7 +165,7 @@ constexpr int64 enumKeyValue(Enum key) noexcept {
 template <typename Enum>
 constexpr auto toUnderlying(Enum key) noexcept {
     static_assert(IsEnumV<Enum>, "toUnderlying only works for enum types");
-    return static_cast<NEX_STD underlying_type_t<Enum>>(key);
+    return static_cast<UnderlyingType<Enum>>(key);
 }
 
 // Get a hash value for an enum class key, which can be used for various purposes such as implementing
@@ -201,7 +201,7 @@ struct EnableBitmaskOperators {
 template <typename Enum>
 constexpr EnableIf<EnableBitmaskOperators<Enum>::enable, Enum>
 operator|(Enum lhs, Enum rhs) {
-    using Type = NEX_STD underlying_type_t<Enum>;
+    using Type = UnderlyingType<Enum>;
     return static_cast<Enum>(static_cast<Type>(lhs) | static_cast<Type>(rhs));
 }
 
@@ -209,7 +209,7 @@ operator|(Enum lhs, Enum rhs) {
 template <typename Enum>
 constexpr EnableIf<EnableBitmaskOperators<Enum>::enable, Enum>
 operator&(Enum lhs, Enum rhs) {
-    using Type = NEX_STD underlying_type_t<Enum>;
+    using Type = UnderlyingType<Enum>;
     return static_cast<Enum>(static_cast<Type>(lhs) & static_cast<Type>(rhs));
 }
 
@@ -217,7 +217,7 @@ operator&(Enum lhs, Enum rhs) {
 template <typename Enum>
 constexpr EnableIf<EnableBitmaskOperators<Enum>::enable, Enum>
 operator^(Enum lhs, Enum rhs) {
-    using Type = NEX_STD underlying_type_t<Enum>;
+    using Type = UnderlyingType<Enum>;
     return static_cast<Enum>(static_cast<Type>(lhs) ^ static_cast<Type>(rhs));
 }
 
@@ -225,7 +225,7 @@ operator^(Enum lhs, Enum rhs) {
 template <typename Enum>
 constexpr EnableIf<EnableBitmaskOperators<Enum>::enable, Enum>
 operator~(Enum key) {
-    using Type = NEX_STD underlying_type_t<Enum>;
+    using Type = UnderlyingType<Enum>;
     return static_cast<Enum>(~static_cast<Type>(key));
 }
 
@@ -482,7 +482,7 @@ public:
     // Disable copy semantics for ScopeGuard to prevent accidental copying 
     // which could lead to multiple calls of the callable object
     NEX_DISALLOW_COPY(ScopeGuard);
-    
+
     // Enable move semantics for ScopeGuard to allow transferring ownership of the callable object
     ScopeGuard(ScopeGuard&& other) noexcept
         : func_(NEX_STD move(other.func_)), dismissed_(other.dismissed_) {
@@ -916,7 +916,7 @@ public:
 
     // Construction
     explicit NamedType(const Type& value) : value_(value) {}
-    explicit NamedType(Type&& value) noexcept(NEX_STD is_nothrow_move_constructible_v<Type>)
+    explicit NamedType(Type&& value) noexcept(IsNothrowMoveConstructibleV<Type>)
         : value_(NEX_STD move(value)) {}
 
     // Accessors

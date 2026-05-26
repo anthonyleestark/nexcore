@@ -16,6 +16,8 @@
  * to provide more context about where in the source code an event occurred. The macros defined in this header are designed
  * to be easy to use and provide consistent source location information across different compilers and platforms,
  * making it easier to maintain and debug code in a cross-platform environment.
+ * 
+ * @see utility::SourceLocation for a struct representing source code location information and related utilities.
  */
 
 #include "nex/base/compiler.h"

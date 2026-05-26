@@ -683,9 +683,17 @@ struct SourceLocation {
     int line;               // The line number in the source file where the SourceLocation was created
     const char* function;   // The function name where the SourceLocation was created
 
-    // Create a SourceLocation object representing the current source location using compiler built-ins
+    // Default constructor: initializes members to default values
+    constexpr SourceLocation() noexcept
+        : file(""), line(0), function("") {}
+
+    // Constructs a SourceLocation with the given file path, line number, and function name
+    constexpr SourceLocation(const char* filePath, int lineNumber, const char* functionName) noexcept
+        : file(filePath), line(lineNumber), function(functionName) {}
+
 #if NEX_USE_STD_SOURCE_LOCATION
-    static SourceLocation current(NEX_STD source_location loc = NEX_STD source_location::current()) {
+    // Create a SourceLocation object representing the current source location using compiler built-ins
+    static consteval SourceLocation current(NEX_STD source_location loc = NEX_STD source_location::current()) {
         return { 
             stripFilePath(loc.file_name()), 
             static_cast<int>(loc.line()), 
@@ -693,7 +701,8 @@ struct SourceLocation {
         };
     }
 #else
-    static SourceLocation current() {
+    // Create a SourceLocation object representing the current source location using compiler built-ins
+    static consteval SourceLocation current() {
         return { 
             stripFilePath(NEX_SOURCE_FILE_PATH), 
             NEX_SOURCE_LINE_NUMBER, 

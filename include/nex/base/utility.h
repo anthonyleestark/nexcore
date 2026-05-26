@@ -39,28 +39,28 @@ NEX_SUBNAMESPACE_BEGIN(utility)
 
 // Get the size of a statically sized array, which can be used for various purposes such as
 // implementing container_of and other utilities that require knowledge of the size of an array.
-template <typename T, usize N>
-constexpr usize arraySize(T (&)[N]) noexcept {
-    return N;
+template <typename Type, usize Capacity>
+constexpr usize arraySize(Type (&)[Capacity]) noexcept {
+    return Capacity;
 }
 
 // Get the offset of a member within a struct/class, which can be used for various purposes such as
 // implementing container_of and other utilities that require knowledge of the layout of a struct/class.
-template <typename T, typename MemberT>
-constexpr isize offsetOf(MemberT T::*member) noexcept {
-    static_assert(IsStandardLayoutV<T>, "offsetOf only safe for standard-layout types");
-    return reinterpret_cast<isize>(&reinterpret_cast<T*>(0)->*member);
+template <typename Type, typename MemberT>
+constexpr isize offsetOf(MemberT Type::*member) noexcept {
+    static_assert(IsStandardLayoutV<Type>, "offsetOf only safe for standard-layout types");
+    return reinterpret_cast<isize>(&reinterpret_cast<Type*>(0)->*member);
 }
 
 // Get the containing struct/class from a pointer to a member, which can be used for various purposes such as
 // implementing container_of and other utilities that require knowledge of the layout of a struct/class.
-template <typename T, auto MemberPtr>
-constexpr T* containerOf(decltype(MemberPtr) ptr) noexcept {
-    using MemberT = RemoveReference<decltype(NEX_STD declval<T>().*MemberPtr)>;
-    static_assert(IsStandardLayoutV<T>, "containerOf only safe for standard-layout types");
+template <typename Type, auto MemberPtr>
+constexpr Type* containerOf(decltype(MemberPtr) ptr) noexcept {
+    using MemberT = RemoveReference<decltype(NEX_STD declval<Type>().*MemberPtr)>;
+    static_assert(IsStandardLayoutV<Type>, "containerOf only safe for standard-layout types");
     
-    return reinterpret_cast<T*>(
-        reinterpret_cast<char*>(ptr) - offsetOf<T, MemberT, MemberPtr>()
+    return reinterpret_cast<Type*>(
+        reinterpret_cast<char*>(ptr) - offsetOf<Type, MemberT>(MemberPtr)
     );
 }
 
@@ -68,15 +68,15 @@ constexpr T* containerOf(decltype(MemberPtr) ptr) noexcept {
 
 // Safely dereference a member pointer, ensuring that the pointer type matches the member type, 
 // and returning a reference to the containing struct/class.
-template <typename T, typename MemberT>
-constexpr T& derefMember(MemberT* memberPtr, MemberT T::*member) noexcept {
+template <typename Type, typename MemberT>
+constexpr Type& derefMember(MemberT* memberPtr, MemberT Type::*member) noexcept {
     return *containerOf(memberPtr, member);
 }
 
 // Safe downcast of a pointer to a member to a pointer to the containing struct/class, 
 // ensuring that the pointer type matches the member type.
-template <typename T, typename MemberT>
-constexpr T* downcastMember(MemberT* memberPtr, MemberT T::*member) noexcept {
+template <typename Type, typename MemberT>
+constexpr Type* downcastMember(MemberT* memberPtr, MemberT Type::*member) noexcept {
     return containerOf(memberPtr, member);
 }
 
@@ -91,8 +91,8 @@ constexpr Derived* safeDowncast(Base* base) noexcept {
 ////// Helper function for safe deletion --------------------------------
 
 // Safely delete a pointer to a struct/class, ensuring that the pointer type matches the struct/class type.
-template <typename T>
-void deleteObject(T* objPtr) noexcept {
+template <typename Type>
+void deleteObject(Type* objPtr) noexcept {
     if (objPtr) {
         delete objPtr;
         (objPtr) = nullptr; // Set the pointer to nullptr after deletion to prevent dangling pointer
@@ -100,8 +100,8 @@ void deleteObject(T* objPtr) noexcept {
 }
 
 // Safely delete an array pointer to a struct/class, ensuring that the pointer type matches the struct/class type.
-template <typename T>
-void deleteObjectArray(T* objPtr) noexcept {
+template <typename Type>
+void deleteObjectArray(Type* objPtr) noexcept {
     if (objPtr) {
         delete[] objPtr;
         (objPtr) = nullptr; // Set the pointer to nullptr after deletion to prevent dangling pointer
@@ -110,8 +110,8 @@ void deleteObjectArray(T* objPtr) noexcept {
 
 // Safely delete a pointer to a member, ensuring that the pointer type matches the member type,
 // and deleting the containing struct/class.
-template <typename T, typename MemberT>
-void deleteMember(MemberT* memberPtr, MemberT T::*member) noexcept {
+template <typename Type, typename MemberT>
+void deleteMember(MemberT* memberPtr, MemberT Type::*member) noexcept {
     if (memberPtr) {
         delete containerOf(memberPtr, member);
     }
@@ -119,8 +119,8 @@ void deleteMember(MemberT* memberPtr, MemberT T::*member) noexcept {
 
 // Safely delete a pointer to a member and set it to nullptr, ensuring that the pointer type matches 
 // the member type, and deleting the containing struct/class.
-template <typename T, typename MemberT>
-void deleteMemberAndNull(MemberT*& memberPtr, MemberT T::*member) noexcept {
+template <typename Type, typename MemberT>
+void deleteMemberAndNull(MemberT*& memberPtr, MemberT Type::*member) noexcept {
     if (memberPtr) {
         delete containerOf(memberPtr, member);
         memberPtr = nullptr;
@@ -129,8 +129,8 @@ void deleteMemberAndNull(MemberT*& memberPtr, MemberT T::*member) noexcept {
 
 // Safely delete an array pointer to a member and set it to nullptr, ensuring that the pointer type matches 
 // the member type, and deleting the containing struct/class.
-template <typename T, typename MemberT>
-void deleteMemberArrayAndNull(MemberT*& memberPtr, MemberT T::*member) noexcept {
+template <typename Type, typename MemberT>
+void deleteMemberArrayAndNull(MemberT*& memberPtr, MemberT Type::*member) noexcept {
     if (memberPtr) {
         delete[] containerOf(memberPtr, member);
         memberPtr = nullptr;
@@ -201,32 +201,32 @@ struct EnableBitmaskOperators {
 template <typename Enum>
 constexpr EnableIf<EnableBitmaskOperators<Enum>::enable, Enum>
 operator|(Enum lhs, Enum rhs) {
-    using T = NEX_STD underlying_type_t<Enum>;
-    return static_cast<Enum>(static_cast<T>(lhs) | static_cast<T>(rhs));
+    using Type = NEX_STD underlying_type_t<Enum>;
+    return static_cast<Enum>(static_cast<Type>(lhs) | static_cast<Type>(rhs));
 }
 
 // Bitwise AND operator for enum classes with bitmask operators enabled
 template <typename Enum>
 constexpr EnableIf<EnableBitmaskOperators<Enum>::enable, Enum>
 operator&(Enum lhs, Enum rhs) {
-    using T = NEX_STD underlying_type_t<Enum>;
-    return static_cast<Enum>(static_cast<T>(lhs) & static_cast<T>(rhs));
+    using Type = NEX_STD underlying_type_t<Enum>;
+    return static_cast<Enum>(static_cast<Type>(lhs) & static_cast<Type>(rhs));
 }
 
 // Bitwise XOR operator for enum classes with bitmask operators enabled
 template <typename Enum>
 constexpr EnableIf<EnableBitmaskOperators<Enum>::enable, Enum>
 operator^(Enum lhs, Enum rhs) {
-    using T = NEX_STD underlying_type_t<Enum>;
-    return static_cast<Enum>(static_cast<T>(lhs) ^ static_cast<T>(rhs));
+    using Type = NEX_STD underlying_type_t<Enum>;
+    return static_cast<Enum>(static_cast<Type>(lhs) ^ static_cast<Type>(rhs));
 }
 
 // Bitwise NOT operator for enum classes with bitmask operators enabled
 template <typename Enum>
 constexpr EnableIf<EnableBitmaskOperators<Enum>::enable, Enum>
 operator~(Enum key) {
-    using T = NEX_STD underlying_type_t<Enum>;
-    return static_cast<Enum>(~static_cast<T>(key));
+    using Type = NEX_STD underlying_type_t<Enum>;
+    return static_cast<Enum>(~static_cast<Type>(key));
 }
 
 // Bitwise OR assignment operator for enum classes with bitmask operators enabled
@@ -362,24 +362,24 @@ struct ConstMemoryBlock {
  * auto reset = AutoReset<bool>::maybe(pFlag, true);  // Safe if pFlag is null
  * @endcode
  */
-template <typename T>
+template <typename Type>
 class NEX_API AutoReset {
 public:
     // Constructor: saves the original value of the variable
-    explicit AutoReset(T& var)
+    explicit AutoReset(Type& var)
         : ptrScopedVar_(&var), originalVal_(var) {}
 
     // Constructor: sets the variable to new value and saves the original
-    AutoReset(T& var, T newValue)
+    AutoReset(Type& var, Type newValue)
         : ptrScopedVar_(&var), originalVal_(NEX_STD exchange(var, NEX_STD move(newValue))) {}
 
     // Factory method for handling nullable pointers (saves original value)
-    static AutoReset maybe(T* ptr) {
+    static AutoReset maybe(Type* ptr) {
         return ptr ? AutoReset(*ptr) : AutoReset();
     }
 
     // Factory method for handling nullable pointers (sets new value if not null)
-    static AutoReset maybe(T* ptr, T newValue) {
+    static AutoReset maybe(Type* ptr, Type newValue) {
         return ptr ? AutoReset(*ptr, NEX_STD move(newValue)) : AutoReset();
     }
 
@@ -419,10 +419,10 @@ private:
     }
 
     // The scoped variable pointer
-    T* ptrScopedVar_;
+    Type* ptrScopedVar_;
 
     // The original value of the scoped variable
-    T originalVal_;
+    Type originalVal_;
 };
 
 /**
@@ -431,11 +431,11 @@ private:
  * object that set it is in scope. Flag resets when object goes
  * out of scope. Works on anything that looks like bool.
  */
-template <class T = bool>
+template <class Type = bool>
 class NEX_API AutoFlag {
 public:
     // Constructor: Sets referent to true.
-    AutoFlag(T& ref) : referent_(ref) {
+    AutoFlag(Type& ref) : referent_(ref) {
         referent_ = true;
     }
 
@@ -445,7 +445,7 @@ public:
     }
 
 private:
-    T& referent_;
+    Type& referent_;
 };
 
 /**
@@ -729,7 +729,7 @@ struct SourceLocation {
  *       base class pointers, as this class is designed as a mix-in, not for
  *       polymorphism.
  * 
- * @note This class uses the CRTP pattern where T is the derived class type.
+ * @note This class uses the CRTP pattern where Type is the derived class type.
  * 
  * Example usage:
  * @code
@@ -750,36 +750,36 @@ struct SourceLocation {
  * }
  * @endcode
  */
-template <class T>
+template <class Type>
 class NEX_API Comparable {
 public:
     // Equality operator: returns true if objects are equal
-    bool operator==(const T& other) const {
+    bool operator==(const Type& other) const {
         return !compare(other);
     }
 
     // Inequality operator: returns true if objects are not equal
-    bool operator!=(const T& other) const {
+    bool operator!=(const Type& other) const {
         return compare(other);
     }
 
     // Less-than operator: returns true if this object is less than other
-    bool operator<(const T& other) const {
+    bool operator<(const Type& other) const {
         return compare(other) < 0;
     }
 
     // Less-than-or-equal operator: returns true if this object is less than or equal to other
-    bool operator<=(const T& other) const {
+    bool operator<=(const Type& other) const {
         return compare(other) <= 0;
     }
 
     // Greater-than operator: returns true if this object is greater than other
-    bool operator>(const T& other) const {
+    bool operator>(const Type& other) const {
         return compare(other) > 0;
     }
 
     // Greater-than-or-equal operator: returns true if this object is greater than or equal to other
-    bool operator>=(const T& other) const {
+    bool operator>=(const Type& other) const {
         return compare(other) >= 0;
     }
 
@@ -792,7 +792,7 @@ protected:
     // Returns -1 if this object is "before" the other,
     //         0 if they are equal,
     //         1 if this object is "after" the other
-    virtual int compare(const T& other) const = 0;
+    virtual int compare(const Type& other) const = 0;
 };
 
 /**
@@ -879,7 +879,7 @@ public:
  * the same underlying type but are treated as distinct types by the compiler, preventing accidental misuse 
  * and improving code clarity.
  * 
- * @tparam T The underlying type that the NamedType will wrap (e.g., int, std::string)
+ * @tparam Type The underlying type that the NamedType will wrap (e.g., int, std::string)
  * @tparam Tag A unique type used to distinguish this NamedType from other NamedTypes that wrap 
  *         the same underlying type. This can be an empty struct or any unique type.
  * 
@@ -900,31 +900,31 @@ public:
  * setDimensions(Width(800), Width(600)); // Compile-time error, prevents misuse
  * @endcode
  */
-template <typename T, typename Tag>
+template <typename Type, typename Tag>
 class NamedType : private NonCopyable, private NonMovable {
 public:
-    using UnderlyingType = T;
+    using UnderlyingType = Type;
 
     // Construction
-    explicit NamedType(const T& value) : value_(value) {}
-    explicit NamedType(T&& value) noexcept(NEX_STD is_nothrow_move_constructible_v<T>)
+    explicit NamedType(const Type& value) : value_(value) {}
+    explicit NamedType(Type&& value) noexcept(NEX_STD is_nothrow_move_constructible_v<Type>)
         : value_(NEX_STD move(value)) {}
 
     // Accessors
-    NEX_NODISCARD const T& get() const noexcept { return value_; }
-    NEX_NODISCARD T& get() noexcept { return value_; }
+    NEX_NODISCARD const Type& get() const noexcept { return value_; }
+    NEX_NODISCARD Type& get() noexcept { return value_; }
 
     // Explicit conversion
-    explicit operator const T&() const noexcept { return value_; }
-    explicit operator T&() noexcept { return value_; }
+    explicit operator const Type&() const noexcept { return value_; }
+    explicit operator Type&() noexcept { return value_; }
 
     // Comparison (if desired)
     // By default, disable comparison between different NamedType instances to prevent accidental misuse
     template <typename OtherTag>
-    bool operator==(const NamedType<T, OtherTag>&) const = delete;
+    bool operator==(const NamedType<Type, OtherTag>&) const = delete;
 
 private:
-    T value_;
+    Type value_;
 };
 
 NEX_SUBNAMESPACE_END(utility)

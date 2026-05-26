@@ -10,10 +10,23 @@
 #include "nex/base/attributes.h"
 #include "nex/base/build.h"
 #include "nex/base/namespace.h"
+#include "nex/base/location.h"
+
+// ======================================================================================
+// Internal source location metadata for Assert/Crash handling
+// ======================================================================================
+
+// Get the relative file path for assertion and fatal handlers
+#define NEX_ASSERT_FILE_PATH \
+    (stripFilePath(NEX_SOURCE_FILE_PATH))
 
 // Get function name for assertion and fatal handlers
 #define NEX_ASSERT_FUNCTION_NAME \
     NEX_SOURCE_FUNCTION_NAME
+
+// ======================================================================================
+// Assert/Crash handling APIs
+// ======================================================================================
 
 NEX_NAMESPACE_BEGIN
 
@@ -178,6 +191,10 @@ void setAssertHandler(AssertHandler handler);
 AssertHandler getAssertHandler();
 
 NEX_NAMESPACE_END
+
+// ======================================================================================
+// Assert/Crash handling macros
+// ======================================================================================
 
 /**
  * @def NEX_IMMEDIATE_CRASH()

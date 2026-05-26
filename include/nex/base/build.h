@@ -75,50 +75,6 @@
 #endif
 
 // ======================================================================================
-// Macros defining for source location information (typically used in debug builds)
-// ======================================================================================
-
-// Get the full file path for source location
-#define NEX_SOURCE_FILE_PATH __FILE__
-
-// Get the line number for source location
-#define NEX_SOURCE_LINE_NUMBER __LINE__
-
-// Get the function name for source location
-#if NEX_COMPILER_GCC_COMPATIBLE
-    #define NEX_SOURCE_FUNCTION_NAME __PRETTY_FUNCTION__
-#elif NEX_COMPILER_IS_MSVC
-    #define NEX_SOURCE_FUNCTION_NAME __FUNCSIG__
-#elif NEX_COMPILER_MSVC_COMPATIBLE
-    // Clang on MSVC supports __PRETTY_FUNCTION__ and provides more detailed function signatures than __FUNCSIG__, 
-    // so we use __PRETTY_FUNCTION__ for better readability and consistency with other platforms. 
-    #define NEX_SOURCE_FUNCTION_NAME __PRETTY_FUNCTION__
-#else
-    // See https://en.cppreference.com/w/c/language/function_definition#func
-    #define NEX_SOURCE_FUNCTION_NAME __func__
-#endif
-
-// User-configurable macro to enable/disable the use of std::source_location for capturing source location information.
-#if defined(NEX_USE_STD_SOURCE_LOCATION)
-    #if NEX_COMPILER_IS_MSVC
-        // MSVC's implementation of std::source_location is incomplete and does not support all the features we need, 
-        // so we disable it for now and use our own implementation instead.
-        #undef NEX_USE_STD_SOURCE_LOCATION
-        #define NEX_USE_STD_SOURCE_LOCATION 0
-    #else
-        // On GCC and Clang, std::source_location is fully supported and provides a more standardized way 
-        // to capture source location information, so we enable it if the user has requested it and it's available 
-        // because we are compiling with C++20 or later.
-        #undef NEX_USE_STD_SOURCE_LOCATION
-        #define NEX_USE_STD_SOURCE_LOCATION 1
-    #endif
-#else
-    // If the user has not defined NEX_USE_STD_SOURCE_LOCATION, we default to 0 (disabled) to avoid compilation 
-    // errors on compilers and use our own implementation instead.
-    #define NEX_USE_STD_SOURCE_LOCATION 0
-#endif
-
-// ======================================================================================
 // Build linkage detection (building/using shared library or static library)
 // ======================================================================================
 

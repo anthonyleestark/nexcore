@@ -10,6 +10,7 @@
 #include "nex/base/macros.h"
 #include "nex/base/types.h"
 #include "nex/base/traits.h"
+#include "nex/base/location.h"
 
 #if NEX_USE_STD_SOURCE_LOCATION
     #include <source_location>
@@ -250,42 +251,6 @@ constexpr EnableIf<EnableBitmaskOperators<Enum>::enable, Enum&>
 operator^=(Enum& lhs, Enum rhs) {
     lhs = lhs ^ rhs;
     return lhs;
-}
-
-////// Helper functions for source location and debugging ---------------------------------
-
-// Strip the path from a file path, returning only the file name, which can be used for various purposes 
-// such as improving the readability of error messages and logs by showing only the file name instead of 
-// the full file path.
-constexpr const char* stripPath(const char* path) {
-    if (!path) return "";
-    const char* last = path;
-    for (const char* p = path; *p; ++p) {
-        if (*p == '/' || *p == '\\') {
-            last = p + 1;
-        }
-    }
-    return last;
-}
-
-// Get the function name from a function signature, which can be used for various purposes such as improving the 
-// readability of error messages and logs by showing only the function name instead of the full function signature.
-constexpr const char* stripFunctionSignature(const char* signature) {
-    if (!signature) return "";
-    const char* last = signature;
-    for (const char* p = signature; *p; ++p) {
-        if (*p == '(') {
-            last = p;
-            break;
-        }
-    }
-    for (const char* p = last; p > signature; --p) {
-        if (*p == ' ' || *p == ':') {
-            last = p + 1;
-            break;
-        }
-    }
-    return last;
 }
 
 ////// Utility classes for memory blocks ---------------------------------
@@ -722,7 +687,7 @@ struct SourceLocation {
 #if NEX_USE_STD_SOURCE_LOCATION
     static SourceLocation current(NEX_STD source_location loc = NEX_STD source_location::current()) {
         return { 
-            stripPath(loc.file_name()), 
+            stripFilePath(loc.file_name()), 
             static_cast<int>(loc.line()), 
             loc.function_name() 
         };
@@ -730,7 +695,7 @@ struct SourceLocation {
 #else
     static SourceLocation current() {
         return { 
-            stripPath(NEX_SOURCE_FILE_PATH), 
+            stripFilePath(NEX_SOURCE_FILE_PATH), 
             NEX_SOURCE_LINE_NUMBER, 
             NEX_SOURCE_FUNCTION_NAME 
         };

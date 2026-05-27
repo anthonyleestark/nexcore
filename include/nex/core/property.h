@@ -5,10 +5,9 @@
 
 #pragma once
 
-#include <utility>
-
 #include "nex/base/macros.h"
 #include "nex/base/types.h"
+#include "nex/base/casts.h"
 #include "nex/base/traits.h"
 #include "nex/base/wrappers.h"
 
@@ -94,7 +93,7 @@ public:
     // Constructors for initializing the property value
     constexpr explicit Property(const ValueType& v) : value_(v) {}
     constexpr explicit Property(ValueType&& v) noexcept(IsNothrowMoveConstructibleV<ValueType>)
-        : value_(NEX_STD move(v)) {}
+        : value_(move(v)) {}
 
     ////// Getters for the property value --------------------------------------------------
 
@@ -137,7 +136,7 @@ public:
         }
 
         // Update the property value using move semantics
-        value_ = NEX_STD move(newVal);
+        value_ = move(newVal);
 
         if constexpr (Policy.hasCallback) {
             if (callback_) callback_(value_);
@@ -148,7 +147,7 @@ public:
     Property& operator=(const ValueType& v) { set(v); return *this; }
 
     // Assignment operator for setting the property value with move semantics
-    Property& operator=(ValueType&& v) { set(NEX_STD move(v)); return *this; }
+    Property& operator=(ValueType&& v) { set(move(v)); return *this; }
 
     ////// Configuration methods ---------------------------------------------------------------
 
@@ -156,14 +155,14 @@ public:
     template <typename ValidatorFunc>
     void setValidator(ValidatorFunc&& func)
     requires Policy.hasValidator && IsInvocableRV<bool, ValidatorFunc, const ValueType&> {
-        validator_ = NEX_STD forward<ValidatorFunc>(func);
+        validator_ = forward<ValidatorFunc>(func);
     }
 
     // Sets the callback function for the property (only if the policy includes a callback)
     template <typename CallbackFunc>
     void setCallback(CallbackFunc&& func)
     requires Policy.hasCallback && IsInvocableRV<void, CallbackFunc, const ValueType&> {
-        callback_ = NEX_STD forward<CallbackFunc>(func);
+        callback_ = forward<CallbackFunc>(func);
     }
 };
 

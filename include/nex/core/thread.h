@@ -10,6 +10,7 @@
 
 #include "nex/base/macros.h"
 #include "nex/base/types.h"
+#include "nex/base/casts.h"
 #include "nex/base/primitives.h"
 #include "nex/base/wrappers.h"
 #include "nex/core/meta/runtime_id.h"
@@ -192,7 +193,7 @@ public:
      */
     template<typename Fn, typename... Args>
     bool start(Fn&& callable, Args&&... args) {
-        return startWithTask(NEX_STD forward<Fn>(callable), NEX_STD forward<Args>(args)...);
+        return startWithTask(forward<Fn>(callable), forward<Args>(args)...);
     }
 
     ////// Thread Control ---------------------------------------------------------------
@@ -289,7 +290,7 @@ public:
     static Thread create(StringView name, Fn&& callable, Args&&... args) {
         Thread t;
         t.setName(name);
-        t.start(NEX_STD forward<Fn>(callable), NEX_STD forward<Args>(args)...);
+        t.start(forward<Fn>(callable), forward<Args>(args)...);
         return t;
     }
 

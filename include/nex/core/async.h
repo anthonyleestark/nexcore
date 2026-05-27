@@ -8,10 +8,10 @@
 #include <exception>
 #include <future>
 #include <tuple>
-#include <utility>
 
 #include "nex/base/macros.h"
 #include "nex/base/types.h"
+#include "nex/base/casts.h"
 #include "nex/base/traits.h"
 #include "nex/base/primitives.h"
 #include "nex/base/wrappers.h"
@@ -49,7 +49,7 @@ public:
         {
             UniqueLock lock(mutex_);
             throwIfReady();
-            value_.emplace(NEX_STD move(value));
+            value_.emplace(move(value));
             ready_ = true;
         }
         condition_.notify_all();
@@ -102,7 +102,7 @@ public:
 
         // Return the value.
         // Since we are moving it out, we can reset the optional to release the memory.
-        return NEX_STD move(*value_);
+        return move(*value_);
     }
 
     // Check if the value is ready without blocking.
@@ -273,7 +273,7 @@ template<typename T>
 struct NEX_INTERNAL PromiseLifetime {
     // Constructor that takes a shared pointer to the FutureState.
     explicit PromiseLifetime(SharedPtr<FutureState<T>> state)
-        : state_(NEX_STD move(state)) {
+        : state_(move(state)) {
     }
 
     // Destructor that checks if the FutureState is still valid and sets the broken promise state if necessary.
@@ -300,9 +300,9 @@ class NEX_INTERNAL AsyncTask {
 public:
     // Constructor that takes a Promise, a function, and its arguments.
     AsyncTask(Promise<ReturnType> promise, Fn fn, Args... args)
-        : promise_(NEX_STD move(promise)),
-          fn_(NEX_STD move(fn)),
-          args_(NEX_STD move(args)...) {
+        : promise_(move(promise)),
+          fn_(move(fn)),
+          args_(move(args)...) {
     }
 
     // Run the task and set the result in the Promise.
@@ -313,7 +313,7 @@ public:
             if constexpr (NEX_STD is_void_v<ReturnType>) {
                 NEX_STD apply(
                     [this](auto&... args) {
-                        NEX_STD invoke(fn_, NEX_STD move(args)...);
+                        NEX_STD invoke(fn_, move(args)...);
                     },
                     args_
                 );
@@ -322,7 +322,7 @@ public:
                 promise_.setValue(
                     NEX_STD apply(
                         [this](auto&... args) -> ReturnType {
-                            return NEX_STD invoke(fn_, NEX_STD move(args)...);
+                            return NEX_STD invoke(fn_, move(args)...);
                         },
                         args_
                     )
@@ -384,7 +384,7 @@ private:
 
     // Private constructor used by Promise to create a Future associated with the given state.
     explicit Future(SharedPtr<NEX_DETAIL FutureState<T>> state)
-        : state_(NEX_STD move(state)) {
+        : state_(move(state)) {
     }
 
     // Internal shared state of the Future, managed by the Promise.
@@ -419,7 +419,7 @@ public:
     // Set the value of the Promise, which will make it available to the associated Future.
     void setValue(T value) {
         ensureState();
-        state_->setValue(NEX_STD move(value));
+        state_->setValue(move(value));
         lifetime_.reset();
     }
 
@@ -540,13 +540,13 @@ auto async(Executor& executor, Fn&& fn, Args&&... args)
     auto future = promise.getFuture();
     auto taskPromise = promise;
     auto task = NEX_STD make_shared<Task>(
-        NEX_STD move(taskPromise),
-        NEX_STD forward<Fn>(fn),
-        NEX_STD forward<Args>(args)...
+        move(taskPromise),
+        forward<Fn>(fn),
+        forward<Args>(args)...
     );
 
     try {
-        executor.execute([task = NEX_STD move(task)]() mutable {
+        executor.execute([task = move(task)]() mutable {
             task->run();
         });
     } catch (...) {

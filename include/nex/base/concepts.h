@@ -24,6 +24,7 @@
 
 #include "nex/base/macros.h"
 #include "nex/base/types.h"
+#include "nex/base/casts.h"
 
 NEX_NAMESPACE_BEGIN
 
@@ -333,7 +334,7 @@ concept Class = NEX_STD is_class_v<NEX_STD remove_cvref_t<Type>>;
 /// Checks whether Type can be dereferenced.
 template <typename Type>
 concept Dereferenceable = requires(Type&& value) {
-    *NEX_STD forward<Type>(value);
+    *forward<Type>(value);
 };
 
 /// Checks whether Type behaves like a raw or smart pointer.

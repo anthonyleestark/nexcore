@@ -3,6 +3,7 @@
  * Copyright (c) 2026 Anthony Lee Stark. All rights reserved.
  */
 
+#include "nex/base/casts.h"
 #include "nex/core/text/encoding.h"
 #include "nex/infrastructure/parser/xml.h"
 
@@ -29,7 +30,7 @@ bool toUtf8String(StringView value, Utf8String& out) {
     if (result.empty() && !value.empty()) {
         return false;
     }
-    out = NEX_STD move(result);
+    out = NEX_PREPEND_NAMESPACE(move(result));
     return true;
 }
 
@@ -196,7 +197,7 @@ Vec<XmlNode> XmlNode::children(StringView name) const {
         XmlNode item;
         item.impl_ = NEX_STD make_unique<Impl>();
         item.impl_->node = child;
-        list.push_back(NEX_STD move(item));
+        list.push_back(NEX_PREPEND_NAMESPACE(move(item)));
     }
 
     return list;

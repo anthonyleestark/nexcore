@@ -179,7 +179,7 @@ bool Thread::startWithTask(Fn&& callable, Args&&... args) {
 
     // Start the thread with a lambda that captures the callable and its arguments
     impl_->jthread = NEX_STD jthread(
-        [func = NEX_STD forward<Fn>(callable), ...argList = NEX_STD forward<Args>(args)]
+        [func = forward<Fn>(callable), ...argList = forward<Args>(args)]
         (StopToken stopToken) mutable {
 
             // Apply the thread's attributes
@@ -189,9 +189,9 @@ bool Thread::startWithTask(Fn&& callable, Args&&... args) {
             // Call the provided function with the stop token and arguments if it accepts a stop token, 
             // otherwise call it without the stop token
             if constexpr (NEX_STD is_invocable_v<Fn, StopToken, Args...>) {
-                NEX_STD invoke(func, stopToken, NEX_STD move(argList)...);
+                NEX_STD invoke(func, stopToken, move(argList)...);
             } else {
-                NEX_STD invoke(func, NEX_STD move(argList)...);
+                NEX_STD invoke(func, move(argList)...);
             }
 
             // Mark the thread as not running when the function exits

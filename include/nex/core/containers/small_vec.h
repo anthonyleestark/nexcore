@@ -9,7 +9,6 @@
 #include <iterator>
 #include <limits>
 #include <memory>
-#include <utility>
 
 #include "nex/base/macros.h"
 #include "nex/base/types.h"
@@ -109,7 +108,7 @@ private:
     static void moveRangeUninit(pointer dest, pointer first, pointer last) noexcept(
         IsNothrowMoveConstructibleV<value_type>) {
         for (; first != last; ++first, ++dest) {
-            ::new (static_cast<void*>(dest)) value_type(NEX_STD move(*first));
+            ::new (static_cast<void*>(dest)) value_type(move(*first));
             first->~value_type();
         }
     }
@@ -444,7 +443,7 @@ public:
     // Append a moved value
     void pushBack(value_type&& value) {
         if (size_ == capacity()) growTo(size_ + 1);
-        ::new (static_cast<void*>(storagePtr() + size_)) value_type(NEX_STD move(value));
+        ::new (static_cast<void*>(storagePtr() + size_)) value_type(move(value));
         ++size_;
     }
 
@@ -453,7 +452,7 @@ public:
     reference emplaceBack(Args&&... args) {
         if (size_ == capacity()) growTo(size_ + 1);
         value_type* ptr = 
-            ::new (static_cast<void*>(storagePtr() + size_)) value_type(NEX_STD forward<Args>(args)...);
+            ::new (static_cast<void*>(storagePtr() + size_)) value_type(forward<Args>(args)...);
         ++size_;
         return *ptr;
     }
@@ -498,7 +497,7 @@ public:
 
     // Insert a moved value before pos
     iterator insert(const_iterator pos, value_type&& value) {
-        return emplace(pos, NEX_STD move(value));
+        return emplace(pos, move(value));
     }
 
     // Insert count copies of value before pos
@@ -512,10 +511,10 @@ public:
         // Shift elements right to make room
         for (size_type i = newSize - 1; i >= idx + count; --i) {
             if (i < size_) {
-                ::new (static_cast<void*>(base + i)) value_type(NEX_STD move(base[i - count]));
+                ::new (static_cast<void*>(base + i)) value_type(move(base[i - count]));
                 base[i - count].~value_type();
             } else {
-                ::new (static_cast<void*>(base + i)) value_type(NEX_STD move(base[i - count]));
+                ::new (static_cast<void*>(base + i)) value_type(move(base[i - count]));
                 base[i - count].~value_type();
             }
         }
@@ -546,13 +545,13 @@ public:
         pointer base = storagePtr();
         if (idx < size_) {
             // Shift elements right by one
-            ::new (static_cast<void*>(base + size_)) value_type(NEX_STD move(base[size_ - 1]));
+            ::new (static_cast<void*>(base + size_)) value_type(move(base[size_ - 1]));
             for (size_type i = size_ - 1; i > idx; --i) {
-                base[i] = NEX_STD move(base[i - 1]);
+                base[i] = move(base[i - 1]);
             }
             base[idx].~value_type();
         }
-        ::new (static_cast<void*>(base + idx)) value_type(NEX_STD forward<Args>(args)...);
+        ::new (static_cast<void*>(base + idx)) value_type(forward<Args>(args)...);
         ++size_;
         return begin() + static_cast<difference_type>(idx);
     }
@@ -573,7 +572,7 @@ public:
         if (eraseCount == 0) return begin() + static_cast<difference_type>(idxFirst);
         // Shift remaining elements left
         for (size_type i = idxFirst; i + eraseCount < size_; ++i) {
-            base[i] = NEX_STD move(base[i + eraseCount]);
+            base[i] = move(base[i + eraseCount]);
         }
         // Destroy the now-excess tail elements
         destroyRange(base + size_ - eraseCount, base + size_);
@@ -598,9 +597,9 @@ public:
             return;
         }
         // At least one is inline — move element by element through a temporary
-        SmallVec tmp(NEX_STD move(*this));
-        *this = NEX_STD move(other);
-        other = NEX_STD move(tmp);
+        SmallVec tmp(move(*this));
+        *this = move(other);
+        other = move(tmp);
     }
 
     ////// Conversion ----------------------------------

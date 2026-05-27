@@ -4,8 +4,8 @@
  */
 
 #include <algorithm>
-#include <utility>
 
+#include "nex/base/casts.h"
 #include "nex/core/containers/bit_array.h"
 #include "nex/base/assert_crash.h"
 
@@ -55,14 +55,14 @@ BitArray& BitArray::operator=(const BitArray& other) {
 
 // Move constructor
 BitArray::BitArray(BitArray&& other) noexcept 
-    : buffer_(NEX_STD move(other.buffer_)), bitCount_(other.bitCount_) {
+    : buffer_(NEX_PREPEND_NAMESPACE(move(other.buffer_))), bitCount_(other.bitCount_) {
     other.bitCount_ = 0;
 }
 
 // Move assignment operator
 BitArray& BitArray::operator=(BitArray&& other) noexcept {
     if (this != &other) {
-        buffer_ = NEX_STD move(other.buffer_);
+        buffer_ = NEX_PREPEND_NAMESPACE(move(other.buffer_));
         bitCount_ = other.bitCount_;
         other.bitCount_ = 0;
     }

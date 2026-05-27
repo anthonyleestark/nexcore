@@ -8,10 +8,10 @@
 #include <algorithm>
 #include <limits>
 #include <stdexcept>
-#include <utility>
 
 #include "nex/base/macros.h"
 #include "nex/base/types.h"
+#include "nex/base/casts.h"
 #include "nex/base/linear.h"
 #include "nex/base/string.h"
 #include "nex/core/view/byte_span.h"
@@ -106,12 +106,12 @@ public:
 
     // Move constructor
     ByteArray(ByteArray&& other) noexcept 
-        : buffer_(NEX_STD move(other.buffer_)) {}
+        : buffer_(NEX_PREPEND_NAMESPACE(move(other.buffer_))) {}
 
     // Move assignment operator
     ByteArray& operator=(ByteArray&& other) noexcept {
         if (this != &other)
-            buffer_ = NEX_STD move(other.buffer_);
+            buffer_ = NEX_PREPEND_NAMESPACE(move(other.buffer_));
         return *this;
     }
 

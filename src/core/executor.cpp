@@ -7,6 +7,7 @@
 #include "nex/base/primitives.h"
 #include "nex/base/adaptors.h"
 #include "nex/base/linear.h"
+#include "nex/base/casts.h"
 
 NEX_NAMESPACE_BEGIN
 
@@ -45,7 +46,7 @@ void ThreadExecutor::start() {
             {
                 LockGuard lock(impl_->queueMutex_);     // Ensure thread-safe access to the queue
                 if (!impl_->taskQueue_.empty()) {
-                    task = NEX_STD move(impl_->taskQueue_.front());
+                    task = NEX_PREPEND_NAMESPACE(move(impl_->taskQueue_.front()));
                     impl_->taskQueue_.pop();
                 }
             }
@@ -68,8 +69,8 @@ void ThreadExecutor::stop() {
 // Execute a task in the context of the thread. 
 // Tasks are added to a queue and processed sequentially.
 void ThreadExecutor::execute(Function<void()> task) {
-    LockGuard lock(impl_->queueMutex_);             // Ensure thread-safe access to the queue
-    impl_->taskQueue_.push(NEX_STD move(task));     // Add the task to the queue
+    LockGuard lock(impl_->queueMutex_);                             // Ensure thread-safe access to the queue
+    impl_->taskQueue_.push(NEX_PREPEND_NAMESPACE(move(task)));      // Add the task to the queue
 }
 
 // ======================================================================
@@ -104,7 +105,7 @@ void ThreadPool::start() {
                 {
                     LockGuard lock(impl_->queueMutex_);     // Ensure thread-safe access to the queue
                     if (!impl_->taskQueue_.empty()) {
-                        task = NEX_STD move(impl_->taskQueue_.front());
+                        task = NEX_PREPEND_NAMESPACE(move(impl_->taskQueue_.front()));
                         impl_->taskQueue_.pop();
                     }
                 }
@@ -132,8 +133,8 @@ void ThreadPool::stop() {
 // Execute a task in the context of the thread pool.
 // Tasks are added to a shared queue and processed by available threads.
 void ThreadPool::execute(Function<void()> task) {
-    LockGuard lock(impl_->queueMutex_);             // Ensure thread-safe access to the queue
-    impl_->taskQueue_.push(NEX_STD move(task));     // Add the task to the queue
+    LockGuard lock(impl_->queueMutex_);                             // Ensure thread-safe access to the queue
+    impl_->taskQueue_.push(NEX_PREPEND_NAMESPACE(move(task)));      // Add the task to the queue
 }
 
 // Get the number of threads in the pool.

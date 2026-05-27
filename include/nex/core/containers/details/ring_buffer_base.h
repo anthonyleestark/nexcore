@@ -6,11 +6,11 @@
 #pragma once
 
 #include <iterator>
-#include <utility>
 #include <cstring>
 
 #include "nex/base/macros.h"
 #include "nex/base/types.h"
+#include "nex/base/casts.h"
 #include "nex/base/traits.h"
 #include "nex/base/wrappers.h"
 #include "nex/base/assert_crash.h"
@@ -184,7 +184,7 @@ namespace ring_buffer::details {
                     if constexpr (IsNothrowMoveAssignableV<value_type> 
                                     || !IsCopyAssignableV<value_type>) {
                         // Move elements if it's safe to do so
-                        newBuffer[i] = NEX_STD move(Storage::buffer[(head_ + i) % oldCapacity]);
+                        newBuffer[i] = move(Storage::buffer[(head_ + i) % oldCapacity]);
                     } else {
                         // Otherwise, copy elements
                         newBuffer[i] = Storage::buffer[(head_ + i) % oldCapacity];
@@ -193,7 +193,7 @@ namespace ring_buffer::details {
             }
 
             // Replace old buffer with new buffer
-            Storage::buffer = NEX_STD move(newBuffer);
+            Storage::buffer = move(newBuffer);
 
             // Update capacity and reset indices
             Storage::capacity = newCapacity;
@@ -585,13 +585,13 @@ namespace ring_buffer::details {
                 if constexpr (Policy == OverflowPolicy::Reject) {
                     return false;                                           // Reject new element
                 } else {
-                    Storage::buffer[tail_] = NEX_STD move(value);           // Overwrite oldest element
+                    Storage::buffer[tail_] = move(value);                   // Overwrite oldest element
                     tail_ = (tail_ + 1) % Storage::capacity;                // Move tail forward
                     head_ = tail_;                                          // Oldest element follows inserted element
                     return true;
                 }
             }
-            Storage::buffer[tail_] = NEX_STD move(value);                   // Add new element using move semantics
+            Storage::buffer[tail_] = move(value);                           // Add new element using move semantics
             tail_ = (tail_ + 1) % Storage::capacity;                        // Move tail forward
             ++count_;
             return true;

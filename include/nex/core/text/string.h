@@ -7,10 +7,10 @@
 
 #include <string>
 #include <string_view>
-#include <utility>
 
 #include "nex/base/macros.h"
 #include "nex/base/types.h"
+#include "nex/base/casts.h"
 #include "nex/base/iterator.h"
 #include "nex/base/string.h"
 #include "nex/base/result.h"
@@ -96,12 +96,12 @@ public:
 
     // Move constructor
     String(String&& other) noexcept 
-        : buffer_(NEX_STD move(other.buffer_)) {}
+        : buffer_(NEX_PREPEND_NAMESPACE(move(other.buffer_))) {}
 
     // Move assignment operator
     String& operator=(String&& other) noexcept {
         if (this != &other)
-            buffer_ = NEX_STD move(other.buffer_);
+            buffer_ = NEX_PREPEND_NAMESPACE(move(other.buffer_));
         return *this;
     }
 

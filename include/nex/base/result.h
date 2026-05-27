@@ -5,9 +5,8 @@
 
 #pragma once
 
-#include <utility>
-
 #include "nex/base/types.h"
+#include "nex/base/casts.h"
 #include "nex/base/error.h"
 #include "nex/base/assert_crash.h"
 
@@ -54,7 +53,7 @@ public:
     static Result ok(ReturnType value) {
         Result result;
         result.isOk_ = true;
-        ::new (&result.value_) ReturnType(NEX_STD move(value));
+        ::new (&result.value_) ReturnType(move(value));
         return result;
     }
     
@@ -62,7 +61,7 @@ public:
     static Result error(ErrorType error) {
         Result result;
         result.isOk_ = false;
-        ::new (&result.error_) ErrorType(NEX_STD move(error));
+        ::new (&result.error_) ErrorType(move(error));
         return result;
     }
     

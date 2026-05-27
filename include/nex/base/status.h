@@ -69,13 +69,12 @@ public:
     }
 
     // Get the error message (returns "Ok" if status is successful)
-    constexpr const Error& error() const noexcept {
+    constexpr Error error() const noexcept {
         if (isOk_) {
-            static constexpr Error success = {
-                .code = ErrorCode::Ok,      // No error code for successful/okay status
-                .message = "Ok"             // Message indicating successful/okay status
+            return {
+                .code = ErrorCode::Ok,    // No error code for successful/okay status
+                .message = "Ok"           // Message indicating successful/okay status
             };
-            return success;
         }
         return storage_.error_;
     }
@@ -112,6 +111,18 @@ private:
         NEX_STD construct_at(&storage_.error_, NEX_STD move(unexpected.error));
     }
 
+    // Copy the contents of another Status object into this one
+    constexpr void copy(const Status& other) noexcept {
+        isOk_ = other.isOk_;
+        if (isOk_) {
+            // Construct the dummy member for successful status
+            NEX_STD construct_at(&storage_.dummy_);
+        } else {
+            // Copy the error information from the other Status object
+            NEX_STD construct_at(&storage_.error_, other.storage_.error_);
+        }
+    }
+
     // Move the contents of another Status object into this one
     constexpr void move(Status&& other) noexcept {
         isOk_ = other.isOk_;
@@ -132,8 +143,19 @@ private:
     }
 
 public:
-    // Deleted copy constructor and copy assignment operator to prevent copying of Status objects
-    NEX_DISALLOW_COPY(Status);
+    // Copy constructor for copying a Status object
+    constexpr Status(const Status& other) noexcept {
+        copy(other);
+    }
+
+    // Copy assignment operator for copying a Status object
+    constexpr Status& operator=(const Status& other) noexcept {
+        if (this != &other) {
+            destroy();
+            copy(other);
+        }
+        return *this;
+    }
 
     // Constructor for moving a Status object
     constexpr Status(Status&& other) noexcept {

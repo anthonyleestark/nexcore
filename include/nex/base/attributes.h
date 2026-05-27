@@ -448,6 +448,16 @@
 #endif  // NEX_CONSTEXPR20
 
 /**
+ * @def NEX_CONSTEXPR23
+ * @brief Expands to `constexpr` when compiling with C++23 support, otherwise empty
+ */
+#if NEX_HAS_CXX23
+    #define NEX_CONSTEXPR23 constexpr
+#else  // Compiler does not support C++23 constexpr
+    #define NEX_CONSTEXPR23
+#endif  // NEX_CONSTEXPR23
+
+/**
  * @def NEX_MSVC_INTRINSIC
  * @brief Marks a function as an intrinsic when compiling with MSVC
  * 

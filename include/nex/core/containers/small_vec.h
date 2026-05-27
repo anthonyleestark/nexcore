@@ -108,7 +108,7 @@ private:
     static void moveRangeUninit(pointer dest, pointer first, pointer last) noexcept(
         IsNothrowMoveConstructibleV<value_type>) {
         for (; first != last; ++first, ++dest) {
-            ::new (static_cast<void*>(dest)) value_type(move(*first));
+            ::new (static_cast<void*>(dest)) value_type(NEX_MOVE(*first));
             first->~value_type();
         }
     }
@@ -443,7 +443,7 @@ public:
     // Append a moved value
     void pushBack(value_type&& value) {
         if (size_ == capacity()) growTo(size_ + 1);
-        ::new (static_cast<void*>(storagePtr() + size_)) value_type(move(value));
+        ::new (static_cast<void*>(storagePtr() + size_)) value_type(NEX_MOVE(value));
         ++size_;
     }
 
@@ -497,7 +497,7 @@ public:
 
     // Insert a moved value before pos
     iterator insert(const_iterator pos, value_type&& value) {
-        return emplace(pos, move(value));
+        return emplace(pos, NEX_MOVE(value));
     }
 
     // Insert count copies of value before pos
@@ -511,10 +511,10 @@ public:
         // Shift elements right to make room
         for (size_type i = newSize - 1; i >= idx + count; --i) {
             if (i < size_) {
-                ::new (static_cast<void*>(base + i)) value_type(move(base[i - count]));
+                ::new (static_cast<void*>(base + i)) value_type(NEX_MOVE(base[i - count]));
                 base[i - count].~value_type();
             } else {
-                ::new (static_cast<void*>(base + i)) value_type(move(base[i - count]));
+                ::new (static_cast<void*>(base + i)) value_type(NEX_MOVE(base[i - count]));
                 base[i - count].~value_type();
             }
         }
@@ -545,9 +545,9 @@ public:
         pointer base = storagePtr();
         if (idx < size_) {
             // Shift elements right by one
-            ::new (static_cast<void*>(base + size_)) value_type(move(base[size_ - 1]));
+            ::new (static_cast<void*>(base + size_)) value_type(NEX_MOVE(base[size_ - 1]));
             for (size_type i = size_ - 1; i > idx; --i) {
-                base[i] = move(base[i - 1]);
+                base[i] = NEX_MOVE(base[i - 1]);
             }
             base[idx].~value_type();
         }
@@ -572,7 +572,7 @@ public:
         if (eraseCount == 0) return begin() + static_cast<difference_type>(idxFirst);
         // Shift remaining elements left
         for (size_type i = idxFirst; i + eraseCount < size_; ++i) {
-            base[i] = move(base[i + eraseCount]);
+            base[i] = NEX_MOVE(base[i + eraseCount]);
         }
         // Destroy the now-excess tail elements
         destroyRange(base + size_ - eraseCount, base + size_);
@@ -597,9 +597,9 @@ public:
             return;
         }
         // At least one is inline — move element by element through a temporary
-        SmallVec tmp(move(*this));
-        *this = move(other);
-        other = move(tmp);
+        SmallVec tmp(NEX_MOVE(*this));
+        *this = NEX_MOVE(other);
+        other = NEX_MOVE(tmp);
     }
 
     ////// Conversion ----------------------------------

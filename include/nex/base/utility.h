@@ -370,7 +370,7 @@ public:
 
     // Constructor: sets the variable to new value and saves the original
     AutoReset(Type& var, Type newValue)
-        : ptrScopedVar_(&var), originalVal_(NEX_STD exchange(var, move(newValue))) {}
+        : ptrScopedVar_(&var), originalVal_(NEX_STD exchange(var, NEX_MOVE(newValue))) {}
 
     // Factory method for handling nullable pointers (saves original value)
     static AutoReset maybe(Type* ptr) {
@@ -379,20 +379,20 @@ public:
 
     // Factory method for handling nullable pointers (sets new value if not null)
     static AutoReset maybe(Type* ptr, Type newValue) {
-        return ptr ? AutoReset(*ptr, move(newValue)) : AutoReset();
+        return ptr ? AutoReset(*ptr, NEX_MOVE(newValue)) : AutoReset();
     }
 
     // Move constructor: transfers ownership from another AutoReset instance
     AutoReset(AutoReset&& other) noexcept
         : ptrScopedVar_(NEX_STD exchange(other.ptrScopedVar_, nullptr)),
-        originalVal_(move(other.originalVal_)) {}
+        originalVal_(NEX_MOVE(other.originalVal_)) {}
 
     // Move assignment operator: transfers ownership from another AutoReset instance
     AutoReset& operator=(AutoReset&& rhs) noexcept {
         if (this != &rhs) {
             reset();
             ptrScopedVar_ = NEX_STD exchange(rhs.ptrScopedVar_, nullptr);
-            originalVal_ = move(rhs.originalVal_);
+            originalVal_ = NEX_MOVE(rhs.originalVal_);
         }
         return *this;
     }
@@ -412,7 +412,7 @@ private:
     // Reset the scoped variable to its original value
     void reset() noexcept {
         if (ptrScopedVar_) {
-            *ptrScopedVar_ = move(originalVal_);
+            *ptrScopedVar_ = NEX_MOVE(originalVal_);
             ptrScopedVar_ = nullptr;
         }
     }
@@ -464,7 +464,7 @@ class NEX_API ScopeGuard {
 public:
     // Constructor: Takes a callable object (e.g., lambda) to be called on scope exit
     explicit ScopeGuard(FuncType f) 
-        : func_(move(f)) {}
+        : func_(NEX_MOVE(f)) {}
 
     // Destructor: Calls the stored callable object if not dismissed
     // The destructor is marked noexcept to ensure that it does not throw exceptions, 
@@ -484,13 +484,13 @@ public:
 
     // Enable move semantics for ScopeGuard to allow transferring ownership of the callable object
     ScopeGuard(ScopeGuard&& other) noexcept
-        : func_(move(other.func_)), dismissed_(other.dismissed_) {
+        : func_(NEX_MOVE(other.func_)), dismissed_(other.dismissed_) {
         other.dismissed_ = true; // Prevent the moved-from object from calling the callable
     }
     ScopeGuard& operator=(ScopeGuard&& rhs) noexcept {
         if (this != &rhs) {
             if (!dismissed_) func_(); // Call the current callable if not dismissed
-            func_ = move(rhs.func_);
+            func_ = NEX_MOVE(rhs.func_);
             dismissed_ = rhs.dismissed_;
             rhs.dismissed_ = true; // Prevent the moved-from object from calling the callable
         }
@@ -525,7 +525,7 @@ public:
     // Constructor: Takes a callable object (e.g., lambda) to be called on scope exit 
     // if no exceptions were thrown
     explicit OnScopeSuccess(FuncType f)
-        : func_(move(f))
+        : func_(NEX_MOVE(f))
         , exceptionsAtConstruction_(NEX_STD uncaught_exceptions()) {}
 
     // Destructor: Calls the stored callable object if no exceptions were thrown 
@@ -546,7 +546,7 @@ public:
 
     // Enable move semantics for OnScopeSuccess to allow transferring ownership of the callable object
     OnScopeSuccess(OnScopeSuccess&& other) noexcept
-        : func_(move(other.func_))
+        : func_(NEX_MOVE(other.func_))
         , exceptionsAtConstruction_(other.exceptionsAtConstruction_)
         , dismissed_(other.dismissed_)
     {
@@ -556,7 +556,7 @@ public:
         if (this != &rhs) {
             if (NEX_STD uncaught_exceptions() == exceptionsAtConstruction_ && !dismissed_)
                 func_(); // Call the current callable if not dismissed and no exceptions were thrown
-            func_ = move(rhs.func_);
+            func_ = NEX_MOVE(rhs.func_);
             exceptionsAtConstruction_ = rhs.exceptionsAtConstruction_;
             dismissed_ = rhs.dismissed_;
             rhs.dismissed_ = true; // Prevent the moved-from object from calling the callable
@@ -592,7 +592,7 @@ class NEX_API OnScopeFailure {
 public:
     // Constructor: Takes a callable object (e.g., lambda) to be called on scope exit if an exception was thrown
     explicit OnScopeFailure(FuncType f)
-        : func_(move(f))
+        : func_(NEX_MOVE(f))
         , exceptionsAtConstruction_(NEX_STD uncaught_exceptions()) {}
 
     // Destructor: Calls the stored callable object if an exception was thrown during the lifetime of this object
@@ -612,7 +612,7 @@ public:
 
     // Enable move semantics for OnScopeFailure to allow transferring ownership of the callable object
     OnScopeFailure(OnScopeFailure&& other) noexcept
-        : func_(move(other.func_))
+        : func_(NEX_MOVE(other.func_))
         , exceptionsAtConstruction_(other.exceptionsAtConstruction_)
         , dismissed_(other.dismissed_)
     {
@@ -622,7 +622,7 @@ public:
         if (this != &rhs) {
             if (NEX_STD uncaught_exceptions() > exceptionsAtConstruction_ && !dismissed_)
                 func_(); // Call the current callable if not dismissed and an exception was thrown
-            func_ = move(rhs.func_);
+            func_ = NEX_MOVE(rhs.func_);
             exceptionsAtConstruction_ = rhs.exceptionsAtConstruction_;
             dismissed_ = rhs.dismissed_;
             rhs.dismissed_ = true; // Prevent the moved-from object from calling the callable
@@ -641,7 +641,7 @@ private:
 // without having to explicitly specify the type of the callable object.
 template <typename FuncType>
 NEX_NODISCARD auto makeScopeGuard(FuncType&& f) {
-    return ScopeGuard<Decay<FuncType>>(forward<FuncType>(f));
+    return ScopeGuard<Decay<FuncType>>(NEX_FORWARD(FuncType, f));
 }
 
 // DEFER macro for scope-based excution of code blocks, similar to the DEFER statement in languages like Go
@@ -916,7 +916,7 @@ public:
     // Construction
     explicit NamedType(const Type& value) : value_(value) {}
     explicit NamedType(Type&& value) noexcept(IsNothrowMoveConstructibleV<Type>)
-        : value_(move(value)) {}
+        : value_(NEX_MOVE(value)) {}
 
     // Accessors
     NEX_NODISCARD const Type& get() const noexcept { return value_; }

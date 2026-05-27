@@ -53,7 +53,7 @@ public:
     static Result ok(ReturnType value) {
         Result result;
         result.isOk_ = true;
-        ::new (&result.value_) ReturnType(move(value));
+        ::new (&result.value_) ReturnType(NEX_MOVE(value));
         return result;
     }
     
@@ -61,7 +61,7 @@ public:
     static Result error(ErrorType error) {
         Result result;
         result.isOk_ = false;
-        ::new (&result.error_) ErrorType(move(error));
+        ::new (&result.error_) ErrorType(NEX_MOVE(error));
         return result;
     }
     

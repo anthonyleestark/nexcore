@@ -30,7 +30,7 @@ bool toUtf8String(StringView value, Utf8String& out) {
     if (result.empty() && !value.empty()) {
         return false;
     }
-    out = NEX_PREPEND_NAMESPACE(move(result));
+    out = NEX_MOVE(result);
     return true;
 }
 
@@ -197,7 +197,7 @@ Vec<XmlNode> XmlNode::children(StringView name) const {
         XmlNode item;
         item.impl_ = NEX_STD make_unique<Impl>();
         item.impl_->node = child;
-        list.push_back(NEX_PREPEND_NAMESPACE(move(item)));
+        list.push_back(NEX_MOVE(item));
     }
 
     return list;

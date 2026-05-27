@@ -731,4 +731,27 @@ const Type* addressOf(const Type&&) = delete;
     #pragma warning(pop)
 #endif
 
+// =====================================================================================
+// Define macros for the usage of the casting utilities
+// =====================================================================================
+
+// Forward an argument while preserving its value category (lvalue or rvalue)
+#define NEX_FORWARD(Type, arg) \
+    NEX_PREPEND_NAMESPACE(forward<Type>(arg))
+
+#define NEX_FORWARD_PACK(Types, pack) \
+    NEX_PREPEND_NAMESPACE(forward<Types...>(pack)...)
+
+// Move an argument to allow it to be moved from, even if it is an lvalue
+#define NEX_MOVE(...) \
+    NEX_PREPEND_NAMESPACE(move(__VA_ARGS__))
+
+// Move an argument if it is nothrow move constructible, otherwise copy it
+#define NEX_MOVE_IF_NOEXCEPT(...) \
+    NEX_PREPEND_NAMESPACE(moveIfNoexcept(__VA_ARGS__))
+
+// Get the address of an object
+#define NEX_ADDRESS_OF(obj) \
+    NEX_PREPEND_NAMESPACE(addressOf(obj))
+
 NEX_NAMESPACE_END

@@ -82,7 +82,7 @@ concept AssignableFrom =
         const type_traits::RemoveReferenceT<To>&,
         const type_traits::RemoveReferenceT<From>&> &&
     requires(To lhs, From&& rhs) {
-        { lhs = forward<From>(rhs) } -> SameAs<To>;
+        { lhs = NEX_FORWARD(From, rhs) } -> SameAs<To>;
     };
 
 /// Checks whether Type can be swapped with another Type.
@@ -345,7 +345,7 @@ concept Class = type_traits::IsClassV<type_traits::RemoveCvrefT<Type>>;
 /// Checks whether Type can be dereferenced.
 template <typename Type>
 concept Dereferenceable = requires(Type&& value) {
-    *forward<Type>(value);
+    *NEX_FORWARD(Type, value);
 };
 
 /// Checks whether Type behaves like a raw or smart pointer.

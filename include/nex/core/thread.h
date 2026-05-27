@@ -193,7 +193,7 @@ public:
      */
     template<typename Fn, typename... Args>
     bool start(Fn&& callable, Args&&... args) {
-        return startWithTask(forward<Fn>(callable), forward<Args>(args)...);
+        return startWithTask(NEX_FORWARD<Fn>(callable), forward<Args>(args)...);
     }
 
     ////// Thread Control ---------------------------------------------------------------

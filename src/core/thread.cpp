@@ -189,9 +189,9 @@ bool Thread::startWithTask(Fn&& callable, Args&&... args) {
             // Call the provided function with the stop token and arguments if it accepts a stop token, 
             // otherwise call it without the stop token
             if constexpr (NEX_STD is_invocable_v<Fn, StopToken, Args...>) {
-                NEX_STD invoke(func, stopToken, move(argList)...);
+                NEX_STD invoke(func, stopToken, NEX_MOVE(argList)...);
             } else {
-                NEX_STD invoke(func, move(argList)...);
+                NEX_STD invoke(func, NEX_MOVE(argList)...);
             }
 
             // Mark the thread as not running when the function exits

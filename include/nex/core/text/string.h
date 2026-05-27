@@ -96,12 +96,12 @@ public:
 
     // Move constructor
     String(String&& other) noexcept 
-        : buffer_(NEX_PREPEND_NAMESPACE(move(other.buffer_))) {}
+        : buffer_(NEX_MOVE(other.buffer_)) {}
 
     // Move assignment operator
     String& operator=(String&& other) noexcept {
         if (this != &other)
-            buffer_ = NEX_PREPEND_NAMESPACE(move(other.buffer_));
+            buffer_ = NEX_MOVE(other.buffer_);
         return *this;
     }
 

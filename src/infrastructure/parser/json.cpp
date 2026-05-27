@@ -111,7 +111,7 @@ Result<void> Json::loadFromFile(StringView filePath) {
 
         nlohmann::json j;
         file >> j;
-        impl_->json = NEX_PREPEND_NAMESPACE(move(j));
+        impl_->json = NEX_MOVE(j);
         impl_->loaded = true;
         
         return Result<void>::ok();
@@ -190,7 +190,7 @@ Result<void> Json::loadFromString(StringView jsonString) {
     // Attempt to parse the JSON string
     try {
         nlohmann::json j = nlohmann::json::parse(text);
-        impl_->json = NEX_PREPEND_NAMESPACE(move(j));
+        impl_->json = NEX_MOVE(j);
         impl_->loaded = true;
         
         // Successfully loaded and parsed JSON

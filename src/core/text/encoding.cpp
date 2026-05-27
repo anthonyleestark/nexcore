@@ -477,7 +477,7 @@ Result<Utf16String> encoding::ansiToUtf16(Utf8StringView ansi) {
                         requiredSize);
 
     // Successfully converted ANSI to UTF-16, return the result
-    return Result<Utf16String>::ok(NEX_PREPEND_NAMESPACE(move(utf16)));
+    return Result<Utf16String>::ok(NEX_MOVE(utf16));
 
 #else
     // On non-Windows platforms, we can assume ANSI is UTF-8 and convert to UTF-16
@@ -523,7 +523,7 @@ Result<Utf8String> encoding::utf16ToAnsi(Utf16StringView utf16) {
     }
 
     // Successfully converted UTF-16 to ANSI, return the result
-    return Result<Utf8String>::ok(NEX_PREPEND_NAMESPACE(move(ansi)));
+    return Result<Utf8String>::ok(NEX_MOVE(ansi));
 
 #else
     // On non-Windows platforms, we can assume ANSI is UTF-8 and convert from UTF-16 to UTF-8
@@ -578,7 +578,7 @@ Result<Utf16String> encoding::utf8ToUtf16(Utf8StringView utf8) {
                         requiredSize);
 
     // Successfully converted UTF-8 to UTF-16, return the result
-    return Result<Utf16String>::ok(NEX_PREPEND_NAMESPACE(move(utf16)));
+    return Result<Utf16String>::ok(NEX_MOVE(utf16));
 
 #else
     // On non-Windows platforms, we can assume UTF-8 is already in the correct encoding and convert to UTF-16
@@ -608,7 +608,7 @@ Result<Utf16String> encoding::utf8ToUtf16(Utf8StringView utf8) {
     }
 
     // Successfully converted UTF-8 to UTF-16, return the result
-    return Result<Utf16String>::ok(move(result));
+    return Result<Utf16String>::ok(NEX_MOVE(result));
 
 #endif
 }
@@ -643,7 +643,7 @@ Result<Utf8String> encoding::utf16ToUtf8(Utf16StringView utf16) {
                         nullptr);
 
     // Successfully converted UTF-16 to UTF-8, return the result
-    return Result<Utf8String>::ok(NEX_PREPEND_NAMESPACE(move(utf8)));
+    return Result<Utf8String>::ok(NEX_MOVE(utf8));
 #else
     // On non-Windows platforms, we can assume UTF-16 is already in the correct encoding and convert to UTF-8
     
@@ -676,7 +676,7 @@ Result<Utf8String> encoding::utf16ToUtf8(Utf16StringView utf16) {
     }
 
     // Successfully converted UTF-16 to UTF-8, return the result
-    return Result<Utf8String>::ok(NEX_PREPEND_NAMESPACE(move(result)));
+    return Result<Utf8String>::ok(NEX_MOVE(result));
 
 #endif
 }
@@ -710,7 +710,7 @@ Result<Utf16String> encoding::utf32ToUtf16(Utf32StringView utf32) {
     }
 
     // Successfully converted UTF-32 to UTF-16, return the result
-    return Result<Utf16String>::ok(NEX_PREPEND_NAMESPACE(move(result)));
+    return Result<Utf16String>::ok(NEX_MOVE(result));
 }
 
 // Convert UTF-16 string to UTF-32 string
@@ -733,7 +733,7 @@ Result<Utf32String> encoding::utf16ToUtf32(Utf16StringView utf16) {
     }
 
     // Successfully converted UTF-16 to UTF-32, return the result
-    return Result<Utf32String>::ok(NEX_PREPEND_NAMESPACE(move(result)));
+    return Result<Utf32String>::ok(NEX_MOVE(result));
 }
 
 NEX_NAMESPACE_END

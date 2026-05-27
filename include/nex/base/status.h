@@ -56,7 +56,7 @@ public:
 
     // Create an error status from an existing Error object
     static constexpr Status error(Error error) noexcept {
-        return Status(Unexpected { move(error) });
+        return Status(Unexpected { NEX_MOVE(error) });
     }
 
     // Check if the status is OK (without error)
@@ -82,7 +82,7 @@ public:
     // Execute a function if the status is OK, otherwise propagate the error
     template <typename Func>
     constexpr auto andThen(Func&& func) const noexcept -> decltype(func()) {
-        if (isOk_) return NEX_STD invoke(forward<Func>(func));
+        if (isOk_) return NEX_STD invoke(NEX_FORWARD(Func, func));
         return Status(Unexpected { storage_.error_ });
     }
 
@@ -108,7 +108,7 @@ private:
 
     // Constructs a Status object with an unexpected error
     constexpr Status(Unexpected unexpected) noexcept : isOk_(false) {
-        NEX_STD construct_at(&storage_.error_, move(unexpected.error));
+        NEX_STD construct_at(&storage_.error_, NEX_MOVE(unexpected.error));
     }
 
     // Copy the contents of another Status object into this one
@@ -131,7 +131,7 @@ private:
             NEX_STD construct_at(&storage_.dummy_);
         } else {
             // Move the error information from the other Status object
-            NEX_STD construct_at(&storage_.error_, move(other.storage_.error_));
+            NEX_STD construct_at(&storage_.error_, NEX_MOVE(other.storage_.error_));
         }
     }
 
@@ -159,14 +159,14 @@ public:
 
     // Constructor for moving a Status object
     constexpr Status(Status&& other) noexcept {
-        moveStatus(move(other));
+        moveStatus(NEX_MOVE(other));
     }
 
     // Move assignment operator for moving a Status object
     constexpr Status& operator=(Status&& other) noexcept {
         if (this != &other) {
             destroy();
-            moveStatus(move(other));
+            moveStatus(NEX_MOVE(other));
         }
         return *this;
     }

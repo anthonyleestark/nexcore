@@ -24,6 +24,7 @@
 
 #include "nex/base/macros.h"
 #include "nex/base/types.h"
+#include "nex/base/casts.h"
 #include "nex/base/concepts.h"
 
 NEX_NAMESPACE_BEGIN

@@ -468,9 +468,24 @@
  */
 #if NEX_HAS_MSVC_ATTRIBUTE(intrinsic)
     #define NEX_MSVC_INTRINSIC NEX_MSVC_ATTRIBUTE(intrinsic)
-#else // Compiler does not support [[msvc::intrinsic]]
+#else  // Compiler does not support [[msvc::intrinsic]]
     #define NEX_MSVC_INTRINSIC
 #endif  // NEX_MSVC_INTRINSIC
+
+/**
+ * @def NEX_MSVC_KNOWN_SEMANTICS
+ * @brief Marks a type trait specialization as having known semantics in MSVC
+ * 
+ * @details
+ * This macro expands to `[[msvc::known_semantics]]` when compiling with MSVC if the compiler supports this attribute, 
+ * and expands to nothing on other compilers. It can be used to annotate certain type trait specializations to indicate 
+ * that they have the standard-mandated semantics, which can help the MSVC compiler optimize code that relies on these traits.
+ */
+#if NEX_HAS_MSVC_ATTRIBUTE(known_semantics)
+    #define NEX_MSVC_KNOWN_SEMANTICS NEX_MSVC_ATTRIBUTE(known_semantics)
+#else  // Compiler does not support [[msvc::known_semantics]]
+    #define NEX_MSVC_KNOWN_SEMANTICS
+#endif  // NEX_MSVC_KNOWN_SEMANTICS
 
 /**
  * @def NEX_NO_UNIQUE_ADDRESS

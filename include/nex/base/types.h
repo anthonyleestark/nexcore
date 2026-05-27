@@ -299,95 +299,8 @@ using b32   = uint32;                       // 32-bit boolean storage value (0 =
     using null_ptr  = decltype(nullptr);            // Null pointer type
     enum class byte : unsigned char {};             // Single-byte object-representation type
 
-    /**
-     * @note
-     * Internal implementation of `EnableIf` and related utilities for SFINAE and type traits.
-     * Since we are not including the full `<type_traits>` header, we need to provide our own minimal 
-     * implementation of `EnableIf` and related utilities to support the type traits used in this header.
-     */
-
-    // EnableIf implementation for SFINAE
-    template <bool __BoolCond, class __Type = void>
-    struct __EnableIf {};               // no member "type" when !BoolCond
-
-    // Specialization of EnableIf for when the condition is true
-    template <class __Type>
-    struct __EnableIf<true, __Type> {   // type is __Type for __BoolCond
-        using type = __Type;
-    };
-
-    template <bool __BoolCond, class __Type = void>
-    using __EnableIfT = typename __EnableIf<__BoolCond, __Type>::type;
-
-    // RemoveCv implementation to remove top-level const and volatile qualifiers
-    template <class __Type>
-    struct __RemoveCv {
-        using type = __Type;
-
-        // apply cv-qualifiers from the class template argument to __Fn<__Type>
-        template <template <class> class __Fn>
-        using __Apply = __Fn<__Type>;
-    };
-
-    template <class __Type>
-    struct __RemoveCv<const __Type> {
-        using type = __Type;
-        template <template <class> class __Fn>
-        using __Apply = const __Fn<__Type>;
-    };
-
-    template <class __Type>
-    struct __RemoveCv<volatile __Type> {
-        using type = __Type;
-        template <template <class> class __Fn>
-        using __Apply = volatile __Fn<__Type>;
-    };
-
-    template <class __Type>
-    struct __RemoveCv<const volatile __Type> {
-        using type = __Type;
-        template <template <class> class __Fn>
-        using __Apply = const volatile __Fn<__Type>;
-    };
-
-    template <class __Type>
-    using __RemoveCvT = typename __RemoveCv<__Type>::type;
-
-    #if NEX_COMPILER_IS_CLANG
-        // Clang provides a builtin type trait for is_same, 
-        // which is more efficient than our implementation, so use it when available
-        template <class __Type1, class __Type2>
-        constexpr bool __IsSameV = __is_same(__Type1, __Type2);
-    #else
-        template <class, class>
-        constexpr bool __IsSameV = false;   // determine whether arguments are the same type
-        template <class __Type>
-        constexpr bool __IsSameV<__Type, __Type> = true;
-    #endif
-
-    template <class __Type, class... __Types>
-    constexpr bool __IsAnyOfV =             // true if and only if __Type is in __Types
-    #if NEX_HAS_CXX17
-        (__IsSameV<__Type, __Types> || ...);
-    #else // C++14 or earlier
-        // disjunction_v is defined in <xtr1common>, 
-        // but we do NOT need it here since we only supports C++20 or later
-        disjunction_v<is_same<__Type, __Types>...>;
-    #endif // NEX_HAS_CXX17
-
-    template <class __Type>
-    constexpr bool __IsIntegralV = __IsAnyOfV<
-        __RemoveCvT<__Type>, bool, 
-        char, signed char, unsigned char, wchar_t,
-        #if defined(__cpp_char8_t)
-            char8_t,
-        #endif // defined(__cpp_char8_t)
-        char16_t, char32_t, 
-        short, unsigned short, 
-        int, unsigned int, 
-        long, unsigned long, 
-        long long, unsigned long long
-    >;
+    // Using our own type-traits implementation for byte operators and utilities, since <cstddef> is not included
+    #include "nex/base/casts.h"
 
     /**
      * @brief Helper functions for 'byte' type operations
@@ -400,13 +313,13 @@ using b32   = uint32;                       // 32-bit boolean storage value (0 =
      */
 
     // Bitwise left shift operator for 'byte' type
-    template <class IntType, __EnableIfT<__IsIntegralV<IntType>, int> = 0>
+    template <class IntType, type_traits::EnableIfT<type_traits::IsIntegralV<IntType>, int> = 0>
     NEX_NODISCARD constexpr byte operator<<(const byte arg, const IntType shift) noexcept {
         return static_cast<byte>(static_cast<unsigned char>(static_cast<unsigned int>(arg) << shift));
     }
 
     // Bitwise right shift operator for 'byte' type
-    template <class IntType, __EnableIfT<__IsIntegralV<IntType>, int> = 0>
+    template <class IntType, type_traits::EnableIfT<type_traits::IsIntegralV<IntType>, int> = 0>
     NEX_NODISCARD constexpr byte operator>>(const byte arg, const IntType shift) noexcept {
         // every static_cast is intentional
         return static_cast<byte>(static_cast<unsigned char>(static_cast<unsigned int>(arg) >> shift));
@@ -440,13 +353,13 @@ using b32   = uint32;                       // 32-bit boolean storage value (0 =
     }
 
     // Bitwise left shift compound assignment operator for 'byte' type
-    template <class IntType, __EnableIfT<__IsIntegralV<IntType>, int> = 0>
+    template <class IntType, type_traits::EnableIfT<type_traits::IsIntegralV<IntType>, int> = 0>
     constexpr byte& operator<<=(byte& arg, const IntType shift) noexcept {
         return arg = arg << shift;
     }
 
     // Bitwise right shift compound assignment operator for 'byte' type
-    template <class IntType, __EnableIfT<__IsIntegralV<IntType>, int> = 0>
+    template <class IntType, type_traits::EnableIfT<type_traits::IsIntegralV<IntType>, int> = 0>
     constexpr byte& operator>>=(byte& arg, const IntType shift) noexcept {
         return arg = arg >> shift;
     }
@@ -467,7 +380,7 @@ using b32   = uint32;                       // 32-bit boolean storage value (0 =
     }
 
     // Utility function to convert 'byte' to an integral type
-    template <class IntType, __EnableIfT<__IsIntegralV<IntType>, int> = 0>
+    template <class IntType, type_traits::EnableIfT<type_traits::IsIntegralV<IntType>, int> = 0>
     NEX_NODISCARD NEX_MSVC_INTRINSIC constexpr IntType toInteger(const byte arg) noexcept {
         return static_cast<IntType>(arg);
     }

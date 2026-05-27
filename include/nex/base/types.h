@@ -10,11 +10,11 @@
  * @brief Common type definitions and aliases for global use across the Nex-ecosystem.
  * 
  * @details
- * This header defines fundamental type aliases, including fixed-width integers, pointer-sized 
- * integers, size types, floating-point types, character types, boolean storage types, pointer types, 
- * and address types. These types are designed to provide consistent and descriptive type names 
- * across the Nex-ecosystem, while also adhering to C++20 standards and best practices for type safety 
- * and clarity, also providing Rust-style short aliases for convenience and readability.
+ * This header defines fundamental type aliases, including fixed-width integers, pointer-sized integers, 
+ * size types, floating-point types, character types, boolean storage types, pointer types, and address types. 
+ * These types are designed to provide consistent and descriptive type names across the Nex-ecosystem, while 
+ * also adhering to C++20 standards and best practices for type safety and clarity, also providing Rust-style 
+ * short aliases for convenience and readability.
  */
 
 #if !defined(NEX_BASE_TYPES_NO_STD)
@@ -27,6 +27,11 @@
 #include "nex/base/build.h"
 #include "nex/base/attributes.h"
 #include "nex/base/namespace.h"
+
+#if defined(NEX_BASE_TYPES_NO_STD)
+    // Using our own type-traits implementation for byte operators and utilities, since <cstddef> is not included
+    #include "nex/base/casts.h"
+#endif  // !defined(NEX_BASE_TYPES_NO_STD)
 
 NEX_NAMESPACE_BEGIN
 
@@ -298,9 +303,6 @@ using b32   = uint32;                       // 32-bit boolean storage value (0 =
 #else
     using null_ptr  = decltype(nullptr);            // Null pointer type
     enum class byte : unsigned char {};             // Single-byte object-representation type
-
-    // Using our own type-traits implementation for byte operators and utilities, since <cstddef> is not included
-    #include "nex/base/casts.h"
 
     /**
      * @brief Helper functions for 'byte' type operations

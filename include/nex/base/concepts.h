@@ -34,7 +34,9 @@ NEX_NAMESPACE_BEGIN
 
 /// Checks whether two types are the same type.
 template <typename Type1, typename Type2>
-concept SameAs = NEX_STD same_as<Type1, Type2>;
+concept SameAs =
+    type_traits::IsSameV<Type1, Type2> &&
+    type_traits::IsSameV<Type2, Type1>;
 
 /// Checks whether Derived publicly and unambiguously derives from Base.
 template <typename Derived, typename Base>
@@ -54,19 +56,19 @@ concept CommonWith = NEX_STD common_with<Type1, Type2>;
 
 /// Checks whether Type is an integral type.
 template <typename Type>
-concept Integral = NEX_STD integral<Type>;
+concept Integral = type_traits::IsIntegralV<Type>;
 
 /// Checks whether Type is a signed integral type.
 template <typename Type>
-concept SignedIntegral = NEX_STD signed_integral<Type>;
+concept SignedIntegral = type_traits::IsSignedIntegralV<Type>;
 
 /// Checks whether Type is an unsigned integral type.
 template <typename Type>
-concept UnsignedIntegral = NEX_STD unsigned_integral<Type>;
+concept UnsignedIntegral = type_traits::IsUnsignedIntegralV<Type>;
 
 /// Checks whether Type is a floating-point type.
 template <typename Type>
-concept FloatingPoint = NEX_STD floating_point<Type>;
+concept FloatingPoint = type_traits::IsFloatingPointV<Type>;
 
 /// Checks whether Type is either integral or floating-point.
 template <typename Type>
@@ -74,7 +76,14 @@ concept Arithmetic = Integral<Type> || FloatingPoint<Type>;
 
 /// Checks whether an lvalue of To can be assigned from From.
 template <typename To, typename From>
-concept AssignableFrom = NEX_STD assignable_from<To, From>;
+concept AssignableFrom =
+    type_traits::IsLvalueReferenceV<To> &&
+    CommonReferenceWith<
+        const type_traits::RemoveReferenceT<To>&,
+        const type_traits::RemoveReferenceT<From>&> &&
+    requires(To lhs, From&& rhs) {
+        { lhs = forward<From>(rhs) } -> SameAs<To>;
+    };
 
 /// Checks whether Type can be swapped with another Type.
 template <typename Type>
@@ -90,11 +99,13 @@ concept SwappableWith = NEX_STD swappable_with<Type1, Type2>;
 
 /// Checks whether Type can be destroyed.
 template <typename Type>
-concept Destructible = NEX_STD destructible<Type>;
+concept Destructible = type_traits::IsNothrowDestructibleV<Type>;
 
 /// Checks whether Type can be constructed from Args.
 template <typename Type, typename... Args>
-concept ConstructibleFrom = NEX_STD constructible_from<Type, Args...>;
+concept ConstructibleFrom =
+    Destructible<Type> &&
+    type_traits::IsConstructibleV<Type, Args...>;
 
 /// Checks whether Type can be default-initialized.
 template <typename Type>
@@ -303,7 +314,7 @@ template <typename Type>
 concept ContainerLike =
     RangeLike<Type> &&
     requires(Type& value) {
-        typename NEX_STD remove_cvref_t<Type>::value_type;
+        typename type_traits::RemoveCvrefT<Type>::value_type;
         { value.size() } -> ConvertibleTo<usize>;
     };
 
@@ -321,15 +332,15 @@ concept Indexable =
 
 /// Checks whether Type is a raw pointer.
 template <typename Type>
-concept RawPointer = NEX_STD is_pointer_v<NEX_STD remove_cvref_t<Type>>;
+concept RawPointer = type_traits::IsPointerV<type_traits::RemoveCvrefT<Type>>;
 
 /// Checks whether Type is an enum.
 template <typename Type>
-concept Enum = NEX_STD is_enum_v<NEX_STD remove_cvref_t<Type>>;
+concept Enum = type_traits::IsEnumV<type_traits::RemoveCvrefT<Type>>;
 
 /// Checks whether Type is class-like.
 template <typename Type>
-concept Class = NEX_STD is_class_v<NEX_STD remove_cvref_t<Type>>;
+concept Class = type_traits::IsClassV<type_traits::RemoveCvrefT<Type>>;
 
 /// Checks whether Type can be dereferenced.
 template <typename Type>
@@ -343,15 +354,15 @@ concept PointerLike =
     Dereferenceable<Type> &&
     (
         RawPointer<Type> ||
-        requires(NEX_STD remove_reference_t<Type>& value) {
+        requires(type_traits::RemoveReferenceT<Type>& value) {
             value.operator->();
         }
     );
 
 /// Checks whether Type can be hashed by std::hash.
 template <typename Type>
-concept Hashable = requires(const NEX_STD remove_cvref_t<Type>& value) {
-    { NEX_STD hash<NEX_STD remove_cvref_t<Type>>{}(value) } -> ConvertibleTo<usize>;
+concept Hashable = requires(const type_traits::RemoveCvrefT<Type>& value) {
+    { NEX_STD hash<type_traits::RemoveCvrefT<Type>>{}(value) } -> ConvertibleTo<usize>;
 };
 
 NEX_NAMESPACE_END

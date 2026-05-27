@@ -66,7 +66,7 @@ using FalseType = BoolConstant<false>;
 
 // Maps a sequence of any types to the type void 
 template <class... Types>
-using Void = void;
+using VoidT = void;
 
 // Add top-level const qualifier to a type
 template <class Type>
@@ -107,7 +107,7 @@ struct _AddReference {
 
 // Add reference to a type (referenceable type)
 template <class Type>
-struct _AddReference<Type, Void<Type&>> {
+struct _AddReference<Type, VoidT<Type&>> {
     using _Lvalue = Type&;
     using _Rvalue = Type&&;
 };
@@ -211,7 +211,7 @@ void _ImplicitlyDefaultConstruct(const Type&);
 
 // Specialization of _IsImplicitlyDefaultConstructible for types that can be copy-initialized with {}
 template <class Type>
-struct _IsImplicitlyDefaultConstructible<Type, Void<decltype(_ImplicitlyDefaultConstruct<Type>({}))>> : TrueType {};
+struct _IsImplicitlyDefaultConstructible<Type, VoidT<decltype(_ImplicitlyDefaultConstruct<Type>({}))>> : TrueType {};
 
 // Determine whether Type can be direct-initialized from an rvalue Type
 template <class Type>
@@ -504,6 +504,38 @@ struct RemoveCv<const volatile Type> {
 template <class Type>
 using RemoveCvT = typename RemoveCv<Type>::type;
 
+// Remove top-level const qualifier from a type
+template <class Type>
+struct RemoveConst {
+    using type = Type;
+};
+
+// Specialization of RemoveConst for const types, which removes the const qualifier
+template <class Type>
+struct RemoveConst<const Type> {
+    using type = Type;
+};
+
+// Alias template for RemoveConst to simplify usage
+template <class Type>
+using RemoveConstT = typename RemoveConst<Type>::type;
+
+// Remove top-level volatile qualifier from a type
+template <class Type>
+struct RemoveVolatile {
+    using type = Type;
+};
+
+// Specialization of RemoveVolatile for volatile types, which removes the volatile qualifier
+template <class Type>
+struct RemoveVolatile<volatile Type> {
+    using type = Type;
+};
+
+// Alias template for RemoveVolatile to simplify usage
+template <class Type>
+using RemoveVolatileT = typename RemoveVolatile<Type>::type;
+
 #if NEX_COMPILER_IS_CLANG
     // Clang provides a builtin type trait for is_same, 
     // which is more efficient than our implementation, so use it when available
@@ -549,6 +581,49 @@ constexpr bool IsIntegralV = IsAnyOfV<
     long, unsigned long, 
     long long, unsigned long long
 >;
+
+// Check if a type is a floating-point type
+template <class Type>
+constexpr bool IsFloatingPointV = IsAnyOfV<RemoveCvT<Type>, float, double, long double>;
+
+// Check if an integral type is signed
+template <class Type, bool = IsIntegralV<Type>>
+struct _IsSignedIntegral : FalseType {};
+
+// Specialization of _IsSignedIntegral for integral types, 
+// which checks whether the type is signed by comparing -1 and 0
+template <class Type>
+struct _IsSignedIntegral<Type, true>
+    : BoolConstant<static_cast<RemoveCvT<Type>>(-1) < static_cast<RemoveCvT<Type>>(0)> {};
+
+// Check if an integral type is signed
+template <class Type>
+constexpr bool IsSignedIntegralV = _IsSignedIntegral<Type>::value;
+
+// Check if an integral type is unsigned
+template <class Type>
+constexpr bool IsUnsignedIntegralV = IsIntegralV<Type> && !IsSignedIntegralV<Type>;
+
+// Check if a type is a raw pointer
+template <class>
+constexpr bool _IsPointerV = false;
+
+// Specialization of _IsPointerV for pointer types, 
+// which checks if the type is a pointer by checking if it is of the form Type*
+template <class Type>
+constexpr bool _IsPointerV<Type*> = true;
+
+// Check if a type is a raw pointer
+template <class Type>
+constexpr bool IsPointerV = _IsPointerV<RemoveCvT<Type>>;
+
+// Check if a type is an enumeration type
+template <class Type>
+constexpr bool IsEnumV = __is_enum(RemoveCvT<Type>);
+
+// Check if a type is a class type
+template <class Type>
+constexpr bool IsClassV = __is_class(RemoveCvT<Type>);
 
 // RemoveReference implementation to remove reference qualifiers
 template <class Type>

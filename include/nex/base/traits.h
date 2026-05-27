@@ -31,16 +31,16 @@ NEX_NAMESPACE_BEGIN
 
 /// A type trait that provides a compile-time constant boolean value indicating 
 /// whether a type is an integral type.
-using TrueType = NEX_STD true_type;
+using TrueType = type_traits::TrueType;
 
 /// A type trait that provides a compile-time constant boolean value indicating 
 /// whether a type is not an integral type.
-using FalseType = NEX_STD false_type;
+using FalseType = type_traits::FalseType;
 
 /// A type trait that provides a compile-time constant boolean value indicating
 /// whether a type is an integral type.
 template <bool BoolValue>
-using BoolConstant = NEX_STD bool_constant<BoolValue>;
+using BoolConstant = type_traits::BoolConstant<BoolValue>;
 
 /// Checks whether Type is an arithmetic type (i.e., integral or floating-point).
 template <class Type>
@@ -50,13 +50,13 @@ inline constexpr bool IsArithmeticV = IsArithmetic<Type>::value;
 
 /// Checks whether Type is an integral type (e.g., int, char, etc.).
 template <class Type>
-using IsIntegral = BoolConstant<Integral<Type>>;
+using IsIntegral = BoolConstant<type_traits::IsIntegralV<Type>>;
 template <class Type>
 inline constexpr bool IsIntegralV = IsIntegral<Type>::value;
 
 /// Checks whether Type is a floating-point type (i.e., float, double, or long double).
 template <class Type>
-using IsFloatingPoint = BoolConstant<FloatingPoint<Type>>;
+using IsFloatingPoint = BoolConstant<type_traits::IsFloatingPointV<Type>>;
 template <class Type>
 inline constexpr bool IsFloatingPointV = IsFloatingPoint<Type>::value;
 
@@ -74,7 +74,7 @@ inline constexpr bool IsNullPointerV = IsNullPointer<Type>::value;
 
 /// Checks whether Type is a pointer type.
 template <typename Type>
-using IsPointer = NEX_STD is_pointer<Type>;
+using IsPointer = BoolConstant<type_traits::IsPointerV<Type>>;
 template <typename Type>
 inline constexpr bool IsPointerV = IsPointer<Type>::value;
 
@@ -98,7 +98,7 @@ inline constexpr bool IsUnboundedArrayV = IsUnboundedArray<Type>::value;
 
 /// Checks whether Type is an enumeration type (i.e., an enum).
 template <typename Type>
-using IsEnum = NEX_STD is_enum<Type>;
+using IsEnum = BoolConstant<type_traits::IsEnumV<Type>>;
 template <typename Type>
 inline constexpr bool IsEnumV = IsEnum<Type>::value;
 
@@ -110,7 +110,7 @@ inline constexpr bool IsUnionV = IsUnion<Type>::value;
 
 /// Checks whether Type is a class type (i.e., a struct or class).
 template <typename Type>
-using IsClass = NEX_STD is_class<Type>;
+using IsClass = BoolConstant<type_traits::IsClassV<Type>>;
 template <typename Type>
 inline constexpr bool IsClassV = IsClass<Type>::value;
 
@@ -140,19 +140,19 @@ inline constexpr bool IsMemberFunctionPointerV = IsMemberFunctionPointer<Type>::
 
 /// Checks whether Type is an lvalue reference type.
 template <typename Type>
-using IsLvalueReference = NEX_STD is_lvalue_reference<Type>;
+using IsLvalueReference = BoolConstant<type_traits::IsLvalueReferenceV<Type>>;
 template <typename Type>
 inline constexpr bool IsLvalueReferenceV = IsLvalueReference<Type>::value;
 
 /// Checks whether Type is an rvalue reference type.
 template <typename Type>
-using IsRvalueReference = NEX_STD is_rvalue_reference<Type>;
+using IsRvalueReference = BoolConstant<type_traits::IsRvalueReferenceV<Type>>;
 template <typename Type>
 inline constexpr bool IsRvalueReferenceV = IsRvalueReference<Type>::value;
 
 /// Checks whether Type is a reference type (either lvalue or rvalue reference).
 template <typename Type>
-using IsReference = NEX_STD is_reference<Type>;
+using IsReference = BoolConstant<type_traits::IsReferenceV<Type>>;
 template <typename Type>
 inline constexpr bool IsReferenceV = IsReference<Type>::value;
 
@@ -195,19 +195,19 @@ inline constexpr bool IsVolatileV = IsVolatile<Type>::value;
 
 /// Checks whether Type is signed.
 template <typename Type>
-using IsSigned = BoolConstant<SignedIntegral<Type>>;
+using IsSigned = BoolConstant<type_traits::IsSignedIntegralV<Type>>;
 template <typename Type>
 inline constexpr bool IsSignedV = IsSigned<Type>::value;
 
 /// Checks whether Type is an unsigned type (i.e., an integral type that is not signed).
 template <typename Type>
-using IsUnsigned = BoolConstant<UnsignedIntegral<Type>>;
+using IsUnsigned = BoolConstant<type_traits::IsUnsignedIntegralV<Type>>;
 template <typename Type>
 inline constexpr bool IsUnsignedV = IsUnsigned<Type>::value;
 
 /// Checks whether Type1 and Type2 are the same type.
 template <typename Type1, typename Type2>
-using IsSame = BoolConstant<SameAs<Type1, Type2>>;
+using IsSame = BoolConstant<type_traits::IsSameV<Type1, Type2>>;
 template <typename Type1, typename Type2>
 inline constexpr bool IsSameV = IsSame<Type1, Type2>::value;
 
@@ -225,62 +225,62 @@ inline constexpr bool IsConvertibleV = IsConvertible<From, To>::value;
 
 /// Checks whether Type can be constructed with Args.
 template <typename Type, typename... Args>
-using IsConstructible = NEX_STD is_constructible<Type, Args...>;
+using IsConstructible = type_traits::IsConstructible<Type, Args...>;
 template <typename Type, typename... Args>
 inline constexpr bool IsConstructibleV = IsConstructible<Type, Args...>::value;
 
 /// Checks whether Type can be trivially constructed with Args.
 template <typename Type, typename... Args>
-using IsTriviallyConstructible = NEX_STD is_trivially_constructible<Type, Args...>;
+using IsTriviallyConstructible = type_traits::IsTriviallyConstructible<Type, Args...>;
 template <typename Type, typename... Args>
 inline constexpr bool IsTriviallyConstructibleV = IsTriviallyConstructible<Type, Args...>::value;
 
 /// Checks whether Type can be constructed with Args without throwing.
 template <typename Type, typename... Args>
-using IsNothrowConstructible = NEX_STD is_nothrow_constructible<Type, Args...>;
+using IsNothrowConstructible = type_traits::IsNothrowConstructible<Type, Args...>;
 template <typename Type, typename... Args>
 inline constexpr bool IsNothrowConstructibleV = IsNothrowConstructible<Type, Args...>::value;
 
 /// Checks whether Type can be default constructed.
 template <typename Type>
-using IsDefaultConstructible = NEX_STD is_default_constructible<Type>;
+using IsDefaultConstructible = type_traits::IsDefaultConstructible<Type>;
 template <typename Type>
 inline constexpr bool IsDefaultConstructibleV = IsDefaultConstructible<Type>::value;
 
 /// Checks whether Type can be trivially default constructed.
 template <typename Type>
-using IsTriviallyDefaultConstructible = NEX_STD is_trivially_default_constructible<Type>;
+using IsTriviallyDefaultConstructible = type_traits::IsTriviallyDefaultConstructible<Type>;
 template <typename Type>
 inline constexpr bool IsTriviallyDefaultConstructibleV = IsTriviallyDefaultConstructible<Type>::value;
 
 /// Checks whether Type can be default constructed without throwing.
 template <typename Type>
-using IsNothrowDefaultConstructible = NEX_STD is_nothrow_default_constructible<Type>;
+using IsNothrowDefaultConstructible = type_traits::IsNothrowDefaultConstructible<Type>;
 template <typename Type>
 inline constexpr bool IsNothrowDefaultConstructibleV = IsNothrowDefaultConstructible<Type>::value;
 
 /// Checks whether Type is copy constructible.
 template <typename Type>
-using IsCopyable = NEX_STD is_copy_constructible<Type>;
+using IsCopyable = type_traits::IsCopyConstructible<Type>;
 template <typename Type>
 inline constexpr bool IsCopyableV = IsCopyable<Type>::value;
 
 /// Checks whether Type is trivially copy constructible (i.e., can be copy constructed without throwing 
 /// and with a trivial copy constructor).
 template <typename Type>
-using IsTriviallyCopyableConstructible = NEX_STD is_trivially_copy_constructible<Type>;
+using IsTriviallyCopyableConstructible = type_traits::IsTriviallyCopyConstructible<Type>;
 template <typename Type>
 inline constexpr bool IsTriviallyCopyableConstructibleV = IsTriviallyCopyableConstructible<Type>::value;
 
 /// Checks whether Type is copy constructible without throwing.
 template <typename Type>
-using IsNothrowCopyConstructible = NEX_STD is_nothrow_copy_constructible<Type>;
+using IsNothrowCopyConstructible = type_traits::IsNothrowCopyConstructible<Type>;
 template <typename Type>
 inline constexpr bool IsNothrowCopyConstructibleV = IsNothrowCopyConstructible<Type>::value;
 
 /// Checks whether Type is move constructible.
 template <typename Type>
-using IsMoveable = NEX_STD is_move_constructible<Type>;
+using IsMoveable = type_traits::IsMoveConstructible<Type>;
 template <typename Type>
 using IsMovable = IsMoveable<Type>;
 template <typename Type>
@@ -291,85 +291,85 @@ inline constexpr bool IsMovableV = IsMoveableV<Type>;
 /// Checks whether Type is trivially move constructible (i.e., can be move constructed without throwing 
 /// and with a trivial move constructor).
 template <typename Type>
-using IsTriviallyMovableConstructible = NEX_STD is_trivially_move_constructible<Type>;
+using IsTriviallyMovableConstructible = type_traits::IsTriviallyMoveConstructible<Type>;
 template <typename Type>
 inline constexpr bool IsTriviallyMovableConstructibleV = IsTriviallyMovableConstructible<Type>::value;
 
 /// Checks whether Type is move constructible without throwing.
 template <typename Type>
-using IsNothrowMoveConstructible = NEX_STD is_nothrow_move_constructible<Type>;
+using IsNothrowMoveConstructible = type_traits::IsNothrowMoveConstructible<Type>;
 template <typename Type>
 inline constexpr bool IsNothrowMoveConstructibleV = IsNothrowMoveConstructible<Type>::value;
 
 /// Checks whether To can be assigned from From.
 template <typename To, typename From = To>
-using IsAssignable = NEX_STD is_assignable<To, From>;
+using IsAssignable = type_traits::IsAssignable<To, From>;
 template <typename To, typename From = To>
 inline constexpr bool IsAssignableV = IsAssignable<To, From>::value;
 
 /// Checks whether To can be trivially assigned from From.
 template <typename To, typename From = To>
-using IsTriviallyAssignable = NEX_STD is_trivially_assignable<To, From>;
+using IsTriviallyAssignable = type_traits::IsTriviallyAssignable<To, From>;
 template <typename To, typename From = To>
 inline constexpr bool IsTriviallyAssignableV = IsTriviallyAssignable<To, From>::value;
 
 /// Checks whether To can be assigned from From without throwing.
 template <typename To, typename From = To>
-using IsNothrowAssignable = NEX_STD is_nothrow_assignable<To, From>;
+using IsNothrowAssignable = type_traits::IsNothrowAssignable<To, From>;
 template <typename To, typename From = To>
 inline constexpr bool IsNothrowAssignableV = IsNothrowAssignable<To, From>::value;
 
 /// Checks whether Type can be copy assigned.
 template <typename Type>
-using IsCopyAssignable = NEX_STD is_copy_assignable<Type>;
+using IsCopyAssignable = type_traits::IsCopyAssignable<Type>;
 template <typename Type>
 inline constexpr bool IsCopyAssignableV = IsCopyAssignable<Type>::value;
 
 /// Checks whether Type can be trivially copy assigned.
 template <typename Type>
-using IsTriviallyCopyAssignable = NEX_STD is_trivially_copy_assignable<Type>;
+using IsTriviallyCopyAssignable = type_traits::IsTriviallyCopyAssignable<Type>;
 template <typename Type>
 inline constexpr bool IsTriviallyCopyAssignableV = IsTriviallyCopyAssignable<Type>::value;
 
 /// Checks whether Type can be copy assigned without throwing.
 template <typename Type>
-using IsNothrowCopyAssignable = NEX_STD is_nothrow_copy_assignable<Type>;
+using IsNothrowCopyAssignable = type_traits::IsNothrowCopyAssignable<Type>;
 template <typename Type>
 inline constexpr bool IsNothrowCopyAssignableV = IsNothrowCopyAssignable<Type>::value;
 
 /// Checks whether Type can be move assigned.
 template <typename Type>
-using IsMoveAssignable = NEX_STD is_move_assignable<Type>;
+using IsMoveAssignable = type_traits::IsMoveAssignable<Type>;
 template <typename Type>
 inline constexpr bool IsMoveAssignableV = IsMoveAssignable<Type>::value;
 
 /// Checks whether Type can be trivially move assigned.
 template <typename Type>
-using IsTriviallyMoveAssignable = NEX_STD is_trivially_move_assignable<Type>;
+using IsTriviallyMoveAssignable = type_traits::IsTriviallyMoveAssignable<Type>;
 template <typename Type>
 inline constexpr bool IsTriviallyMoveAssignableV = IsTriviallyMoveAssignable<Type>::value;
 
 /// Checks whether Type can be move assigned without throwing.
 template <typename Type>
-using IsNothrowMoveAssignable = NEX_STD is_nothrow_move_assignable<Type>;
+using IsNothrowMoveAssignable = type_traits::IsNothrowMoveAssignable<Type>;
 template <typename Type>
 inline constexpr bool IsNothrowMoveAssignableV = IsNothrowMoveAssignable<Type>::value;
 
 /// Checks whether Type can be destructed.
 template <typename Type>
-using IsDestructible = NEX_STD is_destructible<Type>;
+using IsDestructible = type_traits::IsDestructible<Type>;
 template <typename Type>
 inline constexpr bool IsDestructibleV = IsDestructible<Type>::value;
 
 /// Checks whether Type can be trivially destructed.
 template <typename Type>
-using IsTriviallyDestructible = NEX_STD is_trivially_destructible<Type>;
+using IsTriviallyDestructible = type_traits::IsTriviallyDestructible<Type>;
 template <typename Type>
 inline constexpr bool IsTriviallyDestructibleV = IsTriviallyDestructible<Type>::value;
 
 /// Checks whether Type can be destructed without throwing.
 template <typename Type>
-using IsNothrowDestructible = NEX_STD is_nothrow_destructible<Type>;
+using IsNothrowDestructible = type_traits::IsNothrowDestructible<Type>;
 template <typename Type>
 inline constexpr bool IsNothrowDestructibleV = IsNothrowDestructible<Type>::value;
 
@@ -425,23 +425,23 @@ inline constexpr bool IsAggregateV = IsAggregate<Type>::value;
 
 /// Removes the const qualifier from a Type.
 template <typename Type>
-using RemoveConst = typename NEX_STD remove_const<Type>::type;
+using RemoveConst = type_traits::RemoveConstT<Type>;
 
 /// Removes the volatile qualifier from a Type.
 template <typename Type>
-using RemoveVolatile = NEX_STD remove_volatile_t<Type>;
+using RemoveVolatile = type_traits::RemoveVolatileT<Type>;
 
 /// Removes const and volatile qualifiers from a Type.
 template <typename Type>
-using RemoveCv = NEX_STD remove_cv_t<Type>;
+using RemoveCv = type_traits::RemoveCvT<Type>;
 
 /// Removes reference qualifiers from a Type.
 template <typename Type>
-using RemoveReference = NEX_STD remove_reference_t<Type>;
+using RemoveReference = type_traits::RemoveReferenceT<Type>;
 
 /// Removes const, volatile, and reference qualifiers from a Type.
 template <typename Type>
-using RemoveCvref = RemoveCv<RemoveReference<Type>>;
+using RemoveCvref = type_traits::RemoveCvrefT<Type>;
 
 /// Removes the pointer qualifier from a Type.
 template <typename Type>
@@ -457,23 +457,23 @@ using RemoveAllExtents = NEX_STD remove_all_extents_t<Type>;
 
 /// Adds the const qualifier to a Type.
 template <typename Type>
-using AddConst = NEX_STD add_const_t<Type>;
+using AddConst = type_traits::AddConstT<Type>;
 
 /// Adds the volatile qualifier to a Type.
 template <typename Type>
-using AddVolatile = NEX_STD add_volatile_t<Type>;
+using AddVolatile = type_traits::AddVolatileT<Type>;
 
 /// Adds const and volatile qualifiers to a Type.
 template <typename Type>
-using AddCv = NEX_STD add_cv_t<Type>;
+using AddCv = type_traits::AddCvT<Type>;
 
 /// Adds an lvalue reference to a Type.
 template <typename Type>
-using AddLvalueReference = NEX_STD add_lvalue_reference_t<Type>;
+using AddLvalueReference = type_traits::AddLvalueReferenceT<Type>;
 
 /// Adds an rvalue reference to a Type.
 template <typename Type>
-using AddRvalueReference = NEX_STD add_rvalue_reference_t<Type>;
+using AddRvalueReference = type_traits::AddRvalueReferenceT<Type>;
 
 /// Adds a pointer qualifier to a Type.
 template <typename Type>
@@ -499,7 +499,7 @@ using TypeIdentity = NEX_STD type_identity_t<Type>;
 /// It is commonly used in SFINAE (Substitution Failure Is Not An Error) contexts to detect the presence 
 /// of certain types or expressions.
 template <typename... Types>
-using VoidT = NEX_STD void_t<Types...>;
+using VoidT = type_traits::VoidT<Types...>;
 
 /// Represents the common type among a list of types. 
 /// The common type is the type that all types in the list can be implicitly converted to.
@@ -515,7 +515,7 @@ using CommonReference = NEX_STD common_reference_t<Types...>;
 /// Represents one of two types (TrueType or FalseType) based on a boolean condition. 
 /// If Condition is true, Conditional evaluates to TrueType; otherwise, it evaluates to FalseType.
 template <bool Condition, typename TrueType, typename FalseType>
-using Conditional = NEX_STD conditional_t<Condition, TrueType, FalseType>;
+using Conditional = type_traits::ConditionalT<Condition, TrueType, FalseType>;
 
 /// Represents the logical conjunction (AND) of a list of type traits Traits. 
 /// Conjunction evaluates to true if all traits in the list are true; otherwise, it evaluates to false.
@@ -540,7 +540,7 @@ inline constexpr bool NegationV = Negation<Trait>::value;
 
 /// A type trait that enables a template only if a boolean condition is true.
 template <bool Condition, typename Type = void>
-using EnableIf = typename NEX_STD enable_if<Condition, Type>::type;
+using EnableIf = type_traits::EnableIfT<Condition, Type>;
 
 /// A type trait that enables a template only if the Type is a numeric type (arithmetic type).
 template <typename Type>
@@ -632,15 +632,15 @@ using MemberPointer = MemberT Type::*;
 
 /// Represents a reference to a member within a struct/class.
 template <typename Type, auto MemberPtr>
-using MemberReference = decltype(NEX_STD declval<Type&>().*MemberPtr);
+using MemberReference = decltype(type_traits::declval<Type&>().*MemberPtr);
 
 /// Represents a const reference to a member within a struct/class.
 template <typename Type, auto MemberPtr>
-using ConstMemberReference = decltype(NEX_STD declval<const Type&>().*MemberPtr);
+using ConstMemberReference = decltype(type_traits::declval<const Type&>().*MemberPtr);
 
 /// Represents an rvalue reference to a member within a struct/class.
 template <typename Type, auto MemberPtr>
-using MemberRvalueReference = decltype(NEX_STD declval<Type&&>().*MemberPtr);
+using MemberRvalueReference = decltype(type_traits::declval<Type&&>().*MemberPtr);
 
 /// Checks whether Type is callable with specific argument types.
 template <typename Type, typename... Args>
@@ -727,12 +727,6 @@ using FunctionArg = typename FunctionTraits<Fn>::template Arg<N>;
 /// Represents the number of arguments of a function Fn.
 template <typename Fn>
 inline constexpr usize FunctionArgCount = FunctionTraits<Fn>::argCount;
-
-/// Extracts information about an iterator type, such as its value type, reference type, and pointer type. 
-/// This primary template is designed to handle iterators by deducing the type of the expression *it, 
-/// which is the value type of the iterator.
-template <typename Ip>
-struct IteratorTraits : IteratorTraits<decltype(&RemoveReference<Type>::operator())> {};
 
 /// Extracts information about an iterator type, such as its value type, reference type, pointer type, 
 /// difference type, and iterator category.

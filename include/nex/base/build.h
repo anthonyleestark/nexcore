@@ -23,44 +23,38 @@
 // Building mode detection
 // ======================================================================================
 
-// Check if we are in a debug build mode and define a macro accordingly
-// The logic for detecting a debug build mode is based on common macros defined by compilers and build systems, 
+// Check if we are in a debug build mode or release build mode and define a macro accordingly
+// The logic for auto-detecting the build mode is based on common macros defined by compilers and build systems, 
 // such as NDEBUG, _DEBUG, and optimization flags.
-#if !defined(NEX_BUILD_MODE_DEBUG)
-    #if !defined(NDEBUG) || defined(_DEBUG)
-        // Check if we are NOT optimizing (only works in GCC/Clang)
-        #if NEX_COMPILER_GCC_COMPATIBLE || NEX_COMPILER_IS_CLANG
-            #if !defined(__OPTIMIZE__)
-                #define NEX_BUILD_MODE_DEBUG
-                #undef NEX_BUILD_MODE_RELEASE
-            #endif
-        #else
-            // Fallback for other compilers/MSVC logic
-            #define NEX_BUILD_MODE_DEBUG
-            #undef NEX_BUILD_MODE_RELEASE
-        #endif
+
+// First we check if user has explicitly defined the build mode macros
+// If not, we will try to detect the build mode based on common macros defined by compilers and build systems.
+#if !defined(NEX_BUILD_MODE_DEBUG) && !defined(NEX_BUILD_MODE_RELEASE)
+    // Highest priority: check for NDEBUG, which is commonly defined in release builds
+    #if defined(NDEBUG)
+        #define NEX_BUILD_MODE_RELEASE
+    // Next priority: check for _DEBUG/DEBUG, 
+    // which is commonly defined in debug builds on Windows or in some build systems
+    #elif defined(_DEBUG) || defined(DEBUG)
+        #define NEX_BUILD_MODE_DEBUG
+    // Next priority: check for optimization flags, which are commonly defined in release builds on GCC and Clang
+    #elif (NEX_COMPILER_GCC_COMPATIBLE || NEX_COMPILER_IS_CLANG) && defined(__OPTIMIZE__)
+        #define NEX_BUILD_MODE_RELEASE
+    // If we cannot detect the build mode, we can default to release mode, 
+    // but this should not happen in a properly configured build environment.
+    #else
+        #define NEX_BUILD_MODE_RELEASE 
     #endif
 #endif
 
-// Check if we are in a release build mode and define a macro accordingly
-// The logic for detecting a release build mode is based on common macros defined by compilers and build systems,
-// such as NDEBUG, _DEBUG, and optimization flags.
-#if !defined(NEX_BUILD_MODE_RELEASE) && !defined(NEX_BUILD_MODE_DEBUG)
-    #if defined(NDEBUG) && !defined(_DEBUG)
-        #if NEX_COMPILER_GCC_COMPATIBLE || NEX_COMPILER_IS_CLANG
-            #if defined(__OPTIMIZE__)
-                #define NEX_BUILD_MODE_RELEASE
-                #undef NEX_BUILD_MODE_DEBUG
-            #endif
-        #else
-            // Fallback for other compilers/MSVC logic
-            #define NEX_BUILD_MODE_RELEASE
-            #undef NEX_BUILD_MODE_DEBUG
-        #endif
-    #endif
+// We check for conflicting definitions of build mode macros and resolve them by prioritizing one over the other,
+// or by generating a compile-time error to alert the developer to fix the build configuration.
+#if defined(NEX_BUILD_MODE_DEBUG) && defined(NEX_BUILD_MODE_RELEASE)
+    // We prioritize release mode in this case
+    #undef NEX_BUILD_MODE_DEBUG
 #endif
 
-// Define a macro for checking which build configuration we are in (debug or release)
+// Define boolean macros for checking which build configuration we are in (debug or release)
 #if defined(NEX_BUILD_MODE_DEBUG)
     #define NEX_BUILD_MODE_IS_DEBUG 1
     #define NEX_BUILD_MODE_IS_RELEASE 0

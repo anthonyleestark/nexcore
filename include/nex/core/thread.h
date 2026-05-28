@@ -193,7 +193,7 @@ public:
      */
     template<typename Fn, typename... Args>
     bool start(Fn&& callable, Args&&... args) {
-        return startWithTask(NEX_FORWARD<Fn>(callable), forward<Args>(args)...);
+        return startWithTask(NEX_FORWARD<Fn>(callable), NEX_FORWARD<Args>(args)...);
     }
 
     ////// Thread Control ---------------------------------------------------------------
@@ -290,7 +290,7 @@ public:
     static Thread create(StringView name, Fn&& callable, Args&&... args) {
         Thread t;
         t.setName(name);
-        t.start(forward<Fn>(callable), forward<Args>(args)...);
+        t.start(NEX_FORWARD<Fn>(callable), NEX_FORWARD<Args>(args)...);
         return t;
     }
 

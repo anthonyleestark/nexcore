@@ -50,7 +50,7 @@ String format(StringView fmt, Args&&... args) {
 
     // Use fmt library to format the string with the provided arguments
     try {
-        const auto formattedUtf8 = fmt::format(utf8.value(), std::forward<Args>(args)...);
+        const auto formattedUtf8 = fmt::format(utf8.value(), NEX_FORWARD<Args>(args)...);
         // Convert the formatted UTF-8 string back to our String type (UTF-16)
         const auto result = String::fromUtf8(formattedUtf8);
         return result.isOk() ? result.value() : String();
@@ -81,7 +81,7 @@ String format(StringView fmt, Args&&... args) {
 template <typename... Args>
 String format(const char* utf8Fmt, Args&&... args) {
     try {
-        const auto formattedUtf8 = fmt::format(utf8Fmt, std::forward<Args>(args)...);
+        const auto formattedUtf8 = fmt::format(utf8Fmt, NEX_FORWARD<Args>(args)...);
         // Convert the formatted UTF-8 string back to our String type (UTF-16)
         const auto result = String::fromUtf8(formattedUtf8);
         return result.isOk() ? result.value() : String();

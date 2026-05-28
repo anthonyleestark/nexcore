@@ -541,8 +541,8 @@ auto async(Executor& executor, Fn&& fn, Args&&... args)
     auto taskPromise = promise;
     auto task = NEX_STD make_shared<Task>(
         NEX_MOVE(taskPromise),
-        NEX_FORWARD(Fn, fn),
-        NEX_FORWARD_PACK(Args, args)
+        NEX_FORWARD<Fn>(fn),
+        NEX_FORWARD<Args>(args)...
     );
 
     try {

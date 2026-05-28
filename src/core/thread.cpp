@@ -179,7 +179,7 @@ bool Thread::startWithTask(Fn&& callable, Args&&... args) {
 
     // Start the thread with a lambda that captures the callable and its arguments
     impl_->jthread = NEX_STD jthread(
-        [func = forward<Fn>(callable), ...argList = forward<Args>(args)]
+        [func = NEX_FORWARD<Fn>(callable), ...argList = NEX_FORWARD<Args>(args)]
         (StopToken stopToken) mutable {
 
             // Apply the thread's attributes

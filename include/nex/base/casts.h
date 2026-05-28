@@ -551,14 +551,7 @@ using RemoveVolatileT = typename RemoveVolatile<Type>::type;
 
 // Check if a type is any of a list of types
 template <class Type, class... Types>
-constexpr bool IsAnyOfV =             // true if and only if Type is in Types
-#if NEX_HAS_CXX17
-    (IsSameV<Type, Types> || ...);
-#else // C++14 or earlier
-    // disjunction_v is defined in <xtr1common>, 
-    // but we do NOT need it here since we only supports C++20 or later
-    disjunction_v<is_same<Type, Types>...>;
-#endif // NEX_HAS_CXX17
+constexpr bool IsAnyOfV = (IsSameV<Type, Types> || ...);   // true if and only if Type is in Types
 
 #if NEX_HAS_CXX20
     // Check if we are in a constant evaluation context
@@ -684,46 +677,104 @@ NEX_SUBNAMESPACE_END(type_traits)
     #pragma warning(disable: 5240)  // 'nodiscard': attribute is ignored in this syntactic position
 #endif
 
-// Forward an lvalue as either an lvalue or an rvalue, 
-// depending on the value category of the argument
+/**
+ * @brief Forwards an lvalue argument as either an lvalue or an rvalue reference 
+ *        depending on the template parameter Type.
+ * @tparam Type The target value category to forward to.
+ * @param arg The lvalue argument to be forwarded.
+ * @return The forwarded reference (Type&&).
+ */
 template <class Type>
 NEX_NODISCARD NEX_MSVC_INTRINSIC constexpr 
-Type&& forward(type_traits::RemoveReferenceT<Type>& arg) noexcept {
+Type&& forwardCast(type_traits::RemoveReferenceT<Type>& arg) noexcept {
     return static_cast<Type&&>(arg);
 }
 
-// Forward an rvalue as an rvalue
+/**
+ * @brief Forwards an rvalue argument as an rvalue reference.
+ * @note Enforces at compile-time that an rvalue cannot be mistakenly forwarded as an lvalue reference.
+ * @tparam Type The target value category to forward to.
+ * @param arg The rvalue temporary to be forwarded.
+ * @return The forwarded rvalue reference (Type&&).
+ */
 template <class Type>
 NEX_NODISCARD NEX_MSVC_INTRINSIC constexpr 
-Type&& forward(type_traits::RemoveReferenceT<Type>&& arg) noexcept {
-    static_assert(!type_traits::IsLvalueReferenceV<Type>, "Bad forward call");
+Type&& forwardCast(type_traits::RemoveReferenceT<Type>&& arg) noexcept {
+    static_assert(!type_traits::IsLvalueReferenceV<Type>, 
+        "Error: Bad forward call, cannot forward an rvalue as an lvalue reference!");
     return static_cast<Type&&>(arg);
 }
-
-// Move an object to allow it to be moved from, even if it is an lvalue
-template <class Type>
+/**
+ * @brief Casts an lvalue object to an rvalue reference to enable move semantics.
+ * @note Strictly enforces that the object is non-const. Moving a const object triggers a compile-time error 
+ *       to prevent a silent, expensive deep copy (Unreal Engine's MoveTemp() style).
+ * @tparam Type The deduced type of the lvalue object.
+ * @param arg The lvalue object to be moved.
+ * @return An rvalue reference pointing to the object.
+ */
+template <class Type> 
+requires (!type_traits::IsLvalueReferenceV<Type>)
 NEX_NODISCARD NEX_MSVC_INTRINSIC constexpr 
-type_traits::RemoveReferenceT<Type>&& move(Type&& arg) noexcept {
+type_traits::RemoveReferenceT<Type>&& moveCast(Type& arg) noexcept {
+    static_assert(!type_traits::IsConstV<type_traits::RemoveReferenceT<Type>>, 
+        "Error: Cannot move from a const-qualified type, as it would result in a silent copy instead of a move!");
     return static_cast<type_traits::RemoveReferenceT<Type>&&>(arg);
 }
 
-// Move an object if it is nothrow move constructible, otherwise copy it
+/**
+ * @brief Overload that catches rvalue temporaries passed to moveCast.
+ * @note Triggers a compile-time error because invoking a move cast on an object 
+ *       that is already an rvalue temporary is redundant and unnecessary.
+ * @tparam Type The deduced type of the rvalue temporary.
+ * @param arg The rvalue temporary object.
+ * @return An rvalue reference pointing to the object.
+ */
 template <class Type>
-NEX_NODISCARD NEX_MSVC_INTRINSIC constexpr
-type_traits::ConditionalT<!type_traits::IsNothrowMoveConstructibleV<Type> 
-    && type_traits::IsCopyConstructibleV<Type>, const Type&, Type&&>
-moveIfNoexcept(Type& arg) noexcept {
-    return move(arg);
+NEX_NODISCARD NEX_MSVC_INTRINSIC constexpr 
+type_traits::RemoveReferenceT<Type>&& moveCast(Type&& arg) noexcept {
+    static_assert(!type_traits::IsLvalueReferenceV<Type>, 
+        "Error: Moving on an rvalue temporary object is redundant and unnecessary!");
+    return static_cast<type_traits::RemoveReferenceT<Type>&&>(arg);
 }
 
-// Implementation of addressof that works even if the type has an overloaded operator&.
+/**
+ * @brief Conditionally casts an object to an rvalue reference if its move constructor 
+ *        is guaranteed not to throw exceptions, otherwise falls back to a const lvalue reference.
+ * @tparam Type The type of the object being evaluated.
+ * @param arg The object to be conditionally moved or copied.
+ * @return An rvalue reference if noexcept move-constructible; otherwise, a const lvalue reference for safe copying.
+ */
+template <class Type>
+NEX_NODISCARD NEX_MSVC_INTRINSIC constexpr
+type_traits::ConditionalT<
+    !type_traits::IsNothrowMoveConstructibleV<Type> && type_traits::IsCopyConstructibleV<Type>, 
+    const Type&, 
+    type_traits::RemoveReferenceT<Type>&&
+>
+moveIfNoexcept(Type& arg) noexcept {
+    return static_cast<type_traits::RemoveReferenceT<Type>&&>(arg);
+}
+
+/**
+ * @brief Obtains the actual address of an object, safely bypassing any overloaded operator&.
+ * @note Utilizes a compiler built-in to guarantee the extraction of the real memory address, 
+ *       even if the type has a custom or malicious address-of operator.
+ * @tparam Type The type of the object whose address is being taken.
+ * @param Value The lvalue reference to the object.
+ * @return A pointer to the object (Type*).
+ */
 template <class Type>
 NEX_NODISCARD NEX_MSVC_INTRINSIC constexpr 
 Type* addressOf(Type& Value) noexcept {
     return __builtin_addressof(Value);
 }
 
-// Delete the overload of addressOf for rvalue references to prevent taking the address of a temporary
+/**
+ * @brief Deleted overload to explicitly prevent taking the address of rvalue temporaries.
+ * @note This overload triggers a compile-time error if a temporary object is passed, 
+ *       protecting against dangerous dangling pointers to short-lived resources.
+ * @tparam Type The type of the rvalue temporary.
+ */
 template <class Type>
 const Type* addressOf(const Type&&) = delete;
 
@@ -732,26 +783,25 @@ const Type* addressOf(const Type&&) = delete;
 #endif
 
 // =====================================================================================
-// Define macros for the usage of the casting utilities
+// Define macros for the clear usage of the casting utilities
 // =====================================================================================
 
-// Forward an argument while preserving its value category (lvalue or rvalue)
-#define NEX_FORWARD(Type, arg) \
-    NEX_PREPEND_NAMESPACE(forward<Type>(arg))
+// Forward an argument as either an lvalue or rvalue reference based on the template parameter Type
+#define NEX_FORWARD \
+    NEX_PREPEND_NAMESPACE(forwardCast)
 
-#define NEX_FORWARD_PACK(Types, pack) \
-    NEX_PREPEND_NAMESPACE(forward<Types...>(pack)...)
+// Cast an lvalue to an rvalue reference to enable move semantics, 
+// with strict compile-time checks to prevent misuse
+#define NEX_MOVE \
+    NEX_PREPEND_NAMESPACE(moveCast)
 
-// Move an argument to allow it to be moved from, even if it is an lvalue
-#define NEX_MOVE(...) \
-    NEX_PREPEND_NAMESPACE(move(__VA_ARGS__))
+// Conditionally casts to an rvalue reference if the type is nothrow move constructible, 
+// otherwise falls back to a const lvalue reference
+#define NEX_MOVE_IF_NOEXCEPT \
+    NEX_PREPEND_NAMESPACE(moveIfNoexcept)
 
-// Move an argument if it is nothrow move constructible, otherwise copy it
-#define NEX_MOVE_IF_NOEXCEPT(...) \
-    NEX_PREPEND_NAMESPACE(moveIfNoexcept(__VA_ARGS__))
-
-// Get the address of an object
-#define NEX_ADDRESS_OF(obj) \
-    NEX_PREPEND_NAMESPACE(addressOf(obj))
+// Obtains the actual address of an object
+#define NEX_ADDRESS_OF \
+    NEX_PREPEND_NAMESPACE(addressOf)
 
 NEX_NAMESPACE_END

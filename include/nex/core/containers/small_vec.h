@@ -452,7 +452,7 @@ public:
     reference emplaceBack(Args&&... args) {
         if (size_ == capacity()) growTo(size_ + 1);
         value_type* ptr = 
-            ::new (static_cast<void*>(storagePtr() + size_)) value_type(forward<Args>(args)...);
+            ::new (static_cast<void*>(storagePtr() + size_)) value_type(NEX_FORWARD<Args>(args)...);
         ++size_;
         return *ptr;
     }
@@ -551,7 +551,7 @@ public:
             }
             base[idx].~value_type();
         }
-        ::new (static_cast<void*>(base + idx)) value_type(forward<Args>(args)...);
+        ::new (static_cast<void*>(base + idx)) value_type(NEX_FORWARD<Args>(args)...);
         ++size_;
         return begin() + static_cast<difference_type>(idx);
     }

@@ -12,6 +12,10 @@
 #include "nex/base/namespace.h"
 #include "nex/base/location.h"
 
+#if NEX_PLATFORM_IS_WINDOWS
+    #include <intrin.h> // For __fastfail on MSVC
+#endif
+
 // ======================================================================================
 // Internal source location metadata for Assert/Crash handling
 // ======================================================================================

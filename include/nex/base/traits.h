@@ -219,7 +219,7 @@ inline constexpr bool IsBaseOfV = IsBaseOf<Base, Derived>::value;
 
 /// Checks whether From can be implicitly converted to To.
 template <typename From, typename To>
-using IsConvertible = NEX_STD is_convertible<From, To>;
+using IsConvertible = type_traits::IsConvertible<From, To>;
 template <typename From, typename To>
 inline constexpr bool IsConvertibleV = IsConvertible<From, To>::value;
 
@@ -375,14 +375,14 @@ inline constexpr bool IsNothrowDestructibleV = IsNothrowDestructible<Type>::valu
 
 /// Checks whether Type is a trivial type (i.e., a type that can be trivially constructed, copied, and destroyed).
 template <typename Type>
-using IsTrivial = NEX_STD is_trivial<Type>;
+using IsTrivial = type_traits::IsTrivial<Type>;
 template <typename Type>
 inline constexpr bool IsTrivialV = IsTrivial<Type>::value;
 
 /// Checks whether Type is trivially copyable (i.e., a type that can be copied with a simple bitwise copy 
 /// and does not require a user-defined copy constructor, copy assignment operator, or destructor).
 template <typename Type>
-using IsTriviallyCopyable = NEX_STD is_trivially_copyable<Type>;
+using IsTriviallyCopyable = type_traits::IsTriviallyCopyable<Type>;
 template <typename Type>
 inline constexpr bool IsTriviallyCopyableV = IsTriviallyCopyable<Type>::value;
 

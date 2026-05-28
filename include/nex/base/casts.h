@@ -17,8 +17,10 @@
  */
 
 #include "nex/base/compiler.h"
+#include "nex/base/build.h"
 #include "nex/base/attributes.h"
 #include "nex/base/namespace.h"
+#include "nex/base/assert_crash.h"
 
 NEX_NAMESPACE_BEGIN
 
@@ -176,6 +178,22 @@ constexpr bool IsReferenceV<Type&&> = true;
 // Check if a type is a reference (either lvalue or rvalue)
 template <class Type>
 struct IsReference : BoolConstant<IsReferenceV<Type>> {};
+
+// Determine whether Type is a trivial type
+template <class Type>
+struct IsTrivial : BoolConstant<__is_trivial(Type)> {};
+
+// Determine whether Type is a trivial type
+template <class Type>
+constexpr bool IsTrivialV = __is_trivial(Type);
+
+// Determine whether Type is a trivially copyable type
+template <class Type>
+struct IsTriviallyCopyable : BoolConstant<__is_trivially_copyable(Type)> {};
+
+// Determine whether Type is a trivially copyable type
+template <class Type>
+constexpr bool IsTriviallyCopyableV = __is_trivially_copyable(Type);
 
 // Determine whether Type can be direct-initialized with Args...
 template <class Type, class... Args>
@@ -618,6 +636,14 @@ constexpr bool IsEnumV = __is_enum(RemoveCvT<Type>);
 template <class Type>
 constexpr bool IsClassV = __is_class(RemoveCvT<Type>);
 
+// Determine whether From is convertible to To
+template <class From, class To>
+struct IsConvertible : BoolConstant<__is_convertible_to(From, To)> {};
+
+// Determine whether From is convertible to To
+template <class From, class To>
+constexpr bool IsConvertibleV = __is_convertible_to(From, To);
+
 // RemoveReference implementation to remove reference qualifiers
 template <class Type>
 struct RemoveReference {
@@ -778,6 +804,68 @@ Type* addressOf(Type& Value) noexcept {
 template <class Type>
 const Type* addressOf(const Type&&) = delete;
 
+/**
+ * @brief Reinterprets the bits of a source value as a destination type.
+ * @note Safe alternative to reinterpret_cast or memcpy for bit-blitting. 
+ *       Requires types to be trivially copyable and of identical size.
+ * @tparam Dest The target type to convert to.
+ * @tparam Source The source type to convert from.
+ */
+template <class Dest, class Source>
+    requires (sizeof(Dest) == sizeof(Source) && 
+              type_traits::IsTriviallyCopyableV<Source> && 
+              type_traits::IsTriviallyCopyableV<Dest>)
+NEX_NODISCARD NEX_MSVC_INTRINSIC constexpr 
+Dest bitCast(const Source& source) noexcept {
+    return __builtin_bit_cast(Dest, source);
+}
+
+/**
+ * @brief Performs a safe, implicit upcast or const-cast that is checked by the compiler.
+ * @note Ensures that the conversion could happen implicitly without a forceful static_cast.
+ * @tparam Dest The target type (must be implicitly convertible from Source).
+ */
+template <class Dest, class Source>
+requires type_traits::IsConvertibleV<Source, Dest>
+NEX_NODISCARD NEX_MSVC_INTRINSIC constexpr 
+Dest implicitCast(Source&& source) noexcept {
+    return forwardCast<Source>(source);
+}
+
+/**
+ * @brief Safely casts between numeric types, checking for overflow/underflow in Debug builds.
+ * @note Acts as a standard static_cast in Release builds, but panics in Debug if data loss occurs.
+ */
+template <class Dest, class Source>
+NEX_NODISCARD NEX_MSVC_INTRINSIC constexpr Dest numericCast(Source value) noexcept {
+    #if NEX_BUILD_MODE_IS_DEBUG
+        // Perform a checked cast that panics if the value cannot be represented in the destination type
+        Dest casted = static_cast<Dest>(value);
+        NEX_ASSERT_MSG(static_cast<Source>(casted) == value, "Error: Integer overflow or truncation detected!");
+        return casted;
+    #else
+        // In Release builds, perform a regular static_cast without the overhead of checks
+        return static_cast<Dest>(value);
+    #endif
+}
+
+/**
+ * @brief Safely downcasts a polymorphic pointer. 
+ *        Uses dynamic_cast in Debug builds, but optimizes to static_cast in Release builds.
+ * @note Requires RTTI to be enabled only during Debug builds for verification.
+ */
+template <class Dest, class Source>
+NEX_NODISCARD NEX_MSVC_INTRINSIC Dest polymorphicCast(Source* polyPointer) noexcept {
+    #if NEX_BUILD_MODE_IS_DEBUG
+        if (polyPointer == nullptr) return nullptr;
+        Dest result = dynamic_cast<Dest>(polyPointer);
+        NEX_ASSERT_MSG(result != nullptr, "Error: Invalid downcast detected!");
+        return result;
+    #else
+        return static_cast<Dest>(polyPointer);
+    #endif
+}
+
 #if NEX_COMPILER_MSVC_COMPATIBLE
     #pragma warning(pop)
 #endif
@@ -803,5 +891,23 @@ const Type* addressOf(const Type&&) = delete;
 // Obtains the actual address of an object
 #define NEX_ADDRESS_OF \
     NEX_PREPEND_NAMESPACE(addressOf)
+
+// Reinterprets the bits of a source value as a destination type, 
+// with safety checks for trivial copyability and size
+#define NEX_BIT_CAST \
+    NEX_PREPEND_NAMESPACE(bitCast)
+
+// Performs a safe, implicit upcast or const-cast that is checked by the compiler
+#define NEX_IMPLICIT_CAST \
+    NEX_PREPEND_NAMESPACE(implicitCast)
+
+// Safely casts between numeric types, checking for overflow/underflow in Debug builds
+#define NEX_NUMERIC_CAST \
+    NEX_PREPEND_NAMESPACE(numericCast)
+
+// Safely downcasts a polymorphic pointer, 
+// using dynamic_cast in Debug builds and static_cast in Release builds
+#define NEX_POLYMORPHIC_CAST \
+    NEX_PREPEND_NAMESPACE(polymorphicCast)
 
 NEX_NAMESPACE_END

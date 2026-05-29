@@ -42,12 +42,6 @@ using FalseType = type_traits::FalseType;
 template <bool BoolValue>
 using BoolConstant = type_traits::BoolConstant<BoolValue>;
 
-/// Checks whether Type is an arithmetic type (i.e., integral or floating-point).
-template <class Type>
-using IsArithmetic = BoolConstant<Arithmetic<Type>>;
-template <class Type>
-inline constexpr bool IsArithmeticV = IsArithmetic<Type>::value;
-
 /// Checks whether Type is an integral type (e.g., int, char, etc.).
 template <class Type>
 using IsIntegral = type_traits::IsIntegral<Type>;
@@ -59,6 +53,12 @@ template <class Type>
 using IsFloatingPoint = type_traits::IsFloatingPoint<Type>;
 template <class Type>
 inline constexpr bool IsFloatingPointV = IsFloatingPoint<Type>::value;
+
+/// Checks whether Type is an arithmetic type (i.e., integral or floating-point).
+template <class Type>
+using IsArithmetic = BoolConstant<Arithmetic<Type>>;
+template <class Type>
+inline constexpr bool IsArithmeticV = IsArithmetic<Type>::value;
 
 /// Checks whether Type is the void type.
 template <typename Type>

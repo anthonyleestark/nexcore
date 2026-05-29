@@ -29,8 +29,28 @@
 NEX_NAMESPACE_BEGIN
 
 // ============================================================================
-// Core language concepts
+// Concepts for type properties and relationships
 // ============================================================================
+
+/// Checks whether Type is an integral type.
+template <typename Type>
+concept Integral = type_traits::IsIntegralV<Type>;
+
+/// Checks whether Type is a signed integral type.
+template <typename Type>
+concept SignedIntegral = type_traits::IsSignedIntegralV<Type>;
+
+/// Checks whether Type is an unsigned integral type.
+template <typename Type>
+concept UnsignedIntegral = type_traits::IsUnsignedIntegralV<Type>;
+
+/// Checks whether Type is a floating-point type.
+template <typename Type>
+concept FloatingPoint = type_traits::IsFloatingPointV<Type>;
+
+/// Checks whether Type is either integral or floating-point.
+template <typename Type>
+concept Arithmetic = type_traits::IsArithmeticV<Type>;
 
 /// Checks whether two types are the same type.
 template <typename Type1, typename Type2>
@@ -54,26 +74,6 @@ concept CommonReferenceWith = NEX_STD common_reference_with<Type1, Type2>;
 template <typename Type1, typename Type2>
 concept CommonWith = NEX_STD common_with<Type1, Type2>;
 
-/// Checks whether Type is an integral type.
-template <typename Type>
-concept Integral = type_traits::IsIntegralV<Type>;
-
-/// Checks whether Type is a signed integral type.
-template <typename Type>
-concept SignedIntegral = type_traits::IsSignedIntegralV<Type>;
-
-/// Checks whether Type is an unsigned integral type.
-template <typename Type>
-concept UnsignedIntegral = type_traits::IsUnsignedIntegralV<Type>;
-
-/// Checks whether Type is a floating-point type.
-template <typename Type>
-concept FloatingPoint = type_traits::IsFloatingPointV<Type>;
-
-/// Checks whether Type is either integral or floating-point.
-template <typename Type>
-concept Arithmetic = Integral<Type> || FloatingPoint<Type>;
-
 /// Checks whether an lvalue of To can be assigned from From.
 template <typename To, typename From>
 concept AssignableFrom =
@@ -94,7 +94,7 @@ template <typename Type1, typename Type2>
 concept SwappableWith = NEX_STD swappable_with<Type1, Type2>;
 
 // ============================================================================
-// Object lifetime and value concepts
+// Concepts for object properties, lifetime, and operations
 // ============================================================================
 
 /// Checks whether Type can be destroyed.
@@ -146,7 +146,7 @@ template <typename Type>
 concept RegularValue = Regular<Type>;
 
 // ============================================================================
-// Comparison concepts
+// Concepts for comparison and ordering
 // ============================================================================
 
 /// Checks whether two values of Type can be compared for equality.
@@ -166,7 +166,7 @@ template <typename Type1, typename Type2>
 concept TotallyOrderedWith = NEX_STD totally_ordered_with<Type1, Type2>;
 
 // ============================================================================
-// Callable concepts
+// Concepts for invocability and predicates
 // ============================================================================
 
 /// Checks whether Fn can be invoked with Args.
@@ -206,7 +206,7 @@ template <typename Fn, typename Type1, typename Type2>
 concept StrictWeakOrder = NEX_STD strict_weak_order<Fn, Type1, Type2>;
 
 // ============================================================================
-// Iterator concepts
+// Concepts for iterators, ranges, and containers
 // ============================================================================
 
 /// Checks whether Type supports weak increment operations.
@@ -262,7 +262,7 @@ template <typename Out, typename Value>
 concept IndirectlyWritable = NEX_STD indirectly_writable<Out, Value>;
 
 // ============================================================================
-// Range and container concepts
+// Concepts for ranges and range properties
 // ============================================================================
 
 /// Checks whether Type is a standard range.
@@ -327,7 +327,7 @@ concept Indexable =
     };
 
 // ============================================================================
-// Project-specific convenience concepts
+// Concepts for type properties and relationships (NexCore-specific)
 // ============================================================================
 
 /// Checks whether Type is a raw pointer.

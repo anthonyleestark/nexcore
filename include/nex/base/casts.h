@@ -66,6 +66,254 @@ using TrueType  = BoolConstant<true>;
 // Represents the compile-time constant value `false`.
 using FalseType = BoolConstant<false>;
 
+// EnableIf implementation for SFINAE
+template <bool BoolCond, class Type = void>
+struct EnableIf {};     // no member "type" when !BoolCond
+
+template <class Type>
+struct EnableIf<true, Type> {   // type is Type for BoolCond
+    using type = Type;
+};
+
+template <bool BoolCond, class Type = void>
+using EnableIfT = typename EnableIf<BoolCond, Type>::type;
+
+// Conditional implementation to select one of two types based on a boolean condition
+template <bool Test, class Type1, class Type2>
+struct Conditional {
+    using type = Type1;
+};
+
+template <class Type1, class Type2>
+struct Conditional<false, Type1, Type2> {
+    using type = Type2;
+};
+
+template <bool Test, class Type1, class Type2>
+using ConditionalT = typename Conditional<Test, Type1, Type2>::type;
+
+#if NEX_COMPILER_IS_CLANG
+    // Clang provides a builtin type trait for is_same, 
+    // which is more efficient than our implementation, so use it when available
+    template <class Type1, class Type2>
+    constexpr bool IsSameV = __is_same(Type1, Type2);
+#else
+    // Determine whether arguments are the same type
+    template <class, class>
+    constexpr bool IsSameV = false;
+    template <class Type>
+    constexpr bool IsSameV<Type, Type> = true;
+#endif
+
+// Determine whether arguments are the same type
+template <class Type1, class Type2>
+struct IsSame : BoolConstant<IsSameV<Type1, Type2>> {};
+
+// RemoveConst implementation to remove top-level const qualifier from a type
+template <class Type>
+struct RemoveConst {
+    using type = Type;
+};
+
+template <class Type>
+struct RemoveConst<const Type> {
+    using type = Type;
+};
+
+template <class Type>
+using RemoveConstT = typename RemoveConst<Type>::type;
+
+// RemoveVolatile implementation to remove top-level volatile qualifier from a type
+template <class Type>
+struct RemoveVolatile {
+    using type = Type;
+};
+
+template <class Type>
+struct RemoveVolatile<volatile Type> {
+    using type = Type;
+};
+
+template <class Type>
+using RemoveVolatileT = typename RemoveVolatile<Type>::type;
+
+// RemoveCv implementation to remove top-level const and volatile qualifiers
+template <class Type>
+struct RemoveCv {
+    using type = Type;
+
+    // apply cv-qualifiers from the class template argument to __Fn<Type>
+    template <template <class> class Fn>
+    using _Apply = Fn<Type>;
+};
+
+template <class Type>
+struct RemoveCv<const Type> {
+    using type = Type;
+    template <template <class> class Fn>
+    using _Apply = const Fn<Type>;
+};
+
+template <class Type>
+struct RemoveCv<volatile Type> {
+    using type = Type;
+    template <template <class> class Fn>
+    using _Apply = volatile Fn<Type>;
+};
+
+template <class Type>
+struct RemoveCv<const volatile Type> {
+    using type = Type;
+    template <template <class> class Fn>
+    using _Apply = const volatile Fn<Type>;
+};
+
+template <class Type>
+using RemoveCvT = typename RemoveCv<Type>::type;
+
+// Determine whether a type is any of a list of types
+template <class Type, class... Types>
+constexpr bool IsAnyOfV = (IsSameV<Type, Types> || ...);
+
+#if NEX_HAS_CXX20
+    // Check if we are in a constant evaluation context
+    NEX_NODISCARD constexpr bool IsConstantEvaluated() noexcept {
+        return __builtin_is_constant_evaluated();
+    }
+#endif  // NEX_HAS_CXX20
+
+// Determine whether a type is an integral type
+template <class Type>
+constexpr bool IsIntegralV = IsAnyOfV<
+    RemoveCvT<Type>, bool, 
+    char, signed char, unsigned char, wchar_t,
+#if defined(__cpp_char8_t)
+    char8_t,
+#endif // defined(__cpp_char8_t)
+    char16_t, char32_t, 
+    short, unsigned short, 
+    int, unsigned int, 
+    long, unsigned long, 
+    long long, unsigned long long
+>;
+
+// Determine whether a type is a floating-point type
+template <class Type>
+constexpr bool IsFloatingPointV = IsAnyOfV<RemoveCvT<Type>, float, double, long double>;
+
+// Determine whether integral type Type is signed or unsigned
+template <class Type, bool = IsIntegralV<Type>>
+struct _SignCheckBase {
+    using _Underlying = RemoveCvT<Type>;
+
+    static constexpr bool _Signed   = static_cast<_Underlying>(-1) < static_cast<_Underlying>(0);
+    static constexpr bool _Unsigned = !_Signed;
+};
+
+// Specialization of _SignCheckBase for non-integral types
+template <class Type>
+struct _SignCheckBase<Type, false> {
+    static constexpr bool _Signed   = IsFloatingPointV<Type>;   // floating-point Type is signed
+    static constexpr bool _Unsigned = false;                    // non-arithmetic Type is neither signed nor unsigned
+};
+
+// Determine whether an integral type is signed
+template <class Type>
+struct IsSignedIntegral : BoolConstant<_SignCheckBase<Type>::_Signed> {};
+
+template <class Type>
+constexpr bool IsSignedIntegralV = IsSignedIntegral<Type>::value;
+
+// Determine whether an integral type is unsigned
+template <class Type>
+struct IsUnsignedIntegral : BoolConstant<_SignCheckBase<Type>::_Unsigned> {};
+
+template <class Type>
+constexpr bool IsUnsignedIntegralV = IsUnsignedIntegral<Type>::value;
+
+// Determine whether a type is an arithmetic type (either integral or floating-point)
+template <class Type>
+constexpr bool _IsArithmeticV = IsIntegralV<Type> || IsFloatingPointV<Type>;
+
+template <class Type>
+struct IsArithmetic : BoolConstant<_IsArithmeticV<Type>> {};
+
+template <class Type>
+constexpr bool IsArithmeticV = IsArithmetic<Type>::value;
+
+// Determine whether a type is a raw pointer
+template <class>
+constexpr bool _IsPointerV = false;
+
+// Specialization of _IsPointerV for pointer types, 
+// which checks if the type is a pointer by checking if it is of the form Type*
+template <class Type>
+constexpr bool _IsPointerV<Type*> = true;
+
+// Determine whether a type is a raw pointer
+template <class Type>
+constexpr bool IsPointerV = _IsPointerV<RemoveCvT<Type>>;
+
+// Determine whether a type is an enumeration type
+template <class Type>
+struct IsEnum : BoolConstant<__is_enum(RemoveCvT<Type>)> {};
+
+template <class Type>
+constexpr bool IsEnumV = IsEnum<Type>::value;
+
+// Determine whether a type is a class type
+template <class Type>
+struct IsClass : BoolConstant<__is_class(RemoveCvT<Type>)> {};
+
+template <class Type>
+constexpr bool IsClassV = IsClass<Type>::value;
+
+// Determine whether From is convertible to To
+template <class From, class To>
+struct IsConvertible : BoolConstant<__is_convertible_to(From, To)> {};
+
+template <class From, class To>
+constexpr bool IsConvertibleV = IsConvertible<From, To>::value;
+
+// RemoveReference implementation to remove reference qualifiers
+template <class Type>
+struct RemoveReference {
+    using type = Type;
+    using _ConstThruRefType = const Type;
+};
+
+template <class Type>
+struct RemoveReference<Type&> {
+    using type = Type;
+    using _ConstThruRefType = const Type&;
+};
+
+template <class Type>
+struct RemoveReference<Type&&> {
+    using type = Type;
+    using _ConstThruRefType = const Type&&;
+};
+
+template <class Type>
+using RemoveReferenceT = typename RemoveReference<Type>::type;
+
+template <class Type>
+using _ConstThruRef = typename RemoveReference<Type>::_ConstThruRefType;
+
+template <class Type>
+using _RemoveCvrefT NEX_MSVC_KNOWN_SEMANTICS = RemoveCvT<RemoveReferenceT<Type>>;
+
+#if NEX_HAS_CXX20
+    // Remove reference and cv-qualifiers from a type
+    template <class Type>
+    using RemoveCvrefT = _RemoveCvrefT<Type>;
+
+    template <class Type>
+    struct RemoveCvref {
+        using type = RemoveCvrefT<Type>;
+    };
+#endif  // NEX_HAS_CXX20
+
 // Maps a sequence of any types to the type void 
 template <class... Types>
 using VoidT = void;
@@ -76,7 +324,6 @@ struct AddConst {
     using type = const Type;
 };
 
-// Add top-level const qualifier to a type
 template <class Type>
 using AddConstT = typename AddConst<Type>::type;
 
@@ -96,7 +343,6 @@ struct AddCv {
     using type = const volatile Type;
 };
 
-// Add top-level const and volatile qualifiers to a type
 template <class Type>
 using AddCvT = typename AddCv<Type>::type;
 
@@ -120,7 +366,6 @@ struct AddLvalueReference {
     using type = typename _AddReference<Type>::_Lvalue;
 };
 
-// Add an lvalue reference to a type
 template <class Type>
 using AddLvalueReferenceT = typename _AddReference<Type>::_Lvalue;
 
@@ -130,7 +375,6 @@ struct AddRvalueReference {
     using type = typename _AddReference<Type>::_Rvalue;
 };
 
-// Add an rvalue reference to a type
 template <class Type>
 using AddRvalueReferenceT = typename _AddReference<Type>::_Rvalue;
 
@@ -143,7 +387,6 @@ AddRvalueReferenceT<Type> declval() noexcept;
 template <class>
 constexpr bool IsLvalueReferenceV = false;
 
-// Specialization of IsLvalueReferenceV for lvalue references
 template <class Type>
 constexpr bool IsLvalueReferenceV<Type&> = true;
 
@@ -155,7 +398,6 @@ struct IsLvalueReference : BoolConstant<IsLvalueReferenceV<Type>> {};
 template <class>
 constexpr bool IsRvalueReferenceV = false;
 
-// Specialization of IsRvalueReferenceV for rvalue references
 template <class Type>
 constexpr bool IsRvalueReferenceV<Type&&> = true;
 
@@ -167,11 +409,9 @@ struct IsRvalueReference : BoolConstant<IsRvalueReferenceV<Type>> {};
 template <class>
 constexpr bool IsReferenceV = false;
 
-// Specialization of IsReferenceV for lvalue references
 template <class Type>
 constexpr bool IsReferenceV<Type&> = true;
 
-// Specialization of IsReferenceV for rvalue references
 template <class Type>
 constexpr bool IsReferenceV<Type&&> = true;
 
@@ -222,7 +462,6 @@ struct _IsImplicitlyDefaultConstructible : FalseType {};
 template <class Type>
 void _ImplicitlyDefaultConstruct(const Type&);
 
-// Specialization of _IsImplicitlyDefaultConstructible for types that can be copy-initialized with {}
 template <class Type>
 struct _IsImplicitlyDefaultConstructible<Type, VoidT<decltype(_ImplicitlyDefaultConstruct<Type>({}))>> : TrueType {};
 
@@ -424,259 +663,6 @@ struct IsNothrowDestructible : BoolConstant<__is_nothrow_destructible(Type)> {};
 
 template <class Type>
 constexpr bool IsNothrowDestructibleV = IsNothrowDestructible<Type>::value;
-
-// EnableIf implementation for SFINAE
-template <bool BoolCond, class Type = void>
-struct EnableIf {};             // no member "type" when !BoolCond
-
-// Specialization of EnableIf for when the condition is true
-template <class Type>
-struct EnableIf<true, Type> {   // type is Type for BoolCond
-    using type = Type;
-};
-
-// Alias template for EnableIf to simplify usage
-template <bool BoolCond, class Type = void>
-using EnableIfT = typename EnableIf<BoolCond, Type>::type;
-
-// Choose Type1 if Test is true
-template <bool Test, class Type1, class Type2>
-struct Conditional {
-    using type = Type1;
-};
-
-// Choose Type2 otherwise
-template <class Type1, class Type2>
-struct Conditional<false, Type1, Type2> {
-    using type = Type2;
-};
-
-// Alias template for Conditional to simplify usage
-template <bool Test, class Type1, class Type2>
-using ConditionalT = typename Conditional<Test, Type1, Type2>::type;
-
-// RemoveCv implementation to remove top-level const and volatile qualifiers
-template <class Type>
-struct RemoveCv {
-    using type = Type;
-
-    // apply cv-qualifiers from the class template argument to __Fn<Type>
-    template <template <class> class Fn>
-    using _Apply = Fn<Type>;
-};
-
-// Specializations of RemoveCv for const, volatile, and const volatile types
-template <class Type>
-struct RemoveCv<const Type> {
-    using type = Type;
-    template <template <class> class Fn>
-    using _Apply = const Fn<Type>;
-};
-
-// Specialization of RemoveCv for volatile types
-template <class Type>
-struct RemoveCv<volatile Type> {
-    using type = Type;
-    template <template <class> class Fn>
-    using _Apply = volatile Fn<Type>;
-};
-
-// Specialization of RemoveCv for const volatile types
-template <class Type>
-struct RemoveCv<const volatile Type> {
-    using type = Type;
-    template <template <class> class Fn>
-    using _Apply = const volatile Fn<Type>;
-};
-
-// Alias template for RemoveCv to simplify usage
-template <class Type>
-using RemoveCvT = typename RemoveCv<Type>::type;
-
-// Remove top-level const qualifier from a type
-template <class Type>
-struct RemoveConst {
-    using type = Type;
-};
-
-// Specialization of RemoveConst for const types, which removes the const qualifier
-template <class Type>
-struct RemoveConst<const Type> {
-    using type = Type;
-};
-
-// Alias template for RemoveConst to simplify usage
-template <class Type>
-using RemoveConstT = typename RemoveConst<Type>::type;
-
-// Remove top-level volatile qualifier from a type
-template <class Type>
-struct RemoveVolatile {
-    using type = Type;
-};
-
-// Specialization of RemoveVolatile for volatile types, which removes the volatile qualifier
-template <class Type>
-struct RemoveVolatile<volatile Type> {
-    using type = Type;
-};
-
-// Alias template for RemoveVolatile to simplify usage
-template <class Type>
-using RemoveVolatileT = typename RemoveVolatile<Type>::type;
-
-#if NEX_COMPILER_IS_CLANG
-    // Clang provides a builtin type trait for is_same, 
-    // which is more efficient than our implementation, so use it when available
-    template <class Type1, class Type2>
-    constexpr bool IsSameV = __is_same(Type1, Type2);
-#else
-    // Check if two types are the same
-    template <class, class>
-    constexpr bool IsSameV = false;   // determine whether arguments are the same type
-    template <class Type>
-    constexpr bool IsSameV<Type, Type> = true;
-#endif
-
-// Check if a type is any of a list of types
-template <class Type, class... Types>
-constexpr bool IsAnyOfV = (IsSameV<Type, Types> || ...);   // true if and only if Type is in Types
-
-#if NEX_HAS_CXX20
-    // Check if we are in a constant evaluation context
-    NEX_NODISCARD constexpr bool IsConstantEvaluated() noexcept {
-        return __builtin_is_constant_evaluated();
-    }
-#endif  // NEX_HAS_CXX20
-
-// Check if a type is an integral type
-template <class Type>
-constexpr bool IsIntegralV = IsAnyOfV<
-    RemoveCvT<Type>, bool, 
-    char, signed char, unsigned char, wchar_t,
-#if defined(__cpp_char8_t)
-    char8_t,
-#endif // defined(__cpp_char8_t)
-    char16_t, char32_t, 
-    short, unsigned short, 
-    int, unsigned int, 
-    long, unsigned long, 
-    long long, unsigned long long
->;
-
-// Check if a type is a floating-point type
-template <class Type>
-constexpr bool IsFloatingPointV = IsAnyOfV<RemoveCvT<Type>, float, double, long double>;
-
-
-// Determine whether integral type Type is signed or unsigned
-template <class Type, bool = IsIntegralV<Type>>
-struct _SignCheckBase {
-    using _Underlying = RemoveCvT<Type>;
-
-    static constexpr bool _Signed   = static_cast<_Underlying>(-1) < static_cast<_Underlying>(0);
-    static constexpr bool _Unsigned = !_Signed;
-};
-
-// Specialization of _SignCheckBase for non-integral types
-template <class Type>
-struct _SignCheckBase<Type, false> {
-    static constexpr bool _Signed   = IsFloatingPointV<Type>;   // floating-point Type is signed
-    static constexpr bool _Unsigned = false;                    // non-arithmetic Type is neither signed nor unsigned
-};
-
-// Check if an integral type is signed
-template <class Type>
-struct IsSignedIntegral : BoolConstant<_SignCheckBase<Type>::_Signed> {};
-
-template <class Type>
-constexpr bool IsSignedIntegralV = IsSignedIntegral<Type>::value;
-
-// Check if an integral type is unsigned
-template <class Type>
-struct IsUnsignedIntegral : BoolConstant<_SignCheckBase<Type>::_Unsigned> {};
-
-template <class Type>
-constexpr bool IsUnsignedIntegralV = IsUnsignedIntegral<Type>::value;
-
-// Check if a type is a raw pointer
-template <class>
-constexpr bool _IsPointerV = false;
-
-// Specialization of _IsPointerV for pointer types, 
-// which checks if the type is a pointer by checking if it is of the form Type*
-template <class Type>
-constexpr bool _IsPointerV<Type*> = true;
-
-// Check if a type is a raw pointer
-template <class Type>
-constexpr bool IsPointerV = _IsPointerV<RemoveCvT<Type>>;
-
-// Check if a type is an enumeration type
-template <class Type>
-struct IsEnum : BoolConstant<__is_enum(RemoveCvT<Type>)> {};
-
-template <class Type>
-constexpr bool IsEnumV = IsEnum<Type>::value;
-
-// Check if a type is a class type
-template <class Type>
-struct IsClass : BoolConstant<__is_class(RemoveCvT<Type>)> {};
-
-template <class Type>
-constexpr bool IsClassV = IsClass<Type>::value;
-
-// Determine whether From is convertible to To
-template <class From, class To>
-struct IsConvertible : BoolConstant<__is_convertible_to(From, To)> {};
-
-template <class From, class To>
-constexpr bool IsConvertibleV = IsConvertible<From, To>::value;
-
-// RemoveReference implementation to remove reference qualifiers
-template <class Type>
-struct RemoveReference {
-    using type = Type;
-    using _ConstThruRefType = const Type;
-};
-
-// Specialization of RemoveReference for lvalue references
-template <class Type>
-struct RemoveReference<Type&> {
-    using type = Type;
-    using _ConstThruRefType = const Type&;
-};
-
-// Specialization of RemoveReference for rvalue references
-template <class Type>
-struct RemoveReference<Type&&> {
-    using type = Type;
-    using _ConstThruRefType = const Type&&;
-};
-
-// Alias template for RemoveReference to simplify usage
-template <class Type>
-using RemoveReferenceT = typename RemoveReference<Type>::type;
-
-// Alias template to get the const-qualified type through reference for a given type
-template <class Type>
-using _ConstThruRef = typename RemoveReference<Type>::_ConstThruRefType;
-
-// Alias template to remove both const/volatile qualifiers and reference qualifiers from a type
-template <class Type>
-using _RemoveCvrefT NEX_MSVC_KNOWN_SEMANTICS = RemoveCvT<RemoveReferenceT<Type>>;
-
-#if NEX_HAS_CXX20
-    // Alias template for RemoveCvref to simplify usage in C++20
-    template <class Type>
-    using RemoveCvrefT = _RemoveCvrefT<Type>;
-
-    // RemoveCvref implementation to remove both const/volatile qualifiers and reference qualifiers
-    template <class Type>
-    struct RemoveCvref {
-        using type = RemoveCvrefT<Type>;
-    };
-#endif  // NEX_HAS_CXX20
 
 NEX_SUBNAMESPACE_END(type_traits)
 

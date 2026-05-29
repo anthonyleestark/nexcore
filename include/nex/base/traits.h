@@ -23,7 +23,7 @@
 #include <utility>
 
 #include "nex/base/macros.h"
-#include "nex/base/types.h"
+#include "nex/base/intrinsics.h"
 #include "nex/base/casts.h"
 #include "nex/base/concepts.h"
 

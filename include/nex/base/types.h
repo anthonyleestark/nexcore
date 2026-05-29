@@ -29,8 +29,7 @@
 #include "nex/base/namespace.h"
 
 #if defined(NEX_BASE_TYPES_NO_STD)
-    // Using our own type-traits implementation for byte operators and utilities, since <cstddef> is not included
-    #include "nex/base/casts.h"
+    #include "nex/base/intrinsics.h"
 #endif  // !defined(NEX_BASE_TYPES_NO_STD)
 
 NEX_NAMESPACE_BEGIN

@@ -23,7 +23,7 @@
 #include <ranges>
 
 #include "nex/base/macros.h"
-#include "nex/base/types.h"
+#include "nex/base/intrinsics.h"
 #include "nex/base/casts.h"
 
 NEX_NAMESPACE_BEGIN

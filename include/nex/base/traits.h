@@ -44,13 +44,13 @@ using BoolConstant = type_traits::BoolConstant<BoolValue>;
 
 /// Checks whether Type is an integral type (e.g., int, char, etc.).
 template <class Type>
-using IsIntegral = type_traits::IsIntegral<Type>;
+using IsIntegral = BoolConstant<type_traits::IsIntegralV<Type>>;
 template <class Type>
 inline constexpr bool IsIntegralV = IsIntegral<Type>::value;
 
 /// Checks whether Type is a floating-point type (i.e., float, double, or long double).
 template <class Type>
-using IsFloatingPoint = type_traits::IsFloatingPoint<Type>;
+using IsFloatingPoint = BoolConstant<type_traits::IsFloatingPointV<Type>>;
 template <class Type>
 inline constexpr bool IsFloatingPointV = IsFloatingPoint<Type>::value;
 
@@ -62,19 +62,19 @@ inline constexpr bool IsArithmeticV = IsArithmetic<Type>::value;
 
 /// Checks whether Type is the void type.
 template <typename Type>
-using IsVoid = NEX_STD is_void<Type>;
+using IsVoid = type_traits::IsVoid<Type>;
 template <typename Type>
-inline constexpr bool IsVoidV = IsVoid<Type>::value;
+inline constexpr bool IsVoidV = type_traits::IsVoidV<Type>;
 
 /// Checks whether Type is the nullptr type.
 template <typename Type>
-using IsNullPointer = NEX_STD is_null_pointer<Type>;
+using IsNullPointer = type_traits::IsNullPointer<Type>;
 template <typename Type>
-inline constexpr bool IsNullPointerV = IsNullPointer<Type>::value;
+inline constexpr bool IsNullPointerV = type_traits::IsNullPointerV<Type>;
 
 /// Checks whether Type is a pointer type.
 template <typename Type>
-using IsPointer = type_traits::IsPointer<Type>;
+using IsPointer = BoolConstant<type_traits::IsPointerV<Type>>;
 template <typename Type>
 inline constexpr bool IsPointerV = IsPointer<Type>::value;
 

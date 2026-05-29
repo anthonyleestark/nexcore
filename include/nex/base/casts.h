@@ -241,6 +241,13 @@ struct IsArithmetic : BoolConstant<_IsArithmeticV<Type>> {};
 template <class Type>
 constexpr bool IsArithmeticV = IsArithmetic<Type>::value;
 
+// Determine whether a type is the void type
+template <class Type>
+constexpr bool IsVoidV = IsSameV<RemoveCvT<Type>, void>;
+
+template <class Type>
+struct IsVoid : BoolConstant<IsVoidV<Type>> {};
+
 // Determine whether a type is a raw pointer
 template <class>
 constexpr bool _IsPointerV = false;
@@ -253,6 +260,13 @@ constexpr bool _IsPointerV<Type*> = true;
 // Determine whether a type is a raw pointer
 template <class Type>
 constexpr bool IsPointerV = _IsPointerV<RemoveCvT<Type>>;
+
+// Determine whether a cv-qualified type is a null-pointer type
+template <class Type>
+constexpr bool IsNullPointerV = IsSameV<RemoveCvT<Type>, decltype(nullptr)>;
+
+template <class Type>
+struct IsNullPointer : BoolConstant<IsNullPointerV<Type>> {};
 
 // Determine whether a type is an enumeration type
 template <class Type>

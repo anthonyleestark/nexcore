@@ -50,13 +50,13 @@ inline constexpr bool IsArithmeticV = IsArithmetic<Type>::value;
 
 /// Checks whether Type is an integral type (e.g., int, char, etc.).
 template <class Type>
-using IsIntegral = BoolConstant<type_traits::IsIntegralV<Type>>;
+using IsIntegral = type_traits::IsIntegral<Type>;
 template <class Type>
 inline constexpr bool IsIntegralV = IsIntegral<Type>::value;
 
 /// Checks whether Type is a floating-point type (i.e., float, double, or long double).
 template <class Type>
-using IsFloatingPoint = BoolConstant<type_traits::IsFloatingPointV<Type>>;
+using IsFloatingPoint = type_traits::IsFloatingPoint<Type>;
 template <class Type>
 inline constexpr bool IsFloatingPointV = IsFloatingPoint<Type>::value;
 
@@ -74,7 +74,7 @@ inline constexpr bool IsNullPointerV = IsNullPointer<Type>::value;
 
 /// Checks whether Type is a pointer type.
 template <typename Type>
-using IsPointer = BoolConstant<type_traits::IsPointerV<Type>>;
+using IsPointer = type_traits::IsPointer<Type>;
 template <typename Type>
 inline constexpr bool IsPointerV = IsPointer<Type>::value;
 
@@ -98,7 +98,7 @@ inline constexpr bool IsUnboundedArrayV = IsUnboundedArray<Type>::value;
 
 /// Checks whether Type is an enumeration type (i.e., an enum).
 template <typename Type>
-using IsEnum = BoolConstant<type_traits::IsEnumV<Type>>;
+using IsEnum = type_traits::IsEnum<Type>;
 template <typename Type>
 inline constexpr bool IsEnumV = IsEnum<Type>::value;
 
@@ -110,7 +110,7 @@ inline constexpr bool IsUnionV = IsUnion<Type>::value;
 
 /// Checks whether Type is a class type (i.e., a struct or class).
 template <typename Type>
-using IsClass = BoolConstant<type_traits::IsClassV<Type>>;
+using IsClass = type_traits::IsClass<Type>;
 template <typename Type>
 inline constexpr bool IsClassV = IsClass<Type>::value;
 
@@ -140,19 +140,19 @@ inline constexpr bool IsMemberFunctionPointerV = IsMemberFunctionPointer<Type>::
 
 /// Checks whether Type is an lvalue reference type.
 template <typename Type>
-using IsLvalueReference = BoolConstant<type_traits::IsLvalueReferenceV<Type>>;
+using IsLvalueReference = type_traits::IsLvalueReference<Type>;
 template <typename Type>
 inline constexpr bool IsLvalueReferenceV = IsLvalueReference<Type>::value;
 
 /// Checks whether Type is an rvalue reference type.
 template <typename Type>
-using IsRvalueReference = BoolConstant<type_traits::IsRvalueReferenceV<Type>>;
+using IsRvalueReference = type_traits::IsRvalueReference<Type>;
 template <typename Type>
 inline constexpr bool IsRvalueReferenceV = IsRvalueReference<Type>::value;
 
 /// Checks whether Type is a reference type (either lvalue or rvalue reference).
 template <typename Type>
-using IsReference = BoolConstant<type_traits::IsReferenceV<Type>>;
+using IsReference = type_traits::IsReference<Type>;
 template <typename Type>
 inline constexpr bool IsReferenceV = IsReference<Type>::value;
 
@@ -195,19 +195,19 @@ inline constexpr bool IsVolatileV = IsVolatile<Type>::value;
 
 /// Checks whether Type is signed.
 template <typename Type>
-using IsSigned = BoolConstant<type_traits::IsSignedIntegralV<Type>>;
+using IsSigned = type_traits::IsSignedIntegral<Type>;
 template <typename Type>
 inline constexpr bool IsSignedV = IsSigned<Type>::value;
 
 /// Checks whether Type is an unsigned type (i.e., an integral type that is not signed).
 template <typename Type>
-using IsUnsigned = BoolConstant<type_traits::IsUnsignedIntegralV<Type>>;
+using IsUnsigned = type_traits::IsUnsignedIntegral<Type>;
 template <typename Type>
 inline constexpr bool IsUnsignedV = IsUnsigned<Type>::value;
 
 /// Checks whether Type1 and Type2 are the same type.
 template <typename Type1, typename Type2>
-using IsSame = BoolConstant<type_traits::IsSameV<Type1, Type2>>;
+using IsSame = type_traits::IsSame<Type1, Type2>;
 template <typename Type1, typename Type2>
 inline constexpr bool IsSameV = IsSame<Type1, Type2>::value;
 

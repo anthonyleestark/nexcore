@@ -183,41 +183,36 @@ struct IsReference : BoolConstant<IsReferenceV<Type>> {};
 template <class Type>
 struct IsTrivial : BoolConstant<__is_trivial(Type)> {};
 
-// Determine whether Type is a trivial type
 template <class Type>
-constexpr bool IsTrivialV = __is_trivial(Type);
+constexpr bool IsTrivialV = IsTrivial<Type>::value;
 
 // Determine whether Type is a trivially copyable type
 template <class Type>
 struct IsTriviallyCopyable : BoolConstant<__is_trivially_copyable(Type)> {};
 
-// Determine whether Type is a trivially copyable type
 template <class Type>
-constexpr bool IsTriviallyCopyableV = __is_trivially_copyable(Type);
+constexpr bool IsTriviallyCopyableV = IsTriviallyCopyable<Type>::value;
 
 // Determine whether Type can be direct-initialized with Args...
 template <class Type, class... Args>
 struct IsConstructible : BoolConstant<__is_constructible(Type, Args...)> {};
 
-// Determine whether Type can be direct-initialized with Args...
 template <class Type, class... Args>
-constexpr bool IsConstructibleV = __is_constructible(Type, Args...);
+constexpr bool IsConstructibleV = IsConstructible<Type, Args...>::value;
 
 // Determine whether Type can be direct-initialized with an lvalue const Type
 template <class Type>
 struct IsCopyConstructible : BoolConstant<__is_constructible(Type, AddLvalueReferenceT<const Type>)> {};
 
-// Determine whether Type can be direct-initialized with an lvalue const Type
 template <class Type>
-constexpr bool IsCopyConstructibleV = __is_constructible(Type, AddLvalueReferenceT<const Type>);
+constexpr bool IsCopyConstructibleV = IsCopyConstructible<Type>::value;
 
 // Determine whether Type can be value-initialized
 template <class Type>
 struct IsDefaultConstructible : BoolConstant<__is_constructible(Type)> {};
 
-// Determine whether Type can be default constructed
 template <class Type>
-constexpr bool IsDefaultConstructibleV = __is_constructible(Type);
+constexpr bool IsDefaultConstructibleV = IsDefaultConstructible<Type>::value;
 
 // Determine whether Type can be copy-initialized with {}
 template <class Type, class = void>
@@ -235,17 +230,15 @@ struct _IsImplicitlyDefaultConstructible<Type, VoidT<decltype(_ImplicitlyDefault
 template <class Type>
 struct IsMoveConstructible : BoolConstant<__is_constructible(Type, Type)> {};
 
-// Determine whether Type can be direct-initialized from an rvalue Type
 template <class Type>
-constexpr bool IsMoveConstructibleV = __is_constructible(Type, Type);
+constexpr bool IsMoveConstructibleV = IsMoveConstructible<Type>::value;
 
 // Determine whether From can be assigned to To
 template <class To, class From>
 struct IsAssignable : BoolConstant<__is_assignable(To, From)> {};
 
-// Determine whether From can be assigned to To
 template <class To, class From>
-constexpr bool IsAssignableV = __is_assignable(To, From);
+constexpr bool IsAssignableV = IsAssignable<To, From>::value;
 
 /** 
  * Determine whether From can be assigned to To without checking preconditions
@@ -267,9 +260,8 @@ template <class Type>
 struct IsCopyAssignable
     : BoolConstant<__is_assignable(AddLvalueReferenceT<Type>, AddLvalueReferenceT<const Type>)> {};
 
-// Determine whether Type can be copy assigned
 template <class Type>
-constexpr bool IsCopyAssignableV = __is_assignable(AddLvalueReferenceT<Type>, AddLvalueReferenceT<const Type>);
+constexpr bool IsCopyAssignableV = IsCopyAssignable<Type>::value;
 
 // Determine whether an rvalue Type can be assigned to an lvalue Type without checking preconditions
 #if defined(NEX_IS_ASSIGNABLE_NOCHECK_SUPPORTED) && !defined(__CUDACC__)
@@ -279,8 +271,7 @@ constexpr bool IsCopyAssignableV = __is_assignable(AddLvalueReferenceT<Type>, Ad
             AddLvalueReferenceT<Type>, AddLvalueReferenceT<const Type>)> {};
 
     template <class Type>
-    constexpr bool _IsCopyAssignableUncheckedV =
-        __is_assignable_no_precondition_check(AddLvalueReferenceT<Type>, AddLvalueReferenceT<const Type>);
+    constexpr bool _IsCopyAssignableUncheckedV = _IsCopyAssignableNoPreconditionCheck<Type>::value;
 #else // Use standard type trait as fallback when intrinsic is not supported
     template <class Type>
     using _IsCopyAssignableNoPreconditionCheck = IsCopyAssignable<Type>;
@@ -294,7 +285,7 @@ template <class Type>
 struct IsMoveAssignable : BoolConstant<__is_assignable(AddLvalueReferenceT<Type>, Type)> {};
 
 template <class Type>
-constexpr bool IsMoveAssignableV = __is_assignable(AddLvalueReferenceT<Type>, Type);
+constexpr bool IsMoveAssignableV = IsMoveAssignable<Type>::value;
 
 #if defined(NEX_IS_ASSIGNABLE_NOCHECK_SUPPORTED) && !defined(__CUDACC__)
     template <class Type>
@@ -302,8 +293,7 @@ constexpr bool IsMoveAssignableV = __is_assignable(AddLvalueReferenceT<Type>, Ty
         : BoolConstant<__is_assignable_no_precondition_check(AddLvalueReferenceT<Type>, Type)> {};
 
     template <class Type>
-    constexpr bool _IsMoveAssignableUncheckedV =
-        __is_assignable_no_precondition_check(AddLvalueReferenceT<Type>, Type);
+    constexpr bool _IsMoveAssignableUncheckedV = _IsMoveAssignableNoPreconditionCheck<Type>::value;
 #else // Use standard type trait as fallback when intrinsic is not supported
     template <class Type>
     using _IsMoveAssignableNoPreconditionCheck = IsMoveAssignable<Type>;
@@ -316,143 +306,124 @@ constexpr bool IsMoveAssignableV = __is_assignable(AddLvalueReferenceT<Type>, Ty
 template <class Type>
 struct IsDestructible : BoolConstant<__is_destructible(Type)> {};
 
-// True if RemoveAllExtentsT<Type> is a reference type, or can be explicitly destroyed
 template <class Type>
-constexpr bool IsDestructibleV = __is_destructible(Type);
+constexpr bool IsDestructibleV = IsDestructible<Type>::value;
 
 // Determine whether direct-initialization of Type with Args... is trivial
 template <class Type, class... Args>
 struct IsTriviallyConstructible : BoolConstant<__is_trivially_constructible(Type, Args...)> {};
 
-// Determine whether direct-initialization of Type with Args... is trivial
 template <class Type, class... Args>
-constexpr bool IsTriviallyConstructibleV = __is_trivially_constructible(Type, Args...);
+constexpr bool IsTriviallyConstructibleV = IsTriviallyConstructible<Type, Args...>::value;
 
 // Determine whether direct-initialization of Type with an lvalue const Type is trivial
 template <class Type>
 struct IsTriviallyCopyConstructible
     : BoolConstant<__is_trivially_constructible(Type, AddLvalueReferenceT<const Type>)> {};
 
-// Determine whether direct-initialization of Type with an lvalue const Type is trivial
 template <class Type>
-constexpr bool IsTriviallyCopyConstructibleV = __is_trivially_constructible(Type, AddLvalueReferenceT<const Type>);
+constexpr bool IsTriviallyCopyConstructibleV = IsTriviallyCopyConstructible<Type>::value;
 
 // Determine whether value-initialization of Type is trivial
 template <class Type>
 struct IsTriviallyDefaultConstructible : BoolConstant<__is_trivially_constructible(Type)> {};
 
-// Determine whether value-initialization of Type is trivial
 template <class Type>
-constexpr bool IsTriviallyDefaultConstructibleV = __is_trivially_constructible(Type);
+constexpr bool IsTriviallyDefaultConstructibleV = IsTriviallyDefaultConstructible<Type>::value;
 
 // Determine whether direct-initialization of Type with an rvalue Type is trivial
 template <class Type>
 struct IsTriviallyMoveConstructible : BoolConstant<__is_trivially_constructible(Type, Type)> {};
 
-// Determine whether direct-initialization of Type with an rvalue Type is trivial
 template <class Type>
-constexpr bool IsTriviallyMoveConstructibleV = __is_trivially_constructible(Type, Type);
+constexpr bool IsTriviallyMoveConstructibleV = IsTriviallyMoveConstructible<Type>::value;
 
 // Determine whether From can be trivially assigned to To
 template <class To, class From>
 struct IsTriviallyAssignable : BoolConstant<__is_trivially_assignable(To, From)> {};
 
-// Determine whether From can be trivially assigned to To
 template <class To, class From>
-constexpr bool IsTriviallyAssignableV = __is_trivially_assignable(To, From);
+constexpr bool IsTriviallyAssignableV = IsTriviallyAssignable<To, From>::value;
 
 // Determine whether an lvalue const Type can be trivially assigned to an lvalue Type
 template <class Type>
 struct IsTriviallyCopyAssignable
     : BoolConstant<__is_trivially_assignable(AddLvalueReferenceT<Type>, AddLvalueReferenceT<const Type>)> {};
 
-// Determine whether an lvalue const Type can be trivially assigned to an lvalue Type
 template <class Type>
-constexpr bool IsTriviallyCopyAssignableV =
-    __is_trivially_assignable(AddLvalueReferenceT<Type>, AddLvalueReferenceT<const Type>);
+constexpr bool IsTriviallyCopyAssignableV = IsTriviallyCopyAssignable<Type>::value;
 
 // Determine whether an rvalue Type can be trivially assigned to an lvalue Type
 template <class Type>
 struct IsTriviallyMoveAssignable : BoolConstant<__is_trivially_assignable(AddLvalueReferenceT<Type>, Type)> {};
 
-// Determine whether an rvalue Type can be trivially assigned to an lvalue Type
 template <class Type>
-constexpr bool IsTriviallyMoveAssignableV = __is_trivially_assignable(AddLvalueReferenceT<Type>, Type);
+constexpr bool IsTriviallyMoveAssignableV = IsTriviallyMoveAssignable<Type>::value;
 
 // Determine whether remove_all_extents_t<Type> is a reference type or can trivially be explicitly destroyed
 template <class Type>
 struct IsTriviallyDestructible : BoolConstant<__is_trivially_destructible(Type)> {};
 
-// Determine whether remove_all_extents_t<Type> is a reference type or can trivially be explicitly destroyed
 template <class Type>
-constexpr bool IsTriviallyDestructibleV = __is_trivially_destructible(Type);
+constexpr bool IsTriviallyDestructibleV = IsTriviallyDestructible<Type>::value;
 
 // Determine whether direct-initialization of Type from Args... is both valid and not potentially-throwing
 template <class Type, class... Args>
 struct IsNothrowConstructible : BoolConstant<__is_nothrow_constructible(Type, Args...)> {};
 
-// Determine whether direct-initialization of Type from Args... is both valid and not potentially-throwing
 template <class Type, class... Args>
-constexpr bool IsNothrowConstructibleV = __is_nothrow_constructible(Type, Args...);
+constexpr bool IsNothrowConstructibleV = IsNothrowConstructible<Type, Args...>::value;
 
 // Determine whether direct-initialization of Type from an lvalue const Type is both valid and not potentially-throwing
 template <class Type>
 struct IsNothrowCopyConstructible
     : BoolConstant<__is_nothrow_constructible(Type, AddLvalueReferenceT<const Type>)> {};
 
-// Determine whether direct-initialization of Type from an lvalue const Type is both valid and not potentially-throwing
 template <class Type>
-constexpr bool IsNothrowCopyConstructibleV = __is_nothrow_constructible(Type, AddLvalueReferenceT<const Type>);
+constexpr bool IsNothrowCopyConstructibleV = IsNothrowCopyConstructible<Type>::value;
 
 // Determine whether value-initialization of Type is both valid and not potentially-throwing
 template <class Type>
 struct IsNothrowDefaultConstructible : BoolConstant<__is_nothrow_constructible(Type)> {};
 
-// Determine whether value-initialization of Type is both valid and not potentially-throwing
 template <class Type>
-constexpr bool IsNothrowDefaultConstructibleV = __is_nothrow_constructible(Type);
+constexpr bool IsNothrowDefaultConstructibleV = IsNothrowDefaultConstructible<Type>::value;
 
 // Determine whether direct-initialization of Type from an rvalue Type is both valid and not potentially-throwing
 template <class Type>
 struct IsNothrowMoveConstructible : BoolConstant<__is_nothrow_constructible(Type, Type)> {};
 
-// Determine whether direct-initialization of Type from an rvalue Type is both valid and not potentially-throwing
 template <class Type>
-constexpr bool IsNothrowMoveConstructibleV = __is_nothrow_constructible(Type, Type);
+constexpr bool IsNothrowMoveConstructibleV = IsNothrowMoveConstructible<Type>::value;
 
 // Determine whether assignment of From to To is both valid and not potentially-throwing
 template <class To, class From>
 struct IsNothrowAssignable : BoolConstant<__is_nothrow_assignable(To, From)> {};
 
-// Determine whether assignment of From to To is both valid and not potentially-throwing
 template <class To, class From>
-constexpr bool IsNothrowAssignableV = __is_nothrow_assignable(To, From);
+constexpr bool IsNothrowAssignableV = IsNothrowAssignable<To, From>::value;
 
 // Determine whether assignment of an lvalue const Type to an lvalue Type is both valid and not potentially-throwing
 template <class Type>
 struct IsNothrowCopyAssignable
     : BoolConstant<__is_nothrow_assignable(AddLvalueReferenceT<Type>, AddLvalueReferenceT<const Type>)> {};
 
-// Determine whether assignment of an lvalue const Type to an lvalue Type is both valid and not potentially-throwing
 template <class Type>
-constexpr bool IsNothrowCopyAssignableV =
-    __is_nothrow_assignable(AddLvalueReferenceT<Type>, AddLvalueReferenceT<const Type>);
+constexpr bool IsNothrowCopyAssignableV = IsNothrowCopyAssignable<Type>::value;
 
 // Determine whether assignment of an rvalue Type to an lvalue Type is both valid and not potentially-throwing
 template <class Type>
 struct IsNothrowMoveAssignable : BoolConstant<__is_nothrow_assignable(AddLvalueReferenceT<Type>, Type)> {};
 
-// Determine whether assignment of an rvalue Type to an lvalue Type is both valid and not potentially-throwing
 template <class Type>
-constexpr bool IsNothrowMoveAssignableV = __is_nothrow_assignable(AddLvalueReferenceT<Type>, Type);
+constexpr bool IsNothrowMoveAssignableV = IsNothrowMoveAssignable<Type>::value;
 
 // Determine whether remove_all_extents_t<Type> is a reference type or has non-potentially-throwing explicit destruction
 template <class Type>
 struct IsNothrowDestructible : BoolConstant<__is_nothrow_destructible(Type)> {};
 
-// Determine whether remove_all_extents_t<Type> is a reference type or has non-potentially-throwing explicit destruction
 template <class Type>
-constexpr bool IsNothrowDestructibleV = __is_nothrow_destructible(Type);
+constexpr bool IsNothrowDestructibleV = IsNothrowDestructible<Type>::value;
 
 // EnableIf implementation for SFINAE
 template <bool BoolCond, class Type = void>
@@ -597,23 +568,36 @@ constexpr bool IsIntegralV = IsAnyOfV<
 template <class Type>
 constexpr bool IsFloatingPointV = IsAnyOfV<RemoveCvT<Type>, float, double, long double>;
 
-// Check if an integral type is signed
+
+// Determine whether integral type Type is signed or unsigned
 template <class Type, bool = IsIntegralV<Type>>
-struct _IsSignedIntegral : FalseType {};
+struct _SignCheckBase {
+    using _Underlying = RemoveCvT<Type>;
 
-// Specialization of _IsSignedIntegral for integral types, 
-// which checks whether the type is signed by comparing -1 and 0
+    static constexpr bool _Signed   = static_cast<_Underlying>(-1) < static_cast<_Underlying>(0);
+    static constexpr bool _Unsigned = !_Signed;
+};
+
+// Specialization of _SignCheckBase for non-integral types
 template <class Type>
-struct _IsSignedIntegral<Type, true>
-    : BoolConstant<static_cast<RemoveCvT<Type>>(-1) < static_cast<RemoveCvT<Type>>(0)> {};
+struct _SignCheckBase<Type, false> {
+    static constexpr bool _Signed   = IsFloatingPointV<Type>;   // floating-point Type is signed
+    static constexpr bool _Unsigned = false;                    // non-arithmetic Type is neither signed nor unsigned
+};
 
 // Check if an integral type is signed
 template <class Type>
-constexpr bool IsSignedIntegralV = _IsSignedIntegral<Type>::value;
+struct IsSignedIntegral : BoolConstant<_SignCheckBase<Type>::_Signed> {};
+
+template <class Type>
+constexpr bool IsSignedIntegralV = IsSignedIntegral<Type>::value;
 
 // Check if an integral type is unsigned
 template <class Type>
-constexpr bool IsUnsignedIntegralV = IsIntegralV<Type> && !IsSignedIntegralV<Type>;
+struct IsUnsignedIntegral : BoolConstant<_SignCheckBase<Type>::_Unsigned> {};
+
+template <class Type>
+constexpr bool IsUnsignedIntegralV = IsUnsignedIntegral<Type>::value;
 
 // Check if a type is a raw pointer
 template <class>
@@ -630,19 +614,24 @@ constexpr bool IsPointerV = _IsPointerV<RemoveCvT<Type>>;
 
 // Check if a type is an enumeration type
 template <class Type>
-constexpr bool IsEnumV = __is_enum(RemoveCvT<Type>);
+struct IsEnum : BoolConstant<__is_enum(RemoveCvT<Type>)> {};
+
+template <class Type>
+constexpr bool IsEnumV = IsEnum<Type>::value;
 
 // Check if a type is a class type
 template <class Type>
-constexpr bool IsClassV = __is_class(RemoveCvT<Type>);
+struct IsClass : BoolConstant<__is_class(RemoveCvT<Type>)> {};
+
+template <class Type>
+constexpr bool IsClassV = IsClass<Type>::value;
 
 // Determine whether From is convertible to To
 template <class From, class To>
 struct IsConvertible : BoolConstant<__is_convertible_to(From, To)> {};
 
-// Determine whether From is convertible to To
 template <class From, class To>
-constexpr bool IsConvertibleV = __is_convertible_to(From, To);
+constexpr bool IsConvertibleV = IsConvertible<From, To>::value;
 
 // RemoveReference implementation to remove reference qualifiers
 template <class Type>

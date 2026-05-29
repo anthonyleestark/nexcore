@@ -163,17 +163,7 @@
 
 // Get the offset of a member within a struct/class
 #define NEX_OFFSET_OF(type, member) \
-    offsetof(type, member)
-
-// Get the containing struct/class from a pointer to a member
-#define NEX_CONTAINER_OF(ptr, type, member) \
-    ([](auto* __mptr) -> type* { \
-        static_assert(NEX_STD is_same_v<decltype(__mptr), \
-            NEX_MEMBER_POINTER_TYPE(type, member)>, \
-            "Pointer type does not match the member type"); \
-        return reinterpret_cast<type*>( \
-            reinterpret_cast<char*>(__mptr) - NEX_OFFSET_OF(type, member)); \
-    }(ptr))
+    offsetOf(type, member)
 
 // Get the size of a struct/class member
 #define NEX_MEMBER_SIZE(type, member) \
@@ -206,14 +196,6 @@
 // Get the type of a struct/class member as a const rvalue reference
 #define NEX_MEMBER_CONST_RVALUE_REFERENCE_TYPE(type, member) \
     decltype(((const type*)0)->member)&&
-
-// Safe downcast of a pointer to a member to a pointer to the containing struct/class
-#define NEX_DOWNCAST_MEMBER(ptr, type, member) \
-    ((type*)NEX_CONTAINER_OF(ptr, type, member))
-
-// Safe deref of a pointer to a member to a reference to the containing struct/class
-#define NEX_DEREF_MEMBER(ptr, type, member) \
-    (*NEX_DOWNCAST_MEMBER(ptr, type, member))
 
 // Safe delete of a pointer to an object and set the pointer to nullptr to avoid dangling pointers
 #define NEX_DELETE_OBJECT(objPtr) \

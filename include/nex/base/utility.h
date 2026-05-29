@@ -36,55 +36,18 @@ NEX_SUBNAMESPACE_BEGIN(utility)
 
 ////// Helpers functions array/struct/class processing -------------------------------
 
-// Get the size of a statically sized array, which can be used for various purposes such as
-// implementing container_of and other utilities that require knowledge of the size of an array.
+// Get the size of a statically sized array
 template <typename Type, usize Size>
 constexpr usize arraySize(Type (&)[Size]) noexcept {
     return Size;
 }
 
-// Get the offset of a member within a struct/class, which can be used for various purposes such as
-// implementing container_of and other utilities that require knowledge of the layout of a struct/class.
+// Get the offset of a member within a struct/class
 template <typename Type, typename MemberT>
 constexpr isize offsetOf(MemberT Type::*member) noexcept {
-    static_assert(IsStandardLayoutV<Type>, "offsetOf only safe for standard-layout types");
+    static_assert(type_traits::IsStandardLayoutV<Type>, 
+        "Error: 'offsetOf' only safe for standard-layout types");
     return reinterpret_cast<isize>(&reinterpret_cast<Type*>(0)->*member);
-}
-
-// Get the containing struct/class from a pointer to a member, which can be used for various purposes such as
-// implementing container_of and other utilities that require knowledge of the layout of a struct/class.
-template <typename Type, auto MemberPtr>
-constexpr Type* containerOf(decltype(MemberPtr) ptr) noexcept {
-    using MemberT = RemoveReference<decltype(NEX_STD declval<Type>().*MemberPtr)>;
-    static_assert(IsStandardLayoutV<Type>, "containerOf only safe for standard-layout types");
-
-    return reinterpret_cast<Type*>(
-        reinterpret_cast<char_ptr>(ptr) - offsetOf<Type, MemberT, MemberPtr>()
-    );
-}
-
-////// Helper functions for safe downcast and dereference -------------------------------
-
-// Safely dereference a member pointer, ensuring that the pointer type matches the member type, 
-// and returning a reference to the containing struct/class.
-template <typename Type, typename MemberT>
-constexpr Type& derefMember(MemberT* memberPtr, MemberT Type::*member) noexcept {
-    return *containerOf(memberPtr, member);
-}
-
-// Safe downcast of a pointer to a member to a pointer to the containing struct/class, 
-// ensuring that the pointer type matches the member type.
-template <typename Type, typename MemberT>
-constexpr Type* downcastMember(MemberT* memberPtr, MemberT Type::*member) noexcept {
-    return containerOf(memberPtr, member);
-}
-
-// Safe downcast of a pointer to a base class to a pointer to a derived class with checking for inheritance 
-// relationship at compile time, ensuring that the pointer type matches the class type.
-template <typename Derived, typename Base>
-constexpr Derived* safeDowncast(Base* base) noexcept {
-    static_assert(IsBaseOfV<Base, Derived>, "safeDowncast requires Derived to be a subclass of Base");
-    return dynamic_cast<Derived*>(base);
 }
 
 ////// Helper function for safe deletion --------------------------------
@@ -112,7 +75,8 @@ void deleteObjectArray(Type* objPtr) noexcept {
 template <typename Type, typename MemberT>
 void deleteMember(MemberT* memberPtr, MemberT Type::*member) noexcept {
     if (memberPtr) {
-        delete containerOf(memberPtr, member);
+        // TODO: Fix this later
+        delete NEX_CONTAINER_OF(memberPtr, member);
     }
 }
 
@@ -121,7 +85,8 @@ void deleteMember(MemberT* memberPtr, MemberT Type::*member) noexcept {
 template <typename Type, typename MemberT>
 void deleteMemberAndNull(MemberT*& memberPtr, MemberT Type::*member) noexcept {
     if (memberPtr) {
-        delete containerOf(memberPtr, member);
+        // TODO: Fix this later
+        delete NEX_CONTAINER_OF(memberPtr, member);
         memberPtr = nullptr;
     }
 }
@@ -131,7 +96,8 @@ void deleteMemberAndNull(MemberT*& memberPtr, MemberT Type::*member) noexcept {
 template <typename Type, typename MemberT>
 void deleteMemberArrayAndNull(MemberT*& memberPtr, MemberT Type::*member) noexcept {
     if (memberPtr) {
-        delete[] containerOf(memberPtr, member);
+        // TODO: Fix this later
+        delete[] NEX_CONTAINER_OF(memberPtr, member);
         memberPtr = nullptr;
     }
 }

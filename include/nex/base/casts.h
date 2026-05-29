@@ -289,6 +289,20 @@ struct IsConvertible : BoolConstant<__is_convertible_to(From, To)> {};
 template <class From, class To>
 constexpr bool IsConvertibleV = IsConvertible<From, To>::value;
 
+// Determine whether Type is a standard-layout type
+template <class Type>
+struct IsStandardLayout : BoolConstant<__is_standard_layout(Type)> {};
+
+template <class Type>
+constexpr bool IsStandardLayoutV = IsStandardLayout<Type>::value;
+
+// Determine whether Base is a base of or the same as Derived
+template <class Base, class Derived>
+struct IsBaseOf : BoolConstant<__is_base_of(Base, Derived)> {};
+
+template <class Base, class Derived>
+constexpr bool IsBaseOfV = IsBaseOf<Base, Derived>::value;
+
 // RemoveReference implementation to remove reference qualifiers
 template <class Type>
 struct RemoveReference {
@@ -395,7 +409,9 @@ using AddRvalueReferenceT = typename _AddReference<Type>::_Rvalue;
 // A utility function that can be used in unevaluated contexts 
 // to obtain a value of a specified type without needing to construct it.
 template <class Type>
-AddRvalueReferenceT<Type> declval() noexcept;
+AddRvalueReferenceT<Type> declval() noexcept {
+    static_assert(false, "declval not allowed in an evaluated context");
+}
 
 // Determine whether type argument is an lvalue reference
 template <class>
@@ -855,6 +871,94 @@ NEX_NODISCARD NEX_MSVC_INTRINSIC Dest polymorphicCast(Source* polyPointer) noexc
     #endif
 }
 
+/**
+ * @brief Get the containing struct/class from a pointer to a member.
+ * @tparam Type The type of the containing struct/class.
+ * @tparam MemberPtr A pointer to the member within the struct/class.
+ */
+template <typename Type, auto MemberPtr>
+NEX_NODISCARD NEX_MSVC_INTRINSIC constexpr 
+Type* containerOf(
+    type_traits::RemoveReferenceT<decltype(type_traits::declval<Type>().*MemberPtr)>* ptr
+) noexcept {
+    static_assert(type_traits::IsStandardLayoutV<Type>, 
+        "Error: 'containerOf' only safe for standard-layout types");
+
+    if (ptr == nullptr) return nullptr;
+
+#if NEX_COMPILER_IS_MSVC
+    #if NEX_BUILD_ENV_IS_64_BIT
+        // 64-bit build, where pointer size is 8 bytes
+        using ptrsize_type = unsigned __int64;
+        using ptrdiff_type = __int64;
+    #else
+        // 32-bit build, where pointer size is 4 bytes
+        using ptrsize_type = unsigned __int32;
+        using ptrdiff_type = __int32;
+    #endif
+#else
+    // On GCC/Clang (or on non-Windows platforms), 
+    // we can use the built-in types that match the pointer size
+    using ptrsize_type = __UINTPTR_TYPE__;
+    using ptrdiff_type = __PTRDIFF_TYPE__;
+#endif
+
+    return reinterpret_cast<Type*>(
+        reinterpret_cast<ptrsize_type>(ptr) - static_cast<ptrsize_type>(
+            reinterpret_cast<ptrdiff_type>(&reinterpret_cast<Type*>(0)->*MemberPtr)
+        )
+    );
+}
+
+/**
+ * @brief Safely downcasts a pointer to a member to a pointer to its containing structure.
+ * @tparam Type The type of the containing structure/class.
+ * @tparam MemberPtr The compile-time member pointer.
+ */
+template <typename Type, auto MemberPtr>
+NEX_NODISCARD NEX_MSVC_INTRINSIC constexpr 
+Type* downcastMember(
+    type_traits::RemoveReferenceT<decltype(type_traits::declval<Type>().*MemberPtr)>* memberPtr
+) noexcept {
+    return containerOf<Type, MemberPtr>(memberPtr);
+}
+
+/**
+ * @brief Safely dereferences a member pointer, returning a reference to its containing structure.
+ * @tparam Type The type of the containing structure/class.
+ * @tparam MemberPtr The compile-time member pointer.
+ */
+template <typename Type, auto MemberPtr>
+NEX_NODISCARD NEX_MSVC_INTRINSIC constexpr 
+Type& derefMember(
+    type_traits::RemoveReferenceT<decltype(type_traits::declval<Type>().*MemberPtr)>* memberPtr
+) noexcept {
+    return *containerOf<Type, MemberPtr>(memberPtr);
+}
+
+/**
+ * @brief Safely downcasts a base class pointer to a derived class pointer 
+ *        with compile-time inheritance verification.
+ * @note Fully supports constexpr environments. 
+ *       In runtime debug builds, it falls back to polymorphicCast for dynamic verification.
+ */
+template <typename Derived, typename Base>
+NEX_NODISCARD NEX_MSVC_INTRINSIC constexpr 
+Derived* safeDowncast(Base* base) noexcept {
+    static_assert(type_traits::IsBaseOfV<Base, Derived>, 
+        "Error: 'safeDowncast' requires 'Derived' to be a valid subclass of 'Base'. "
+        "If you are attempting cross-casting between independent interfaces, consider using 'polymorphicCast' instead.");
+    if consteval {
+        // In a constant evaluation context, we can safely use static_cast() 
+        // since the compiler will enforce the inheritance relationship at compile time
+        return static_cast<Derived*>(base);
+    } else {
+        // In a runtime context, we can use polymorphicCast() 
+        // to perform a safe downcast with RTTI checks in Debug builds
+        return polymorphicCast<Derived>(base);
+    }
+}
+
 #if NEX_COMPILER_MSVC_COMPATIBLE
     #pragma warning(pop)
 #endif
@@ -898,5 +1002,22 @@ NEX_NODISCARD NEX_MSVC_INTRINSIC Dest polymorphicCast(Source* polyPointer) noexc
 // using dynamic_cast in Debug builds and static_cast in Release builds
 #define NEX_POLYMORPHIC_CAST \
     NEX_PREPEND_NAMESPACE(polymorphicCast)
+
+// Get the containing struct/class from a pointer to a member
+#define NEX_CONTAINER_OF \
+    NEX_PREPEND_NAMESPACE(containerOf)
+
+// Safely downcasts a pointer to a member to a pointer to its containing structure
+#define NEX_DOWNCAST_MEMBER \
+    NEX_PREPEND_NAMESPACE(downcastMember)
+
+// Safely dereferences a member pointer, returning a reference to its containing structure
+#define NEX_DEREF_MEMBER \
+    NEX_PREPEND_NAMESPACE(derefMember)
+
+// Safely downcasts a base class pointer to a derived class pointer 
+// with compile-time inheritance verification
+#define NEX_SAFE_DOWNCAST \
+    NEX_PREPEND_NAMESPACE(safeDowncast)
 
 NEX_NAMESPACE_END

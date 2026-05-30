@@ -17,20 +17,10 @@
  * short aliases for convenience and readability.
  */
 
-#if !defined(NEX_BASE_TYPES_NO_STD)
-    #include <cstddef>
-    #include <cstdint>
-    #include <limits>
-    #include <cwchar>
-#endif  // !defined(NEX_BASE_TYPES_NO_STD)
-
 #include "nex/base/build.h"
 #include "nex/base/attributes.h"
 #include "nex/base/namespace.h"
-
-#if defined(NEX_BASE_TYPES_NO_STD)
-    #include "nex/base/intrinsics.h"
-#endif  // !defined(NEX_BASE_TYPES_NO_STD)
+#include "nex/base/intrinsics.h"
 
 NEX_NAMESPACE_BEGIN
 
@@ -38,25 +28,14 @@ NEX_NAMESPACE_BEGIN
 // Include standard fixed-width integer types
 // =================================================================================
 
-#if !defined(NEX_BASE_TYPES_NO_STD)
-    using int8      = NEX_STD int8_t;       // 8-bit signed integer
-    using uint8     = NEX_STD uint8_t;      // 8-bit unsigned integer
-    using int16     = NEX_STD int16_t;      // 16-bit signed integer
-    using uint16    = NEX_STD uint16_t;     // 16-bit unsigned integer
-    using int32     = NEX_STD int32_t;      // 32-bit signed integer
-    using uint32    = NEX_STD uint32_t;     // 32-bit unsigned integer
-    using int64     = NEX_STD int64_t;      // 64-bit signed integer
-    using uint64    = NEX_STD uint64_t;     // 64-bit unsigned integer
-#else
-    using int8      = signed char;          // 8-bit signed integer
-    using uint8     = unsigned char;        // 8-bit unsigned integer
-    using int16     = short;                // 16-bit signed integer
-    using uint16    = unsigned short;       // 16-bit unsigned integer
-    using int32     = int;                  // 32-bit signed integer
-    using uint32    = unsigned int;         // 32-bit unsigned integer
-    using int64     = long long;            // 64-bit signed integer
-    using uint64    = unsigned long long;   // 64-bit unsigned integer
-#endif  // defined(NEX_BASE_TYPES_NO_STD)
+using int8      = signed char;              // 8-bit signed integer
+using uint8     = unsigned char;            // 8-bit unsigned integer
+using int16     = short;                    // 16-bit signed integer
+using uint16    = unsigned short;           // 16-bit unsigned integer
+using int32     = int;                      // 32-bit signed integer
+using uint32    = unsigned int;             // 32-bit unsigned integer
+using int64     = long long;                // 64-bit signed integer
+using uint64    = unsigned long long;       // 64-bit unsigned integer
 
 #if NEX_HAS_BUILTIN_INT128
     using int128    = __int128;             // 128-bit signed integer
@@ -95,10 +74,7 @@ using ull       = ulonglong;                // 64-bit unsigned integer (unsigned
 // Include standard pointer-sized integer types
 // =================================================================================
 
-#if !defined(NEX_BASE_TYPES_NO_STD)
-    using intptr      = NEX_STD intptr_t;   // Pointer-sized signed integer
-    using uintptr     = NEX_STD uintptr_t;  // Pointer-sized unsigned integer
-#else
+#if NEX_COMPILER_IS_MSVC
     #if NEX_BUILD_ENV_IS_64_BIT
         using intptr  = __int64;            // Pointer-sized signed integer (64-bit)
         using uintptr = unsigned __int64;   // Pointer-sized unsigned integer (64-bit)
@@ -106,7 +82,18 @@ using ull       = ulonglong;                // 64-bit unsigned integer (unsigned
         using intptr  = int;                // Pointer-sized signed integer (32-bit)
         using uintptr = unsigned int;       // Pointer-sized unsigned integer (32-bit)
     #endif
-#endif  // !defined(NEX_BASE_TYPES_NO_STD)
+#else  // Non-MSVC compilers
+    #if defined(__INTPTR_TYPE__) && defined(__UINTPTR_TYPE__)
+        using intptr  = __INTPTR_TYPE__;    // Pointer-sized signed integer
+        using uintptr = __UINTPTR_TYPE__;   // Pointer-sized unsigned integer
+    #elif NEX_BUILD_ENV_IS_64_BIT
+        using intptr  = long;               // Pointer-sized signed integer
+        using uintptr = unsigned long;      // Pointer-sized unsigned integer
+    #else  // Non-64-bit environment, assume 32-bit
+        using intptr  = int;               // Pointer-sized signed integer
+        using uintptr = unsigned int;      // Pointer-sized unsigned integer
+    #endif
+#endif
 
 // =================================================================================
 // Short aliases for standard pointer-sized integer types (Rust-style)
@@ -119,13 +106,25 @@ using uptr  = uintptr;                      // Pointer-sized unsigned integer (u
 // Include standard maximum-width integer types
 // =================================================================================
 
-#if !defined(NEX_BASE_TYPES_NO_STD)
-    using intmax    = NEX_STD intmax_t;     // Maximum-width signed integer
-    using uintmax   = NEX_STD uintmax_t;    // Maximum-width unsigned integer
+#if defined(__INTMAX_TYPE__)
+    using intmax    = __INTMAX_TYPE__;          // Maximum-width signed integer
+#elif NEX_COMPILER_IS_MSVC
+    using intmax    = __int64;                  // Maximum-width signed integer
+#elif NEX_HAS_BUILTIN_INT128
+    using intmax    = int128;                   // Maximum-width signed integer
 #else
-    using intmax    = long long;            // Maximum-width signed integer
-    using uintmax   = unsigned long long;   // Maximum-width unsigned integer
-#endif  // !defined(NEX_BASE_TYPES_NO_STD)
+    using intmax    = long long;                // Maximum-width signed integer
+#endif
+
+#if defined(__UINTMAX_TYPE__)
+    using uintmax   = __UINTMAX_TYPE__;         // Maximum-width unsigned integer
+#elif NEX_COMPILER_IS_MSVC
+    using uintmax   = unsigned __int64;         // Maximum-width unsigned integer
+#elif NEX_HAS_BUILTIN_INT128
+    using uintmax   = uint128;                  // Maximum-width unsigned integer
+#else
+    using uintmax   = unsigned long long;       // Maximum-width unsigned integer
+#endif
 
 // =================================================================================
 // Short aliases for standard maximum-width integer types (Rust-style)
@@ -138,87 +137,73 @@ using umax  = uintmax;                      // Maximum-width unsigned integer (u
 // Include standard minimum-width integer types
 // =================================================================================
 
-#if !defined(NEX_BASE_TYPES_NO_STD)
-    using int_least8    = NEX_STD int_least8_t;     // Minimum 8-bit signed integer
-    using uint_least8   = NEX_STD uint_least8_t;    // Minimum 8-bit unsigned integer
-    using int_least16   = NEX_STD int_least16_t;    // Minimum 16-bit signed integer
-    using uint_least16  = NEX_STD uint_least16_t;   // Minimum 16-bit unsigned integer
-    using int_least32   = NEX_STD int_least32_t;    // Minimum 32-bit signed integer
-    using uint_least32  = NEX_STD uint_least32_t;   // Minimum 32-bit unsigned integer
-    using int_least64   = NEX_STD int_least64_t;    // Minimum 64-bit signed integer
-    using uint_least64  = NEX_STD uint_least64_t;   // Minimum 64-bit unsigned integer
-#else
-    using int_least8    = signed char;              // Minimum 8-bit signed integer
-    using uint_least8   = unsigned char;            // Minimum 8-bit unsigned integer
-    using int_least16   = short;                    // Minimum 16-bit signed integer
-    using uint_least16  = unsigned short;           // Minimum 16-bit unsigned integer
-    using int_least32   = int;                      // Minimum 32-bit signed integer
-    using uint_least32  = unsigned int;             // Minimum 32-bit unsigned integer
-    using int_least64   = long long;                // Minimum 64-bit signed integer
-    using uint_least64  = unsigned long long;       // Minimum 64-bit unsigned integer
-#endif  // !defined(NEX_BASE_TYPES_NO_STD)
+using int_least8    = int8;                 // Minimum 8-bit signed integer
+using uint_least8   = uint8;                // Minimum 8-bit unsigned integer
+using int_least16   = int16;                // Minimum 16-bit signed integer
+using uint_least16  = uint16;               // Minimum 16-bit unsigned integer
+using int_least32   = int32;                // Minimum 32-bit signed integer
+using uint_least32  = uint32;               // Minimum 32-bit unsigned integer
+using int_least64   = int64;                // Minimum 64-bit signed integer
+using uint_least64  = uint64;               // Minimum 64-bit unsigned integer
 
 #if NEX_HAS_BUILTIN_INT128
-    using int_least128   = int128;                  // Minimum 128-bit signed integer
-    using uint_least128  = uint128;                 // Minimum 128-bit unsigned integer
+    using int_least128   = int128;          // Minimum 128-bit signed integer
+    using uint_least128  = uint128;         // Minimum 128-bit unsigned integer
 #else
-    using int_least128   = int_least64;             // No support for 128-bit signed integer, fallback to 64-bit
-    using uint_least128  = uint_least64;            // No support for 128-bit unsigned integer, fallback to 64-bit
+    using int_least128   = int_least64;     // No support for 128-bit signed integer, fallback to 64-bit
+    using uint_least128  = uint_least64;    // No support for 128-bit unsigned integer, fallback to 64-bit
 #endif
 
 // =================================================================================
 // Include standard fastest minimum-width integer types
 // =================================================================================
 
-#if !defined(NEX_BASE_TYPES_NO_STD)
-    using int_fast8     = NEX_STD int_fast8_t;      // Fastest minimum 8-bit signed integer
-    using uint_fast8    = NEX_STD uint_fast8_t;     // Fastest minimum 8-bit unsigned integer
-    using int_fast16    = NEX_STD int_fast16_t;     // Fastest minimum 16-bit signed integer
-    using uint_fast16   = NEX_STD uint_fast16_t;    // Fastest minimum 16-bit unsigned integer
-    using int_fast32    = NEX_STD int_fast32_t;     // Fastest minimum 32-bit signed integer
-    using uint_fast32   = NEX_STD uint_fast32_t;    // Fastest minimum 32-bit unsigned integer
-    using int_fast64    = NEX_STD int_fast64_t;     // Fastest minimum 64-bit signed integer
-    using uint_fast64   = NEX_STD uint_fast64_t;    // Fastest minimum 64-bit unsigned integer
-#else
-    using int_fast8     = signed char;              // Fastest minimum 8-bit signed integer
-    using uint_fast8    = unsigned char;            // Fastest minimum 8-bit unsigned integer
-    using int_fast16    = int;                      // Fastest minimum 16-bit signed integer
-    using uint_fast16   = unsigned int;             // Fastest minimum 16-bit unsigned integer
-    using int_fast32    = int;                      // Fastest minimum 32-bit signed integer
-    using uint_fast32   = unsigned int;             // Fastest minimum 32-bit unsigned integer
-    using int_fast64    = long long;                // Fastest minimum 64-bit signed integer
-    using uint_fast64   = unsigned long long;       // Fastest minimum 64-bit unsigned integer
-#endif  // !defined(NEX_BASE_TYPES_NO_STD)
+using int_fast8     = int8;                 // Fastest minimum 8-bit signed integer
+using uint_fast8    = uint8;                // Fastest minimum 8-bit unsigned integer
+using int_fast16    = int16;                // Fastest minimum 16-bit signed integer
+using uint_fast16   = uint16;               // Fastest minimum 16-bit unsigned integer
+using int_fast32    = int32;                // Fastest minimum 32-bit signed integer
+using uint_fast32   = uint32;               // Fastest minimum 32-bit unsigned integer
+using int_fast64    = int64;                // Fastest minimum 64-bit signed integer
+using uint_fast64   = uint64;               // Fastest minimum 64-bit unsigned integer
 
 #if NEX_HAS_BUILTIN_INT128
-    using int_fast128    = int128;                  // Fastest minimum 128-bit signed integer
-    using uint_fast128   = uint128;                 // Fastest minimum 128-bit unsigned integer
+    using int_fast128    = int128;          // Fastest minimum 128-bit signed integer
+    using uint_fast128   = uint128;         // Fastest minimum 128-bit unsigned integer
 #else
-    using int_fast128    = int_fast64;              // No support for 128-bit signed integer, fallback to 64-bit
-    using uint_fast128   = uint_fast64;             // No support for 128-bit unsigned integer, fallback to 64-bit
+    using int_fast128    = int_fast64;      // No support for 128-bit signed integer, fallback to 64-bit
+    using uint_fast128   = uint_fast64;     // No support for 128-bit unsigned integer, fallback to 64-bit
 #endif
 
 // =================================================================================
 // Include standard size types
 // =================================================================================
 
-#if !defined(NEX_BASE_TYPES_NO_STD)
-    using sizetype  = NEX_STD size_t;           // Unsigned integer type used for sizes & array indexing
-    using ptrdiff   = NEX_STD ptrdiff_t;        // Signed integer type used for pointer arithmetic & array indexing
-    using max_align = NEX_STD max_align_t;      // Type with alignment at least as strict as any scalar type
-#else
+#if NEX_COMPILER_IS_MSVC
     #if NEX_BUILD_ENV_IS_64_BIT
-        using sizetype  = unsigned __int64;     // Unsigned integer type used for sizes & array indexing (64-bit)
-        using ptrdiff   = __int64;              // Signed integer type used for pointer arithmetic & array indexing (64-bit)
+        using sizetype  = unsigned __int64; // Unsigned integer type used for sizes & array indexing (64-bit)
+        using ptrdiff   = __int64;          // Signed integer type used for pointer arithmetic & array indexing (64-bit)
     #else  // Non-64-bit environment, assume 32-bit
-        using sizetype  = unsigned int;         // Unsigned integer type used for sizes & array indexing (32-bit)
-        using ptrdiff   = int;                  // Signed integer type used for pointer arithmetic & array indexing (32-bit)
+        using sizetype  = unsigned int;     // Unsigned integer type used for sizes & array indexing (32-bit)
+        using ptrdiff   = int;              // Signed integer type used for pointer arithmetic & array indexing (32-bit)
     #endif
-    using max_align = double;                   // Type with alignment at least as strict as any scalar type
-#endif  // !defined(NEX_BASE_TYPES_NO_STD)
+    using max_align = double;               // Type with alignment at least as strict as any scalar type
+#else
+    #if defined(__SIZE_TYPE__) && defined(__PTRDIFF_TYPE__)
+        using sizetype  = __SIZE_TYPE__;    // Unsigned integer type used for sizes & array indexing
+        using ptrdiff   = __PTRDIFF_TYPE__; // Signed integer type used for pointer arithmetic & array indexing
+    #elif NEX_BUILD_ENV_IS_64_BIT
+        using sizetype  = unsigned long;    // Unsigned integer type used for sizes & array indexing (64-bit)
+        using ptrdiff   = long;             // Signed integer type used for pointer arithmetic & array indexing (64-bit)
+    #else  // Non-64-bit environment, assume 32-bit
+        using sizetype  = unsigned int;     // Unsigned integer type used for sizes & array indexing (32-bit)
+        using ptrdiff   = int;              // Signed integer type used for pointer arithmetic & array indexing (32-bit)
+    #endif
+    using max_align = long double;          // Type with alignment at least as strict as any scalar type
+#endif
 
-using usize         = sizetype;                 // Unsigned integer type used for sizes & array indexing
-using isize         = ptrdiff;                  // Signed integer type used for pointer arithmetic & array indexing
+using usize     = sizetype;                 // Unsigned integer type used for sizes & array indexing
+using isize     = ptrdiff;                  // Signed integer type used for pointer arithmetic & array indexing
 
 // =================================================================================
 // Short aliases for standard size types (Rust-style)
@@ -235,6 +220,7 @@ using float32       = float;                // 32-bit floating point
 using float64       = double;               // 64-bit floating point
 using ldouble       = long double;          // Extended precision floating point
 using floatmax      = long double;          // Widest standard floating-point type
+
 #if NEX_HAS_BUILTIN_FLOAT128
     using float128  = __float128;           // 128-bit floating point
 #else
@@ -261,8 +247,8 @@ using schar     = signed char;              // Signed narrow character storage t
 using uchar     = unsigned char;            // Unsigned narrow character storage type
 using codepoint = char32;                   // Unicode code point storage type
 
-#if !defined(NEX_BASE_TYPES_NO_STD)
-    using wint  = NEX_STD wint_t;           // Wide character type for I/O functions
+#if !defined(__WINT_TYPE__)
+    using wint  = __WINT_TYPE__;            // Wide character type for I/O functions
 #else
     using wint  = uint16;                   // Wide character type for I/O functions
 #endif
@@ -296,96 +282,91 @@ using b32   = uint32;                       // 32-bit boolean storage value (0 =
 // Include pointer and address-related types
 // =================================================================================
 
-#if !defined(NEX_BASE_TYPES_NO_STD)
-    using null_ptr  = NEX_STD nullptr_t;            // Null pointer type
-    using byte      = NEX_STD byte;                 // Single-byte object-representation type
-#else
-    using null_ptr  = decltype(nullptr);            // Null pointer type
-    enum class byte : unsigned char {};             // Single-byte object-representation type
+using null_ptr  = decltype(nullptr);            // Null pointer type
+enum class byte : unsigned char {};             // Single-byte object-representation type
 
-    /**
-     * @brief Helper functions for 'byte' type operations
-     * @details 
-     * This section provides operator overloads for the `byte` type, allowing it to be used in bitwise 
-     * operations and shifts, as well as a utility function to convert `byte` to an integral type. 
-     * These functions are implemented using SFINAE to ensure they only participate in overload resolution 
-     * when the appropriate conditions are met (e.g., when the shift amount is an integral type). 
-     * The use of `static_cast` ensures that the operations are performed correctly while maintaining type safety.
-     */
+/**
+ * @brief Helper functions for 'byte' type operations
+ * @details 
+ * This section provides operator overloads for the `byte` type, allowing it to be used in bitwise 
+ * operations and shifts, as well as a utility function to convert `byte` to an integral type. 
+ * These functions are implemented using SFINAE to ensure they only participate in overload resolution 
+ * when the appropriate conditions are met (e.g., when the shift amount is an integral type). 
+ * The use of `static_cast` ensures that the operations are performed correctly while maintaining type safety.
+ */
 
-    // Bitwise left shift operator for 'byte' type
-    template <class IntType, type_traits::EnableIfT<type_traits::IsIntegralV<IntType>, int> = 0>
-    NEX_NODISCARD constexpr byte operator<<(const byte arg, const IntType shift) noexcept {
-        return static_cast<byte>(static_cast<unsigned char>(static_cast<unsigned int>(arg) << shift));
-    }
+// Bitwise left shift operator for 'byte' type
+template <class IntType, type_traits::EnableIfT<type_traits::IsIntegralV<IntType>, int> = 0>
+NEX_NODISCARD constexpr byte operator<<(const byte arg, const IntType shift) noexcept {
+    return static_cast<byte>(static_cast<unsigned char>(static_cast<unsigned int>(arg) << shift));
+}
 
-    // Bitwise right shift operator for 'byte' type
-    template <class IntType, type_traits::EnableIfT<type_traits::IsIntegralV<IntType>, int> = 0>
-    NEX_NODISCARD constexpr byte operator>>(const byte arg, const IntType shift) noexcept {
-        // every static_cast is intentional
-        return static_cast<byte>(static_cast<unsigned char>(static_cast<unsigned int>(arg) >> shift));
-    }
+// Bitwise right shift operator for 'byte' type
+template <class IntType, type_traits::EnableIfT<type_traits::IsIntegralV<IntType>, int> = 0>
+NEX_NODISCARD constexpr byte operator>>(const byte arg, const IntType shift) noexcept {
+    // every static_cast is intentional
+    return static_cast<byte>(static_cast<unsigned char>(static_cast<unsigned int>(arg) >> shift));
+}
 
-    // Bitwise OR operator for 'byte' type
-    NEX_NODISCARD constexpr byte operator|(const byte left, const byte right) noexcept {
-        // every static_cast is intentional
-        return static_cast<byte>(
-            static_cast<unsigned char>(static_cast<unsigned int>(left) | static_cast<unsigned int>(right)));
-    }
+// Bitwise OR operator for 'byte' type
+NEX_NODISCARD constexpr byte operator|(const byte left, const byte right) noexcept {
+    // every static_cast is intentional
+    return static_cast<byte>(
+        static_cast<unsigned char>(static_cast<unsigned int>(left) | static_cast<unsigned int>(right)));
+}
 
-    // Bitwise AND operator for 'byte' type
-    NEX_NODISCARD constexpr byte operator&(const byte left, const byte right) noexcept {
-        // every static_cast is intentional
-        return static_cast<byte>(
-            static_cast<unsigned char>(static_cast<unsigned int>(left) & static_cast<unsigned int>(right)));
-    }
+// Bitwise AND operator for 'byte' type
+NEX_NODISCARD constexpr byte operator&(const byte left, const byte right) noexcept {
+    // every static_cast is intentional
+    return static_cast<byte>(
+        static_cast<unsigned char>(static_cast<unsigned int>(left) & static_cast<unsigned int>(right)));
+}
 
-    // Bitwise XOR operator for 'byte' type
-    NEX_NODISCARD constexpr byte operator^(const byte left, const byte right) noexcept {
-        // every static_cast is intentional
-        return static_cast<byte>(
-            static_cast<unsigned char>(static_cast<unsigned int>(left) ^ static_cast<unsigned int>(right)));
-    }
+// Bitwise XOR operator for 'byte' type
+NEX_NODISCARD constexpr byte operator^(const byte left, const byte right) noexcept {
+    // every static_cast is intentional
+    return static_cast<byte>(
+        static_cast<unsigned char>(static_cast<unsigned int>(left) ^ static_cast<unsigned int>(right)));
+}
 
-    // Bitwise NOT operator for 'byte' type
-    NEX_NODISCARD constexpr byte operator~(const byte arg) noexcept {
-        // every static_cast is intentional
-        return static_cast<byte>(static_cast<unsigned char>(~static_cast<unsigned int>(arg)));
-    }
+// Bitwise NOT operator for 'byte' type
+NEX_NODISCARD constexpr byte operator~(const byte arg) noexcept {
+    // every static_cast is intentional
+    return static_cast<byte>(static_cast<unsigned char>(~static_cast<unsigned int>(arg)));
+}
 
-    // Bitwise left shift compound assignment operator for 'byte' type
-    template <class IntType, type_traits::EnableIfT<type_traits::IsIntegralV<IntType>, int> = 0>
-    constexpr byte& operator<<=(byte& arg, const IntType shift) noexcept {
-        return arg = arg << shift;
-    }
+// Bitwise left shift compound assignment operator for 'byte' type
+template <class IntType, type_traits::EnableIfT<type_traits::IsIntegralV<IntType>, int> = 0>
+constexpr byte& operator<<=(byte& arg, const IntType shift) noexcept {
+    return arg = arg << shift;
+}
 
-    // Bitwise right shift compound assignment operator for 'byte' type
-    template <class IntType, type_traits::EnableIfT<type_traits::IsIntegralV<IntType>, int> = 0>
-    constexpr byte& operator>>=(byte& arg, const IntType shift) noexcept {
-        return arg = arg >> shift;
-    }
+// Bitwise right shift compound assignment operator for 'byte' type
+template <class IntType, type_traits::EnableIfT<type_traits::IsIntegralV<IntType>, int> = 0>
+constexpr byte& operator>>=(byte& arg, const IntType shift) noexcept {
+    return arg = arg >> shift;
+}
 
-    // Bitwise OR compound assignment operator for 'byte' type
-    constexpr byte& operator|=(byte& left, const byte right) noexcept {
-        return left = left | right;
-    }
+// Bitwise OR compound assignment operator for 'byte' type
+constexpr byte& operator|=(byte& left, const byte right) noexcept {
+    return left = left | right;
+}
 
-    // Bitwise AND compound assignment operator for 'byte' type
-    constexpr byte& operator&=(byte& left, const byte right) noexcept {
-        return left = left & right;
-    }
+// Bitwise AND compound assignment operator for 'byte' type
+constexpr byte& operator&=(byte& left, const byte right) noexcept {
+    return left = left & right;
+}
 
-    // Bitwise XOR compound assignment operator for 'byte' type
-    constexpr byte& operator^=(byte& left, const byte right) noexcept {
-        return left = left ^ right;
-    }
+// Bitwise XOR compound assignment operator for 'byte' type
+constexpr byte& operator^=(byte& left, const byte right) noexcept {
+    return left = left ^ right;
+}
 
-    // Utility function to convert 'byte' to an integral type
-    template <class IntType, type_traits::EnableIfT<type_traits::IsIntegralV<IntType>, int> = 0>
-    NEX_NODISCARD NEX_MSVC_INTRINSIC constexpr IntType toInteger(const byte arg) noexcept {
-        return static_cast<IntType>(arg);
-    }
-#endif  // !defined(NEX_BASE_TYPES_NO_STD)
+// Utility function to convert 'byte' to an integral type
+template <class IntType, type_traits::EnableIfT<type_traits::IsIntegralV<IntType>, int> = 0>
+NEX_NODISCARD NEX_MSVC_INTRINSIC constexpr IntType toInteger(const byte arg) noexcept {
+    return static_cast<IntType>(arg);
+}
 
 using raw_byte              = uint8;                // Arithmetic byte type
 using byte_ptr              = raw_byte*;            // Pointer to arithmetic byte data
@@ -429,48 +410,37 @@ struct Constants {
     // Minimum and maximum values for fixed-width integer types
     // These constants are defined as constexpr to allow for compile-time evaluation and optimization.
 
-#if !defined(NEX_BASE_TYPES_NO_STD)
-    static constexpr int8   i8min         = NEX_STD numeric_limits<int8>::min();
-    static constexpr int16  i16min        = NEX_STD numeric_limits<int16>::min();
-    static constexpr int32  i32min        = NEX_STD numeric_limits<int32>::min();
-    static constexpr int64  i64min        = NEX_STD numeric_limits<int64>::min();
-    static constexpr int8   i8max         = NEX_STD numeric_limits<int8>::max();
-    static constexpr int16  i16max        = NEX_STD numeric_limits<int16>::max();
-    static constexpr int32  i32max        = NEX_STD numeric_limits<int32>::max();
-    static constexpr int64  i64max        = NEX_STD numeric_limits<int64>::max();
-    static constexpr uint8  u8max         = NEX_STD numeric_limits<uint8>::max();
-    static constexpr uint16 u16max        = NEX_STD numeric_limits<uint16>::max();
-    static constexpr uint32 u32max        = NEX_STD numeric_limits<uint32>::max();
-    static constexpr uint64 u64max        = NEX_STD numeric_limits<uint64>::max();
+    static constexpr int8   i8min       = (-127 - 1);
+    static constexpr int16  i16min      = (-32767 - 1);
+    static constexpr int32  i32min      = (-2147483647 - 1);
+    static constexpr int64  i64min      = (-9223372036854775807LL - 1);
+    static constexpr int8   i8max       = 127;
+    static constexpr int16  i16max      = 32767;
+    static constexpr int32  i32max      = 2147483647;
+    static constexpr int64  i64max      = 9223372036854775807LL;
+    static constexpr uint8  u8max       = static_cast<uint8>(~static_cast<uint8>(0));
+    static constexpr uint16 u16max      = static_cast<uint16>(~static_cast<uint16>(0));
+    static constexpr uint32 u32max      = ~static_cast<uint32>(0);
+    static constexpr uint64 u64max      = ~static_cast<uint64>(0ULL);
 
-    static constexpr uint64 sizemax       = NEX_STD numeric_limits<sizetype>::max();
-    static constexpr uint16 wcharmin      = NEX_STD numeric_limits<wchar>::min();
-    static constexpr uint16 wcharmax      = NEX_STD numeric_limits<wchar>::max();
-    static constexpr uint16 wintmin       = NEX_STD numeric_limits<wint>::min();
-    static constexpr uint16 wintmax       = NEX_STD numeric_limits<wint>::max();
+#if NEX_BUILD_ENV_IS_64_BIT
+    static constexpr uint64 sizemax     = ~static_cast<uintptr>(0);
+#else  // Non-64-bit environment, assume 32-bit
+    static constexpr uint32 sizemax     = 0xffffffffui32;
+#endif
+
+#if NEX_PLATFORM_IS_WINDOWS
+    // Windows ABI defines wchar_t/wint_t as 16-bit unsigned shorts
+    static constexpr uint16 wcharmin    = 0x0000;
+    static constexpr uint16 wcharmax    = 0xffff;
+    static constexpr uint16 wintmin     = 0x0000;
+    static constexpr uint16 wintmax     = 0xffff;
 #else
-    static constexpr int8   i8min         = (-127i8 - 1);
-    static constexpr int16  i16min        = (-32767i16 - 1);
-    static constexpr int32  i32min        = (-2147483647i32 - 1);
-    static constexpr int64  i64min        = (-9223372036854775807i64 - 1);
-    static constexpr int8   i8max         = 127i8;
-    static constexpr int16  i16max        = 32767i16;
-    static constexpr int32  i32max        = 2147483647i32;
-    static constexpr int64  i64max        = 9223372036854775807i64;
-    static constexpr uint8  u8max         = 0xffui8;
-    static constexpr uint16 u16max        = 0xffffui16;
-    static constexpr uint32 u32max        = 0xffffffffui32;
-    static constexpr uint64 u64max        = 0xffffffffffffffffui64;
-
-    #if NEX_BUILD_ENV_IS_64_BIT
-        static constexpr uint64 sizemax   = 0xffffffffffffffffui64;
-    #else  // Non-64-bit environment, assume 32-bit
-        static constexpr uint32 sizemax   = 0xffffffffui32;
-    #endif
-    static constexpr uint16 wcharmin      = 0x0000;
-    static constexpr uint16 wcharmax      = 0xffff;
-    static constexpr uint16 wintmin       = 0x0000;
-    static constexpr uint16 wintmax       = 0xffff;
+    // Unix/Linux/macOS/Android ABIs define wchar_t/wint_t as 32-bit
+    static constexpr uint32 wcharmin    = 0x00000000;
+    static constexpr uint32 wcharmax    = 0xffffffff;
+    static constexpr uint32 wintmin     = 0x00000000;
+    static constexpr uint32 wintmax     = 0xffffffff;
 #endif
 };
 

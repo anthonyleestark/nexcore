@@ -177,40 +177,6 @@
 #endif  // NEX_COMPILER_MSVC_COMPATIBLE
 
 /**
- * @def NEX_HAS_BUILTIN_INT128
- * @brief This macro indicates whether the compiler supports the built-in `__int128` type
- *       (available in GCC and Clang on platforms with 128-bit integer support).
- * 
- * @details
- * The `__int128` type provides extended precision integer arithmetic, which can be useful for certain 
- * numerical applications. This macro can be used to conditionally compile code that relies on `__int128` when 
- * it is available, while providing fallback implementations or alternative code paths when it is not supported 
- * by the compiler.
- */
-#if defined(__SIZEOF_INT128__) && !NEX_COMPILER_MSVC_COMPATIBLE
-    #define NEX_HAS_BUILTIN_INT128 1
-#else // Compiler does not support __int128
-    #define NEX_HAS_BUILTIN_INT128 0
-#endif  // defined(__SIZEOF_INT128__) && !NEX_COMPILER_MSVC_COMPATIBLE
-
-/**
- * @def NEX_HAS_BUILTIN_FLOAT128
- * @brief This macro indicates whether the compiler supports the built-in `__float128` type
- *       (available in GCC and Clang on platforms with 128-bit floating-point support).
- * 
- * @details
- * The `__float128` type provides extended precision floating-point arithmetic, which can be useful for certain 
- * numerical applications. This macro can be used to conditionally compile code that relies on `__float128` when 
- * it is available, while providing fallback implementations or alternative code paths when it is not supported 
- * by the compiler.
- */
-#if defined(__SIZEOF_FLOAT128__) && !NEX_COMPILER_MSVC_COMPATIBLE
-    #define NEX_HAS_BUILTIN_FLOAT128 1
-#else  // Compiler does not support __float128
-    #define NEX_HAS_BUILTIN_FLOAT128 0
-#endif  // defined(__SIZEOF_FLOAT128__) && !NEX_COMPILER_MSVC_COMPATIBLE
-
-/**
  * @def NEX_NOINLINE
  * @brief Annotate a function indicating it should not be inlined.
  * 

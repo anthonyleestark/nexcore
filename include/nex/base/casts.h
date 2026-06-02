@@ -21,6 +21,7 @@
 #include "nex/base/attributes.h"
 #include "nex/base/namespace.h"
 #include "nex/base/intrinsics.h"
+#include "nex/base/types.h"
 #include "nex/base/assert_crash.h"
 
 NEX_NAMESPACE_BEGIN
@@ -212,29 +213,10 @@ Type* containerOf(
 ) noexcept {
     static_assert(type_traits::IsStandardLayoutV<Type>, 
         "Error: 'containerOf' only safe for standard-layout types");
-
     if (ptr == nullptr) return nullptr;
-
-#if NEX_COMPILER_IS_MSVC
-    #if NEX_BUILD_ENV_IS_64_BIT
-        // 64-bit build, where pointer size is 8 bytes
-        using ptrsize_type = unsigned __int64;
-        using ptrdiff_type = __int64;
-    #else
-        // 32-bit build, where pointer size is 4 bytes
-        using ptrsize_type = unsigned __int32;
-        using ptrdiff_type = __int32;
-    #endif
-#else
-    // On GCC/Clang (or on non-Windows platforms), 
-    // we can use the built-in types that match the pointer size
-    using ptrsize_type = __UINTPTR_TYPE__;
-    using ptrdiff_type = __PTRDIFF_TYPE__;
-#endif
-
     return reinterpret_cast<Type*>(
-        reinterpret_cast<ptrsize_type>(ptr) - static_cast<ptrsize_type>(
-            reinterpret_cast<ptrdiff_type>(&reinterpret_cast<Type*>(0)->*MemberPtr)
+        reinterpret_cast<usize>(ptr) - static_cast<usize>(
+            reinterpret_cast<isize>(&reinterpret_cast<Type*>(0)->*MemberPtr)
         )
     );
 }

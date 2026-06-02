@@ -172,24 +172,40 @@ constexpr bool IsAnyOfV = (IsSameV<Type, Types> || ...);
     }
 #endif  // NEX_HAS_CXX20
 
-// Determine whether a type is an integral type
-template <class Type>
-constexpr bool IsIntegralV = IsAnyOfV<
-    RemoveCvT<Type>, bool, 
-    char, signed char, unsigned char, wchar_t,
-#if defined(__cpp_char8_t)
-    char8_t,
-#endif // defined(__cpp_char8_t)
-    char16_t, char32_t, 
-    short, unsigned short, 
-    int, unsigned int, 
-    long, unsigned long, 
-    long long, unsigned long long
->;
+#if NEX_HAS_BUILTIN(__is_integral) || (NEX_COMPILER_IS_MSVC && NEX_HAS_CXX20)
+    // Determine whether a type is an integral type
+    template <class Type>
+    constexpr bool IsIntegralV = __is_integral(RemoveCvT<Type>);
+#else
+    // Determine whether a type is an integral type
+    template <class Type>
+    constexpr bool IsIntegralV = IsAnyOfV<
+        RemoveCvT<Type>, bool, 
+        char, signed char, unsigned char, wchar_t,
+    #if defined(__cpp_char8_t)
+        char8_t,
+    #endif // defined(__cpp_char8_t)
+        char16_t, char32_t, 
+        short, unsigned short, 
+        int, unsigned int, 
+        long, unsigned long, 
+        long long, unsigned long long
+    >;
+#endif
 
-// Determine whether a type is a floating-point type
-template <class Type>
-constexpr bool IsFloatingPointV = IsAnyOfV<RemoveCvT<Type>, float, double, long double>;
+#if NEX_HAS_BUILTIN(__is_floating_point)
+    // Determine whether a type is a floating-point type
+    template <class Type>
+    constexpr bool IsFloatingPointV = __is_floating_point(RemoveCvT<Type>);
+#elif (NEX_COMPILER_IS_MSVC && NEX_HAS_CXX20)
+    // Determine whether a type is a floating-point type
+    template <class Type>
+    constexpr bool IsFloatingPointV = __is_floating(RemoveCvT<Type>);
+#else
+    // Determine whether a type is a floating-point type
+    template <class Type>
+    constexpr bool IsFloatingPointV = IsAnyOfV<RemoveCvT<Type>, float, double, long double>;
+#endif
 
 // Determine whether integral type Type is signed or unsigned
 template <class Type, bool = IsIntegralV<Type>>
@@ -331,6 +347,15 @@ using _RemoveCvrefT NEX_MSVC_KNOWN_SEMANTICS = RemoveCvT<RemoveReferenceT<Type>>
         using type = RemoveCvrefT<Type>;
     };
 #endif  // NEX_HAS_CXX20
+
+// Retrieve the underlying type of an enumeration type
+template <class Type>
+struct UnderlyingType {
+    using type = __underlying_type(Type);
+};
+
+template <class Type>
+using UnderlyingTypeT = typename UnderlyingType<Type>::type;
 
 // Maps a sequence of any types to the type void 
 template <class... Types>

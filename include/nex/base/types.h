@@ -490,7 +490,7 @@ using fflags64   = uint64;                  // 64-bit flags (bitfield storage, a
 // =================================================================================
 
 using null_ptr  = decltype(nullptr);        // Null pointer type
-enum class byte : unsigned char {};         // Single-byte object-representation type
+enum class byte : uint8 {};                 // Single-byte object-representation type
 
 /**
  * @note 
@@ -503,11 +503,6 @@ enum class byte : unsigned char {};         // Single-byte object-representation
  * type safety and avoiding unintended implicit conversions.
  */
 
-// Get the underlying unsigned char value of a byte (C++23 std::to_underlying equivalent)
-NEX_NODISCARD constexpr unsigned char toUnderlying(const byte arg) noexcept {
-    return static_cast<unsigned char>(arg);
-}
-
 // Bitwise left shift operator for 'byte' type
 template <class IntType>
 NEX_NODISCARD constexpr byte operator<<(const byte arg, const IntType shift) noexcept 
@@ -516,8 +511,8 @@ requires (meta::IsIntegralV<IntType> && !meta::IsSameV<IntType, bool>) {
         static_assert(shift >= 0 && shift < 8, 
             "Error: Shift amount must be in range [0, 7] for byte type.");
     }
-    return static_cast<byte>(static_cast<unsigned char>(
-            static_cast<unsigned int>(toUnderlying(arg)) << shift));
+    return static_cast<byte>(static_cast<uint8>(
+            static_cast<uint32>(static_cast<meta::UnderlyingTypeT<byte>>(arg)) << shift));
 }
 
 // Bitwise right shift operator for 'byte' type
@@ -528,32 +523,31 @@ requires (meta::IsIntegralV<IntType> && !meta::IsSameV<IntType, bool>) {
         static_assert(shift >= 0 && shift < 8, 
             "Error: Shift amount must be in range [0, 7] for byte type.");
     }
-    return static_cast<byte>(static_cast<unsigned char>(
-            static_cast<unsigned int>(toUnderlying(arg)) >> shift));
+    return static_cast<byte>(static_cast<uint8>(
+            static_cast<uint32>(static_cast<meta::UnderlyingTypeT<byte>>(arg)) >> shift));
 }
 
 // Bitwise OR operator for 'byte' type
 NEX_NODISCARD constexpr byte operator|(const byte left, const byte right) noexcept {
     return static_cast<byte>(
-            static_cast<unsigned char>(toUnderlying(left) | toUnderlying(right)));
+        static_cast<meta::UnderlyingTypeT<byte>>(left) | static_cast<meta::UnderlyingTypeT<byte>>(right));
 }
 
 // Bitwise AND operator for 'byte' type
 NEX_NODISCARD constexpr byte operator&(const byte left, const byte right) noexcept {
     return static_cast<byte>(
-        static_cast<unsigned char>(toUnderlying(left) & toUnderlying(right)));
+        static_cast<meta::UnderlyingTypeT<byte>>(left) & static_cast<meta::UnderlyingTypeT<byte>>(right));
 }
 
 // Bitwise XOR operator for 'byte' type
 NEX_NODISCARD constexpr byte operator^(const byte left, const byte right) noexcept {
     return static_cast<byte>(
-        static_cast<unsigned char>(toUnderlying(left) ^ toUnderlying(right)));
+        static_cast<meta::UnderlyingTypeT<byte>>(left) ^ static_cast<meta::UnderlyingTypeT<byte>>(right));
 }
 
 // Bitwise NOT operator for 'byte' type
 NEX_NODISCARD constexpr byte operator~(const byte arg) noexcept {
-    return static_cast<byte>(
-        static_cast<unsigned char>(~static_cast<unsigned int>(toUnderlying(arg))));
+    return static_cast<byte>(~static_cast<meta::UnderlyingTypeT<byte>>(arg));
 }
 
 // Bitwise left shift compound assignment operator for 'byte' type
@@ -588,20 +582,22 @@ constexpr byte& operator^=(byte& left, const byte right) noexcept {
 // Convert 'byte' to an integral type
 template <class IntType>
 NEX_NODISCARD NEX_MSVC_INTRINSIC constexpr IntType toInteger(const byte arg) noexcept
-requires (meta::IsIntegralV<IntType> || !meta::IsSameV<IntType, bool>) {
-    return static_cast<IntType>(toUnderlying(arg));
+requires (meta::IsIntegralV<IntType> && !meta::IsSameV<IntType, bool>) {
+    return static_cast<IntType>(static_cast<meta::UnderlyingTypeT<byte>>(arg));
 }
 
 // Explicit conversion from 'byte' to 'bool'
-NEX_NODISCARD NEX_MSVC_INTRINSIC constexpr bool toBool(const byte arg) noexcept {
-    return toUnderlying(arg) != 0;
+template <class ByteType>
+NEX_NODISCARD NEX_MSVC_INTRINSIC constexpr bool toBool(const ByteType arg) noexcept 
+requires (meta::IsSameV<ByteType, byte>) {
+    return static_cast<meta::UnderlyingTypeT<byte>>(arg) != 0;
 }
 
 // Convert an integral type to 'byte' (symmetric to toInteger)
 template <class IntType>
 NEX_NODISCARD constexpr byte toByte(IntType value) noexcept 
-requires (meta::IsIntegralV<IntType> || !meta::IsSameV<IntType, bool>) {
-    return static_cast<byte>(static_cast<unsigned char>(value));
+requires (meta::IsIntegralV<IntType> && !meta::IsSameV<IntType, bool>) {
+    return static_cast<byte>(static_cast<meta::UnderlyingTypeT<byte>>(value));
 }
 
 // Explicit conversion from 'bool' to 'byte'

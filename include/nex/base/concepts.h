@@ -24,6 +24,7 @@
 
 #include "nex/base/macros.h"
 #include "nex/base/meta.h"
+#include "nex/base/types.h"
 #include "nex/base/casts.h"
 
 NEX_NAMESPACE_BEGIN
@@ -351,8 +352,7 @@ concept Dereferenceable = requires(Type&& value) {
 /// Checks whether Type behaves like a raw or smart pointer.
 template <typename Type>
 concept PointerLike =
-    Dereferenceable<Type> &&
-    (
+    Dereferenceable<Type> && (
         RawPointer<Type> ||
         requires(meta::RemoveReferenceT<Type>& value) {
             value.operator->();

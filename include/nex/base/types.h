@@ -133,6 +133,20 @@ constexpr u64 operator""_u64(ulonglong value) noexcept { return static_cast<u64>
 #endif  // ^^NEX_HAS_BUILTIN_INT128
 
 // =================================================================================
+// Macro definitions for fixed-width integer literal suffixes (C-style)
+// =================================================================================
+
+#define NEX_INT8_C(x)       (x ## _i8)
+#define NEX_INT16_C(x)      (x ## _i16)
+#define NEX_INT32_C(x)      (x ## _i32)
+#define NEX_INT64_C(x)      (x ## _i64)
+
+#define NEX_UINT8_C(x)      (x ## _u8)
+#define NEX_UINT16_C(x)     (x ## _u16)
+#define NEX_UINT32_C(x)     (x ## _u32)
+#define NEX_UINT64_C(x)     (x ## _u64)
+
+// =================================================================================
 // Standard pointer-sized integer types
 // =================================================================================
 
@@ -295,6 +309,13 @@ using ssize         = isize;        // Represents the difference between pointer
 constexpr usize operator""_uz(ulonglong value) noexcept { return static_cast<usize>(value); }
 constexpr isize operator""_iz(ulonglong value) noexcept { return static_cast<isize>(value); }
 
+// ================================================================================
+// Macro definitions for size and pointer difference literal suffixes (C-style)
+// =================================================================================
+
+#define NEX_SIZE_C(x)      (x ## _uz)
+#define NEX_PTRDIFF_C(x)   (x ## _iz)
+
 // =================================================================================
 // Common power-of-two alignment types (for specifying alignment requirements)
 // =================================================================================
@@ -373,6 +394,18 @@ constexpr f64 operator""_f64(ldouble value) noexcept { return static_cast<f64>(v
 #endif  // ^^NEX_HAS_BUILTIN_FLOAT128
 
 // =================================================================================
+// Macro definitions for standard floating-point literal suffixes (C-style)
+// =================================================================================
+
+#define NEX_FLOAT16_C(x)        (x ## _f16)
+#define NEX_FLOAT32_C(x)        (x ## _f32)
+#define NEX_FLOAT64_C(x)        (x ## _f64)
+
+#if NEX_HAS_BUILTIN_FLOAT128
+    #define NEX_FLOAT128_C(x)   (x ## _f128)
+#endif  // ^^NEX_HAS_BUILTIN_FLOAT128
+
+// =================================================================================
 // Standard character and code unit types (encoding-aware; C++20)
 // =================================================================================
 
@@ -410,6 +443,15 @@ constexpr c32 operator""_c32(char32 value) noexcept { return value; }
 
 constexpr c8 operator""_c8(char value) noexcept     { return static_cast<c8>(value); }
 constexpr wchar operator""_wc(wchar value) noexcept { return value; }
+
+// =================================================================================
+// Macro definitions for standard character literal suffixes (C-style)
+// =================================================================================
+
+#define NEX_CHAR8_C(x)     (x ## _c8)
+#define NEX_CHAR16_C(x)    (x ## _c16)
+#define NEX_CHAR32_C(x)    (x ## _c32)
+#define NEX_WCHAR_C(x)     (x ## _wc)
 
 // =================================================================================
 // Standard boolean storage types

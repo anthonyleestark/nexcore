@@ -24,69 +24,72 @@
 NEX_NAMESPACE_BEGIN
 
 // =================================================================================
-// Define constants for minimum and maximum values of fixed-width integer types
+// Compile-time constants for fixed-width integer limits and character type limits
 // =================================================================================
 
-struct Constants {
-    // Minimum and maximum values for fixed-width integer types
-    // These constants are defined as constexpr to allow for compile-time evaluation and optimization.
+struct LimitConstants {
+    /**
+     * @note
+     * These constants are defined to match those value in the platform SDK, ensuring compatibility
+     * with platform APIs and conventions, while also ensuring consistency across the Nex-ecosystem.
+     */
 
-    static constexpr int8   i8min       = (-127 - 1);
-    static constexpr int16  i16min      = (-32767 - 1);
-    static constexpr int32  i32min      = (-2147483647 - 1);
-    static constexpr int64  i64min      = (-9223372036854775807LL - 1);
-    static constexpr int8   i8max       = 127;
-    static constexpr int16  i16max      = 32767;
-    static constexpr int32  i32max      = 2147483647;
-    static constexpr int64  i64max      = 9223372036854775807LL;
+    static constexpr int8   i8min       = (-127_i8 - 1_i8);
+    static constexpr int16  i16min      = (-32767_i16 - 1_i16);
+    static constexpr int32  i32min      = (-2147483647_i32 - 1_i32);
+    static constexpr int64  i64min      = (-9223372036854775807_i64 - 1_i64);
+    static constexpr int8   i8max       = 127_i8;
+    static constexpr int16  i16max      = 32767_i16;
+    static constexpr int32  i32max      = 2147483647_i32;
+    static constexpr int64  i64max      = 9223372036854775807_i64;
     static constexpr uint8  u8max       = static_cast<uint8>(~static_cast<uint8>(0));
     static constexpr uint16 u16max      = static_cast<uint16>(~static_cast<uint16>(0));
     static constexpr uint32 u32max      = ~static_cast<uint32>(0);
-    static constexpr uint64 u64max      = ~static_cast<uint64>(0ULL);
+    static constexpr uint64 u64max      = ~static_cast<uint64>(0);
+
+#if NEX_HAS_BUILTIN_INT128
+    static constexpr int128  i128min    = (static_cast<int128>(-1) << 127_i128);
+    static constexpr int128  i128max    = ~(static_cast<int128>(-1) << 127_i128);
+    static constexpr uint128 u128max    = ~static_cast<uint128>(0);
+#endif  // ^^NEX_HAS_BUILTIN_INT128
 
 #if NEX_BUILD_ENV_IS_64_BIT
-    static constexpr uint64 sizemax     = ~static_cast<uintptr>(0);
+    static constexpr uint64 sizemax     = ~static_cast<uintptr>(0_u64);
 #else  // Non-64-bit environment, assume 32-bit
-    static constexpr uint32 sizemax     = 0xffffffffui32;
+    static constexpr uint32 sizemax     = 0xffffffff_u32;
 #endif
 
 #if NEX_PLATFORM_IS_WINDOWS
     // Windows ABI defines wchar_t/wint_t as 16-bit unsigned shorts
-    static constexpr uint16 wcharmin    = 0x0000;
-    static constexpr uint16 wcharmax    = 0xffff;
-    static constexpr uint16 wintmin     = 0x0000;
-    static constexpr uint16 wintmax     = 0xffff;
+    static constexpr uint16 wcharmin    = 0x0000_u16;
+    static constexpr uint16 wcharmax    = 0xffff_u16;
+    static constexpr uint16 wintmin     = 0x0000_u16;
+    static constexpr uint16 wintmax     = 0xffff_u16;
 #else
     // Unix/Linux/macOS/Android ABIs define wchar_t/wint_t as 32-bit
-    static constexpr uint32 wcharmin    = 0x00000000;
-    static constexpr uint32 wcharmax    = 0xffffffff;
-    static constexpr uint32 wintmin     = 0x00000000;
-    static constexpr uint32 wintmax     = 0xffffffff;
+    static constexpr uint32 wcharmin    = 0x00000000_u32;
+    static constexpr uint32 wcharmax    = 0xffffffff_u32;
+    static constexpr uint32 wintmin     = 0x00000000_u32;
+    static constexpr uint32 wintmax     = 0xffffffff_u32;
 #endif
 };
 
 // =================================================================================
-// Define macros for minimum and maximum values of fixed-width integer types
+// Macro definitions for fixed-width integer limits (C-style)
 // =================================================================================
 
-/**
- * @note
- * These macros are defined to match those value in the platform SDK, ensuring compatibility 
- * with platform APIs and conventions, while also ensuring consistency across the Nex-ecosystem.
- */
-
-#define NEX_INT8_MIN            NEX_PREPEND_NAMESPACE(Constants::i8min)
-#define NEX_INT16_MIN           NEX_PREPEND_NAMESPACE(Constants::i16min)
-#define NEX_INT32_MIN           NEX_PREPEND_NAMESPACE(Constants::i32min)
-#define NEX_INT64_MIN           NEX_PREPEND_NAMESPACE(Constants::i64min)
-#define NEX_INT8_MAX            NEX_PREPEND_NAMESPACE(Constants::i8max)
-#define NEX_INT16_MAX           NEX_PREPEND_NAMESPACE(Constants::i16max)
-#define NEX_INT32_MAX           NEX_PREPEND_NAMESPACE(Constants::i32max)
-#define NEX_INT64_MAX           NEX_PREPEND_NAMESPACE(Constants::i64max)
-#define NEX_UINT8_MAX           NEX_PREPEND_NAMESPACE(Constants::u8max)
-#define NEX_UINT16_MAX          NEX_PREPEND_NAMESPACE(Constants::u16max)
-#define NEX_UINT32_MAX          NEX_PREPEND_NAMESPACE(Constants::u32max)
-#define NEX_UINT64_MAX          NEX_PREPEND_NAMESPACE(Constants::u64max)
+#define NEX_INT8_MIN            NEX_PREPEND_NAMESPACE(LimitConstants::i8min)
+#define NEX_INT16_MIN           NEX_PREPEND_NAMESPACE(LimitConstants::i16min)
+#define NEX_INT32_MIN           NEX_PREPEND_NAMESPACE(LimitConstants::i32min)
+#define NEX_INT64_MIN           NEX_PREPEND_NAMESPACE(LimitConstants::i64min)
+#define NEX_INT8_MAX            NEX_PREPEND_NAMESPACE(LimitConstants::i8max)
+#define NEX_INT16_MAX           NEX_PREPEND_NAMESPACE(LimitConstants::i16max)
+#define NEX_INT32_MAX           NEX_PREPEND_NAMESPACE(LimitConstants::i32max)
+#define NEX_INT64_MAX           NEX_PREPEND_NAMESPACE(LimitConstants::i64max)
+#define NEX_UINT8_MAX           NEX_PREPEND_NAMESPACE(LimitConstants::u8max)
+#define NEX_UINT16_MAX          NEX_PREPEND_NAMESPACE(LimitConstants::u16max)
+#define NEX_UINT32_MAX          NEX_PREPEND_NAMESPACE(LimitConstants::u32max)
+#define NEX_UINT64_MAX          NEX_PREPEND_NAMESPACE(LimitConstants::u64max)
 
 #define NEX_INT_LEAST8_MIN      NEX_INT8_MIN
 #define NEX_INT_LEAST16_MIN     NEX_INT16_MIN
@@ -128,35 +131,30 @@ struct Constants {
 #define NEX_INTMAX_MAX          NEX_INT64_MAX
 #define NEX_UINTMAX_MAX         NEX_UINT64_MAX
 
+// =================================================================================
+// Macro definitions for pointer difference and size limits (C-style)
+// =================================================================================
+
 #define NEX_PTRDIFF_MIN         NEX_INTPTR_MIN
 #define NEX_PTRDIFF_MAX         NEX_INTPTR_MAX
 
-#define NEX_SIZE_MAX            NEX_PREPEND_NAMESPACE(Constants::sizemax)
-
-#define NEX_SIG_ATOMIC_MIN      NEX_PREPEND_NAMESPACE(Constants::i32min)
-#define NEX_SIG_ATOMIC_MAX      NEX_PREPEND_NAMESPACE(Constants::i32max)
-
-#define NEX_WCHAR_MIN           NEX_PREPEND_NAMESPACE(Constants::wcharmin)
-#define NEX_WCHAR_MAX           NEX_PREPEND_NAMESPACE(Constants::wcharmax)
-
-#define NEX_WINT_MIN            NEX_PREPEND_NAMESPACE(Constants::wintmin)
-#define NEX_WINT_MAX            NEX_PREPEND_NAMESPACE(Constants::wintmax)
+#define NEX_SIZE_MAX            NEX_PREPEND_NAMESPACE(LimitConstants::sizemax)
 
 // =================================================================================
-// Define macros for integer constant expressions
+// Macro definitions for signal atomic type limits (C-style)
 // =================================================================================
 
-#define NEX_INT8_C(x)           (x)
-#define NEX_INT16_C(x)          (x)
-#define NEX_INT32_C(x)          (x)
-#define NEX_INT64_C(x)          (x ## LL)
+#define NEX_SIG_ATOMIC_MIN      NEX_PREPEND_NAMESPACE(LimitConstants::i32min)
+#define NEX_SIG_ATOMIC_MAX      NEX_PREPEND_NAMESPACE(LimitConstants::i32max)
 
-#define NEX_UINT8_C(x)          (x)
-#define NEX_UINT16_C(x)         (x)
-#define NEX_UINT32_C(x)         (x ## U)
-#define NEX_UINT64_C(x)         (x ## ULL)
+// =================================================================================
+// Macro definitions for wide character limits (C-style)
+// =================================================================================
 
-#define NEX_INTMAX_C(x)         NEX_INT64_C(x)
-#define NEX_UINTMAX_C(x)        NEX_UINT64_C(x)
+#define NEX_WCHAR_MIN           NEX_PREPEND_NAMESPACE(LimitConstants::wcharmin)
+#define NEX_WCHAR_MAX           NEX_PREPEND_NAMESPACE(LimitConstants::wcharmax)
+
+#define NEX_WINT_MIN            NEX_PREPEND_NAMESPACE(LimitConstants::wintmin)
+#define NEX_WINT_MAX            NEX_PREPEND_NAMESPACE(LimitConstants::wintmax)
 
 NEX_NAMESPACE_END

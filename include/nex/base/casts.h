@@ -20,7 +20,7 @@
 #include "nex/base/build.h"
 #include "nex/base/attributes.h"
 #include "nex/base/namespace.h"
-#include "nex/base/intrinsics.h"
+#include "nex/base/meta.h"
 #include "nex/base/types.h"
 #include "nex/base/assert_crash.h"
 
@@ -47,7 +47,7 @@ NEX_NAMESPACE_BEGIN
  */
 template <class Type>
 NEX_NODISCARD NEX_MSVC_INTRINSIC constexpr 
-Type&& forwardCast(type_traits::RemoveReferenceT<Type>& arg) noexcept {
+Type&& forwardCast(meta::RemoveReferenceT<Type>& arg) noexcept {
     return static_cast<Type&&>(arg);
 }
 
@@ -60,8 +60,8 @@ Type&& forwardCast(type_traits::RemoveReferenceT<Type>& arg) noexcept {
  */
 template <class Type>
 NEX_NODISCARD NEX_MSVC_INTRINSIC constexpr 
-Type&& forwardCast(type_traits::RemoveReferenceT<Type>&& arg) noexcept {
-    static_assert(!type_traits::IsLvalueReferenceV<Type>, 
+Type&& forwardCast(meta::RemoveReferenceT<Type>&& arg) noexcept {
+    static_assert(!meta::IsLvalueReferenceV<Type>, 
         "Error: Bad forward call, cannot forward an rvalue as an lvalue reference!");
     return static_cast<Type&&>(arg);
 }
@@ -74,12 +74,12 @@ Type&& forwardCast(type_traits::RemoveReferenceT<Type>&& arg) noexcept {
  * @return An rvalue reference pointing to the object.
  */
 template <class Type> 
-requires (!type_traits::IsLvalueReferenceV<Type>)
+requires (!meta::IsLvalueReferenceV<Type>)
 NEX_NODISCARD NEX_MSVC_INTRINSIC constexpr 
-type_traits::RemoveReferenceT<Type>&& moveCast(Type& arg) noexcept {
-    static_assert(!type_traits::IsConstV<type_traits::RemoveReferenceT<Type>>, 
+meta::RemoveReferenceT<Type>&& moveCast(Type& arg) noexcept {
+    static_assert(!meta::IsConstV<meta::RemoveReferenceT<Type>>, 
         "Error: Cannot move from a const-qualified type, as it would result in a silent copy instead of a move!");
-    return static_cast<type_traits::RemoveReferenceT<Type>&&>(arg);
+    return static_cast<meta::RemoveReferenceT<Type>&&>(arg);
 }
 
 /**
@@ -92,10 +92,10 @@ type_traits::RemoveReferenceT<Type>&& moveCast(Type& arg) noexcept {
  */
 template <class Type>
 NEX_NODISCARD NEX_MSVC_INTRINSIC constexpr 
-type_traits::RemoveReferenceT<Type>&& moveCast(Type&& arg) noexcept {
-    static_assert(!type_traits::IsLvalueReferenceV<Type>, 
+meta::RemoveReferenceT<Type>&& moveCast(Type&& arg) noexcept {
+    static_assert(!meta::IsLvalueReferenceV<Type>, 
         "Error: Moving on an rvalue temporary object is redundant and unnecessary!");
-    return static_cast<type_traits::RemoveReferenceT<Type>&&>(arg);
+    return static_cast<meta::RemoveReferenceT<Type>&&>(arg);
 }
 
 /**
@@ -107,13 +107,13 @@ type_traits::RemoveReferenceT<Type>&& moveCast(Type&& arg) noexcept {
  */
 template <class Type>
 NEX_NODISCARD NEX_MSVC_INTRINSIC constexpr
-type_traits::ConditionalT<
-    !type_traits::IsNothrowMoveConstructibleV<Type> && type_traits::IsCopyConstructibleV<Type>, 
+meta::ConditionalT<
+    !meta::IsNothrowMoveConstructibleV<Type> && meta::IsCopyConstructibleV<Type>, 
     const Type&, 
-    type_traits::RemoveReferenceT<Type>&&
+    meta::RemoveReferenceT<Type>&&
 >
 moveIfNoexcept(Type& arg) noexcept {
-    return static_cast<type_traits::RemoveReferenceT<Type>&&>(arg);
+    return static_cast<meta::RemoveReferenceT<Type>&&>(arg);
 }
 
 /**
@@ -148,8 +148,8 @@ const Type* addressOf(const Type&&) = delete;
  */
 template <class Dest, class Source>
     requires (sizeof(Dest) == sizeof(Source) && 
-              type_traits::IsTriviallyCopyableV<Source> && 
-              type_traits::IsTriviallyCopyableV<Dest>)
+              meta::IsTriviallyCopyableV<Source> && 
+              meta::IsTriviallyCopyableV<Dest>)
 NEX_NODISCARD NEX_MSVC_INTRINSIC constexpr 
 Dest bitCast(const Source& source) noexcept {
     return __builtin_bit_cast(Dest, source);
@@ -161,7 +161,7 @@ Dest bitCast(const Source& source) noexcept {
  * @tparam Dest The target type (must be implicitly convertible from Source).
  */
 template <class Dest, class Source>
-requires type_traits::IsConvertibleV<Source, Dest>
+requires meta::IsConvertibleV<Source, Dest>
 NEX_NODISCARD NEX_MSVC_INTRINSIC constexpr 
 Dest implicitCast(Source&& source) noexcept {
     return forwardCast<Source>(source);
@@ -209,9 +209,9 @@ NEX_NODISCARD NEX_MSVC_INTRINSIC Dest polymorphicCast(Source* polyPointer) noexc
 template <typename Type, auto MemberPtr>
 NEX_NODISCARD NEX_MSVC_INTRINSIC constexpr 
 Type* containerOf(
-    type_traits::RemoveReferenceT<decltype(type_traits::declval<Type>().*MemberPtr)>* ptr
+    meta::RemoveReferenceT<decltype(meta::declval<Type>().*MemberPtr)>* ptr
 ) noexcept {
-    static_assert(type_traits::IsStandardLayoutV<Type>, 
+    static_assert(meta::IsStandardLayoutV<Type>, 
         "Error: 'containerOf' only safe for standard-layout types");
     if (ptr == nullptr) return nullptr;
     return reinterpret_cast<Type*>(
@@ -229,7 +229,7 @@ Type* containerOf(
 template <typename Type, auto MemberPtr>
 NEX_NODISCARD NEX_MSVC_INTRINSIC constexpr 
 Type* downcastMember(
-    type_traits::RemoveReferenceT<decltype(type_traits::declval<Type>().*MemberPtr)>* memberPtr
+    meta::RemoveReferenceT<decltype(meta::declval<Type>().*MemberPtr)>* memberPtr
 ) noexcept {
     return containerOf<Type, MemberPtr>(memberPtr);
 }
@@ -242,7 +242,7 @@ Type* downcastMember(
 template <typename Type, auto MemberPtr>
 NEX_NODISCARD NEX_MSVC_INTRINSIC constexpr 
 Type& derefMember(
-    type_traits::RemoveReferenceT<decltype(type_traits::declval<Type>().*MemberPtr)>* memberPtr
+    meta::RemoveReferenceT<decltype(meta::declval<Type>().*MemberPtr)>* memberPtr
 ) noexcept {
     return *containerOf<Type, MemberPtr>(memberPtr);
 }
@@ -256,7 +256,7 @@ Type& derefMember(
 template <typename Derived, typename Base>
 NEX_NODISCARD NEX_MSVC_INTRINSIC constexpr 
 Derived* safeDowncast(Base* base) noexcept {
-    static_assert(type_traits::IsBaseOfV<Base, Derived>, 
+    static_assert(meta::IsBaseOfV<Base, Derived>, 
         "Error: 'safeDowncast' requires 'Derived' to be a valid subclass of 'Base'. "
         "If you are attempting cross-casting between independent interfaces, consider using 'polymorphicCast' instead.");
     if consteval {

@@ -45,7 +45,7 @@ constexpr usize arraySize(Type (&)[Size]) noexcept {
 // Get the offset of a member within a struct/class
 template <typename Type, typename MemberT>
 constexpr isize offsetOf(MemberT Type::*member) noexcept {
-    static_assert(type_traits::IsStandardLayoutV<Type>, 
+    static_assert(meta::IsStandardLayoutV<Type>, 
         "Error: 'offsetOf' only safe for standard-layout types");
     return reinterpret_cast<isize>(&reinterpret_cast<Type*>(0)->*member);
 }

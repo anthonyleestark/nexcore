@@ -23,7 +23,7 @@
 #include <utility>
 
 #include "nex/base/macros.h"
-#include "nex/base/intrinsics.h"
+#include "nex/base/meta.h"
 #include "nex/base/casts.h"
 #include "nex/base/concepts.h"
 
@@ -31,26 +31,26 @@ NEX_NAMESPACE_BEGIN
 
 /// A type trait that provides a compile-time constant boolean value indicating 
 /// whether a type is an integral type.
-using TrueType = type_traits::TrueType;
+using TrueType = meta::TrueType;
 
 /// A type trait that provides a compile-time constant boolean value indicating 
 /// whether a type is not an integral type.
-using FalseType = type_traits::FalseType;
+using FalseType = meta::FalseType;
 
 /// A type trait that provides a compile-time constant boolean value indicating
 /// whether a type is an integral type.
 template <bool BoolValue>
-using BoolConstant = type_traits::BoolConstant<BoolValue>;
+using BoolConstant = meta::BoolConstant<BoolValue>;
 
 /// Checks whether Type is an integral type (e.g., int, char, etc.).
 template <class Type>
-using IsIntegral = BoolConstant<type_traits::IsIntegralV<Type>>;
+using IsIntegral = BoolConstant<meta::IsIntegralV<Type>>;
 template <class Type>
 inline constexpr bool IsIntegralV = IsIntegral<Type>::value;
 
 /// Checks whether Type is a floating-point type (i.e., float, double, or long double).
 template <class Type>
-using IsFloatingPoint = BoolConstant<type_traits::IsFloatingPointV<Type>>;
+using IsFloatingPoint = BoolConstant<meta::IsFloatingPointV<Type>>;
 template <class Type>
 inline constexpr bool IsFloatingPointV = IsFloatingPoint<Type>::value;
 
@@ -62,19 +62,19 @@ inline constexpr bool IsArithmeticV = IsArithmetic<Type>::value;
 
 /// Checks whether Type is the void type.
 template <typename Type>
-using IsVoid = type_traits::IsVoid<Type>;
+using IsVoid = meta::IsVoid<Type>;
 template <typename Type>
-inline constexpr bool IsVoidV = type_traits::IsVoidV<Type>;
+inline constexpr bool IsVoidV = meta::IsVoidV<Type>;
 
 /// Checks whether Type is the nullptr type.
 template <typename Type>
-using IsNullPointer = type_traits::IsNullPointer<Type>;
+using IsNullPointer = meta::IsNullPointer<Type>;
 template <typename Type>
-inline constexpr bool IsNullPointerV = type_traits::IsNullPointerV<Type>;
+inline constexpr bool IsNullPointerV = meta::IsNullPointerV<Type>;
 
 /// Checks whether Type is a pointer type.
 template <typename Type>
-using IsPointer = BoolConstant<type_traits::IsPointerV<Type>>;
+using IsPointer = BoolConstant<meta::IsPointerV<Type>>;
 template <typename Type>
 inline constexpr bool IsPointerV = IsPointer<Type>::value;
 
@@ -98,7 +98,7 @@ inline constexpr bool IsUnboundedArrayV = IsUnboundedArray<Type>::value;
 
 /// Checks whether Type is an enumeration type (i.e., an enum).
 template <typename Type>
-using IsEnum = type_traits::IsEnum<Type>;
+using IsEnum = meta::IsEnum<Type>;
 template <typename Type>
 inline constexpr bool IsEnumV = IsEnum<Type>::value;
 
@@ -110,7 +110,7 @@ inline constexpr bool IsUnionV = IsUnion<Type>::value;
 
 /// Checks whether Type is a class type (i.e., a struct or class).
 template <typename Type>
-using IsClass = type_traits::IsClass<Type>;
+using IsClass = meta::IsClass<Type>;
 template <typename Type>
 inline constexpr bool IsClassV = IsClass<Type>::value;
 
@@ -140,19 +140,19 @@ inline constexpr bool IsMemberFunctionPointerV = IsMemberFunctionPointer<Type>::
 
 /// Checks whether Type is an lvalue reference type.
 template <typename Type>
-using IsLvalueReference = type_traits::IsLvalueReference<Type>;
+using IsLvalueReference = meta::IsLvalueReference<Type>;
 template <typename Type>
 inline constexpr bool IsLvalueReferenceV = IsLvalueReference<Type>::value;
 
 /// Checks whether Type is an rvalue reference type.
 template <typename Type>
-using IsRvalueReference = type_traits::IsRvalueReference<Type>;
+using IsRvalueReference = meta::IsRvalueReference<Type>;
 template <typename Type>
 inline constexpr bool IsRvalueReferenceV = IsRvalueReference<Type>::value;
 
 /// Checks whether Type is a reference type (either lvalue or rvalue reference).
 template <typename Type>
-using IsReference = type_traits::IsReference<Type>;
+using IsReference = meta::IsReference<Type>;
 template <typename Type>
 inline constexpr bool IsReferenceV = IsReference<Type>::value;
 
@@ -195,19 +195,19 @@ inline constexpr bool IsVolatileV = IsVolatile<Type>::value;
 
 /// Checks whether Type is signed.
 template <typename Type>
-using IsSigned = type_traits::IsSignedIntegral<Type>;
+using IsSigned = meta::IsSignedIntegral<Type>;
 template <typename Type>
 inline constexpr bool IsSignedV = IsSigned<Type>::value;
 
 /// Checks whether Type is an unsigned type (i.e., an integral type that is not signed).
 template <typename Type>
-using IsUnsigned = type_traits::IsUnsignedIntegral<Type>;
+using IsUnsigned = meta::IsUnsignedIntegral<Type>;
 template <typename Type>
 inline constexpr bool IsUnsignedV = IsUnsigned<Type>::value;
 
 /// Checks whether Type1 and Type2 are the same type.
 template <typename Type1, typename Type2>
-using IsSame = type_traits::IsSame<Type1, Type2>;
+using IsSame = meta::IsSame<Type1, Type2>;
 template <typename Type1, typename Type2>
 inline constexpr bool IsSameV = IsSame<Type1, Type2>::value;
 
@@ -219,68 +219,68 @@ inline constexpr bool IsBaseOfV = IsBaseOf<Base, Derived>::value;
 
 /// Checks whether From can be implicitly converted to To.
 template <typename From, typename To>
-using IsConvertible = type_traits::IsConvertible<From, To>;
+using IsConvertible = meta::IsConvertible<From, To>;
 template <typename From, typename To>
 inline constexpr bool IsConvertibleV = IsConvertible<From, To>::value;
 
 /// Checks whether Type can be constructed with Args.
 template <typename Type, typename... Args>
-using IsConstructible = type_traits::IsConstructible<Type, Args...>;
+using IsConstructible = meta::IsConstructible<Type, Args...>;
 template <typename Type, typename... Args>
 inline constexpr bool IsConstructibleV = IsConstructible<Type, Args...>::value;
 
 /// Checks whether Type can be trivially constructed with Args.
 template <typename Type, typename... Args>
-using IsTriviallyConstructible = type_traits::IsTriviallyConstructible<Type, Args...>;
+using IsTriviallyConstructible = meta::IsTriviallyConstructible<Type, Args...>;
 template <typename Type, typename... Args>
 inline constexpr bool IsTriviallyConstructibleV = IsTriviallyConstructible<Type, Args...>::value;
 
 /// Checks whether Type can be constructed with Args without throwing.
 template <typename Type, typename... Args>
-using IsNothrowConstructible = type_traits::IsNothrowConstructible<Type, Args...>;
+using IsNothrowConstructible = meta::IsNothrowConstructible<Type, Args...>;
 template <typename Type, typename... Args>
 inline constexpr bool IsNothrowConstructibleV = IsNothrowConstructible<Type, Args...>::value;
 
 /// Checks whether Type can be default constructed.
 template <typename Type>
-using IsDefaultConstructible = type_traits::IsDefaultConstructible<Type>;
+using IsDefaultConstructible = meta::IsDefaultConstructible<Type>;
 template <typename Type>
 inline constexpr bool IsDefaultConstructibleV = IsDefaultConstructible<Type>::value;
 
 /// Checks whether Type can be trivially default constructed.
 template <typename Type>
-using IsTriviallyDefaultConstructible = type_traits::IsTriviallyDefaultConstructible<Type>;
+using IsTriviallyDefaultConstructible = meta::IsTriviallyDefaultConstructible<Type>;
 template <typename Type>
 inline constexpr bool IsTriviallyDefaultConstructibleV = IsTriviallyDefaultConstructible<Type>::value;
 
 /// Checks whether Type can be default constructed without throwing.
 template <typename Type>
-using IsNothrowDefaultConstructible = type_traits::IsNothrowDefaultConstructible<Type>;
+using IsNothrowDefaultConstructible = meta::IsNothrowDefaultConstructible<Type>;
 template <typename Type>
 inline constexpr bool IsNothrowDefaultConstructibleV = IsNothrowDefaultConstructible<Type>::value;
 
 /// Checks whether Type is copy constructible.
 template <typename Type>
-using IsCopyable = type_traits::IsCopyConstructible<Type>;
+using IsCopyable = meta::IsCopyConstructible<Type>;
 template <typename Type>
 inline constexpr bool IsCopyableV = IsCopyable<Type>::value;
 
 /// Checks whether Type is trivially copy constructible (i.e., can be copy constructed without throwing 
 /// and with a trivial copy constructor).
 template <typename Type>
-using IsTriviallyCopyableConstructible = type_traits::IsTriviallyCopyConstructible<Type>;
+using IsTriviallyCopyableConstructible = meta::IsTriviallyCopyConstructible<Type>;
 template <typename Type>
 inline constexpr bool IsTriviallyCopyableConstructibleV = IsTriviallyCopyableConstructible<Type>::value;
 
 /// Checks whether Type is copy constructible without throwing.
 template <typename Type>
-using IsNothrowCopyConstructible = type_traits::IsNothrowCopyConstructible<Type>;
+using IsNothrowCopyConstructible = meta::IsNothrowCopyConstructible<Type>;
 template <typename Type>
 inline constexpr bool IsNothrowCopyConstructibleV = IsNothrowCopyConstructible<Type>::value;
 
 /// Checks whether Type is move constructible.
 template <typename Type>
-using IsMoveable = type_traits::IsMoveConstructible<Type>;
+using IsMoveable = meta::IsMoveConstructible<Type>;
 template <typename Type>
 using IsMovable = IsMoveable<Type>;
 template <typename Type>
@@ -291,98 +291,98 @@ inline constexpr bool IsMovableV = IsMoveableV<Type>;
 /// Checks whether Type is trivially move constructible (i.e., can be move constructed without throwing 
 /// and with a trivial move constructor).
 template <typename Type>
-using IsTriviallyMovableConstructible = type_traits::IsTriviallyMoveConstructible<Type>;
+using IsTriviallyMovableConstructible = meta::IsTriviallyMoveConstructible<Type>;
 template <typename Type>
 inline constexpr bool IsTriviallyMovableConstructibleV = IsTriviallyMovableConstructible<Type>::value;
 
 /// Checks whether Type is move constructible without throwing.
 template <typename Type>
-using IsNothrowMoveConstructible = type_traits::IsNothrowMoveConstructible<Type>;
+using IsNothrowMoveConstructible = meta::IsNothrowMoveConstructible<Type>;
 template <typename Type>
 inline constexpr bool IsNothrowMoveConstructibleV = IsNothrowMoveConstructible<Type>::value;
 
 /// Checks whether To can be assigned from From.
 template <typename To, typename From = To>
-using IsAssignable = type_traits::IsAssignable<To, From>;
+using IsAssignable = meta::IsAssignable<To, From>;
 template <typename To, typename From = To>
 inline constexpr bool IsAssignableV = IsAssignable<To, From>::value;
 
 /// Checks whether To can be trivially assigned from From.
 template <typename To, typename From = To>
-using IsTriviallyAssignable = type_traits::IsTriviallyAssignable<To, From>;
+using IsTriviallyAssignable = meta::IsTriviallyAssignable<To, From>;
 template <typename To, typename From = To>
 inline constexpr bool IsTriviallyAssignableV = IsTriviallyAssignable<To, From>::value;
 
 /// Checks whether To can be assigned from From without throwing.
 template <typename To, typename From = To>
-using IsNothrowAssignable = type_traits::IsNothrowAssignable<To, From>;
+using IsNothrowAssignable = meta::IsNothrowAssignable<To, From>;
 template <typename To, typename From = To>
 inline constexpr bool IsNothrowAssignableV = IsNothrowAssignable<To, From>::value;
 
 /// Checks whether Type can be copy assigned.
 template <typename Type>
-using IsCopyAssignable = type_traits::IsCopyAssignable<Type>;
+using IsCopyAssignable = meta::IsCopyAssignable<Type>;
 template <typename Type>
 inline constexpr bool IsCopyAssignableV = IsCopyAssignable<Type>::value;
 
 /// Checks whether Type can be trivially copy assigned.
 template <typename Type>
-using IsTriviallyCopyAssignable = type_traits::IsTriviallyCopyAssignable<Type>;
+using IsTriviallyCopyAssignable = meta::IsTriviallyCopyAssignable<Type>;
 template <typename Type>
 inline constexpr bool IsTriviallyCopyAssignableV = IsTriviallyCopyAssignable<Type>::value;
 
 /// Checks whether Type can be copy assigned without throwing.
 template <typename Type>
-using IsNothrowCopyAssignable = type_traits::IsNothrowCopyAssignable<Type>;
+using IsNothrowCopyAssignable = meta::IsNothrowCopyAssignable<Type>;
 template <typename Type>
 inline constexpr bool IsNothrowCopyAssignableV = IsNothrowCopyAssignable<Type>::value;
 
 /// Checks whether Type can be move assigned.
 template <typename Type>
-using IsMoveAssignable = type_traits::IsMoveAssignable<Type>;
+using IsMoveAssignable = meta::IsMoveAssignable<Type>;
 template <typename Type>
 inline constexpr bool IsMoveAssignableV = IsMoveAssignable<Type>::value;
 
 /// Checks whether Type can be trivially move assigned.
 template <typename Type>
-using IsTriviallyMoveAssignable = type_traits::IsTriviallyMoveAssignable<Type>;
+using IsTriviallyMoveAssignable = meta::IsTriviallyMoveAssignable<Type>;
 template <typename Type>
 inline constexpr bool IsTriviallyMoveAssignableV = IsTriviallyMoveAssignable<Type>::value;
 
 /// Checks whether Type can be move assigned without throwing.
 template <typename Type>
-using IsNothrowMoveAssignable = type_traits::IsNothrowMoveAssignable<Type>;
+using IsNothrowMoveAssignable = meta::IsNothrowMoveAssignable<Type>;
 template <typename Type>
 inline constexpr bool IsNothrowMoveAssignableV = IsNothrowMoveAssignable<Type>::value;
 
 /// Checks whether Type can be destructed.
 template <typename Type>
-using IsDestructible = type_traits::IsDestructible<Type>;
+using IsDestructible = meta::IsDestructible<Type>;
 template <typename Type>
 inline constexpr bool IsDestructibleV = IsDestructible<Type>::value;
 
 /// Checks whether Type can be trivially destructed.
 template <typename Type>
-using IsTriviallyDestructible = type_traits::IsTriviallyDestructible<Type>;
+using IsTriviallyDestructible = meta::IsTriviallyDestructible<Type>;
 template <typename Type>
 inline constexpr bool IsTriviallyDestructibleV = IsTriviallyDestructible<Type>::value;
 
 /// Checks whether Type can be destructed without throwing.
 template <typename Type>
-using IsNothrowDestructible = type_traits::IsNothrowDestructible<Type>;
+using IsNothrowDestructible = meta::IsNothrowDestructible<Type>;
 template <typename Type>
 inline constexpr bool IsNothrowDestructibleV = IsNothrowDestructible<Type>::value;
 
 /// Checks whether Type is a trivial type (i.e., a type that can be trivially constructed, copied, and destroyed).
 template <typename Type>
-using IsTrivial = type_traits::IsTrivial<Type>;
+using IsTrivial = meta::IsTrivial<Type>;
 template <typename Type>
 inline constexpr bool IsTrivialV = IsTrivial<Type>::value;
 
 /// Checks whether Type is trivially copyable (i.e., a type that can be copied with a simple bitwise copy 
 /// and does not require a user-defined copy constructor, copy assignment operator, or destructor).
 template <typename Type>
-using IsTriviallyCopyable = type_traits::IsTriviallyCopyable<Type>;
+using IsTriviallyCopyable = meta::IsTriviallyCopyable<Type>;
 template <typename Type>
 inline constexpr bool IsTriviallyCopyableV = IsTriviallyCopyable<Type>::value;
 
@@ -425,23 +425,23 @@ inline constexpr bool IsAggregateV = IsAggregate<Type>::value;
 
 /// Removes the const qualifier from a Type.
 template <typename Type>
-using RemoveConst = type_traits::RemoveConstT<Type>;
+using RemoveConst = meta::RemoveConstT<Type>;
 
 /// Removes the volatile qualifier from a Type.
 template <typename Type>
-using RemoveVolatile = type_traits::RemoveVolatileT<Type>;
+using RemoveVolatile = meta::RemoveVolatileT<Type>;
 
 /// Removes const and volatile qualifiers from a Type.
 template <typename Type>
-using RemoveCv = type_traits::RemoveCvT<Type>;
+using RemoveCv = meta::RemoveCvT<Type>;
 
 /// Removes reference qualifiers from a Type.
 template <typename Type>
-using RemoveReference = type_traits::RemoveReferenceT<Type>;
+using RemoveReference = meta::RemoveReferenceT<Type>;
 
 /// Removes const, volatile, and reference qualifiers from a Type.
 template <typename Type>
-using RemoveCvref = type_traits::RemoveCvrefT<Type>;
+using RemoveCvref = meta::RemoveCvrefT<Type>;
 
 /// Removes the pointer qualifier from a Type.
 template <typename Type>
@@ -457,23 +457,23 @@ using RemoveAllExtents = NEX_STD remove_all_extents_t<Type>;
 
 /// Adds the const qualifier to a Type.
 template <typename Type>
-using AddConst = type_traits::AddConstT<Type>;
+using AddConst = meta::AddConstT<Type>;
 
 /// Adds the volatile qualifier to a Type.
 template <typename Type>
-using AddVolatile = type_traits::AddVolatileT<Type>;
+using AddVolatile = meta::AddVolatileT<Type>;
 
 /// Adds const and volatile qualifiers to a Type.
 template <typename Type>
-using AddCv = type_traits::AddCvT<Type>;
+using AddCv = meta::AddCvT<Type>;
 
 /// Adds an lvalue reference to a Type.
 template <typename Type>
-using AddLvalueReference = type_traits::AddLvalueReferenceT<Type>;
+using AddLvalueReference = meta::AddLvalueReferenceT<Type>;
 
 /// Adds an rvalue reference to a Type.
 template <typename Type>
-using AddRvalueReference = type_traits::AddRvalueReferenceT<Type>;
+using AddRvalueReference = meta::AddRvalueReferenceT<Type>;
 
 /// Adds a pointer qualifier to a Type.
 template <typename Type>
@@ -499,7 +499,7 @@ using TypeIdentity = NEX_STD type_identity_t<Type>;
 /// It is commonly used in SFINAE (Substitution Failure Is Not An Error) contexts to detect the presence 
 /// of certain types or expressions.
 template <typename... Types>
-using VoidT = type_traits::VoidT<Types...>;
+using VoidT = meta::VoidT<Types...>;
 
 /// Represents the common type among a list of types. 
 /// The common type is the type that all types in the list can be implicitly converted to.
@@ -515,7 +515,7 @@ using CommonReference = NEX_STD common_reference_t<Types...>;
 /// Represents one of two types (TrueType or FalseType) based on a boolean condition. 
 /// If Condition is true, Conditional evaluates to TrueType; otherwise, it evaluates to FalseType.
 template <bool Condition, typename TrueType, typename FalseType>
-using Conditional = type_traits::ConditionalT<Condition, TrueType, FalseType>;
+using Conditional = meta::ConditionalT<Condition, TrueType, FalseType>;
 
 /// Represents the logical conjunction (AND) of a list of type traits Traits. 
 /// Conjunction evaluates to true if all traits in the list are true; otherwise, it evaluates to false.
@@ -540,7 +540,7 @@ inline constexpr bool NegationV = Negation<Trait>::value;
 
 /// A type trait that enables a template only if a boolean condition is true.
 template <bool Condition, typename Type = void>
-using EnableIf = type_traits::EnableIfT<Condition, Type>;
+using EnableIf = meta::EnableIfT<Condition, Type>;
 
 /// A type trait that enables a template only if the Type is a numeric type (arithmetic type).
 template <typename Type>
@@ -632,15 +632,15 @@ using MemberPointer = MemberT Type::*;
 
 /// Represents a reference to a member within a struct/class.
 template <typename Type, auto MemberPtr>
-using MemberReference = decltype(type_traits::declval<Type&>().*MemberPtr);
+using MemberReference = decltype(meta::declval<Type&>().*MemberPtr);
 
 /// Represents a const reference to a member within a struct/class.
 template <typename Type, auto MemberPtr>
-using ConstMemberReference = decltype(type_traits::declval<const Type&>().*MemberPtr);
+using ConstMemberReference = decltype(meta::declval<const Type&>().*MemberPtr);
 
 /// Represents an rvalue reference to a member within a struct/class.
 template <typename Type, auto MemberPtr>
-using MemberRvalueReference = decltype(type_traits::declval<Type&&>().*MemberPtr);
+using MemberRvalueReference = decltype(meta::declval<Type&&>().*MemberPtr);
 
 /// Checks whether Type is callable with specific argument types.
 template <typename Type, typename... Args>

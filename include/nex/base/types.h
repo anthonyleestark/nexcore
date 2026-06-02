@@ -20,9 +20,10 @@
  */
 
 #include "nex/base/build.h"
+#include "nex/base/compiler.h"
 #include "nex/base/attributes.h"
 #include "nex/base/namespace.h"
-#include "nex/base/intrinsics.h"
+#include "nex/base/meta.h"
 
 NEX_NAMESPACE_BEGIN
 
@@ -510,8 +511,8 @@ NEX_NODISCARD constexpr unsigned char toUnderlying(const byte arg) noexcept {
 // Bitwise left shift operator for 'byte' type
 template <class IntType>
 NEX_NODISCARD constexpr byte operator<<(const byte arg, const IntType shift) noexcept 
-requires (type_traits::IsIntegralV<IntType> && !type_traits::IsSameV<IntType, bool>) {
-    if constexpr (type_traits::IsConstantEvaluated()) {
+requires (meta::IsIntegralV<IntType> && !meta::IsSameV<IntType, bool>) {
+    if constexpr (meta::IsConstantEvaluated()) {
         static_assert(shift >= 0 && shift < 8, 
             "Error: Shift amount must be in range [0, 7] for byte type.");
     }
@@ -522,8 +523,8 @@ requires (type_traits::IsIntegralV<IntType> && !type_traits::IsSameV<IntType, bo
 // Bitwise right shift operator for 'byte' type
 template <class IntType>
 NEX_NODISCARD constexpr byte operator>>(const byte arg, const IntType shift) noexcept 
-requires (type_traits::IsIntegralV<IntType> && !type_traits::IsSameV<IntType, bool>) {
-    if constexpr (type_traits::IsConstantEvaluated()) {
+requires (meta::IsIntegralV<IntType> && !meta::IsSameV<IntType, bool>) {
+    if constexpr (meta::IsConstantEvaluated()) {
         static_assert(shift >= 0 && shift < 8, 
             "Error: Shift amount must be in range [0, 7] for byte type.");
     }
@@ -558,14 +559,14 @@ NEX_NODISCARD constexpr byte operator~(const byte arg) noexcept {
 // Bitwise left shift compound assignment operator for 'byte' type
 template <class IntType>
 constexpr byte& operator<<=(byte& arg, const IntType shift) noexcept 
-requires (type_traits::IsIntegralV<IntType> && !type_traits::IsSameV<IntType, bool>) {
+requires (meta::IsIntegralV<IntType> && !meta::IsSameV<IntType, bool>) {
     return arg = arg << shift;
 }
 
 // Bitwise right shift compound assignment operator for 'byte' type
 template <class IntType>
 constexpr byte& operator>>=(byte& arg, const IntType shift) noexcept 
-requires (type_traits::IsIntegralV<IntType> && !type_traits::IsSameV<IntType, bool>) {
+requires (meta::IsIntegralV<IntType> && !meta::IsSameV<IntType, bool>) {
     return arg = arg >> shift;
 }
 
@@ -587,7 +588,7 @@ constexpr byte& operator^=(byte& left, const byte right) noexcept {
 // Convert 'byte' to an integral type
 template <class IntType>
 NEX_NODISCARD NEX_MSVC_INTRINSIC constexpr IntType toInteger(const byte arg) noexcept
-requires (type_traits::IsIntegralV<IntType> || !type_traits::IsSameV<IntType, bool>) {
+requires (meta::IsIntegralV<IntType> || !meta::IsSameV<IntType, bool>) {
     return static_cast<IntType>(toUnderlying(arg));
 }
 
@@ -599,14 +600,14 @@ NEX_NODISCARD NEX_MSVC_INTRINSIC constexpr bool toBool(const byte arg) noexcept 
 // Convert an integral type to 'byte' (symmetric to toInteger)
 template <class IntType>
 NEX_NODISCARD constexpr byte toByte(IntType value) noexcept 
-requires (type_traits::IsIntegralV<IntType> || !type_traits::IsSameV<IntType, bool>) {
+requires (meta::IsIntegralV<IntType> || !meta::IsSameV<IntType, bool>) {
     return static_cast<byte>(static_cast<unsigned char>(value));
 }
 
 // Explicit conversion from 'bool' to 'byte'
 template <class BoolType>
 NEX_NODISCARD constexpr byte toByte(BoolType value) noexcept
-requires (type_traits::IsSameV<BoolType, bool>) {
+requires (meta::IsSameV<BoolType, bool>) {
     return static_cast<byte>(value ? 1u : 0u);
 }
 

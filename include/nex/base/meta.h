@@ -6,15 +6,14 @@
 #pragma once
 
 /**
- * @file    intrinsics.h
- * @brief   Compiler intrinsic utilities and functions for optimized operations.
+ * @file    meta.h
+ * @brief   Compiler-intrinsics type traits and concepts for compile-time type manipulation.
  * 
  * @details
- * This header defines compiler intrinsic utilities and functions that can be used throughout the codebase 
- * for optimized operations. These intrinsics may include functions for bit manipulation, memory operations, 
- * and other low-level optimizations that can benefit from compiler-specific features. The goal is to provide 
- * a centralized location for intrinsic-related utilities to promote code reuse and consistency across the 
- * Nex-ecosystem.
+ * This header defines a collection of type traits and concepts that are implemented using compiler intrinsics 
+ * where available, providing efficient and accurate type information for compile-time type manipulation.
+ * These traits serves as the foundation for more complex type traits and utilities defined in other headers, 
+ * enabling advanced compile-time optimization and metaprogramming techniques for the Nex-ecosystem.
  */
 
 #include "nex/base/compiler.h"
@@ -23,22 +22,11 @@
 
 NEX_NAMESPACE_BEGIN
 
-// ======================================================================================
-// Core/primitive compiler built-in type traits
-// ======================================================================================
+NEX_SUBNAMESPACE_BEGIN(meta)
 
-NEX_SUBNAMESPACE_BEGIN(type_traits)
-
-/**
- * @note
- * These type traits are implemented using compiler built-ins where available, providing efficient
- * and accurate type information that is consistent with the compiler's own type system.
- * Where compiler built-ins are not available, these traits fall back to standard C++20 implementations,
- * ensuring compatibility and correctness across different compilers and platforms. 
- * The use of compiler built-ins allows for more precise type information, especially in edge cases that 
- * may not be fully covered by standard implementations, while also providing better performance for 
- * type trait queries.
- */
+// =================================================================================
+// Compiler intrinsic type traits implementations
+// =================================================================================
 
 // IntegralConstant is a template that represents a compile-time constant value of a specified type. 
 // It is the basis for other type traits like BoolConstant, TrueType, and FalseType.
@@ -696,6 +684,6 @@ struct IsNothrowDestructible : BoolConstant<__is_nothrow_destructible(Type)> {};
 template <class Type>
 constexpr bool IsNothrowDestructibleV = IsNothrowDestructible<Type>::value;
 
-NEX_SUBNAMESPACE_END(type_traits)
+NEX_SUBNAMESPACE_END(meta)
 
 NEX_NAMESPACE_END

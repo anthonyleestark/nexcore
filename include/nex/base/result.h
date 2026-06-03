@@ -36,13 +36,13 @@ NEX_NAMESPACE_BEGIN
  * 
  * Example usage:
  * ```
- * Result<int> divide(int a, int b) {
+ * Result<int32> divide(int32 a, int32 b) {
  *     if (b == 0) {
- *         return Result<int>::error({
+ *         return Result<int32>::error({
  *             ErrorCode::InvalidArgument, "Division by zero is not allowed"
  *         });
  *     }
- *     return Result<int>::ok(a / b);
+ *     return Result<int32>::ok(a / b);
  * }
  * ```
  */

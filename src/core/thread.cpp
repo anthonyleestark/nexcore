@@ -79,7 +79,7 @@ void Thread::Impl::applyThreadPriority() {
 
     // Map ThreadPriority to Windows thread priority levels
     HANDLE nativeHandle = jthread.native_handle();
-    int winPriority;
+    int32 winPriority;
 
     switch (priority) {
         case ThreadPriority::Lowest:
@@ -105,7 +105,7 @@ void Thread::Impl::applyThreadPriority() {
 
 #elif NEX_PLATFORM_IS_MAC || NEX_PLATFORM_IS_LINUX
 
-    int policy;
+    int32 policy;
     struct sched_param param;
 
     // Map ThreadPriority to platform-specific priority levels

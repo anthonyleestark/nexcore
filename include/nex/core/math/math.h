@@ -18,9 +18,9 @@
         #if !defined(_NUMBERS_)
             #include <numbers>
         #endif
-        constexpr double M_PI = NEX_STD numbers::pi;
-        constexpr double M_PI_2 = NEX_STD numbers::pi / 2;
-        constexpr double M_PI_4 = NEX_STD numbers::pi / 4;
+        constexpr float64 M_PI = NEX_STD numbers::pi;
+        constexpr float64 M_PI_2 = NEX_STD numbers::pi / 2;
+        constexpr float64 M_PI_4 = NEX_STD numbers::pi / 4;
     #else
         #define M_PI       3.14159265358979323846   // pi
         #define M_PI_2     1.57079632679489661923   // pi/2
@@ -52,12 +52,12 @@ NEX_SUBNAMESPACE_BEGIN(math)
 // =============================================================================
 
 // Epsilon value for floating-point comparisons
-inline constexpr double kEpsilon = 1e-9;
+inline constexpr float64 kEpsilon = 1e-9;
 
 // Nearly equal comparison for floating-point types with relative tolerance
 template<typename T>
 inline EnableIf<IsFloatingPointV<T>, bool>
-nearlyEqual(T a, T b, T epsilon = static_cast<T>(kEpsilon)) noexcept {
+nearlyEqual(const T& a, const T& b, const T& epsilon = static_cast<T>(kEpsilon)) noexcept {
     return NEX_STD abs(a - b) <= epsilon * NEX_STD max(static_cast<T>(1), 
             NEX_STD max(NEX_STD abs(a), NEX_STD abs(b)));
 }
@@ -65,7 +65,7 @@ nearlyEqual(T a, T b, T epsilon = static_cast<T>(kEpsilon)) noexcept {
 // Nearly equal comparison to zero for floating-point types
 template<typename T>
 inline EnableIf<IsFloatingPointV<T>, bool>
-equalsToZero(T a, T epsilon = static_cast<T>(kEpsilon)) noexcept {
+equalsToZero(const T& a, const T& epsilon = static_cast<T>(kEpsilon)) noexcept {
     return nearlyEqual(a, static_cast<T>(0), epsilon);
 }
 
@@ -213,7 +213,7 @@ struct Size2DValues {
     }
     
     // Area
-    double area() const noexcept {
+    float64 area() const noexcept {
         return NEX_STD abs(width * height);
     }
     

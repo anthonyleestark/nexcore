@@ -79,7 +79,7 @@ String format(StringView fmt, Args&&... args) {
  * @return  The formatted string as a String (UTF-16 encoded)
  */
 template <typename... Args>
-String format(const char* utf8Fmt, Args&&... args) {
+String format(cstring utf8Fmt, Args&&... args) {
     try {
         const auto formattedUtf8 = fmt::format(utf8Fmt, NEX_FORWARD<Args>(args)...);
         // Convert the formatted UTF-8 string back to our String type (UTF-16)

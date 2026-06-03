@@ -58,7 +58,7 @@ NEX_DEFINE_DEFAULT_DTOR(Uuid)
 Uuid Uuid::generate() noexcept {
     // Setup a random number generator with a non-deterministic seed
     NEX_STD random_device rd;
-    auto seed_data = NEX_STD array<int, 6> {};
+    auto seed_data = NEX_STD array<int32, 6> {};
     NEX_STD generate(NEX_STD begin(seed_data), NEX_STD end(seed_data), NEX_STD ref(rd));
     NEX_STD seed_seq seq(NEX_STD begin(seed_data), NEX_STD end(seed_data));
     NEX_STD ranlux48_base generator(seq);
@@ -126,7 +126,7 @@ Uuid Uuid::generateV7() noexcept {
 
     // Pack into uuid (stduuid stores as array<uint8_t,16>)
     NEX_STD array<uint8, 16> data{};
-    for (int i = 0; i < 8; ++i) {
+    for (int32 i = 0; i < 8; ++i) {
         data[i]     = (high >> (56 - i*8)) & 0xFF;
         data[8 + i] = (low  >> (56 - i*8)) & 0xFF;
     }
@@ -193,7 +193,7 @@ bool Uuid::isNil() const noexcept {
 // Convert to string
 String Uuid::toString() const {
     // Convert the internal UUID to its string representation using the stduuid library
-    Utf8String utf8 = uuids::to_string<char>(impl_->uuid);
+    Utf8String utf8 = uuids::to_string<nchar>(impl_->uuid);
     return String::fromUtf8(utf8);
 }
 

@@ -176,10 +176,10 @@ public:
 
         // Increment / decrement
         ConstIterator& operator++() noexcept { ++absoluteIndex_; return *this; }
-        ConstIterator operator++(int) noexcept { ConstIterator tmp = *this; ++(*this); return tmp; }
+        ConstIterator operator++(int32) noexcept { ConstIterator tmp = *this; ++(*this); return tmp; }
 
         ConstIterator& operator--() noexcept { --absoluteIndex_; return *this; }
-        ConstIterator operator--(int) noexcept { ConstIterator tmp = *this; --(*this); return tmp; }
+        ConstIterator operator--(int32) noexcept { ConstIterator tmp = *this; --(*this); return tmp; }
 
         // Arithmetic operators for random-access iteration
         ConstIterator& operator+=(difference_type offset) noexcept {

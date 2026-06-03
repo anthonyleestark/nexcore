@@ -15,8 +15,8 @@ NEX_NAMESPACE_BEGIN
 NEX_SUBNAMESPACE_BEGIN(geometry2d)
 
 // Rotation direction to angle radians
-double rotationToAngle(math::Rotation rotation) noexcept {
-    double angleRadians = 0.0;
+float64 rotationToAngle(math::Rotation rotation) noexcept {
+    float64 angleRadians = 0.0;
     switch (rotation) {
         case math::Rotation::Clockwise_90:         angleRadians = -M_PI / 2.0;          break;
         case math::Rotation::Clockwise_180:        angleRadians = -M_PI;                break;
@@ -29,16 +29,16 @@ double rotationToAngle(math::Rotation rotation) noexcept {
 }
 
 // Rotates a point around a pivot
-Vector2D rotatePointAround(const Vector2D& point, const Vector2D& pivot, double angle) noexcept {
-    double sin = NEX_STD sin(angle);
-    double cos = NEX_STD cos(angle);
+Vector2D rotatePointAround(const Vector2D& point, const Vector2D& pivot, float64 angle) noexcept {
+    float64 sin = NEX_STD sin(angle);
+    float64 cos = NEX_STD cos(angle);
 
     // Translate to origin
     Vector2D translated = point - pivot;
 
     // Rotate
-    double newX = translated.x * cos - translated.y * sin;
-    double newY = translated.x * sin + translated.y * cos;
+    float64 newX = translated.x * cos - translated.y * sin;
+    float64 newY = translated.x * sin + translated.y * cos;
 
     // Translate back
     return Vector2D(newX + pivot.x, newY + pivot.y);
@@ -53,15 +53,15 @@ NEX_SUBNAMESPACE_END(geometry2d)
 // Rectangle rotation around center
 Rect Rect::rotate(math::Rotation rotation) const noexcept {
     // Rotate around center
-    double angleRadians = geometry2d::rotationToAngle(rotation);
+    float64 angleRadians = geometry2d::rotationToAngle(rotation);
     return rotateAround(center(), angleRadians);
 }
 
 // Rectangle rotation around a pivot (any point)
-Rect Rect::rotateAround(const Vector2D& pivot, double angleRadians) const noexcept {
+Rect Rect::rotateAround(const Vector2D& pivot, float64 angleRadians) const noexcept {
     // Get the raw top-left and bottom-right (without normalizing)
-    double left = x, top = y;
-    double right = x + width, bottom = y + height;
+    float64 left = x, top = y;
+    float64 right = x + width, bottom = y + height;
 
     // Get the 4 corners (respecting inversion)
     Array<Vector2D, 4> corners = {
@@ -74,9 +74,9 @@ Rect Rect::rotateAround(const Vector2D& pivot, double angleRadians) const noexce
         point = geometry2d::rotatePointAround(point, pivot, angleRadians);
 
     // Compute the new bounding box
-    double minX = corners[0].x, maxX = corners[0].x;
-    double minY = corners[0].y, maxY = corners[0].y;
-    for (int i = 1; i < 4; ++i) {
+    float64 minX = corners[0].x, maxX = corners[0].x;
+    float64 minY = corners[0].y, maxY = corners[0].y;
+    for (int32 i = 1; i < 4; ++i) {
         minX = NEX_STD min(minX, corners[i].x);
         maxX = NEX_STD max(maxX, corners[i].x);
         minY = NEX_STD min(minY, corners[i].y);
@@ -87,10 +87,10 @@ Rect Rect::rotateAround(const Vector2D& pivot, double angleRadians) const noexce
     bool invertedX = (width < 0.0);
     bool invertedY = (height < 0.0);
 
-    double newX = invertedX ? maxX : minX;
-    double newY = invertedY ? maxY : minY;
-    double newW = NEX_STD abs(maxX - minX);
-    double newH = NEX_STD abs(maxY - minY);
+    float64 newX = invertedX ? maxX : minX;
+    float64 newY = invertedY ? maxY : minY;
+    float64 newW = NEX_STD abs(maxX - minX);
+    float64 newH = NEX_STD abs(maxY - minY);
 
     if (invertedX) newW = -newW;
     if (invertedY) newH = -newH;
@@ -105,12 +105,12 @@ Rect Rect::rotateAround(const Vector2D& pivot, double angleRadians) const noexce
 // Rectangle rotation around center
 EdgeRect EdgeRect::rotate(math::Rotation rotation) const noexcept {
     // Rotate around center
-    double angleRadians = geometry2d::rotationToAngle(rotation);
+    float64 angleRadians = geometry2d::rotationToAngle(rotation);
     return rotateAround(center(), angleRadians);
 }
 
 // Rectangle rotation around a pivot (any point)
-EdgeRect EdgeRect::rotateAround(const Vector2D& pivot, double angleRadians) const noexcept {
+EdgeRect EdgeRect::rotateAround(const Vector2D& pivot, float64 angleRadians) const noexcept {
     // Pre-check inverted state
     bool isInvertedX = (left > right);
     bool isInvertedY = (top > bottom);
@@ -126,9 +126,9 @@ EdgeRect EdgeRect::rotateAround(const Vector2D& pivot, double angleRadians) cons
         point = geometry2d::rotatePointAround(point, pivot, angleRadians);
 
     // Compute the new bounding box
-    double minX = corners[0].x, maxX = corners[0].x;
-    double minY = corners[0].y, maxY = corners[0].y;
-    for (int i = 1; i < 4; ++i) {
+    float64 minX = corners[0].x, maxX = corners[0].x;
+    float64 minY = corners[0].y, maxY = corners[0].y;
+    for (int32 i = 1; i < 4; ++i) {
         minX = NEX_STD min(minX, corners[i].x);
         maxX = NEX_STD max(maxX, corners[i].x);
         minY = NEX_STD min(minY, corners[i].y);
@@ -136,10 +136,10 @@ EdgeRect EdgeRect::rotateAround(const Vector2D& pivot, double angleRadians) cons
     }
 
     // Preserve inversion
-    double newLeft   = isInvertedX ? maxX : minX;
-    double newRight  = isInvertedX ? minX : maxX;
-    double newTop    = isInvertedY ? maxY : minY;
-    double newBottom = isInvertedY ? minY : maxY;
+    float64 newLeft   = isInvertedX ? maxX : minX;
+    float64 newRight  = isInvertedX ? minX : maxX;
+    float64 newTop    = isInvertedY ? maxY : minY;
+    float64 newBottom = isInvertedY ? minY : maxY;
 
     return EdgeRect(newLeft, newTop, newRight, newBottom);
 }

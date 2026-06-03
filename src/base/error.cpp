@@ -8,7 +8,7 @@
 NEX_NAMESPACE_BEGIN
 
 // Convert error code to string
-const char* errorCodeToString(ErrorCode code) {
+cstring errorCodeToString(ErrorCode code) {
     switch (code) {
         // No error / success
 
@@ -329,7 +329,7 @@ const char* errorCodeToString(ErrorCode code) {
 }
 
 // Get user-friendly error message
-const char* getUserMessage(ErrorCode code) {
+cstring getUserMessage(ErrorCode code) {
     // TODO: Implement localized user messages
     return errorCodeToString(code);
 }

@@ -433,8 +433,8 @@ public:
             hexClean = hexClean.substr(1);
         }
         // Convert to uppercase for easier parsing
-        for (char& c : hexClean) {
-            c = static_cast<char>(NEX_STD toupper(static_cast<uchar>(c)));
+        for (nchar& c : hexClean) {
+            c = static_cast<nchar>(NEX_STD toupper(static_cast<uchar>(c)));
         }
         // Parse hex string
         ulong value = 0;
@@ -467,14 +467,14 @@ public:
         // Invalid length, return black
         return Color(0, 0, 0, 255);
     }
-    static Color fromHex(const char* hex) {
+    static Color fromHex(cstring hex) {
         return fromHex(hex ? Utf8String(hex) : Utf8String());
     }
     // Create Color from name (case-insensitive)
     static Color fromName(const Utf8String& name) {
         Utf8String nameLower = name;
-        for (char& c : nameLower) {
-            c = static_cast<char>(NEX_STD tolower(static_cast<uchar>(c)));
+        for (nchar& c : nameLower) {
+            c = static_cast<nchar>(NEX_STD tolower(static_cast<uchar>(c)));
         }
         // Common color names
         if (nameLower == "transparent") return Transparent();
@@ -503,7 +503,7 @@ public:
         // If name not found, return black
         return Black();
     }
-    static Color fromName(const char* name) {
+    static Color fromName(cstring name) {
         return fromName(name ? Utf8String(name) : Utf8String());
     }
 

@@ -20,7 +20,7 @@ NEX_NAMESPACE_BEGIN
  * 
  * @details
  * This struct represents a point in 2D space with x and y coordinates. It inherits from
- * Coordinate2DValues<float> and provides geometric operations for point calculations.
+ * Coordinate2DValues<float32> and provides geometric operations for point calculations.
  * 
  * Point supports:
  * - Construction from x, y coordinates
@@ -31,7 +31,7 @@ NEX_NAMESPACE_BEGIN
  * - Note: Addition and subtraction with other Points are intentionally disabled
  *   (use Vector2D for vector operations instead)
  */
-struct Point : public math::Coordinate2DValues<float> {
+struct Point : public math::Coordinate2DValues<float32> {
 public:
     // Construction
     using Coordinate2DValues::Coordinate2DValues;
@@ -40,10 +40,10 @@ public:
     // Arithmetic Operators
     constexpr Point operator+(const Point& other) const noexcept = delete;
     constexpr Point operator-(const Point& other) const noexcept = delete;
-    constexpr Point operator*(double scalar) const noexcept {
+    constexpr Point operator*(float64 scalar) const noexcept {
         return Point(x * scalar, y * scalar);
     }
-    Point operator/(double scalar) const {
+    Point operator/(float64 scalar) const {
         if (!math::equalsToZero(scalar)) return Point(x / scalar, y / scalar);
         NEX_ASSERT_MSG(false, "Division by zero");
     }
@@ -51,11 +51,11 @@ public:
     // Compound Assignment Operators
     Point& operator+=(const Point& other) noexcept = delete;
     Point& operator-=(const Point& other) noexcept = delete;
-    Point& operator*=(double scalar) noexcept {
+    Point& operator*=(float64 scalar) noexcept {
         x *= scalar; y *= scalar;
         return *this;
     }
-    Point& operator/=(double scalar) {
+    Point& operator/=(float64 scalar) {
         if (!math::equalsToZero(scalar)) { x /= scalar; y /= scalar; return *this; }
         NEX_ASSERT_MSG(false, "Division by zero");
     }
@@ -63,35 +63,35 @@ public:
 // Geometric/Vector Math Operations
 public:
     // Distance between points
-    double distanceTo(const Point& other) const noexcept {
-        double dx = x - other.x; double dy = y - other.y;
+    float64 distanceTo(const Point& other) const noexcept {
+        float64 dx = x - other.x; float64 dy = y - other.y;
         return NEX_STD sqrt(dx * dx + dy * dy);
     }
 
     // length / magnitude (treats the point as a vector from the origin (0, 0))
-    double magnitude() const noexcept {
+    float64 magnitude() const noexcept {
         return NEX_STD sqrt(x * x + y * y);
     }
 
     // Dot products
-    constexpr double dot(const Point& other) const noexcept {
+    constexpr float64 dot(const Point& other) const noexcept {
         return x * other.x + y * other.y;
     }
 
     // Cross product (2D)
     // Used for determining orientation, area of parallelogram, etc.
-    constexpr double cross(const Point& other) const noexcept {
+    constexpr float64 cross(const Point& other) const noexcept {
         return x * other.y - y * other.x;
     }
 
     // Angle between two vectors
-    double angleWith(const Point& other) const noexcept {
-        double dotProd = this->dot(other);
-        double magnitude1 = this->magnitude(); double magnitude2 = other.magnitude();
+    float64 angleWith(const Point& other) const noexcept {
+        float64 dotProd = this->dot(other);
+        float64 magnitude1 = this->magnitude(); float64 magnitude2 = other.magnitude();
         if (math::equalsToZero(magnitude1) || math::equalsToZero(magnitude2)) {
             NEX_ASSERT_MSG(false, "Cannot compute angle with zero-length vector");
         }
-        double magnitudes = magnitude1 * magnitude2;
+        float64 magnitudes = magnitude1 * magnitude2;
         return NEX_STD acos(NEX_STD clamp((dotProd / magnitudes), -1.0, 1.0)); // in radians
     }
 
@@ -99,7 +99,7 @@ public:
 public:
     // Normalization (unit vector)
     Point normalize() const noexcept {
-        double magitude = this->magnitude();
+        float64 magitude = this->magnitude();
         return (magitude == 0) ? Point(0, 0) : Point(x / magitude, y / magitude);
     }
 
@@ -109,7 +109,7 @@ public:
     }
 
     // Manhattan distance
-    double manhattanDistanceTo(const Point& other) const noexcept {
+    float64 manhattanDistanceTo(const Point& other) const noexcept {
         return NEX_STD abs(x - other.x) + NEX_STD abs(y - other.y);
     }
 };
@@ -120,7 +120,7 @@ public:
  * 
  * @details
  * This struct represents a 2D vector with x and y components. It inherits from
- * Coordinate2DValues<double> and provides comprehensive vector operations.
+ * Coordinate2DValues<float64> and provides comprehensive vector operations.
  * 
  * Vector2D supports:
  * - Construction from x, y components or from two Points (from, to)
@@ -131,7 +131,7 @@ public:
  * - Conversion to/from Point
  * - Commonly used as Offset2D, Velocity2D, and Accelaration2D type aliases
  */
-struct Vector2D : public math::Coordinate2DValues<double> {
+struct Vector2D : public math::Coordinate2DValues<float64> {
 public:
     // Construction
     using Coordinate2DValues::Coordinate2DValues;
@@ -155,10 +155,10 @@ public:
     constexpr Vector2D operator-(const Vector2D& other) const noexcept {
         return Vector2D(x - other.x, y - other.y);
     }
-    constexpr Vector2D operator*(double scalar) const noexcept {
+    constexpr Vector2D operator*(float64 scalar) const noexcept {
         return Vector2D(x * scalar, y * scalar);
     }
-    Vector2D operator/(double scalar) const {
+    Vector2D operator/(float64 scalar) const {
         if (!math::equalsToZero(scalar)) return Vector2D(x / scalar, y / scalar);
         NEX_ASSERT_MSG(false, "Division by zero");
     }
@@ -172,11 +172,11 @@ public:
         if (this != &other) { x -= other.x; y -= other.y; }
         return *this;
     }
-    Vector2D& operator*=(double scalar) noexcept {
+    Vector2D& operator*=(float64 scalar) noexcept {
         x *= scalar; y *= scalar;
         return *this;
     }
-    Vector2D& operator/=(double scalar) {
+    Vector2D& operator/=(float64 scalar) {
         if (math::equalsToZero(scalar)) {
             NEX_ASSERT_MSG(false, "Division by zero");
         }
@@ -186,40 +186,40 @@ public:
 
 public:
     // magnitude (length)
-    double length() const noexcept {
+    float64 length() const noexcept {
         return NEX_STD sqrt(x * x + y * y);
     }
 
     // Squared length (no sqrt)
-    constexpr double lengthSquared() const noexcept {
+    constexpr float64 lengthSquared() const noexcept {
         return x * x + y * y;
     }
 
     // Normalized vector (unit length)
     Vector2D normalize() const {
-        double len = length();
+        float64 len = length();
         if (!math::equalsToZero(len)) return Vector2D(x / len, y / len);
         NEX_ASSERT_MSG(false, "Cannot normalize zero-length vector");
     }
 
     // Dot product
-    constexpr double dot(const Vector2D& other) const noexcept {
+    constexpr float64 dot(const Vector2D& other) const noexcept {
         return x * other.x + y * other.y;
     }
 
     // Cross product (2D scalar cross)
-    constexpr double cross(const Vector2D& other) const noexcept {
+    constexpr float64 cross(const Vector2D& other) const noexcept {
         return x * other.y - y * other.x;
     }
 
     // Angle between vectors (in radians)
-    double angleTo(const Vector2D& other) const {
-        double dotProd = this->dot(other);
-        double length1 = this->length(); double length2 = other.length();
+    float64 angleTo(const Vector2D& other) const {
+        float64 dotProd = this->dot(other);
+        float64 length1 = this->length(); float64 length2 = other.length();
         if (math::equalsToZero(length1) || math::equalsToZero(length2)) {
             NEX_ASSERT_MSG(false, "Cannot compute angle with zero-length vector");
         }
-        double cosTheta = dotProd / (length1 * length2);
+        float64 cosTheta = dotProd / (length1 * length2);
         return NEX_STD acos(NEX_STD clamp(cosTheta, -1.0, 1.0));
     }
 
@@ -255,7 +255,7 @@ using Accelaration2D = Vector2D;
  * 
  * @details
  * This struct represents a 2D size with width and height components. It inherits from
- * Size2DValues<double> and provides size manipulation operations.
+ * Size2DValues<float64> and provides size manipulation operations.
  * 
  * Size supports:
  * - Construction from width, height values
@@ -265,7 +265,7 @@ using Accelaration2D = Vector2D;
  * - Conversion to Vector2D
  * - Also available as Dimensions type alias
  */
-struct Size : public math::Size2DValues<double> {
+struct Size : public math::Size2DValues<float64> {
 public:
     // Construction
     using Size2DValues::Size2DValues;
@@ -288,18 +288,18 @@ public:
     }
 
     // Scalar operations
-    constexpr Size operator*(double scalar) const noexcept {
+    constexpr Size operator*(float64 scalar) const noexcept {
         return Size(width * scalar, height * scalar);
     }
-    constexpr Size& operator*=(double scalar) noexcept {
+    constexpr Size& operator*=(float64 scalar) noexcept {
         width *= scalar; height *= scalar;
         return *this;
     }
-    Size operator/(double scalar) const {
+    Size operator/(float64 scalar) const {
         if (!math::equalsToZero(scalar)) return Size(width / scalar, height / scalar);
         NEX_ASSERT_MSG(false, "Division by zero");
     }
-    Size& operator/=(double scalar) {
+    Size& operator/=(float64 scalar) {
         if (!math::equalsToZero(scalar)) { width /= scalar; height /= scalar; return *this; }
         NEX_ASSERT_MSG(false, "Division by zero");
     }
@@ -329,7 +329,7 @@ using Dimensions = Size;
  * 
  * @details
  * This struct represents resolution dimensions with width and height components. It inherits from
- * Size2DValues<double> and provides resolution-specific operations.
+ * Size2DValues<float64> and provides resolution-specific operations.
  * 
  * Resolution supports:
  * - Construction from width, height values
@@ -339,7 +339,7 @@ using Dimensions = Size;
  * - Aspect ratio calculation
  * - Simplified aspect ratio calculation (returns simplified fraction as pair)
  */
-struct Resolution : public math::Size2DValues<double> {
+struct Resolution : public math::Size2DValues<float64> {
 public:
     // Construction
     using Size2DValues::Size2DValues;
@@ -362,18 +362,18 @@ public:
     }
 
     // Scalar operations
-    constexpr Resolution operator*(double scalar) const noexcept {
+    constexpr Resolution operator*(float64 scalar) const noexcept {
         return Resolution(width * scalar, height * scalar);
     }
-    constexpr Resolution& operator*=(double scalar) noexcept {
+    constexpr Resolution& operator*=(float64 scalar) noexcept {
         width *= scalar; height *= scalar;
         return *this;
     }
-    Resolution operator/(double scalar) const {
+    Resolution operator/(float64 scalar) const {
         if (!math::equalsToZero(scalar)) return Resolution(width / scalar, height / scalar);
         NEX_ASSERT_MSG(false, "Division by zero");
     }
-    Resolution& operator/=(double scalar) {
+    Resolution& operator/=(float64 scalar) {
         if (!math::equalsToZero(scalar)) { width /= scalar; height /= scalar; return *this; }
         NEX_ASSERT_MSG(false, "Division by zero");
     }
@@ -389,14 +389,14 @@ public:
     }
 
     // Calculate aspect ratio
-    double aspectRatio() const noexcept {
+    float64 aspectRatio() const noexcept {
         if (math::equalsToZero(height)) return 0.0; // invalid result, not throwing exception here
-        return static_cast<double>(width) / static_cast<double>(height);
+        return static_cast<float64>(width) / static_cast<float64>(height);
     }
-    NEX_STD pair<int, int> simplifiedAspectRatio() const {
-        int w = static_cast<int>(NEX_STD round(width));
-        int h = static_cast<int>(NEX_STD round(height));
-        int gcd = NEX_STD gcd(w, h);
+    NEX_STD pair<int32, int32> simplifiedAspectRatio() const {
+        int32 w = static_cast<int32>(NEX_STD round(width));
+        int32 h = static_cast<int32>(NEX_STD round(height));
+        int32 gcd = NEX_STD gcd(w, h);
         return { w / gcd, h / gcd };
     }
 };
@@ -407,7 +407,7 @@ public:
  * 
  * @details
  * This struct represents a rectangle with position (x, y) and size (width, height). It inherits
- * from RectBase<double> and provides comprehensive rectangle operations. The rectangle can be
+ * from RectBase<float64> and provides comprehensive rectangle operations. The rectangle can be
  * inverted (negative width or height), and operations handle both normal and inverted rectangles.
  * 
  * Rect supports:
@@ -422,7 +422,7 @@ public:
  * - Transformation operations (flip, rotate, normalize, invert)
  * - Arithmetic operations with Point and Vector2D
  */
-struct Rect : public math::RectBase<double> {
+struct Rect : public math::RectBase<float64> {
 public:
     // Construction
     using RectBase::RectBase;
@@ -436,7 +436,7 @@ public:
     static constexpr Rect fromPositionSize(const Vector2D& position, const Size& size) {
         return Rect(position, size);
     }
-    static constexpr Rect fromEdges(double left, double top, double right, double bottom) {
+    static constexpr Rect fromEdges(float64 left, float64 top, float64 right, float64 bottom) {
         return Rect(left, top, (right - left), (bottom - top));
     }
     static constexpr Rect fromEdges(const Point& topLeft, const Point& bottomRight) {
@@ -452,16 +452,16 @@ public:
 
     // Modify data
     void setTopLeft(const Point& topLeft) noexcept { x = topLeft.x; y = topLeft.y; }
-    void setTopLeft(double xVal, double yVal) noexcept { x = xVal; y = yVal; }
+    void setTopLeft(float64 xVal, float64 yVal) noexcept { x = xVal; y = yVal; }
     void setBottomRight(const Point& bottomRight) noexcept { width = bottomRight.x - x; height = bottomRight.y - y; }
-    void setBottomRight(double xVal, double yVal) noexcept { width = xVal - x; height = yVal - y; }
+    void setBottomRight(float64 xVal, float64 yVal) noexcept { width = xVal - x; height = yVal - y; }
 
 public:
     // Return canonical values for inverted rectangles
-    constexpr double canonicalWidth() const noexcept {
+    constexpr float64 canonicalWidth() const noexcept {
         return NEX_STD abs(width);
     }
-    constexpr double canonicalHeight() const noexcept {
+    constexpr float64 canonicalHeight() const noexcept {
         return NEX_STD abs(height);
     }
     constexpr Rect canonicalRect() const noexcept {
@@ -469,8 +469,8 @@ public:
     }
 
     // Base conversion
-    constexpr const RectBase<double>& asRectBase() const noexcept {
-        return static_cast<const RectBase<double>&>(*this);
+    constexpr const RectBase<float64>& asRectBase() const noexcept {
+        return static_cast<const RectBase<float64>&>(*this);
     }
 
 public:
@@ -534,12 +534,12 @@ public:
     }
 
     // Area of the rectangle
-    double area() const noexcept {
+    float64 area() const noexcept {
         return canonicalWidth() * canonicalHeight();
     }
 
     // Perimeter of the rectangle
-    double perimeter() const noexcept {
+    float64 perimeter() const noexcept {
         return (canonicalWidth() * 2.0 + canonicalHeight() * 2.0);
     }
 
@@ -549,7 +549,7 @@ public:
     }
 
     // Diagonal of the rectangle
-    double diagonal() const noexcept {
+    float64 diagonal() const noexcept {
         return NEX_STD sqrt(canonicalWidth() * canonicalWidth() 
                                 + canonicalHeight() * canonicalHeight());
     }
@@ -571,7 +571,7 @@ public:
     }
 
     // Contains a point
-    constexpr bool contains(double ptX, double ptY) const noexcept {
+    constexpr bool contains(float64 ptX, float64 ptY) const noexcept {
         return ptX >= x && ptX <= (x + canonicalWidth()) 
             && ptY >= y && ptY <= (y + canonicalHeight());
     }
@@ -604,7 +604,7 @@ public:
     }
 
     // Move/Offset the rectangle
-    Rect& offset(double deltaX, double deltaY = 0) noexcept {
+    Rect& offset(float64 deltaX, float64 deltaY = 0) noexcept {
         x += deltaX; y += deltaY;
         return *this;
     }
@@ -640,14 +640,14 @@ public:
     // Rotatition around center with an arbitary angle
     // This returns a new axis-aligned bounding rectangle,
     // which often has different width and height compared to the original rectangle
-    Rect rotate(double angleRadians) const noexcept {
+    Rect rotate(float64 angleRadians) const noexcept {
         return rotateAround(center(), angleRadians);
     }
 
     // Rotation around a pivot (any point)
     // This returns a new axis-aligned bounding rectangle,
     // which often has different width and height compared to the original rectangle
-    Rect rotateAround(const Vector2D& pivot, double angleRadians) const noexcept;
+    Rect rotateAround(const Vector2D& pivot, float64 angleRadians) const noexcept;
 };
 
 /**
@@ -656,7 +656,7 @@ public:
  * 
  * @details
  * This struct represents a rectangle using edge coordinates (left, top, right, bottom) instead of
- * position and size. It inherits from Edge2DValues<double> and provides rectangle operations
+ * position and size. It inherits from Edge2DValues<float64> and provides rectangle operations
  * similar to Rect but using edge-based representation. The rectangle can be inverted (right < left
  * or bottom < top), and operations handle both normal and inverted rectangles.
  * 
@@ -672,7 +672,7 @@ public:
  * - Transformation operations (flip, rotate, normalize, invert)
  * - Arithmetic operations with Point and Vector2D
  */
-struct EdgeRect : public math::Edge2DValues<double> {
+struct EdgeRect : public math::Edge2DValues<float64> {
 public:
     // Construction
     using Edge2DValues::Edge2DValues;
@@ -686,7 +686,7 @@ public:
     static constexpr EdgeRect fromPositionSize(const Vector2D& position, const Size& size) {
         return EdgeRect(position, size);
     }
-    static constexpr EdgeRect fromEdges(double left, double top, double right, double bottom) {
+    static constexpr EdgeRect fromEdges(float64 left, float64 top, float64 right, float64 bottom) {
         return EdgeRect(left, top, right, bottom);
     }
     static constexpr EdgeRect fromEdges(const Point& topLeft, const Point& bottomRight) {
@@ -702,22 +702,22 @@ public:
 
     // Modify data
     void setTopLeft(const Point& topLeft) noexcept { left = topLeft.x; top = topLeft.y; }
-    void setTopLeft(double x, double y) noexcept { left = x; top = y; }
+    void setTopLeft(float64 x, float64 y) noexcept { left = x; top = y; }
     void setBottomRight(const Point& bottomRight) noexcept { right = bottomRight.x; bottom = bottomRight.y; }
-    void setBottomRight(double x, double y) noexcept { right = x; bottom = y; }
+    void setBottomRight(float64 x, float64 y) noexcept { right = x; bottom = y; }
 
 public:
     // Return canonical edge values for inverted rectangles
-    constexpr double canonicalLeft() const noexcept {
+    constexpr float64 canonicalLeft() const noexcept {
         return NEX_STD min(left, right);
     }
-    constexpr double canonicalRight() const noexcept {
+    constexpr float64 canonicalRight() const noexcept {
         return NEX_STD max(left, right);
     }
-    constexpr double canonicalTop() const noexcept {
+    constexpr float64 canonicalTop() const noexcept {
         return NEX_STD min(top, bottom);
     }
-    constexpr double canonicalBottom() const noexcept {
+    constexpr float64 canonicalBottom() const noexcept {
         return NEX_STD max(top, bottom);
     }
     constexpr EdgeRect canonicalRect() const noexcept {
@@ -725,8 +725,8 @@ public:
     }
 
     // Base conversion
-    constexpr const Edge2DValues<double>& asEdge2DValues() const noexcept {
-        return static_cast<const Edge2DValues<double>&>(*this);
+    constexpr const Edge2DValues<float64>& asEdge2DValues() const noexcept {
+        return static_cast<const Edge2DValues<float64>&>(*this);
     }
 
 public:
@@ -786,10 +786,10 @@ public:
 
 public:
     // Width and height of the rectangle
-    double width() const noexcept {
+    float64 width() const noexcept {
         return NEX_STD abs(right - left);
     }
-    double height() const noexcept {
+    float64 height() const noexcept {
         return NEX_STD abs(bottom - top);
     }
 
@@ -809,12 +809,12 @@ public:
     }
 
     // Area of the rectangle
-    double area() const noexcept {
+    float64 area() const noexcept {
         return width() * height();
     }
 
     // Perimeter of the rectangle
-    double perimeter() const noexcept {
+    float64 perimeter() const noexcept {
         return (width() * 2.0 + height() * 2.0);
     }
 
@@ -824,7 +824,7 @@ public:
     }
 
     // Diagonal of the rectangle
-    double diagonal() const noexcept {
+    float64 diagonal() const noexcept {
         return NEX_STD sqrt(width() * width() + height() * height());
     }
 
@@ -844,7 +844,7 @@ public:
     }
 
     // Contains a point
-    constexpr bool contains(double x, double y) const noexcept {
+    constexpr bool contains(float64 x, float64 y) const noexcept {
         return x >= canonicalLeft() && x <= canonicalRight() && y >= canonicalTop() && y <= canonicalBottom();
     }
     constexpr bool contains(const Point& point) const noexcept {
@@ -874,7 +874,7 @@ public:
     }
 
     // Move/Offset the rectangle
-    EdgeRect& offset(double deltaX, double deltaY = 0) noexcept {
+    EdgeRect& offset(float64 deltaX, float64 deltaY = 0) noexcept {
         left += deltaX; right += deltaX; top += deltaY; bottom += deltaY;
         return *this;
     }
@@ -913,14 +913,14 @@ public:
     // Rotatition around center with an arbitary angle
     // This returns a new axis-aligned bounding rectangle,
     // which often has different width and height compared to the original rectangle
-    EdgeRect rotate(double angleRadians) const noexcept {
+    EdgeRect rotate(float64 angleRadians) const noexcept {
         return rotateAround(center(), angleRadians);
     }
 
     // Rotation around a pivot (any point)
     // This returns a new axis-aligned bounding rectangle,
     // which often has different width and height compared to the original rectangle
-    EdgeRect rotateAround(const Vector2D& pivot, double angleRadians) const noexcept;
+    EdgeRect rotateAround(const Vector2D& pivot, float64 angleRadians) const noexcept;
 };
 
 /**
@@ -929,7 +929,7 @@ public:
  * 
  * @details
  * This struct represents margin values with left, top, right, and bottom components. It inherits
- * from Edge2DValues<double> and is commonly used in UI layout calculations to define spacing
+ * from Edge2DValues<float64> and is commonly used in UI layout calculations to define spacing
  * outside an element's border.
  * 
  * Margin supports:
@@ -943,7 +943,7 @@ public:
  * - Size manipulation (shrinkSize, expandSize)
  * - Conversion to EdgeRect
  */
-struct Margin : public math::Edge2DValues<double> {
+struct Margin : public math::Edge2DValues<float64> {
 public:
     // Construction
     using Edge2DValues::Edge2DValues;
@@ -972,18 +972,18 @@ public:
     }
 
     // Scalar operators
-    constexpr Margin operator*(double scalar) const noexcept {
+    constexpr Margin operator*(float64 scalar) const noexcept {
         return Margin(left * scalar, top * scalar, right * scalar, bottom * scalar);
     }
-    Margin operator/(double scalar) const {
+    Margin operator/(float64 scalar) const {
         if (!math::equalsToZero(scalar)) return Margin(left / scalar, top / scalar, right / scalar, bottom / scalar);
         NEX_ASSERT_MSG(false, "Division by zero");
     }
-    Margin& operator*=(double scalar) noexcept {
+    Margin& operator*=(float64 scalar) noexcept {
         left *= scalar; top *= scalar; right *= scalar; bottom *= scalar;
         return *this;
     }
-    Margin& operator/=(double scalar) {
+    Margin& operator/=(float64 scalar) {
         if (math::equalsToZero(scalar)) { 
             NEX_ASSERT_MSG(false, "Division by zero");
         }
@@ -1003,21 +1003,21 @@ public:
 
 public:
     // Total horizontal/vertical
-    double totalHorizontal() const noexcept {
+    float64 totalHorizontal() const noexcept {
         return left + right;
     }
-    double totalVertical() const noexcept {
+    float64 totalVertical() const noexcept {
         return top + bottom;
     }
 
     // Center horizontally/vertically
     Margin& centerHorizontally() noexcept {
-        double totalHMargin = totalHorizontal();
+        float64 totalHMargin = totalHorizontal();
         left = right = totalHMargin / 2;
         return *this;
     }
     Margin& centerVertically() noexcept {
-        double totalVMargin = totalVertical();
+        float64 totalVMargin = totalVertical();
         top = bottom = totalVMargin / 2;
         return *this;
     }
@@ -1053,7 +1053,7 @@ public:
  * 
  * @details
  * This struct represents padding values with left, top, right, and bottom components. It inherits
- * from Edge2DValues<double> and is commonly used in UI layout calculations to define spacing
+ * from Edge2DValues<float64> and is commonly used in UI layout calculations to define spacing
  * inside an element's border.
  * 
  * Padding supports:
@@ -1067,7 +1067,7 @@ public:
  * - Size manipulation (shrinkSize, expandSize)
  * - Conversion to EdgeRect
  */
-struct Padding : public math::Edge2DValues<double> {
+struct Padding : public math::Edge2DValues<float64> {
 public:
     // Construction
     using Edge2DValues::Edge2DValues;
@@ -1096,18 +1096,18 @@ public:
     }
 
     // Scalar operators
-    constexpr Padding operator*(double scalar) const noexcept {
+    constexpr Padding operator*(float64 scalar) const noexcept {
         return Padding(left * scalar, top * scalar, right * scalar, bottom * scalar);
     }
-    Padding operator/(double scalar) const {
+    Padding operator/(float64 scalar) const {
         if (!math::equalsToZero(scalar)) return Padding(left / scalar, top / scalar, right / scalar, bottom / scalar);
         NEX_ASSERT_MSG(false, "Division by zero");
     }
-    Padding& operator*=(double scalar) noexcept {
+    Padding& operator*=(float64 scalar) noexcept {
         left *= scalar; top *= scalar; right *= scalar; bottom *= scalar;
         return *this;
     }
-    Padding& operator/=(double scalar) {
+    Padding& operator/=(float64 scalar) {
         if (math::equalsToZero(scalar)) { 
             NEX_ASSERT_MSG(false, "Division by zero");
         }
@@ -1127,21 +1127,21 @@ public:
 
 public:
     // Total horizontal/vertical
-    double totalHorizontal() const noexcept {
+    float64 totalHorizontal() const noexcept {
         return left + right;
     }
-    double totalVertical() const noexcept {
+    float64 totalVertical() const noexcept {
         return top + bottom;
     }
 
     // Center horizontally/vertically
     Padding& centerHorizontally() noexcept {
-        double totalHPadding = totalHorizontal();
+        float64 totalHPadding = totalHorizontal();
         left = right = totalHPadding / 2;
         return *this;
     }
     Padding& centerVertically() noexcept {
-        double totalVPadding = totalVertical();
+        float64 totalVPadding = totalVertical();
         top = bottom = totalVPadding / 2;
         return *this;
     }
@@ -1177,7 +1177,7 @@ public:
  * 
  * @details
  * This struct represents border thickness values with left, top, right, and bottom components.
- * It inherits from Edge2DValues<double> and is commonly used in UI layout calculations to define
+ * It inherits from Edge2DValues<float64> and is commonly used in UI layout calculations to define
  * the width of an element's border on each side.
  * 
  * Thickness supports:
@@ -1191,7 +1191,7 @@ public:
  * - Size manipulation (shrinkSize, expandSize)
  * - Conversion to EdgeRect
  */
-struct Thickness : public math::Edge2DValues<double> {
+struct Thickness : public math::Edge2DValues<float64> {
 public:
     // Construction
     using Edge2DValues::Edge2DValues;
@@ -1226,18 +1226,18 @@ public:
     }
 
     // Scalar operators
-    constexpr Thickness operator*(double scalar) const noexcept {
+    constexpr Thickness operator*(float64 scalar) const noexcept {
         return Thickness(left * scalar, top * scalar, right * scalar, bottom * scalar);
     }
-    Thickness operator/(double scalar) const {
+    Thickness operator/(float64 scalar) const {
         if (!math::equalsToZero(scalar)) return Thickness(left / scalar, top / scalar, right / scalar, bottom / scalar);
         NEX_ASSERT_MSG(false, "Division by zero");
     }
-    Thickness& operator*=(double scalar) noexcept {
+    Thickness& operator*=(float64 scalar) noexcept {
         left *= scalar; top *= scalar; right *= scalar; bottom *= scalar;
         return *this;
     }
-    Thickness& operator/=(double scalar) {
+    Thickness& operator/=(float64 scalar) {
         if (math::equalsToZero(scalar)) { 
             NEX_ASSERT_MSG(false, "Division by zero");
         }
@@ -1257,21 +1257,21 @@ public:
 
 public:
     // Total horizontal/vertical
-    double totalHorizontal() const noexcept {
+    float64 totalHorizontal() const noexcept {
         return left + right;
     }
-    double totalVertical() const noexcept {
+    float64 totalVertical() const noexcept {
         return top + bottom;
     }
 
     // Center horizontally/vertically
     Thickness& centerHorizontally() noexcept {
-        double totalHThickness = totalHorizontal();
+        float64 totalHThickness = totalHorizontal();
         left = right = totalHThickness / 2;
         return *this;
     }
     Thickness& centerVertically() noexcept {
-        double totalVThickness = totalVertical();
+        float64 totalVThickness = totalVertical();
         top = bottom = totalVThickness / 2;
         return *this;
     }

@@ -331,10 +331,10 @@ public:
 
         // Iterator operations
         Iterator& operator++() noexcept { ++index_; return *this; }
-        Iterator operator++(int) noexcept { Iterator tmp = *this; ++(*this); return tmp; }
+        Iterator operator++(int32) noexcept { Iterator tmp = *this; ++(*this); return tmp; }
         
         Iterator& operator--() noexcept { --index_; return *this; }
-        Iterator operator--(int) noexcept { Iterator tmp = *this; --(*this); return tmp; }
+        Iterator operator--(int32) noexcept { Iterator tmp = *this; --(*this); return tmp; }
 
         // Athmetic operators for random access iterator
         Iterator& operator+=(difference_type offset) noexcept {
@@ -427,10 +427,10 @@ public:
 
         // Iterator operations
         ConstIterator& operator++() noexcept { ++index_; return *this; }
-        ConstIterator operator++(int) noexcept { ConstIterator tmp = *this; ++(*this); return tmp; }
+        ConstIterator operator++(int32) noexcept { ConstIterator tmp = *this; ++(*this); return tmp; }
 
         ConstIterator& operator--() noexcept { --index_; return *this; }
-        ConstIterator operator--(int) noexcept { ConstIterator tmp = *this; --(*this); return tmp; }
+        ConstIterator operator--(int32) noexcept { ConstIterator tmp = *this; --(*this); return tmp; }
 
         // Arithmetic operators for random access iterator
         ConstIterator& operator+=(difference_type offset) noexcept {

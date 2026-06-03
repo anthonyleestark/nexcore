@@ -314,7 +314,7 @@ uint32 Json::getUInt(StringView keyPath, uint32 defaultValue /* = 0 */) const {
 
     // Handle both unsigned and signed integers (if non-negative)
     if (!node || !node->is_number_unsigned()) {
-        // Try to get as signed int and convert
+        // Try to get as signed int32 and convert
         if (node && node->is_number_integer()) {
             int32 val = node->get<int32>();
             if (val >= 0) {
@@ -345,7 +345,7 @@ bool Json::getBool(StringView keyPath, bool defaultValue /* = false */) const {
     return node->get<bool>();
 }
 
-// Get double value by key path
+// Get float64 value by key path
 float64 Json::getDouble(StringView keyPath, float64 defaultValue /* = 0.0 */) const {
     if (!isValid()) {
         return defaultValue;
@@ -358,7 +358,7 @@ float64 Json::getDouble(StringView keyPath, float64 defaultValue /* = 0.0 */) co
         return defaultValue;
     }
 
-    // Return the double value
+    // Return the float64 value
     return node->get<float64>();
 }
 
@@ -433,7 +433,7 @@ bool Json::tryGetDouble(StringView keyPath, float64& value) const {
     // Check if node exists and is a number
     if (!node || !node->is_number()) return false;
 
-    // Set the output parameter to the double value
+    // Set the output parameter to the float64 value
     value = node->get<float64>();
     return true;
 }

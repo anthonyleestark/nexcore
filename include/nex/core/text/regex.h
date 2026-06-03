@@ -70,7 +70,7 @@ enum class RegexOptions : uint32 {
 
 // Enable bitwise OR operator for RegexOptions to allow combining flags
 inline constexpr RegexOptions operator|(RegexOptions a, RegexOptions b) {
-    return static_cast<RegexOptions>(static_cast<unsigned int>(a) | static_cast<unsigned int>(b));
+    return static_cast<RegexOptions>(static_cast<uint32>(a) | static_cast<uint32>(b));
 }
 
 /**

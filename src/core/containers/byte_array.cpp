@@ -19,7 +19,7 @@ NEX_NAMESPACE_BEGIN
 NEX_ANONYMOUS_NAMESPACE_BEGIN
 
 //  Convert hex character to value
-uint8 hexCharToValue(char c) {
+uint8 hexCharToValue(nchar c) {
     if (c >= '0' && c <= '9') return static_cast<uint8>(c - '0');
     if (c >= 'A' && c <= 'F') return static_cast<uint8>(c - 'A' + 10);
     if (c >= 'a' && c <= 'f') return static_cast<uint8>(c - 'a' + 10);
@@ -27,16 +27,16 @@ uint8 hexCharToValue(char c) {
 }
 
 // Check if character is hex
-bool isHexChar(char c) {
+bool isHexChar(nchar c) {
     return (c >= '0' && c <= '9') || (c >= 'A' && c <= 'F') || (c >= 'a' && c <= 'f');
 }
 
 // Base64 encoding table
-static constexpr const char base64Chars[] = 
+static constexpr const nchar base64Chars[] = 
     "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
 // Find Base64 character index
-int32 base64CharToValue(char c) {
+int32 base64CharToValue(nchar c) {
     if (c >= 'A' && c <= 'Z') return c - 'A';
     if (c >= 'a' && c <= 'z') return c - 'a' + 26;
     if (c >= '0' && c <= '9') return c - '0' + 52;
@@ -68,7 +68,7 @@ ByteArray::ByteArray(const StdString& str) {
 }
 
 // Construct from C-string (treat as binary data)
-ByteArray::ByteArray(const_char_ptr str, size_type len) {
+ByteArray::ByteArray(cstring str, size_type len) {
     if (str) {
         // If length is not provided, calculate it
         if (len == 0) {
@@ -144,7 +144,7 @@ ByteArray ByteArray::fromBase64(const StdString& base64String) {
         int32 validChars = 0;
 
         for (int32 j = 0; j < 4 && (i + j) < len; ++j) {
-            char c = base64String[i + j];
+            nchar c = base64String[i + j];
             if (NEX_STD isspace(static_cast<uint8>(c))) {
                 // Skip whitespace
                 continue;
@@ -209,7 +209,7 @@ ByteSpan ByteArray::view() const noexcept {
 
 // Convert to StdString (treat as binary data)
 StdString ByteArray::toStdString() const {
-    return StdString(reinterpret_cast<const_char_ptr>(buffer_.data()), buffer_.size());
+    return StdString(reinterpret_cast<cstring>(buffer_.data()), buffer_.size());
 }
 
 // Convert to hex string
@@ -220,7 +220,7 @@ StdString ByteArray::toHex() const {
     oss << NEX_STD hex << NEX_STD uppercase << NEX_STD setfill('0');
 
     for (usize i = 0; i < buffer_.size(); ++i) {
-        oss << NEX_STD setw(2) << static_cast<unsigned>(buffer_[i]);
+        oss << NEX_STD setw(2) << static_cast<uint32>(buffer_[i]);
     }
 
     return oss.str();

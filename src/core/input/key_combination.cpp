@@ -24,10 +24,10 @@ Utf8String trimAscii(Utf8StringView text) {
     usize start = 0;
     usize end = text.size();
 
-    while (start < end && NEX_STD isspace(static_cast<unsigned char>(text[start])) != 0) {
+    while (start < end && NEX_STD isspace(static_cast<uchar>(text[start])) != 0) {
         ++start;
     }
-    while (end > start && NEX_STD isspace(static_cast<unsigned char>(text[end - 1])) != 0) {
+    while (end > start && NEX_STD isspace(static_cast<uchar>(text[end - 1])) != 0) {
         --end;
     }
 
@@ -38,8 +38,8 @@ Utf8String trimAscii(Utf8StringView text) {
 Utf8String toUpperAscii(Utf8StringView text) {
     Utf8String upper(text);
     NEX_STD transform(upper.begin(), upper.end(), upper.begin(),
-        [](unsigned char ch) {
-            return static_cast<char>(NEX_STD toupper(ch));
+        [](uchar ch) {
+            return static_cast<nchar>(NEX_STD toupper(ch));
         });
     return upper;
 }
@@ -50,8 +50,8 @@ bool parseUnsignedValue(Utf8StringView text, uint32& value) {
         return false;
     }
 
-    const char* begin = text.data();
-    const char* end = text.data() + text.size();
+    cstring begin = text.data();
+    cstring end = text.data() + text.size();
     auto parseResult = NEX_STD from_chars(begin, end, value);
     return parseResult.ec == NEX_STD errc() && parseResult.ptr == end;
 }
@@ -93,7 +93,7 @@ bool parseVirtualKeyToken(Utf8StringView token, uint32& value) {
     if (upper == "BACKSPACE" || upper == "BKSP") { value = 0x08; return true; }
 
     if (upper.size() == 1) {
-        const unsigned char ch = static_cast<unsigned char>(upper[0]);
+        const uchar ch = static_cast<uchar>(upper[0]);
         if ((ch >= 'A' && ch <= 'Z') || (ch >= '0' && ch <= '9')) {
             value = static_cast<uint32>(ch);
             return true;
@@ -106,7 +106,7 @@ bool parseVirtualKeyToken(Utf8StringView token, uint32& value) {
 // Convert a virtual key code to a human-readable string representation
 Utf8String virtualKeyToHumanReadable(uint32 virtualKey) {
     if ((virtualKey >= 'A' && virtualKey <= 'Z') || (virtualKey >= '0' && virtualKey <= '9')) {
-        return Utf8String(1, static_cast<char>(virtualKey));
+        return Utf8String(1, static_cast<nchar>(virtualKey));
     }
 
     if (virtualKey >= 0x70 && virtualKey <= 0x87) {

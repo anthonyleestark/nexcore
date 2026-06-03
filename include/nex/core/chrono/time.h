@@ -54,19 +54,19 @@ using SysDays       = NEX_STD chrono::sys_days;
 ////// Helper functions for time validation ------------------------
 
 // Validate hour value (0-23)
-constexpr bool isValidHour(int hour) noexcept {
+constexpr bool isValidHour(int32 hour) noexcept {
     return (hour >= 0 && hour <= 23);
 }
 // Validate minute value (0-59)
-constexpr bool isValidMinute(int minute) noexcept {
+constexpr bool isValidMinute(int32 minute) noexcept {
     return (minute >= 0 && minute <= 59);
 }
 // Validate second value (0-59)
-constexpr bool isValidSecond(int second) noexcept {
+constexpr bool isValidSecond(int32 second) noexcept {
     return (second >= 0 && second <= 59);
 }
 // Validate millisecond value (0-999)
-constexpr bool isValidMillisecs(int millisecs) noexcept {
+constexpr bool isValidMillisecs(int32 millisecs) noexcept {
     return (millisecs >= 0 && millisecs <= 999);
 }
 
@@ -137,7 +137,7 @@ public:
 
     // Conversion constructor from Duration
     explicit TimeSpan(Duration duration) : duration_(duration) {}
-    TimeSpan(int days, int hours = 0, int mins = 0, int secs = 0, int millisecs = 0) noexcept {
+    TimeSpan(int32 days, int32 hours = 0, int32 mins = 0, int32 secs = 0, int32 millisecs = 0) noexcept {
         duration_ = Days{ days } + Hours{ hours } + Minutes{ mins }
                     + Seconds{ secs } + Milliseconds{ millisecs };
     }
@@ -165,11 +165,11 @@ public:
         return *this;
     }
     // Addition with integer seconds
-    TimeSpan operator+(int seconds) const noexcept {
+    TimeSpan operator+(int32 seconds) const noexcept {
         return TimeSpan(duration_ + Seconds{ seconds });
     }
     // Compound assignment for addition with integer seconds
-    TimeSpan& operator+=(int seconds) {
+    TimeSpan& operator+=(int32 seconds) {
         duration_ += Seconds{ seconds };
         return *this;
     }
@@ -184,11 +184,11 @@ public:
         return *this;
     }
     // Subtraction with integer seconds
-    TimeSpan operator-(int seconds) const noexcept {
+    TimeSpan operator-(int32 seconds) const noexcept {
         return TimeSpan(duration_ - Seconds{ seconds });
     }
     // Compound assignment for subtraction with integer seconds
-    TimeSpan& operator-=(int seconds) {
+    TimeSpan& operator-=(int32 seconds) {
         duration_ -= Seconds{ seconds };
         return *this;
     }
@@ -261,14 +261,14 @@ public:
     }
 
     // Postfix increment operator (increase by 1 second)
-    TimeSpan operator++(int) noexcept {
+    TimeSpan operator++(int32) noexcept {
         TimeSpan original = *this;
         duration_ += Seconds{1};
         return original;
     }
 
     // Postfix decrement operator (decrease by 1 second)
-    TimeSpan operator--(int) noexcept {
+    TimeSpan operator--(int32) noexcept {
         TimeSpan original = *this;
         duration_ -= Seconds{1};
         return original;
@@ -296,75 +296,75 @@ public:
     ////// Individual component accessors ------------------------
     
     // Get the number of days
-    constexpr int days() const noexcept {
-        return static_cast<int>(NEX_STD chrono::duration_cast<Days>(duration_).count());
+    constexpr int32 days() const noexcept {
+        return static_cast<int32>(NEX_STD chrono::duration_cast<Days>(duration_).count());
     }
     // Get hours (0-23)
-    constexpr int hours() const noexcept {
-        return static_cast<int>(totalHours() % 24);
+    constexpr int32 hours() const noexcept {
+        return static_cast<int32>(totalHours() % 24);
     }
     // Get minutes (0-59)
-    constexpr int minutes() const noexcept {
-        return static_cast<int>(totalMinutes() % 60);
+    constexpr int32 minutes() const noexcept {
+        return static_cast<int32>(totalMinutes() % 60);
     }
     // Get seconds (0-59)
-    constexpr int seconds() const noexcept {
-        return static_cast<int>(totalSeconds() % 60);
+    constexpr int32 seconds() const noexcept {
+        return static_cast<int32>(totalSeconds() % 60);
     }
     // Get milliseconds (0-999)
-    constexpr int milliseconds() const noexcept {
-        return static_cast<int>(totalMilliseconds() % 1000);
+    constexpr int32 milliseconds() const noexcept {
+        return static_cast<int32>(totalMilliseconds() % 1000);
     }
 
     ////// Component modification methods ------------------------
     
     // Increase the number of days
-    TimeSpan& increaseDays(int days) noexcept {
+    TimeSpan& increaseDays(int32 days) noexcept {
         duration_ += Days{ days };
         return *this;
     }
     // Decrease the number of days
-    TimeSpan& decreaseDays(int days) noexcept {
+    TimeSpan& decreaseDays(int32 days) noexcept {
         duration_ -= Days{ days };
         return *this;
     }
     // Increase the number of hours
-    TimeSpan& increaseHours(int hours) noexcept {
+    TimeSpan& increaseHours(int32 hours) noexcept {
         duration_ += Hours{ hours };
         return *this;
     }
     // Decrease the number of hours
-    TimeSpan& decreaseHours(int hours) noexcept {
+    TimeSpan& decreaseHours(int32 hours) noexcept {
         duration_ -= Hours{ hours };
         return *this;
     }
     // Increase the number of minutes
-    TimeSpan& increaseMinutes(int mins) noexcept {
+    TimeSpan& increaseMinutes(int32 mins) noexcept {
         duration_ += Minutes{ mins };
         return *this;
     }
     // Decrease the number of minutes
-    TimeSpan& decreaseMinutes(int mins) noexcept {
+    TimeSpan& decreaseMinutes(int32 mins) noexcept {
         duration_ -= Minutes{ mins };
         return *this;
     }
     // Increase the number of seconds
-    TimeSpan& increaseSeconds(int secs) noexcept {
+    TimeSpan& increaseSeconds(int32 secs) noexcept {
         duration_ += Seconds{ secs };
         return *this;
     }
     // Decrease the number of seconds
-    TimeSpan& decreaseSeconds(int secs) noexcept {
+    TimeSpan& decreaseSeconds(int32 secs) noexcept {
         duration_ -= Seconds{ secs };
         return *this;
     }
     // Increase the number of milliseconds
-    TimeSpan& increaseMillisecs(int millisecs) noexcept {
+    TimeSpan& increaseMillisecs(int32 millisecs) noexcept {
         duration_ += Milliseconds{ millisecs };
         return *this;
     }
     // Decrease the number of milliseconds
-    TimeSpan& decreaseMillisecs(int millisecs) noexcept {
+    TimeSpan& decreaseMillisecs(int32 millisecs) noexcept {
         duration_ -= Milliseconds{ millisecs };
         return *this;
     }
@@ -380,7 +380,7 @@ public:
      *                  - "iso": "PTnHnMnS" (ISO 8601 duration format)
      * @return  Formatted string representation
      */
-    String toString(const wchar_t* format = L"default") const;
+    String toString(wcstring format = L"default") const;
 
     /**
      * @brief   Create TimeSpan from string representation
@@ -475,7 +475,7 @@ public:
         wrapAround();
     }
     // Construct from individual time components
-    ClockTime(int hour, int min, int sec, int millisec = 0) noexcept {
+    ClockTime(int32 hour, int32 min, int32 sec, int32 millisec = 0) noexcept {
         NEX_ASSERT(isValidTime(hour, min, sec, millisec));
         auto _timeVal = Hours(hour) + Minutes(min) + Seconds(sec) + Milliseconds(millisec);
         sinceMidnight_ = _timeVal;
@@ -559,11 +559,11 @@ public:
         return *this;
     }
     // Addition with integer seconds
-    TimeSpan operator+(int seconds) const noexcept {
+    TimeSpan operator+(int32 seconds) const noexcept {
         return TimeSpan(sinceMidnight_ + Seconds{ seconds });
     }
     // Compound assignment for addition with integer seconds
-    ClockTime& operator+=(int seconds) {
+    ClockTime& operator+=(int32 seconds) {
         sinceMidnight_ += Seconds{ seconds };
         wrapAround();
         return *this;
@@ -590,11 +590,11 @@ public:
         return *this;
     }
     // Subtraction with integer seconds
-    TimeSpan operator-(int seconds) const noexcept {
+    TimeSpan operator-(int32 seconds) const noexcept {
         return TimeSpan(sinceMidnight_ - Seconds{ seconds });
     }
     // Compound assignment for subtraction with integer seconds
-    ClockTime& operator-=(int seconds) {
+    ClockTime& operator-=(int32 seconds) {
         sinceMidnight_ -= Seconds{ seconds };
         wrapAround();
         return *this;
@@ -645,7 +645,7 @@ public:
     }
 
     // Postfix increment operator (increase by 1 second)
-    ClockTime operator++(int) noexcept {
+    ClockTime operator++(int32) noexcept {
         ClockTime original = *this;
         sinceMidnight_ += Seconds{ 1 };
         wrapAround();
@@ -653,7 +653,7 @@ public:
     }
 
     // Postfix decrement operator (decrease by 1 second)
-    ClockTime operator--(int) noexcept {
+    ClockTime operator--(int32) noexcept {
         ClockTime original = *this;
         sinceMidnight_ -= Seconds{ 1 };
         wrapAround();
@@ -663,23 +663,23 @@ public:
     ////// Special validations ------------------------
 
     // Validate the hour value (0-23)
-    static constexpr bool isValidHour(int hour) noexcept {
+    static constexpr bool isValidHour(int32 hour) noexcept {
         return time::isValidHour(hour);
     }
     // Validate the minute value (0-59)
-    static constexpr bool isValidMinute(int minute) noexcept {
+    static constexpr bool isValidMinute(int32 minute) noexcept {
         return time::isValidMinute(minute);
     }
     // Validate the second value (0-59)
-    static constexpr bool isValidSecond(int second) noexcept {
+    static constexpr bool isValidSecond(int32 second) noexcept {
         return time::isValidSecond(second);
     }
     // Validate the millisecond value (0-999)
-    static constexpr bool isValidMillisecs(int millisecs) noexcept {
+    static constexpr bool isValidMillisecs(int32 millisecs) noexcept {
         return time::isValidMillisecs(millisecs);
     }
     // Validate a complete time (hour, minute, second, millisecond)
-    static constexpr bool isValidTime(int hour, int minute, int second, int millisecs = 0) noexcept {
+    static constexpr bool isValidTime(int32 hour, int32 minute, int32 second, int32 millisecs = 0) noexcept {
         return (time::isValidHour(hour) && time::isValidMinute(minute)
                 && time::isValidSecond(second) && time::isValidMillisecs(millisecs));
     }
@@ -687,26 +687,26 @@ public:
     ////// Access individual components ------------------------
 
     // Get the hour value (0-23)
-    constexpr int hour(void) const noexcept {
+    constexpr int32 hour(void) const noexcept {
         return getHours().count();
     }
     // Get the minute value (0-59)
-    constexpr int minute(void) const noexcept {
+    constexpr int32 minute(void) const noexcept {
         return getMinutes().count();
     }
     // Get the second value (0-59)
-    constexpr int second(void) const noexcept {
-        return static_cast<int>(getSeconds().count());
+    constexpr int32 second(void) const noexcept {
+        return static_cast<int32>(getSeconds().count());
     }
     // Get the millisecond value (0-999)
-    constexpr int millisecond(void) const noexcept {
-        return static_cast<int>(getMillisecs().count());
+    constexpr int32 millisecond(void) const noexcept {
+        return static_cast<int32>(getMillisecs().count());
     }
 
     ////// Modify individual components ------------------------
 
     // Set the hour value (0-23)
-    void setHour(int hour) noexcept {
+    void setHour(int32 hour) noexcept {
         NEX_ASSERT(isValidHour(hour));
         ClockTime original = *this;
         sinceMidnight_ = Hours(hour) + original.getMinutes()
@@ -714,7 +714,7 @@ public:
         wrapAround();
     }
     // Set the minute value (0-59)
-    void setMinute(int minute) noexcept {
+    void setMinute(int32 minute) noexcept {
         NEX_ASSERT(isValidMinute(minute));
         ClockTime original = *this;
         sinceMidnight_ = original.getHours() + Minutes(minute)
@@ -722,7 +722,7 @@ public:
         wrapAround();
     }
     // Set the second value (0-59)
-    void setSecond(int second) noexcept {
+    void setSecond(int32 second) noexcept {
         NEX_ASSERT(isValidSecond(second));
         ClockTime original = *this;
         sinceMidnight_ = original.getHours() + original.getMinutes()
@@ -730,7 +730,7 @@ public:
         wrapAround();
     }
     // Set the millisecond value (0-999)
-    void setMillisecs(int millisecs) noexcept {
+    void setMillisecs(int32 millisecs) noexcept {
         NEX_ASSERT(isValidMillisecs(millisecs));
         ClockTime original = *this;
         sinceMidnight_ = original.getHours() + original.getMinutes()
@@ -741,49 +741,49 @@ public:
     ////// Arithmetic ------------------------
 
     // Increase hours by a specified amount
-    ClockTime& increaseHours(int hours) noexcept {
+    ClockTime& increaseHours(int32 hours) noexcept {
         sinceMidnight_ += Hours{ hours };
         wrapAround();
         return *this;
     }
     // Decrease hours by a specified amount
-    ClockTime& decreaseHours(int hours) noexcept {
+    ClockTime& decreaseHours(int32 hours) noexcept {
         sinceMidnight_ -= Hours{ hours };
         wrapAround();
         return *this;
     }
     // Increase minutes by a specified amount
-    ClockTime& increaseMinutes(int mins) noexcept {
+    ClockTime& increaseMinutes(int32 mins) noexcept {
         sinceMidnight_ += Minutes{ mins };
         wrapAround();
         return *this;
     }
     // Decrease minutes by a specified amount
-    ClockTime& decreaseMinutes(int mins) noexcept {
+    ClockTime& decreaseMinutes(int32 mins) noexcept {
         sinceMidnight_ -= Minutes{ mins };
         wrapAround();
         return *this;
     }
     // Increase seconds by a specified amount
-    ClockTime& increaseSeconds(int secs) noexcept {
+    ClockTime& increaseSeconds(int32 secs) noexcept {
         sinceMidnight_ += Seconds{ secs };
         wrapAround();
         return *this;
     }
     // Decrease seconds by a specified amount
-    ClockTime& decreaseSeconds(int secs) noexcept {
+    ClockTime& decreaseSeconds(int32 secs) noexcept {
         sinceMidnight_ -= Seconds{ secs };
         wrapAround();
         return *this;
     }
     // Increase milliseconds by a specified amount
-    ClockTime& increaseMillisecs(int millisecs) noexcept {
+    ClockTime& increaseMillisecs(int32 millisecs) noexcept {
         sinceMidnight_ += Milliseconds{ millisecs };
         wrapAround();
         return *this;
     }
     // Decrease milliseconds by a specified amount
-    ClockTime& decreaseMillisecs(int millisecs) noexcept {
+    ClockTime& decreaseMillisecs(int32 millisecs) noexcept {
         sinceMidnight_ -= Milliseconds{ millisecs };
         wrapAround();
         return *this;
@@ -792,20 +792,20 @@ public:
     ////// Time comparison methods ------------------------
 
     // Compare this ClockTime to another and return the difference in hours
-    int compareToHours(const ClockTime& other) const noexcept {
-        return static_cast<int>((toHours() - other.toHours()).count());
+    int32 compareToHours(const ClockTime& other) const noexcept {
+        return static_cast<int32>((toHours() - other.toHours()).count());
     }
     // Compare this ClockTime to another and return the difference in minutes
-    int compareToMinutes(const ClockTime& other) const noexcept {
-        return static_cast<int>((toMinutes() - other.toMinutes()).count());
+    int32 compareToMinutes(const ClockTime& other) const noexcept {
+        return static_cast<int32>((toMinutes() - other.toMinutes()).count());
     }
     // Compare this ClockTime to another and return the difference in seconds
-    int compareToSeconds(const ClockTime& other) const noexcept {
-        return static_cast<int>((toSeconds() - other.toSeconds()).count());
+    int32 compareToSeconds(const ClockTime& other) const noexcept {
+        return static_cast<int32>((toSeconds() - other.toSeconds()).count());
     }
     // Compare this ClockTime to another and return the difference in milliseconds
-    int compareToMillisecs(const ClockTime& other) const noexcept {
-        return static_cast<int>((toMillisecs() - other.toMillisecs()).count());
+    int32 compareToMillisecs(const ClockTime& other) const noexcept {
+        return static_cast<int32>((toMillisecs() - other.toMillisecs()).count());
     }
 
     ////// String conversion ------------------------
@@ -819,7 +819,7 @@ public:
      *                  - "12h_ms": "HH:MM:SS.mmm AM/PM" (12-hour with milliseconds)
      * @return  Formatted string representation
      */
-    String toString(const wchar_t* format = L"default") const;
+    String toString(wcstring format = L"default") const;
 
     /**
      * @brief   Create ClockTime from string representation
@@ -942,7 +942,7 @@ public:
     explicit DateTime(TimePoint timepoint) : timePoint_(timepoint) {}
 
     // Construct from individual date and time components
-    DateTime(int year, unsigned int month, unsigned int day, int hour, int min, int sec, int millisec = 0) noexcept {
+    DateTime(int32 year, uint32 month, uint32 day, int32 hour, int32 min, int32 sec, int32 millisec = 0) noexcept {
         NEX_ASSERT(isValidDate(year, month, day));
         NEX_ASSERT(isValidTime(hour, min, sec, millisec));
         auto dateVal = Date{ Year{ year }, Month{ month }, Day{ day } };
@@ -978,11 +978,11 @@ public:
         return *this;
     }
     // Addition with integer seconds
-    TimeSpan operator+(int seconds) const noexcept {
+    TimeSpan operator+(int32 seconds) const noexcept {
         return TimeSpan(timePoint_.time_since_epoch() + Seconds{ seconds });
     }
     // Compound assignment for addition with integer seconds
-    DateTime& operator+=(int seconds) {
+    DateTime& operator+=(int32 seconds) {
         timePoint_ += Seconds{ seconds };
         return *this;
     }
@@ -998,10 +998,10 @@ public:
         timePoint_ -= timeSpan.getDuration();
         return *this;
     }
-    TimeSpan operator-(int seconds) const noexcept {
+    TimeSpan operator-(int32 seconds) const noexcept {
         return TimeSpan(timePoint_.time_since_epoch() - Seconds{ seconds });
     }
-    DateTime& operator-=(int seconds) {
+    DateTime& operator-=(int32 seconds) {
         timePoint_ -= Seconds{ seconds };
         return *this;
     }
@@ -1049,14 +1049,14 @@ public:
     }
 
     // Postfix increment operator (increase by 1 second)
-    DateTime operator++(int) noexcept {
+    DateTime operator++(int32) noexcept {
         DateTime original = *this;
         timePoint_ += Seconds{ 1 };
         return original;
     }
 
     // Postfix decrement operator (decrease by 1 second)
-    DateTime operator--(int) noexcept {
+    DateTime operator--(int32) noexcept {
         DateTime original = *this;
         timePoint_ -= Seconds{ 1 };
         return original;
@@ -1110,69 +1110,68 @@ public:
     ////// Special validations ------------------------
 
     // Validate the hour value (0-23)
-    static constexpr bool isValidHour(int hour) noexcept {
+    static constexpr bool isValidHour(int32 hour) noexcept {
         return time::isValidHour(hour);
     }
     // Validate the minute value (0-59)
-    static constexpr bool isValidMinute(int minute) noexcept {
+    static constexpr bool isValidMinute(int32 minute) noexcept {
         return time::isValidMinute(minute);
     }
     // Validate the second value (0-59)
-    static constexpr bool isValidSecond(int second) noexcept {
+    static constexpr bool isValidSecond(int32 second) noexcept {
         return time::isValidSecond(second);
     }
     // Validate the millisecond value (0-999)
-    static constexpr bool isValidMillisecs(int millisecs) noexcept {
+    static constexpr bool isValidMillisecs(int32 millisecs) noexcept {
         return time::isValidMillisecs(millisecs);
     }
 
     ////// Access individual components ------------------------
 
     // Get the year value
-    constexpr int year(void) const noexcept {
-        return static_cast<int>(yearVal());
+    constexpr int32 year(void) const noexcept {
+        return static_cast<int32>(yearVal());
     }
     // Get the month value (1-12)
-    constexpr unsigned month(void) const noexcept {
-        return static_cast<unsigned>(monthVal());
+    constexpr uint32 month(void) const noexcept {
+        return static_cast<uint32>(monthVal());
     }
     // Get the day value (1-31)
-    constexpr unsigned day(void) const noexcept {
-        return static_cast<unsigned>(dayVal());
+    constexpr uint32 day(void) const noexcept {
+        return static_cast<uint32>(dayVal());
     }
     // Get the hour value (0-23)
-    constexpr int hour(void) const noexcept {
+    constexpr int32 hour(void) const noexcept {
         return getHours().count();
     }
     // Get the minute value (0-59)
-    constexpr int minute(void) const noexcept {
+    constexpr int32 minute(void) const noexcept {
         return getMinutes().count();
     }
     // Get the second value (0-59)
-    constexpr int second(void) const noexcept {
-        return static_cast<int>(getSeconds().count());
+    constexpr int32 second(void) const noexcept {
+        return static_cast<int32>(getSeconds().count());
     }
     // Get the millisecond value (0-999)
-    constexpr int millisecond(void) const noexcept {
-        return static_cast<int>(getMillisecs().count());
+    constexpr int32 millisecond(void) const noexcept {
+        return static_cast<int32>(getMillisecs().count());
     }
     // Get the day of week value (0-6, Sunday=0)
-    constexpr int dayOfWeek(void) const noexcept {
-        return static_cast<unsigned>(weekdayVal().c_encoding());
+    constexpr uint8 dayOfWeek(void) const noexcept {
+        return static_cast<uint8>(weekdayVal().c_encoding());
     }
 
     ////// Modify individual components ------------------------
 
     // Set the entire date (year, month, day)
-    void setDate(int year, unsigned int month, unsigned int day) noexcept {
+    void setDate(int32 year, uint32 month, uint32 day) noexcept {
         NEX_ASSERT(isValidDate(year, month, day));
         DateTime original = *this;
         auto newDateVal = Date{ Year(year), Month(month), Day(day) };
-        timePoint_ = SysDays{ newDateVal } 
-                        + (original.timePoint_ - SysDays{ original.dateVal() });
+        timePoint_ = SysDays{ newDateVal } + (original.timePoint_ - SysDays{ original.dateVal() });
     }
     // Set the entire time (hour, minute, second, millisecond)
-    void setClockTime(int hour, int minute, int second, int millisecs = 0) noexcept {
+    void setClockTime(int32 hour, int32 minute, int32 second, int32 millisecs = 0) noexcept {
         NEX_ASSERT(isValidTime(hour, minute, second, millisecs));
         DateTime original = *this;
         auto newTimeVal = Hours(hour) + Minutes(minute) + Seconds(second) + Milliseconds(millisecs);
@@ -1185,37 +1184,35 @@ public:
         timePoint_ = SysDays{ original.dateVal() } + newTimeVal;
     }
     // Set the year value
-    void setYear(int year) noexcept {
+    void setYear(int32 year) noexcept {
         DateTime original = *this;
         NEX_ASSERT(isValidDate(year, 
-                                    static_cast<unsigned>(original.monthVal()), 
-                                    static_cast<unsigned>(original.dayVal())));
+                               static_cast<uint32>(original.monthVal()), 
+                               static_cast<uint32>(original.dayVal())));
         auto newDateVal = Date{ Year(year), original.monthVal(), original.dayVal() };
         timePoint_ = SysDays{ newDateVal } 
                         + (original.timePoint_ - SysDays{ original.dateVal() });
     }
     // Set the month value
-    void setMonth(int month) noexcept {
+    void setMonth(int32 month) noexcept {
         DateTime original = *this;
-        NEX_ASSERT(isValidDate(static_cast<int>(original.yearVal()), 
-                                    static_cast<unsigned>(month), 
-                                    static_cast<unsigned>(original.dayVal())));
+        NEX_ASSERT(isValidDate(static_cast<int32>(original.yearVal()), 
+                               static_cast<uint32>(month), 
+                               static_cast<uint32>(original.dayVal())));
         auto newDateVal = Date{ original.yearVal(), Month(month), original.dayVal() };
-        timePoint_ = SysDays{ newDateVal } 
-                        + (original.timePoint_ - SysDays{ original.dateVal() });
+        timePoint_ = SysDays{ newDateVal } + (original.timePoint_ - SysDays{ original.dateVal() });
     }
     // Set the day value
-    void setDay(int day) noexcept {
+    void setDay(int32 day) noexcept {
         DateTime original = *this;
-        NEX_ASSERT(isValidDate(static_cast<int>(original.yearVal()), 
-                                    static_cast<unsigned>(original.monthVal()), 
-                                    static_cast<unsigned>(day)));
+        NEX_ASSERT(isValidDate(static_cast<int32>(original.yearVal()), 
+                               static_cast<uint32>(original.monthVal()), 
+                               static_cast<uint32>(day)));
         auto newDateVal = Date{ original.yearVal(), original.monthVal(), Day(day) };
-        timePoint_ = SysDays{ newDateVal } 
-                        + (original.timePoint_ - SysDays{ original.dateVal() });
+        timePoint_ = SysDays{ newDateVal } + (original.timePoint_ - SysDays{ original.dateVal() });
     }
     // Set the hour value
-    void setHour(int hour) noexcept {
+    void setHour(int32 hour) noexcept {
         NEX_ASSERT(isValidHour(hour));
         DateTime original = *this;
         auto newTimeVal = Hours(hour) + original.getMinutes() 
@@ -1223,7 +1220,7 @@ public:
         timePoint_ = SysDays{ original.dateVal() } + newTimeVal;
     }
     // Set the minute value
-    void setMinute(int minute) noexcept {
+    void setMinute(int32 minute) noexcept {
         NEX_ASSERT(isValidMinute(minute));
         DateTime original = *this;
         auto newTimeVal = original.getHours() + Minutes(minute) 
@@ -1231,7 +1228,7 @@ public:
         timePoint_ = SysDays{ original.dateVal() } + newTimeVal;
     }
     // Set the second value
-    void setSecond(int second) noexcept {
+    void setSecond(int32 second) noexcept {
         NEX_ASSERT(isValidSecond(second));
         DateTime original = *this;
         auto newTimeVal = original.getHours() + original.getMinutes() 
@@ -1239,7 +1236,7 @@ public:
         timePoint_ = SysDays{ original.dateVal() } + newTimeVal;
     }
     // Set the millisecond value
-    void setMillisecs(int millisecs) noexcept {
+    void setMillisecs(int32 millisecs) noexcept {
         NEX_ASSERT(isValidMillisecs(millisecs));
         DateTime original = *this;
         auto newTimeVal = original.getHours() + original.getMinutes() 
@@ -1254,11 +1251,11 @@ public:
         return yearVal().is_leap();
     }
     // Validate a complete date (year, month, day)
-    static constexpr bool isValidDate(int year, unsigned int month, unsigned int day) noexcept {
+    static constexpr bool isValidDate(int32 year, uint32 month, uint32 day) noexcept {
         return Date{ Year(year), Month(month), Day(day) }.ok();
     }
     // Validate a complete time (hour, minute, second, millisecond)
-    static constexpr bool isValidTime(int hour, int minute, int second, int millisecs = 0) noexcept {
+    static constexpr bool isValidTime(int32 hour, int32 minute, int32 second, int32 millisecs = 0) noexcept {
         return (time::isValidHour(hour) && time::isValidMinute(minute)
                 && time::isValidSecond(second) && time::isValidMillisecs(millisecs));
     }
@@ -1278,52 +1275,52 @@ public:
     ////// Arithmetic methods ------------------------
 
     // Increase the date by a specified number of days
-    DateTime& increaseDays(int days) noexcept {
+    DateTime& increaseDays(int32 days) noexcept {
         timePoint_ += Days{ days };
         return *this;
     }
     // Decrease the date by a specified number of days
-    DateTime& decreaseDays(int days) noexcept {
+    DateTime& decreaseDays(int32 days) noexcept {
         timePoint_ -= Days{ days };
         return *this;
     }
     // Increase the time by a specified number of hours
-    DateTime& increaseHours(int hours) noexcept {
+    DateTime& increaseHours(int32 hours) noexcept {
         timePoint_ += Hours{ hours };
         return *this;
     }
     // Decrease the time by a specified number of hours
-    DateTime& decreaseHours(int hours) noexcept {
+    DateTime& decreaseHours(int32 hours) noexcept {
         timePoint_ -= Hours{ hours };
         return *this;
     }
     // Increase the time by a specified number of minutes
-    DateTime& increaseMinutes(int mins) noexcept {
+    DateTime& increaseMinutes(int32 mins) noexcept {
         timePoint_ += Minutes{ mins };
         return *this;
     }
     // Decrease the time by a specified number of minutes
-    DateTime& decreaseMinutes(int mins) noexcept {
+    DateTime& decreaseMinutes(int32 mins) noexcept {
         timePoint_ -= Minutes{ mins };
         return *this;
     }
     // Increase the time by a specified number of seconds
-    DateTime& increaseSeconds(int secs) noexcept {
+    DateTime& increaseSeconds(int32 secs) noexcept {
         timePoint_ += Seconds{ secs };
         return *this;
     }
     // Decrease the time by a specified number of seconds
-    DateTime& decreaseSeconds(int secs) noexcept {
+    DateTime& decreaseSeconds(int32 secs) noexcept {
         timePoint_ -= Seconds{ secs };
         return *this;
     }
     // Increase the time by a specified number of milliseconds
-    DateTime& increaseMillisecs(int millisecs) noexcept {
+    DateTime& increaseMillisecs(int32 millisecs) noexcept {
         timePoint_ += Milliseconds{ millisecs };
         return *this;
     }
     // Decrease the time by a specified number of milliseconds
-    DateTime& decreaseMillisecs(int millisecs) noexcept {
+    DateTime& decreaseMillisecs(int32 millisecs) noexcept {
         timePoint_ -= Milliseconds{ millisecs };
         return *this;
     }
@@ -1341,7 +1338,7 @@ public:
      *                  - "us_12h": "MM/DD/YYYY HH:MM:SS AM/PM" (US format with 12-hour time)
      * @return  Formatted string representation
      */
-    String toString(const wchar_t* format = L"default") const;
+    String toString(wcstring format = L"default") const;
 
     /**
      * @brief   Create DateTime from string representation

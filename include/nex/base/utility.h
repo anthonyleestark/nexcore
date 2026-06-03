@@ -5,6 +5,18 @@
 
 #pragma once
 
+/**
+ * @file   utility.h
+ * @brief  Common utility functions and classes for the Nex-ecosystem.
+ * 
+ * @details
+ * This header defines common utility functions and classes that are used throughout the Nex-ecosystem. 
+ * These utilities include functions, templates, prototypes, patterns, and other constructs which serve 
+ * various purposes. The functions and classes in this header are designed to provide convenient and 
+ * efficient utilities for common tasks that arise in C++ programming, while also ensuring type safety 
+ * and reducing the likelihood of errors such as memory leaks and hash collisions.
+ */
+
 #include "nex/base/macros.h"
 #include "nex/base/types.h"
 #include "nex/base/casts.h"
@@ -17,24 +29,9 @@
 
 NEX_NAMESPACE_BEGIN
 
-/**
- * @namespace utility
- * @brief   Contains utility functions and classes that provide common functionality and services
- *          across the NEX system, such as helper functions, common data structures, and other
- *          utilities that can be used by various components of the system.
- * 
- * @details
- * The `utility` namespace is intended to contain utility functions and classes that provide common
- * functionality and services across the NEX system, such as helper functions, common data structures,
- * and other utilities that can be used by various components of the system. The utilities in this
- * namespace are designed to be reusable and can be used by different layers and components of the system
- * without introducing dependencies on specific layers or components. The `utility` namespace is intended to
- * provide a centralized location for common utilities that can be used throughout the codebase, improving
- * code reuse and reducing duplication of common functionality.
- */
-NEX_SUBNAMESPACE_BEGIN(utility)
-
-////// Helpers functions array/struct/class processing -------------------------------
+// =================================================================================
+// Utility functions for compile-time and runtime operations
+// =================================================================================
 
 // Get the size of a statically sized array
 template <typename Type, usize Size>
@@ -50,7 +47,9 @@ constexpr isize offsetOf(MemberT Type::*member) noexcept {
     return reinterpret_cast<isize>(&reinterpret_cast<Type*>(0)->*member);
 }
 
-////// Helper function for safe deletion --------------------------------
+// =================================================================================
+// Utility functions for safe deletion of pointers and members
+// =================================================================================
 
 // Safely delete a pointer to a struct/class, ensuring that the pointer type matches the struct/class type.
 template <typename Type>
@@ -102,7 +101,9 @@ void deleteMemberArrayAndNull(MemberT*& memberPtr, MemberT Type::*member) noexce
     }
 }
 
-////// Helper functions for hashing and combining hash values ---------------------------------
+// =================================================================================
+// Utility functions for hashing and combining hash values
+// =================================================================================
 
 // Combine two hash values into a single hash value, which can be used for various purposes such as implementing 
 // hash-based containers that use composite keys, and improving the performance of lookups by providing a way to combine 
@@ -113,7 +114,9 @@ constexpr int64 combineHash(int64 h1, int64 h2) noexcept {
     return h1 ^ (h2 + 0x9e3779b9 + (h1 << 6) + (h1 >> 2));
 }
 
-////// Helper functions for enum class keys ---------------------------------
+// =================================================================================
+// Utility functions for enum class keys and bitmask operations
+// =================================================================================
 
 // Get the underlying integer value of an enum class key, which can be used for various purposes such as
 // implementing mapping of enum keys to configuration entries and other utilities that require knowledge of 
@@ -218,7 +221,11 @@ operator^=(Enum& lhs, Enum rhs) {
     return lhs;
 }
 
-////// Utility classes for memory blocks ---------------------------------
+NEX_SUBNAMESPACE_BEGIN(utility)
+
+// =================================================================================
+// Utility classes for memory blocks and RAII patterns
+// =================================================================================
 
 /**
  * @struct MemoryBlock
@@ -292,7 +299,9 @@ struct ConstMemoryBlock {
     constexpr bool operator==(const ConstMemoryBlock&) const noexcept = default;
 };
 
-////// Utility classes for RAII and generic patterns -------------------------------
+// =================================================================================
+// Utility classes for RAII and generic patterns
+// =================================================================================
 
 /**
  * @class AutoReset
@@ -532,7 +541,7 @@ public:
 
 private:
     FuncType func_;
-    int      exceptionsAtConstruction_;
+    int32    exceptionsAtConstruction_;
     bool     dismissed_ = false;
 };
 
@@ -598,7 +607,7 @@ public:
 
 private:
     FuncType func_;
-    int      exceptionsAtConstruction_;
+    int32    exceptionsAtConstruction_;
     bool     dismissed_ = false;
 };
 
@@ -644,16 +653,16 @@ NEX_NODISCARD auto makeScopeGuard(FuncType&& f) {
  * debugging, and other purposes where information about the source location is valuable.
  */
 struct SourceLocation {
-    const char* file;       // The source file name where the SourceLocation was created
-    int line;               // The line number in the source file where the SourceLocation was created
-    const char* function;   // The function name where the SourceLocation was created
+    cstring file;           // The source file name where the SourceLocation was created
+    int32 line;             // The line number in the source file where the SourceLocation was created
+    cstring function;       // The function name where the SourceLocation was created
 
     // Default constructor: initializes members to default values
     constexpr SourceLocation() noexcept
         : file(""), line(0), function("") {}
 
     // Constructs a SourceLocation with the given file path, line number, and function name
-    constexpr SourceLocation(const char* filePath, int lineNumber, const char* functionName) noexcept
+    constexpr SourceLocation(cstring filePath, int32 lineNumber, cstring functionName) noexcept
         : file(filePath), line(lineNumber), function(functionName) {}
 
 #if NEX_USE_STD_SOURCE_LOCATION
@@ -661,7 +670,7 @@ struct SourceLocation {
     static consteval SourceLocation current(NEX_STD source_location loc = NEX_STD source_location::current()) {
         return { 
             stripFilePath(loc.file_name()), 
-            static_cast<int>(loc.line()), 
+            static_cast<int32>(loc.line()), 
             loc.function_name() 
         };
     }
@@ -670,7 +679,7 @@ struct SourceLocation {
     static consteval SourceLocation current() {
         return { 
             stripFilePath(NEX_SOURCE_FILE_PATH), 
-            NEX_SOURCE_LINE_NUMBER, 
+            static_cast<int32>(NEX_SOURCE_LINE_NUMBER), 
             NEX_SOURCE_FUNCTION_NAME 
         };
     }
@@ -709,13 +718,13 @@ struct SourceLocation {
  * @code
  * class MyClass : public Comparable<MyClass> {
  * protected:
- *     int compare(const MyClass& other) const override {
+ *     int32 compare(const MyClass& other) const override {
  *         if (value < other.value) return -1;
  *         if (value > other.value) return 1;
  *         return 0;
  *     }
  * public:
- *     int value;
+ *     int32 value;
  * };
  * 
  * MyClass a{5}, b{10};
@@ -766,7 +775,7 @@ protected:
     // Returns -1 if this object is "before" the other,
     //         0 if they are equal,
     //         1 if this object is "after" the other
-    virtual int compare(const Type& other) const = 0;
+    virtual int32 compare(const Type& other) const = 0;
 };
 
 /**
@@ -848,12 +857,12 @@ public:
  * @brief A template for creating strong typedefs with unique types and no implicit conversions
  * 
  * This template class provides a convenient way to create strong typedefs, which are distinct types 
- * that wrap an underlying type (e.g., int, std::string) and provide type safety without implicit conversions. 
+ * that wrap an underlying type (e.g., int32, std::string) and provide type safety without implicit conversions. 
  * By specifying a unique Tag type for each NamedType, you can create multiple strong typedefs that wrap 
  * the same underlying type but are treated as distinct types by the compiler, preventing accidental misuse 
  * and improving code clarity.
  * 
- * @tparam Type The underlying type that the NamedType will wrap (e.g., int, std::string)
+ * @tparam Type The underlying type that the NamedType will wrap (e.g., int32, std::string)
  * @tparam Tag A unique type used to distinguish this NamedType from other NamedTypes that wrap 
  *         the same underlying type. This can be an empty struct or any unique type.
  * 
@@ -864,8 +873,8 @@ public:
  * 
  * Example usage:
  * @code
- * using Width = utility::NamedType<int, struct WidthTag>;
- * using Height = utility::NamedType<int, struct HeightTag>;
+ * using Width = utility::NamedType<int32, struct WidthTag>;
+ * using Height = utility::NamedType<int32, struct HeightTag>;
  * 
  * void setDimensions(Width width, Height height) {
  *     // ...

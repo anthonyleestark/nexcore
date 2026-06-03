@@ -73,7 +73,7 @@ public:
     // Get boolean value by key path
     bool getBool(StringView keyPath, bool defaultValue = false) const;
 
-    // Get double value by key path
+    // Get float64 value by key path
     float64 getDouble(StringView keyPath, float64 defaultValue = 0.0) const;
 
     ////// Try-getters (return false if key not found or type mismatch) -----------------------
@@ -90,7 +90,7 @@ public:
     // Try to get boolean value by key path
     bool tryGetBool(StringView keyPath, bool& value) const;
 
-    // Try to get double value by key path
+    // Try to get float64 value by key path
     bool tryGetDouble(StringView keyPath, float64& value) const;
 
     ////// Validation ------------------------

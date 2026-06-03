@@ -49,11 +49,11 @@ constexpr PropertyPolicy WithValidatorAndCallback = { .hasValidator = true, .has
  * @par Example Usage:
  * @code
  * // Define a property with a validator and a callback
- * Property<int, WithValidatorAndCallback> myProperty;
- * myProperty.setValidator([](const int& newValue) {
+ * Property<int32, WithValidatorAndCallback> myProperty;
+ * myProperty.setValidator([](const int32& newValue) {
  *     return newValue >= 0; // Only allow non-negative values
  * });
- * myProperty.setCallback([](const int& newValue) {
+ * myProperty.setCallback([](const int32& newValue) {
  *     std::cout << "Property value changed to: " << newValue << std::endl;
  * });
  * myProperty.set(10); // Valid value, callback will be called

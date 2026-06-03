@@ -102,7 +102,7 @@ Result<Version> doValidateVersionString(StringView versionStr) {
     //// 3. Validate Core (X.Y.Z)
 
     // Count dots and ensure exactly 3 segments
-    int dots = 0;
+    int32 dots = 0;
     for (char16 c : core) {
         if (c == u'.') dots++;
     }

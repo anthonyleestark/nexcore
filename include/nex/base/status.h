@@ -94,7 +94,7 @@ private:
 
     // Storage for either a successful status (no error) or an error status (with error details)
     union NEX_ALIGNAS(alignof(Error)) {
-        char dummy_;     // Dummy member to allow default construction of the union; not used for actual storage
+        nchar dummy_;    // Dummy member to allow default construction of the union; not used for actual storage
         Error error_;    // Error information for failure cases; valid only if isOk_ is false
     } storage_;
 

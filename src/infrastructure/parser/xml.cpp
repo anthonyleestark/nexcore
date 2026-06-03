@@ -65,25 +65,25 @@ bool XmlAttribute::isValid() const noexcept {
 // Get the name of the attribute as a String
 String XmlAttribute::name() const {
     if (!isValid()) return String();
-    const char* name = impl_->attr.name();
+    cstring name = impl_->attr.name();
     return name ? String::fromUtf8(name) : String();
 }
 
 // Get the value of the attribute as a String
 String XmlAttribute::value() const {
     if (!isValid()) return String();
-    const char* value = impl_->attr.value();
+    cstring value = impl_->attr.value();
     return value ? String::fromUtf8(value) : String();
 }
 
 // Get the value of the attribute as an integer, with a default if conversion fails
-int XmlAttribute::asInt(int defaultValue) const {
+int32 XmlAttribute::asInt(int32 defaultValue) const {
     if (!isValid()) return defaultValue;
     return impl_->attr.as_int(defaultValue);
 }
 
-// Get the value of the attribute as a double, with a default if conversion fails
-double XmlAttribute::asDouble(double defaultValue) const {
+// Get the value of the attribute as a float64, with a default if conversion fails
+float64 XmlAttribute::asDouble(float64 defaultValue) const {
     if (!isValid()) return defaultValue;
     return impl_->attr.as_double(defaultValue);
 }
@@ -118,14 +118,14 @@ bool XmlNode::isValid() const noexcept {
 // Get the name of the node as a String
 String XmlNode::name() const {
     if (!isValid()) return String();
-    const char* name = impl_->node.name();
+    cstring name = impl_->node.name();
     return name ? String::fromUtf8(name) : String();
 }
 
 // Get the text content of the node as a String
 String XmlNode::text() const {
     if (!isValid()) return String();
-    const char* text = impl_->node.text().as_string();
+    cstring text = impl_->node.text().as_string();
     return text ? String::fromUtf8(text) : String();
 }
 

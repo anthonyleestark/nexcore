@@ -123,8 +123,8 @@ bool encoding::isUnicodeAlpha(char16 ch) noexcept {
 
 // Check if a UTF-8 string contains invalid sequences
 bool encoding::containsInvalidUtf8Sequences(Utf8StringView input) noexcept {
-    const_char_ptr ptr = input.data();
-    const_char_ptr end = ptr + input.size();
+    cstring ptr = input.data();
+    cstring end = ptr + input.size();
 
     while (ptr < end) {
         // Get the first byte to determine the length of the UTF-8 sequence
@@ -294,8 +294,8 @@ usize encoding::encodeUtf8CodePoint(char32 cp, char8* out) {
 // Count the number of Unicode code points in a UTF-8 string
 Result<usize> encoding::countUtf8CodePoints(Utf8StringView input) noexcept {
     usize count = 0;
-    const_char_ptr ptr = input.data();
-    const_char_ptr end = ptr + input.size();
+    cstring ptr = input.data();
+    cstring end = ptr + input.size();
 
     while (ptr < end) {
         // Get the first byte to determine the length of the UTF-8 sequence,
@@ -441,7 +441,7 @@ Result<usize> encoding::countUtf32CodePoints(Utf32StringView input) noexcept {
 // ========================================================================================
 
 #if NEX_PLATFORM_IS_WINDOWS
-    // Helper function to safely cast size_t to int for Windows API calls, with overflow check
+    // Helper function to safely cast size_t to int32 for Windows API calls, with overflow check
     int32 safeStaticCastInt(usize size) {
         if (size > static_cast<usize>((NEX_STD numeric_limits<int32>::max)())) return -1;
         return static_cast<int32>(size);
@@ -459,7 +459,7 @@ Result<Utf16String> encoding::ansiToUtf16(Utf8StringView ansi) {
 
     int32 len = safeStaticCastInt(ansi.size());
     if (len < 0) {
-        // Input size is too large to fit in an int, return an error result
+        // Input size is too large to fit in an int32, return an error result
         return Result<Utf16String>::error({
                 ErrorCode::InvalidFormat, "Input string is too large" 
             });
@@ -492,7 +492,7 @@ Result<Utf8String> encoding::utf16ToAnsi(Utf16StringView utf16) {
 
     int32 len = safeStaticCastInt(utf16.size());
     if (len < 0) {
-        // Input size is too large to fit in an int, return an error result
+        // Input size is too large to fit in an int32, return an error result
         return Result<Utf8String>::error({
                 ErrorCode::InvalidFormat, "Input string is too large" 
             });
@@ -560,7 +560,7 @@ Result<Utf16String> encoding::utf8ToUtf16(Utf8StringView utf8) {
 
     int32 len = safeStaticCastInt(utf8.size());
     if (len < 0) {
-        // Input size is too large to fit in an int, return an error result
+        // Input size is too large to fit in an int32, return an error result
         return Result<Utf16String>::error({
                 ErrorCode::InvalidFormat, "Input string is too large" 
             });
@@ -588,8 +588,8 @@ Result<Utf16String> encoding::utf8ToUtf16(Utf8StringView utf8) {
     // Reserve enough space to avoid multiple reallocations (worst case: all ASCII characters)
     result.reserve(utf8.size());
     
-    const_char_ptr ptr = utf8.data();
-    const_char_ptr end = ptr + utf8.size();
+    cstring ptr = utf8.data();
+    cstring end = ptr + utf8.size();
     
     while (ptr < end) {
         usize advance = 0;
@@ -619,7 +619,7 @@ Result<Utf8String> encoding::utf16ToUtf8(Utf16StringView utf16) {
     // Windows-specific implementation using WideCharToMultiByte
     int32 len = safeStaticCastInt(utf16.size());
     if (len < 0) {
-        // Input size is too large to fit in an int, return an error result
+        // Input size is too large to fit in an int32, return an error result
         return Result<Utf8String>::error({
                 ErrorCode::InvalidFormat, "Input string is too large" 
             });
@@ -671,7 +671,7 @@ Result<Utf8String> encoding::utf16ToUtf8(Utf16StringView utf16) {
             });
         }
 
-        result.append(reinterpret_cast<const_char_ptr>(u8buf), u8len);
+        result.append(reinterpret_cast<cstring>(u8buf), u8len);
         i += advance;
     }
 

@@ -229,8 +229,8 @@ public:
     ////// Comparison -----------------------
     
     // Compare with another view
-    constexpr int compare(StringView other) const noexcept  {
-        int result = NEX_STD char_traits<char16>::compare(data_, other.data_, 0);
+    constexpr int32 compare(StringView other) const noexcept  {
+        int32 result = NEX_STD char_traits<char16>::compare(data_, other.data_, 0);
         if (result != 0) { return result; } // Data differs in the common prefix
         if (size() < other.size()) { return -1; } // Data is identical in the common prefix, but this view is shorter
         if (size() > other.size()) { return 1; } // Data is identical in the common prefix, but this view is longer
@@ -238,7 +238,7 @@ public:
     }
     
     // Compare substring with another view
-    int compare(size_type pos, size_type count, StringView other) const;
+    int32 compare(size_type pos, size_type count, StringView other) const;
 
     ////// Searching -----------------------
 

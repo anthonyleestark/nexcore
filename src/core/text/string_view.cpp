@@ -133,7 +133,7 @@ StringView StringView::mid(size_type start, size_type count) const noexcept {
 ////// Comparison -----------------------
 
 // Compare substring with another view
-int StringView::compare(size_type pos, size_type count, StringView other) const {
+int32 StringView::compare(size_type pos, size_type count, StringView other) const {
     return substr(pos, count).compare(other);
 }
 

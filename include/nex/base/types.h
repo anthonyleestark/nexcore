@@ -387,8 +387,9 @@ constexpr f16 operator""_f16(ldouble value) noexcept {
     // but it allows for convenient literals.
     return static_cast<f16>(value); 
 }
-constexpr f32 operator""_f32(ldouble value) noexcept { return static_cast<f32>(value); }
-constexpr f64 operator""_f64(ldouble value) noexcept { return static_cast<f64>(value); }
+constexpr f32 operator""_f32(ldouble value) noexcept    { return static_cast<f32>(value); }
+constexpr f64 operator""_f64(ldouble value) noexcept    { return static_cast<f64>(value); }
+constexpr ldouble operator""_ld(ldouble value) noexcept { return value; }
 
 #if NEX_HAS_BUILTIN_FLOAT128
     constexpr f128 operator""_f128(ldouble value) noexcept { return static_cast<f128>(value); }
@@ -413,6 +414,7 @@ constexpr f64 operator""_f64(ldouble value) noexcept { return static_cast<f64>(v
 using char8     = char8_t;                  // UTF-8 code unit (since C++20)
 using char16    = char16_t;                 // UTF-16 code unit (since C++11)
 using char32    = char32_t;                 // UTF-32 code unit (since C++11)
+using nchar     = char;                     // Native character type (platform-dependent)
 using wchar     = wchar_t;                  // Wide character type (platform-dependent)
 using schar     = signed char;              // Signed byte / narrow character storage
 using uchar     = unsigned char;            // Unsigned byte / narrow character storage
@@ -438,12 +440,14 @@ using c32       = char32;                   // UTF-32 code unit (since C++11)
 // Literal suffixes for standard character types (Rust-style)
 // =================================================================================
 
-constexpr c8 operator""_c8(char8 value) noexcept    { return value; }
-constexpr c16 operator""_c16(char16 value) noexcept { return value; }
-constexpr c32 operator""_c32(char32 value) noexcept { return value; }
+constexpr c8 operator""_c8(char8 value) noexcept         { return value; }
+constexpr c16 operator""_c16(char16 value) noexcept      { return value; }
+constexpr c32 operator""_c32(char32 value) noexcept      { return value; }
 
-constexpr c8 operator""_c8(char value) noexcept     { return static_cast<c8>(value); }
-constexpr wchar operator""_wc(wchar value) noexcept { return value; }
+constexpr c8 operator""_c8(nchar value) noexcept         { return static_cast<c8>(value); }
+constexpr nchar operator""_nc(nchar value) noexcept      { return value; }
+constexpr wchar operator""_wc(wchar value) noexcept      { return value; }
+constexpr codepoint operator""_cp(char32 value) noexcept { return value; }
 
 // =================================================================================
 // Macro definitions for standard character literal suffixes (C-style)
@@ -607,19 +611,34 @@ requires (meta::IsSameV<BoolType, bool>) {
     return static_cast<byte>(value ? 1u : 0u);
 }
 
-using raw_byte              = uint8;            // Arithmetic byte type (8-bit unsigned integer)
-using byte_ptr              = raw_byte*;        // Pointer to arithmetic byte data
-using const_byte_ptr        = const raw_byte*;  // Pointer to const-arithmetic byte data
-using std_byte_ptr          = byte*;            // Pointer to byte data (std::byte equivalent)
-using const_std_byte_ptr    = const byte*;      // Pointer to const-byte data (std::byte equivalent)
-using void_ptr              = void*;            // Pointer to void (generic pointer)
-using const_void_ptr        = const void*;      // Pointer to const-void (generic pointer to const-data)
-using address               = uintptr;          // Represents a memory address as an unsigned integer (uintptr)
-using byte_offset           = isize;            // Represents an offset in bytes (for pointer arithmetic) (isize)
-using handle                = uintptr;          // Represents a generic handle or resource identifier (uintptr)
+using raw_byte                  = uint8;                // Arithmetic byte type (8-bit unsigned integer)
+using byte_ptr                  = raw_byte*;            // Pointer to arithmetic byte data
+using const_byte_ptr            = const raw_byte*;      // Pointer to const-arithmetic byte data
+using std_byte_ptr              = byte*;                // Pointer to byte data (std::byte equivalent)
+using const_std_byte_ptr        = const byte*;          // Pointer to const-byte data (std::byte equivalent)
+using void_ptr                  = void*;                // Pointer to void (generic pointer)
+using const_void_ptr            = const void*;          // Pointer to const-void (generic pointer to const-data)
+using address                   = uintptr;              // Represents a memory address as an unsigned integer (uintptr)
+using byte_offset               = isize;                // Represents an offset in bytes (for pointer arithmetic) (isize)
+using handle                    = uintptr;              // Represents a generic handle or resource identifier (uintptr)
 
-using volatile_void_ptr         = volatile void*;        // Generic pointer to volatile-data
-using const_volatile_void_ptr   = const volatile void*;  // Generic pointer to const-volatile data
+using volatile_void_ptr         = volatile void*;       // Generic pointer to volatile-data
+using const_volatile_void_ptr   = const volatile void*; // Generic pointer to const-volatile data
+
+// =================================================================================
+// Short aliases for standard pointer types and address types (Rust-style)
+// =================================================================================
+
+using bptr       = byte_ptr;                    // Pointer to arithmetic byte data (byte_ptr)
+using cbptr      = const_byte_ptr;              // Pointer to const-arithmetic byte data (const_byte_ptr)
+using vptr       = void_ptr;                    // Pointer to void (generic pointer) (void_ptr)
+using cvptr      = const_void_ptr;              // Pointer to const-void (generic pointer to const-data) (const_void_ptr)
+using addr       = address;                     // Represents a memory address as an unsigned integer (uintptr)
+using boff       = byte_offset;                 // Represents an offset in bytes (for pointer arithmetic) (byte_offset)
+using hndl       = handle;                      // Represents a generic handle or resource identifier (handle)
+
+using vvoid_ptr  = volatile_void_ptr;           // Generic pointer to volatile-data (volatile_void_ptr)
+using cvvoid_ptr = const_volatile_void_ptr;     // Generic pointer to const-volatile data (const_volatile_void_ptr)
 
 // =================================================================================
 // Compile-time evaluations for byte type and related pointer types
@@ -632,22 +651,37 @@ static_assert(sizeof(raw_byte) == 1, "Error: raw_byte must be exactly 1 byte in 
 // Standard character pointer types (encoding-aware; C++20)
 // =================================================================================
 
-using char_ptr              = char*;            // Pointer to char
-using const_char_ptr        = const char*;      // Pointer to const char
-using char8_ptr             = char8*;           // Pointer to UTF-8 code unit
-using const_char8_ptr       = const char8*;     // Pointer to const UTF-8 code unit
-using char16_ptr            = char16*;          // Pointer to UTF-16 code unit
-using const_char16_ptr      = const char16*;    // Pointer to const UTF-16 code unit
-using char32_ptr            = char32*;          // Pointer to UTF-32 code unit
-using const_char32_ptr      = const char32*;    // Pointer to const UTF-32 code unit
-using wchar_ptr             = wchar*;           // Pointer to wide character
-using const_wchar_ptr       = const wchar*;     // Pointer to const wide character
+using nchar_ptr         = nchar*;               // Pointer to native char
+using const_nchar_ptr   = const nchar*;         // Pointer to const native char
+using char8_ptr         = char8*;               // Pointer to UTF-8 code unit
+using const_char8_ptr   = const char8*;         // Pointer to const UTF-8 code unit
+using char16_ptr        = char16*;              // Pointer to UTF-16 code unit
+using const_char16_ptr  = const char16*;        // Pointer to const UTF-16 code unit
+using char32_ptr        = char32*;              // Pointer to UTF-32 code unit
+using const_char32_ptr  = const char32*;        // Pointer to const UTF-32 code unit
+using wchar_ptr         = wchar*;               // Pointer to wide character
+using const_wchar_ptr   = const wchar*;         // Pointer to const wide character
+
+// =================================================================================
+// Short aliases for standard character pointer types (Rust-style)
+// =================================================================================
+
+using ncptr         = nchar_ptr;                // Pointer to native char (nchar_ptr)
+using cncptr        = const_nchar_ptr;          // Pointer to const native char (const_nchar_ptr)
+using c8ptr         = char8_ptr;                // Pointer to UTF-8 code unit (char8_ptr)
+using cc8ptr        = const_char8_ptr;          // Pointer to const UTF-8 code unit (const_char8_ptr)
+using c16ptr        = char16_ptr;               // Pointer to UTF-16 code unit (char16_ptr)
+using cc16ptr       = const_char16_ptr;         // Pointer to const UTF-16 code unit (const_char16_ptr)
+using c32ptr        = char32_ptr;               // Pointer to UTF-32 code unit (char32_ptr)
+using cc32ptr       = const_char32_ptr;         // Pointer to const UTF-32 code unit (const_char32_ptr)
+using wcptr         = wchar_ptr;                // Pointer to wide character (wchar_ptr)
+using cwcptr        = const_wchar_ptr;          // Pointer to const wide character (const_wchar_ptr)
 
 // =================================================================================
 // Null-terminated string pointer types (C-style / zero-terminated)
 // =================================================================================
 
-using cstring       = const_char_ptr;           // Null-terminated char string
+using cstring       = const_nchar_ptr;          // Null-terminated char string
 using u8cstring     = const_char8_ptr;          // Null-terminated UTF-8 string
 using u16cstring    = const_char16_ptr;         // Null-terminated UTF-16 string
 using u32cstring    = const_char32_ptr;         // Null-terminated UTF-32 string
@@ -657,10 +691,10 @@ using wcstring      = const_wchar_ptr;          // Null-terminated wide string
 // Short aliases for null-terminated string pointer types (Rust-style)
 // =================================================================================
 
-using cstr      = cstring;                      // Null-terminated char string (cstring)
-using u8cstr    = u8cstring;                    // Null-terminated UTF-8 string (u8cstring)
-using u16cstr   = u16cstring;                   // Null-terminated UTF-16 string (u16cstring)
-using u32cstr   = u32cstring;                   // Null-terminated UTF-32 string (u32cstring)
-using wcstr     = wcstring;                     // Null-terminated wide string (wcstring)
+using cstr          = cstring;                  // Null-terminated char string (cstring)
+using u8cstr        = u8cstring;                // Null-terminated UTF-8 string (u8cstring)
+using u16cstr       = u16cstring;               // Null-terminated UTF-16 string (u16cstring)
+using u32cstr       = u32cstring;               // Null-terminated UTF-32 string (u32cstring)
+using wcstr         = wcstring;                 // Null-terminated wide string (wcstring)
 
 NEX_NAMESPACE_END

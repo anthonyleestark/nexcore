@@ -313,10 +313,10 @@ enum class ErrorCode : uint32 {
  * Example usage:
  * ```
  * ErrorCode code = ErrorCode::InvalidArgument;
- * const char* message = errorCodeToString(code);
+ * cstring message = errorCodeToString(code);
  * ```
  */
-NEX_API const char* errorCodeToString(ErrorCode code);
+NEX_API cstring errorCodeToString(ErrorCode code);
 
 /**
  * @brief Get user-friendly message for an error code
@@ -329,10 +329,10 @@ NEX_API const char* errorCodeToString(ErrorCode code);
  * Example usage:
  * ```
  * ErrorCode code = ErrorCode::FileNotFound;
- * const char* userMessage = getUserMessage(code);
+ * cstring userMessage = getUserMessage(code);
  * ```
  */
-NEX_API const char* getUserMessage(ErrorCode code);
+NEX_API cstring getUserMessage(ErrorCode code);
 
 /**
  * @brief Check if an error code is recoverable
@@ -363,7 +363,7 @@ NEX_API bool isRecoverable(ErrorCode code);
  * and user feedback.
  * 
  * @details
- * The Error struct contains an ErrorCode to indicate the type of error and a const char* message that
+ * The Error struct contains an ErrorCode to indicate the type of error and a message that
  * provides additional context or details about the error. This structure can be extended in the future
  * to include more information such as error severity, source, or recovery suggestions.
  * 
@@ -393,7 +393,7 @@ struct NEX_API Error {
      * possible causes, and suggestions for resolution.
      * This field is optional and can be left empty if not needed.
      */
-    const char* message;
+    cstring message;
 };
 
 NEX_NAMESPACE_END

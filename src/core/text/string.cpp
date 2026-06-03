@@ -23,7 +23,7 @@ String::String(Utf8StringView utf8) {
 }
 
 // Construct from UTF-8 string literal
-String::String(const char* utf8) {
+String::String(cstring utf8) {
     buffer_ = fromUtf8(Utf8StringView(utf8)).buffer_;
 }
 
@@ -52,7 +52,7 @@ String::String(StringView view) {
 
 // Create string from a signed integer with specified base (default is 10)
 String String::fromInt(int64 value, int32 base /* = 10 */) {
-    char buffer[64];
+    nchar buffer[64];
     auto result = NEX_STD to_chars(buffer, buffer+64, value, base);
     if (result.ec == NEX_STD errc()) {
         // Successfully converted integer to string
@@ -67,7 +67,7 @@ String String::fromInt(int64 value, int32 base /* = 10 */) {
 
 // Create string from an unsigned integer with specified base (default is 10)
 String String::fromUInt(uint64 value, int32 base /* = 10 */) {
-    char buffer[64];
+    nchar buffer[64];
     auto result = NEX_STD to_chars(buffer, buffer+64, value, base);
     if (result.ec == NEX_STD errc()) {
         // Successfully converted integer to string
@@ -81,7 +81,7 @@ String String::fromUInt(uint64 value, int32 base /* = 10 */) {
 }
 
 // Create string from a floating-point number
-String String::fromFloat(double value, char format /* = 'g' */, int32 precision /* = 6 */) {
+String String::fromFloat(float64 value, nchar format /* = 'g' */, int32 precision /* = 6 */) {
     // Determine the chars_format based on the given format character
     NEX_STD chars_format charsFormat = NEX_STD chars_format::general;
     switch (format) {
@@ -109,7 +109,7 @@ String String::fromFloat(double value, char format /* = 'g' */, int32 precision 
     }
 
     // First try to convert using a small stack buffer
-    char stackBuffer[128];
+    nchar stackBuffer[128];
     const int32 safePrecision = precision < 0 ? 0 : precision;
     auto result = NEX_STD to_chars(stackBuffer, stackBuffer + sizeof(stackBuffer), value, charsFormat, safePrecision);
     if (result.ec == NEX_STD errc()) {
@@ -255,7 +255,7 @@ bool String::contains(value_type ch) const {
 // - -1 if this string is less than the other string
 // - 0 if this string is equal to the other string
 // - 1 if this string is greater than the other string
-int String::compare(StringView other) const noexcept {
+int32 String::compare(StringView other) const noexcept {
     size_type minLength = NEX_STD min(buffer_.size(), other.size());
 
     // If either string is empty, the result depends on their sizes
@@ -265,7 +265,7 @@ int String::compare(StringView other) const noexcept {
         return 0;
     }
 
-    int cmp = buffer_.compare(0, minLength, other.data(), minLength);
+    int32 cmp = buffer_.compare(0, minLength, other.data(), minLength);
     if (cmp != 0) 
         return cmp; // If the common prefix is different, return the comparison result
 

@@ -71,7 +71,7 @@ public:
     String(Utf8StringView utf8);
 
     // Construct from UTF-8 string literal
-    String(const char* utf8);
+    String(cstring utf8);
     
     // Construct from UTF-16 string view
     String(Utf16StringView utf16);
@@ -118,7 +118,7 @@ public:
     static String fromUInt(uint64 value, int32 base = 10);
 
     // Create string from a floating-point number
-    static String fromFloat(double value, char format = 'g', int32 precision = 6);
+    static String fromFloat(float64 value, nchar format = 'g', int32 precision = 6);
 
     ////// Create string from specified encoding -----------------------
 
@@ -308,10 +308,10 @@ public:
 
         // Iterator operations
         constexpr Iterator& operator++() { ++ptr_; return *this; }
-        constexpr Iterator operator++(int) { Iterator tmp = *this; ++ptr_; return tmp; }
+        constexpr Iterator operator++(int32) { Iterator tmp = *this; ++ptr_; return tmp; }
 
         constexpr Iterator& operator--() { --ptr_; return *this; }
-        constexpr Iterator operator--(int) { Iterator tmp = *this; --ptr_; return tmp; }
+        constexpr Iterator operator--(int32) { Iterator tmp = *this; --ptr_; return tmp; }
 
         // Arithmetic operators for random access iterator
         constexpr Iterator operator+(difference_type offset) const { return Iterator(ptr_ + offset); }
@@ -397,10 +397,10 @@ public:
 
         // Iterator operations
         constexpr ConstIterator& operator++() { ++ptr_; return *this; }
-        constexpr ConstIterator operator++(int) { ConstIterator tmp = *this; ++ptr_; return tmp; }
+        constexpr ConstIterator operator++(int32) { ConstIterator tmp = *this; ++ptr_; return tmp; }
 
         constexpr ConstIterator& operator--() { --ptr_; return *this; }
-        constexpr ConstIterator operator--(int) { ConstIterator tmp = *this; --ptr_; return tmp; }
+        constexpr ConstIterator operator--(int32) { ConstIterator tmp = *this; --ptr_; return tmp; }
 
         // Arithmetic operators for random access iterator
         constexpr ConstIterator operator+(difference_type offset) const { return ConstIterator(ptr_ + offset); }
@@ -565,7 +565,7 @@ public:
     // - -1 if this string is less than the other string
     // - 0 if this string is equal to the other string
     // - 1 if this string is greater than the other string
-    int compare(StringView other) const noexcept;
+    int32 compare(StringView other) const noexcept;
 };
 
 NEX_NAMESPACE_END

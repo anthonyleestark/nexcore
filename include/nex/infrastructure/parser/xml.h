@@ -55,7 +55,7 @@ class XmlDocument;
  *     XmlNode root = doc.root();
  *     XmlAttribute attr = root.attribute("version");
  *     if (attr.isValid()) {
- *         int version = attr.asInt(1); // Get version as int, default to 1 if conversion fails
+ *         int32 version = attr.asInt(1); // Get version as int32, default to 1 if conversion fails
  *         std::cout << "Config version: " << version << std::endl;
  *     }
  * }
@@ -87,10 +87,10 @@ public:
     String value() const;
 
     // Get the value of the attribute as an integer, with a default if conversion fails
-    int asInt(int defaultValue = 0) const;
+    int32 asInt(int32 defaultValue = 0) const;
 
-    // Get the value of the attribute as a double, with a default if conversion fails
-    double asDouble(double defaultValue = 0.0) const;
+    // Get the value of the attribute as a float64, with a default if conversion fails
+    float64 asDouble(float64 defaultValue = 0.0) const;
 
     // Get the value of the attribute as a boolean, with a default if conversion fails
     bool asBool(bool defaultValue = false) const;

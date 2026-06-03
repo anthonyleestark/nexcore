@@ -91,7 +91,7 @@ public:
     explicit ByteArray(const StdString& str);
 
     // Construct from C-string (treat as binary data)
-    explicit ByteArray(const_char_ptr str, size_type len);
+    explicit ByteArray(cstring str, size_type len);
 
     // Copy constructor
     ByteArray(const ByteArray& other) 

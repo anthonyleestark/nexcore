@@ -302,14 +302,14 @@ namespace ring_buffer::details {
                 ++countFromStart_;
                 return *this; 
             }
-            constexpr Iterator operator++(int) { Iterator temp = *this; ++(*this); return temp; }
+            constexpr Iterator operator++(int32) { Iterator temp = *this; ++(*this); return temp; }
 
             constexpr Iterator& operator--() { 
                 index_ = (index_ + buffer_->capacity() - 1) % buffer_->capacity();
                 --countFromStart_;
                 return *this; 
             }
-            constexpr Iterator operator--(int) { Iterator temp = *this; --(*this); return temp; }
+            constexpr Iterator operator--(int32) { Iterator temp = *this; --(*this); return temp; }
 
             // Arithmetic operators for random access iterator
             constexpr Iterator operator+(difference_type offset) const { 
@@ -443,14 +443,14 @@ namespace ring_buffer::details {
                 ++countFromStart_;
                 return *this; 
             }
-            constexpr ConstIterator operator++(int) { ConstIterator temp = *this; ++(*this); return temp; }
+            constexpr ConstIterator operator++(int32) { ConstIterator temp = *this; ++(*this); return temp; }
 
             constexpr ConstIterator& operator--() { 
                 index_ = (index_ + buffer_->capacity() - 1) % buffer_->capacity();
                 --countFromStart_;
                 return *this; 
             }
-            constexpr ConstIterator operator--(int) { ConstIterator temp = *this; --(*this); return temp; }
+            constexpr ConstIterator operator--(int32) { ConstIterator temp = *this; --(*this); return temp; }
 
             // Arithmetic operators for random access iterator
             constexpr ConstIterator operator+(difference_type offset) const { 

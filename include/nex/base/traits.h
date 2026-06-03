@@ -42,13 +42,13 @@ using FalseType = meta::FalseType;
 template <bool BoolValue>
 using BoolConstant = meta::BoolConstant<BoolValue>;
 
-/// Checks whether Type is an integral type (e.g., int, char, etc.).
+/// Checks whether Type is an integral type (e.g., int32, int64, nchar, etc.).
 template <class Type>
 using IsIntegral = BoolConstant<meta::IsIntegralV<Type>>;
 template <class Type>
 inline constexpr bool IsIntegralV = IsIntegral<Type>::value;
 
-/// Checks whether Type is a floating-point type (i.e., float, double, or long double).
+/// Checks whether Type is a floating-point type (i.e., float32, float64, or ldouble).
 template <class Type>
 using IsFloatingPoint = BoolConstant<meta::IsFloatingPointV<Type>>;
 template <class Type>

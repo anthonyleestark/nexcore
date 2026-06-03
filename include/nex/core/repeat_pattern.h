@@ -120,8 +120,8 @@ public:
     // Check if snooze is allowed
     bool allowsSnooze() const { return allowsSnooze_; }
 
-    // Get snooze interval
-    int snoozeIntervalSeconds() const { return snoozeIntervalSeconds_; }
+    // Get snooze interval in seconds
+    int32 snoozeIntervalSeconds() const { return snoozeIntervalSeconds_; }
     
     // Set snooze options
     RepeatPattern withSnooze(bool allowed, int32 intervalSeconds) const {

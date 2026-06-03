@@ -11,6 +11,7 @@
 #include "nex/base/build.h"
 #include "nex/base/namespace.h"
 #include "nex/base/location.h"
+#include "nex/base/types.h"
 
 #if NEX_PLATFORM_IS_WINDOWS
     #include <intrin.h> // For __fastfail on MSVC
@@ -37,26 +38,27 @@ NEX_NAMESPACE_BEGIN
 /**
  * @brief Fatal handler function pointer type
  * 
+ * @details
  * Called when a fatal error is triggered. 
  * The handler receives:
- * - reason: Optional reason for the fatal error (const char*)
- * - file: Source file where the fatal error occurred (const char*)
- * - line: Line number in the source file (int)
- * - function: Function name where the fatal error occurred (const char*)
+ *  - reason: Optional reason for the fatal error (cstring)
+ *  - file: Source file where the fatal error occurred (cstring)
+ *  - line: Line number in the source file (int32)
+ *  - function: Function name where the fatal error occurred (cstring)
  * 
- * Example usage:
+ * @example
  * ```
- * void myFatalHandler(const char* reason, const char* file, int line, const char* function) {
+ * void myFatalHandler(cstring reason, cstring file, int32 line, cstring function) {
  *     // Custom fatal handling logic
  * }
  * ::NEX_PREPEND_NAMESPACE(setFatalHandler)(myFatalHandler);
  * ```
  */
 using FatalHandler = void(*)(
-    const char* reason,
-    const char* file,
-    int line,
-    const char* function
+    cstring reason,
+    cstring file,
+    int32 line,
+    cstring function
 );
 
 /**
@@ -78,13 +80,14 @@ FatalHandler getFatalHandler();
 /**
  * @brief Immediately crash the program in a platform-specific manner
  * 
+ * @details
  * This function triggers an immediate crash using a low-level trap instruction.
  * It is designed to be fatal, unique, and non-allocating, ensuring that
  * crash reports remain accurate and debuggable.
  * 
  * @param reason Optional reason for the crash (currently unused)
  * 
- * Example usage:
+ * @example
  * ```
  * if (unexpected_condition) {
  *     immediateCrash("Unexpected condition encountered");
@@ -107,7 +110,7 @@ NEX_NORETURN inline void immediateCrash() {
     // Fallback: cause a crash by dereferencing a null pointer with an invalid value.
     // This is not guaranteed to be unique or non-allocating, but it's better than nothing 
     // on unsupported platforms.
-    *(volatile int*)0 = 0xDEADC0DE;
+    *(volatile int32*)0 = 0xDEADC0DE;
 #endif
 
     // The function is marked [[noreturn]], so we should never reach this point.
@@ -123,11 +126,12 @@ NEX_NORETURN inline void immediateCrash() {
 /**
  * @brief Indicate that a code path is unreachable
  * 
+ * @details
  * This function marks a code path as unreachable, allowing the compiler
  * to optimize accordingly. It uses compiler-specific extensions to
  * indicate that the code path should never be executed.
  * 
- * Example usage:
+ * @example
  * ```
  * switch (value) {
  *     case 1:
@@ -163,19 +167,21 @@ NEX_NORETURN inline void unreachable() {
 /**
  * @brief Assert handler function pointer type
  * 
- * Called when an assertion fails. The handler receives:
- * - file: Source file path where assertion failed
- * - line: Line number where assertion failed
- * - function: Function name where assertion failed (may be empty)
- * - expression: String representation of the failed expression
- * - message: Optional user-provided message (may be empty)
+ * @details
+ * Called when an assertion fails. 
+ * The handler receives:
+ *  - file: Source file path where assertion failed (cstring)
+ *  - line: Line number where assertion failed (int32)
+ *  - function: Function name where assertion failed (cstring)
+ *  - expression: String representation of the failed expression (cstring)
+ *  - message: Optional user-provided message (cstring)
  */
 using AssertHandler = void(*)(
-    const char* file, 
-    int line, 
-    const char* function, 
-    const char* expression, 
-    const char* message
+    cstring file, 
+    int32 line, 
+    cstring function, 
+    cstring expression, 
+    cstring message
 );
 
 /**
@@ -204,11 +210,12 @@ NEX_NAMESPACE_END
  * @def NEX_IMMEDIATE_CRASH()
  * @brief Immediately crash the program
  * 
+ * @details
  * This macro triggers an immediate crash using a low-level trap instruction.
  * It is designed to be fatal, unique, and non-allocating, ensuring that
  * crash reports remain accurate and debuggable.
  * 
- * Example usage:
+ * @example
  * ```
  * if (unexpected_condition) {
  *     NEX_IMMEDIATE_CRASH();
@@ -224,6 +231,7 @@ NEX_NAMESPACE_END
  * @def NEX_FATAL(reason)
  * @brief Immediately crash the program with a specified reason
  * 
+ * @details
  * This macro triggers an immediate crash using a low-level trap instruction,
  * providing a reason for the crash.
  * It is designed to be fatal, unique, and non-allocating, ensuring that
@@ -231,7 +239,7 @@ NEX_NAMESPACE_END
  * 
  * @param reason Reason for the crash (const char*)
  * 
- * Example usage:
+ * @example
  * ```
  * if (unexpected_condition) {
  *    NEX_FATAL("Unexpected condition encountered");
@@ -251,11 +259,12 @@ NEX_NAMESPACE_END
  * @def NEX_UNREACHABLE()
  * @brief Indicate that a code path is unreachable
  * 
+ * @details
  * This macro marks a code path as unreachable, allowing the compiler
  * to optimize accordingly. It uses compiler-specific extensions to
  * indicate that the code path should never be executed.
  * 
- * Example usage:
+ * @example
  * ```
  * switch (value) {
  *     case 1:
@@ -278,6 +287,7 @@ NEX_NAMESPACE_END
  * @def NEX_ASSERT(expr)
  * @brief Assert that an expression evaluates to true
  * 
+ * @details
  * If the expression is false, the assert handler is called with file, line, and function information.
  * In debug builds, this will typically terminate the program.
  * In release builds, this will be compiled out and have no effect.
@@ -311,6 +321,7 @@ NEX_NAMESPACE_END
  * @def NEX_ASSERT_MSG(expr, msg)
  * @brief Assert that an expression evaluates to true with a custom message
  * 
+ * @details
  * Similar to NEX_ASSERT, but includes a user-provided message that will be
  * passed to the assert handler.
  * 
@@ -344,12 +355,13 @@ NEX_NAMESPACE_END
  * @def NEX_VERIFY(expr)
  * @brief Verify an expression (always checked, even in release builds)
  * 
+ * @details
  * Similar to NEX_ASSERT, but is never compiled out, even in release builds.
  * Use this for critical checks that must always be performed.
  * 
  * @param expr Expression to check (must be convertible to bool)
  * 
- * Example usage:
+ * @example
  * ```
  * NEX_VERIFY(InitializeSystem());  // Must always check
  * ```
@@ -371,12 +383,13 @@ NEX_NAMESPACE_END
  * @def NEX_VERIFY_MSG(expr, msg)
  * @brief Verify an expression with a custom message (always checked)
  * 
+ * @details
  * Similar to NEX_VERIFY, but includes a user-provided message.
  * 
  * @param expr Expression to check (must be convertible to bool)
  * @param msg User message (StringView or convertible to StringView)
  * 
- * Example usage:
+ * @example
  * ```
  * NEX_VERIFY_MSG(LoadConfiguration(configPath), "Failed to load configuration");
  * ```
@@ -398,10 +411,11 @@ NEX_NAMESPACE_END
  * @def NEX_NOT_IMPLEMENTED()
  * @brief Indicate that a code path is not yet implemented
  * 
+ * @details
  * This macro triggers an assertion failure indicating that the code path
  * is not yet implemented. It is useful as a placeholder during development.
  * 
- * Example usage:
+ * @example
  * ```
  * void myFunction() {
  *     NEX_NOT_IMPLEMENTED();

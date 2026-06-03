@@ -172,7 +172,7 @@ constexpr bool IsAnyOfV = (IsSameV<Type, Types> || ...);
     }
 #endif  // NEX_HAS_CXX20
 
-#if NEX_HAS_BUILTIN(__is_integral) || (NEX_COMPILER_IS_MSVC && NEX_HAS_CXX20)
+#if NEX_HAS_BUILTIN(__is_integral)
     // Determine whether a type is an integral type
     template <class Type>
     constexpr bool IsIntegralV = __is_integral(RemoveCvT<Type>);
@@ -197,10 +197,6 @@ constexpr bool IsAnyOfV = (IsSameV<Type, Types> || ...);
     // Determine whether a type is a floating-point type
     template <class Type>
     constexpr bool IsFloatingPointV = __is_floating_point(RemoveCvT<Type>);
-#elif (NEX_COMPILER_IS_MSVC && NEX_HAS_CXX20)
-    // Determine whether a type is a floating-point type
-    template <class Type>
-    constexpr bool IsFloatingPointV = __is_floating(RemoveCvT<Type>);
 #else
     // Determine whether a type is a floating-point type
     template <class Type>

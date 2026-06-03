@@ -18,9 +18,9 @@
         #if !defined(_NUMBERS_)
             #include <numbers>
         #endif
-        constexpr float64 M_PI = NEX_STD numbers::pi;
-        constexpr float64 M_PI_2 = NEX_STD numbers::pi / 2;
-        constexpr float64 M_PI_4 = NEX_STD numbers::pi / 4;
+        constexpr double M_PI = NEX_STD numbers::pi;
+        constexpr double M_PI_2 = NEX_STD numbers::pi / 2;
+        constexpr double M_PI_4 = NEX_STD numbers::pi / 4;
     #else
         #define M_PI       3.14159265358979323846   // pi
         #define M_PI_2     1.57079632679489661923   // pi/2
@@ -52,38 +52,37 @@ NEX_SUBNAMESPACE_BEGIN(math)
 // =============================================================================
 
 // Epsilon value for floating-point comparisons
-inline constexpr float64 kEpsilon = 1e-9;
+template <FloatingPoint Floating>
+inline constexpr Floating kEpsilon = static_cast<Floating>(1e-9);
 
-// Nearly equal comparison for floating-point types with relative tolerance
-template<typename T>
-inline EnableIf<IsFloatingPointV<T>, bool>
-nearlyEqual(const T& a, const T& b, const T& epsilon = static_cast<T>(kEpsilon)) noexcept {
-    return NEX_STD abs(a - b) <= epsilon * NEX_STD max(static_cast<T>(1), 
+// Nearly equal comparison for floating-point types with specified epsilon
+template<FloatingPoint Floating>
+NEX_NODISCARD inline bool
+nearlyEqual(const Floating& a, const Floating& b, const Floating& epsilon = kEpsilon<Floating>) noexcept {
+    return NEX_STD abs(a - b) <= epsilon * NEX_STD max(static_cast<Floating>(1), 
             NEX_STD max(NEX_STD abs(a), NEX_STD abs(b)));
 }
 
-// Nearly equal comparison to zero for floating-point types
-template<typename T>
-inline EnableIf<IsFloatingPointV<T>, bool>
-equalsToZero(const T& a, const T& epsilon = static_cast<T>(kEpsilon)) noexcept {
-    return nearlyEqual(a, static_cast<T>(0), epsilon);
+// Check if a floating-point value is nearly equal to zero with specified epsilon
+template<FloatingPoint Floating>
+NEX_NODISCARD inline bool
+equalsToZero(const Floating& a, const Floating& epsilon = kEpsilon<Floating>) noexcept {
+    return nearlyEqual(a, static_cast<Floating>(0), epsilon);
 }
 
 // =============================================================================
 // Fallback for non-floating-point types: exact equality
 // =============================================================================
 
-// For non-floating-point types, nearlyEqual is just equality
-template<typename T>
-inline EnableIf<!IsFloatingPointV<T>, bool>
-nearlyEqual(const T& a, const T& b) noexcept {
+// For non-floating-point types, nearlyEqual is just exact equality
+template<typename NumType> requires (!FloatingPoint<NumType>)
+NEX_NODISCARD inline bool nearlyEqual(const NumType& a, const NumType& b) noexcept {
     return a == b;
 }
 
-// For non-floating-point types, equalsToZero is just equality to zero
-template<typename T>
-inline EnableIf<!IsFloatingPointV<T>, bool> 
-equalsToZero(const T& a) noexcept {
+// For non-floating-point types, equalsToZero is just exact equality to zero
+template<typename NumType> requires (!FloatingPoint<NumType>)
+NEX_NODISCARD inline bool equalsToZero(const NumType& a) noexcept {
     return a == 0;
 }
 

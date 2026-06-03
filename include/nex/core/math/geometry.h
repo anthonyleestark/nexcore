@@ -44,8 +44,8 @@ public:
         return Point(x * scalar, y * scalar);
     }
     Point operator/(float64 scalar) const {
-        if (!math::equalsToZero(scalar)) return Point(x / scalar, y / scalar);
-        NEX_ASSERT_MSG(false, "Division by zero");
+        NEX_ASSERT_MSG(!math::equalsToZero(scalar), "Division by zero");
+        return Point(x / scalar, y / scalar);
     }
 
     // Compound Assignment Operators
@@ -56,8 +56,8 @@ public:
         return *this;
     }
     Point& operator/=(float64 scalar) {
-        if (!math::equalsToZero(scalar)) { x /= scalar; y /= scalar; return *this; }
-        NEX_ASSERT_MSG(false, "Division by zero");
+        NEX_ASSERT_MSG(!math::equalsToZero(scalar), "Division by zero");
+        x /= scalar; y /= scalar; return *this;
     }
 
 // Geometric/Vector Math Operations
@@ -65,31 +65,32 @@ public:
     // Distance between points
     float64 distanceTo(const Point& other) const noexcept {
         float64 dx = x - other.x; float64 dy = y - other.y;
-        return NEX_STD sqrt(dx * dx + dy * dy);
+        return static_cast<float64>(NEX_STD sqrt(dx * dx + dy * dy));
     }
 
     // length / magnitude (treats the point as a vector from the origin (0, 0))
     float64 magnitude() const noexcept {
-        return NEX_STD sqrt(x * x + y * y);
+        return static_cast<float64>(NEX_STD sqrt(x * x + y * y));
     }
 
     // Dot products
     constexpr float64 dot(const Point& other) const noexcept {
-        return x * other.x + y * other.y;
+        return static_cast<float64>(x * other.x + y * other.y);
     }
 
     // Cross product (2D)
     // Used for determining orientation, area of parallelogram, etc.
     constexpr float64 cross(const Point& other) const noexcept {
-        return x * other.y - y * other.x;
+        return static_cast<float64>(x * other.y - y * other.x);
     }
 
     // Angle between two vectors
     float64 angleWith(const Point& other) const noexcept {
         float64 dotProd = this->dot(other);
         float64 magnitude1 = this->magnitude(); float64 magnitude2 = other.magnitude();
-        if (math::equalsToZero(magnitude1) || math::equalsToZero(magnitude2)) {
+        if NEX_UNLIKELY(math::equalsToZero(magnitude1) || math::equalsToZero(magnitude2)) {
             NEX_ASSERT_MSG(false, "Cannot compute angle with zero-length vector");
+            NEX_UNREACHABLE();
         }
         float64 magnitudes = magnitude1 * magnitude2;
         return NEX_STD acos(NEX_STD clamp((dotProd / magnitudes), -1.0, 1.0)); // in radians
@@ -159,8 +160,8 @@ public:
         return Vector2D(x * scalar, y * scalar);
     }
     Vector2D operator/(float64 scalar) const {
-        if (!math::equalsToZero(scalar)) return Vector2D(x / scalar, y / scalar);
-        NEX_ASSERT_MSG(false, "Division by zero");
+        NEX_ASSERT_MSG(!math::equalsToZero(scalar), "Division by zero");
+        return Vector2D(x / scalar, y / scalar);
     }
 
     // Compound Assignment Operators
@@ -177,9 +178,7 @@ public:
         return *this;
     }
     Vector2D& operator/=(float64 scalar) {
-        if (math::equalsToZero(scalar)) {
-            NEX_ASSERT_MSG(false, "Division by zero");
-        }
+        NEX_ASSERT_MSG(!math::equalsToZero(scalar), "Division by zero");
         x /= scalar; y /= scalar;
         return *this;
     }
@@ -198,8 +197,9 @@ public:
     // Normalized vector (unit length)
     Vector2D normalize() const {
         float64 len = length();
-        if (!math::equalsToZero(len)) return Vector2D(x / len, y / len);
+        if NEX_LIKELY(!math::equalsToZero(len)) return Vector2D(x / len, y / len);
         NEX_ASSERT_MSG(false, "Cannot normalize zero-length vector");
+        NEX_UNREACHABLE();
     }
 
     // Dot product
@@ -216,8 +216,9 @@ public:
     float64 angleTo(const Vector2D& other) const {
         float64 dotProd = this->dot(other);
         float64 length1 = this->length(); float64 length2 = other.length();
-        if (math::equalsToZero(length1) || math::equalsToZero(length2)) {
+        if NEX_UNLIKELY(math::equalsToZero(length1) || math::equalsToZero(length2)) {
             NEX_ASSERT_MSG(false, "Cannot compute angle with zero-length vector");
+            NEX_UNREACHABLE();
         }
         float64 cosTheta = dotProd / (length1 * length2);
         return NEX_STD acos(NEX_STD clamp(cosTheta, -1.0, 1.0));
@@ -296,12 +297,12 @@ public:
         return *this;
     }
     Size operator/(float64 scalar) const {
-        if (!math::equalsToZero(scalar)) return Size(width / scalar, height / scalar);
-        NEX_ASSERT_MSG(false, "Division by zero");
+        NEX_ASSERT_MSG(!math::equalsToZero(scalar), "Division by zero");
+        return Size(width / scalar, height / scalar);
     }
     Size& operator/=(float64 scalar) {
-        if (!math::equalsToZero(scalar)) { width /= scalar; height /= scalar; return *this; }
-        NEX_ASSERT_MSG(false, "Division by zero");
+        NEX_ASSERT_MSG(!math::equalsToZero(scalar), "Division by zero");
+        width /= scalar; height /= scalar; return *this;
     }
 
 public:
@@ -370,12 +371,12 @@ public:
         return *this;
     }
     Resolution operator/(float64 scalar) const {
-        if (!math::equalsToZero(scalar)) return Resolution(width / scalar, height / scalar);
-        NEX_ASSERT_MSG(false, "Division by zero");
+        NEX_ASSERT_MSG(!math::equalsToZero(scalar), "Division by zero");
+        return Resolution(width / scalar, height / scalar);
     }
     Resolution& operator/=(float64 scalar) {
-        if (!math::equalsToZero(scalar)) { width /= scalar; height /= scalar; return *this; }
-        NEX_ASSERT_MSG(false, "Division by zero");
+        NEX_ASSERT_MSG(!math::equalsToZero(scalar), "Division by zero");
+        width /= scalar; height /= scalar; return *this;
     }
 
 public:
@@ -390,7 +391,10 @@ public:
 
     // Calculate aspect ratio
     float64 aspectRatio() const noexcept {
-        if (math::equalsToZero(height)) return 0.0; // invalid result, not throwing exception here
+        if NEX_UNLIKELY(math::equalsToZero(height)) {
+            NEX_ASSERT_MSG(false, "Height cannot be zero for aspect ratio calculation");
+            NEX_UNREACHABLE();
+        }
         return static_cast<float64>(width) / static_cast<float64>(height);
     }
     NEX_STD pair<int32, int32> simplifiedAspectRatio() const {
@@ -976,17 +980,15 @@ public:
         return Margin(left * scalar, top * scalar, right * scalar, bottom * scalar);
     }
     Margin operator/(float64 scalar) const {
-        if (!math::equalsToZero(scalar)) return Margin(left / scalar, top / scalar, right / scalar, bottom / scalar);
-        NEX_ASSERT_MSG(false, "Division by zero");
+        NEX_ASSERT_MSG(!math::equalsToZero(scalar), "Division by zero");
+        return Margin(left / scalar, top / scalar, right / scalar, bottom / scalar);
     }
     Margin& operator*=(float64 scalar) noexcept {
         left *= scalar; top *= scalar; right *= scalar; bottom *= scalar;
         return *this;
     }
     Margin& operator/=(float64 scalar) {
-        if (math::equalsToZero(scalar)) { 
-            NEX_ASSERT_MSG(false, "Division by zero");
-        }
+        NEX_ASSERT_MSG(!math::equalsToZero(scalar), "Division by zero");
         left /= scalar; top /= scalar; right /= scalar; bottom /= scalar; 
         return *this; 
     }
@@ -1100,17 +1102,15 @@ public:
         return Padding(left * scalar, top * scalar, right * scalar, bottom * scalar);
     }
     Padding operator/(float64 scalar) const {
-        if (!math::equalsToZero(scalar)) return Padding(left / scalar, top / scalar, right / scalar, bottom / scalar);
-        NEX_ASSERT_MSG(false, "Division by zero");
+        NEX_ASSERT_MSG(!math::equalsToZero(scalar), "Division by zero");
+        return Padding(left / scalar, top / scalar, right / scalar, bottom / scalar);
     }
     Padding& operator*=(float64 scalar) noexcept {
         left *= scalar; top *= scalar; right *= scalar; bottom *= scalar;
         return *this;
     }
     Padding& operator/=(float64 scalar) {
-        if (math::equalsToZero(scalar)) { 
-            NEX_ASSERT_MSG(false, "Division by zero");
-        }
+        NEX_ASSERT_MSG(!math::equalsToZero(scalar), "Division by zero");
         left /= scalar; top /= scalar; right /= scalar; bottom /= scalar; 
         return *this; 
     }
@@ -1230,17 +1230,15 @@ public:
         return Thickness(left * scalar, top * scalar, right * scalar, bottom * scalar);
     }
     Thickness operator/(float64 scalar) const {
-        if (!math::equalsToZero(scalar)) return Thickness(left / scalar, top / scalar, right / scalar, bottom / scalar);
-        NEX_ASSERT_MSG(false, "Division by zero");
+        NEX_ASSERT_MSG(!math::equalsToZero(scalar), "Division by zero");
+        return Thickness(left / scalar, top / scalar, right / scalar, bottom / scalar);
     }
     Thickness& operator*=(float64 scalar) noexcept {
         left *= scalar; top *= scalar; right *= scalar; bottom *= scalar;
         return *this;
     }
     Thickness& operator/=(float64 scalar) {
-        if (math::equalsToZero(scalar)) { 
-            NEX_ASSERT_MSG(false, "Division by zero");
-        }
+        NEX_ASSERT_MSG(!math::equalsToZero(scalar), "Division by zero");
         left /= scalar; top /= scalar; right /= scalar; bottom /= scalar; 
         return *this; 
     }

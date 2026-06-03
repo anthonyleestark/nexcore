@@ -611,7 +611,7 @@
  */
 #if !defined(NEX_UNLIKELY)
     #if NEX_HAS_CXX20
-        #define NEX_UNLIKELY(x) [[unlikely]] (x)
+        #define NEX_UNLIKELY(x) (x) [[unlikely]]
     #elif NEX_COMPILER_GCC_COMPATIBLE || NEX_COMPILER_IS_CLANG
         #define NEX_UNLIKELY(x) __builtin_expect(!!(x), 0)
     #else  // Compiler does not support __builtin_expect
@@ -632,7 +632,7 @@
  */
 #if !defined(NEX_LIKELY)
     #if NEX_HAS_CXX20
-        #define NEX_LIKELY(x) [[likely]] (x)
+        #define NEX_LIKELY(x) (x) [[likely]]
     #elif NEX_COMPILER_GCC_COMPATIBLE || NEX_COMPILER_IS_CLANG
         #define NEX_LIKELY(x) __builtin_expect(!!(x), 1)
     #else  // Compiler does not support __builtin_expect

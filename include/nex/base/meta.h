@@ -705,6 +705,127 @@ struct IsNothrowDestructible : BoolConstant<__is_nothrow_destructible(Type)> {};
 template <class Type>
 constexpr bool IsNothrowDestructibleV = IsNothrowDestructible<Type>::value;
 
+// =================================================================================
+// Internal utilities for compile-time logic processing to support metaprogramming
+// =================================================================================
+
+// Convert a character representing a digit in base 2, 8, 10, or 16 to its integer value
+NEX_NODISCARD constexpr int __char2Val(char c) {
+    if (c >= '0' && c <= '9') return c - '0';
+    if (c >= 'a' && c <= 'f') return 10 + (c - 'a');
+    if (c >= 'A' && c <= 'F') return 10 + (c - 'A');
+    return -1;
+}
+
+// Parse a sequence of characters representing an integer literal in base 2, 8, 10, or 16 
+// into its integer value at compile time
+template <typename TargetType, char... Chars>
+requires (IsIntegralV<TargetType> && sizeof...(Chars) > 0)
+NEX_NODISCARD constexpr TargetType __parseRawInteger() noexcept {
+    static_assert(IsIntegralV<TargetType>, "Error: TargetType must be an integral type");
+    static_assert(sizeof...(Chars) > 0, 
+        "Error: At least one character is required to parse an integer literal");
+
+    // Pack the template characters into a compile-time array
+    constexpr char arr[] = { Chars... };
+    constexpr unsigned long long len = sizeof...(Chars);
+
+    unsigned long long idx = 0; 
+    unsigned long long base = 10;
+
+    // Detect base prefixes (0x, 0b, 0)
+    if constexpr (len >= 2) {
+        if (arr[0] == '0') {
+            if (arr[1] == 'x' || arr[1] == 'X') { base = 16; idx = 2; } 
+            else if (arr[1] == 'b' || arr[1] == 'B') { base = 2; idx = 2; } 
+            else { base = 8; idx = 1; }
+        }
+    }
+
+    TargetType result = 0;
+    for (; idx < len; ++idx) {
+        if (arr[idx] == '\'') continue;   // ignore digit separators
+        result = static_cast<TargetType>(result * base + __char2Val(arr[idx]));
+    }
+    return result;
+}
+
+// Parse a sequence of characters representing a floating-point literal in base 10 
+// into its value at compile time
+template <typename TargetType, char... Chars>
+requires (IsFloatingPointV<TargetType> && sizeof...(Chars) > 0)
+NEX_NODISCARD constexpr TargetType __parseRawFloating() noexcept {
+    static_assert(IsFloatingPointV<TargetType>, "Error: TargetType must be a floating-point type");
+    static_assert(sizeof...(Chars) > 0, 
+        "Error: At least one character is required to parse a floating-point literal");
+
+    // Pack the template characters into a compile-time array
+    constexpr char arr[] = { Chars... };
+    constexpr unsigned long long len = sizeof...(Chars);
+
+    TargetType result = 0;
+    TargetType decimalPlace = 10;
+    bool isFraction = false;
+    unsigned long long idx = 0;
+
+    // Leading sign handling 
+    // (if the literal is passed as character sequence)
+    bool isNegative = false;
+    if constexpr (len > 0) {
+        if (arr[0] == '-') { isNegative = true; idx = 1; }
+        else if (arr[0] == '+') { idx = 1; }
+    }
+
+    // Loop through the characters to parse the integer 
+    // and fractional parts (not handling exponent part yet)
+    for (; idx < len; ++idx) {
+        char c = arr[idx];
+        if (c == '\'') continue;   // ignore digit separators
+        if (c == '.') {
+            isFraction = true;
+            continue;
+        }
+        // If we encounter an exponent character (e or E),
+        // break to handle the exponent part
+        if (c == 'e' || c == 'E') {
+            ++idx;
+            break;
+        }
+
+        int val = __char2Val(c);
+        if (val < 0 || val > 9) continue; // ignore invalid characters or f/F suffixes
+
+        if (!isFraction) {
+            result = result * 10 + val;
+        } else {
+            result = result + static_cast<TargetType>(val) / decimalPlace;
+            decimalPlace *= 10;
+        }
+    }
+
+    // Handle the exponent part (e.g., 1e-5 or 1e5)
+    if (idx < len) {
+        bool expNegative = false;
+        if (arr[idx] == '-') { expNegative = true; ++idx; }
+        else if (arr[idx] == '+') { ++idx; }
+
+        long long exponent = 0;
+        for (; idx < len; ++idx) {
+            if (arr[idx] == '\'') continue;   // ignore digit separators
+            int val = __char2Val(arr[idx]);
+            if (val >= 0 && val <= 9) exponent = exponent * 10 + val;
+        }
+
+        TargetType eScale = 1;
+        for (long long i = 0; i < exponent; ++i) eScale *= 10;
+
+        if (expNegative) result /= eScale;
+        else result *= eScale;
+    }
+
+    return isNegative ? -result : result;
+}
+
 NEX_SUBNAMESPACE_END(meta)
 
 NEX_NAMESPACE_END

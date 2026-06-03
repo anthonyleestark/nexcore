@@ -119,6 +119,8 @@ using ull       = ulonglong;                // 64-bit unsigned integer (unsigned
 // Literal suffixes for standard fixed-width integer types (Rust-style)
 // =================================================================================
 
+NEX_INLINE_NAMESPACE_BEGIN(literals)
+
 constexpr i8 operator""_i8(ulonglong value) noexcept   { return static_cast<i8>(value); }
 constexpr u8 operator""_u8(ulonglong value) noexcept   { return static_cast<u8>(value); }
 constexpr i16 operator""_i16(ulonglong value) noexcept { return static_cast<i16>(value); }
@@ -129,9 +131,17 @@ constexpr i64 operator""_i64(ulonglong value) noexcept { return static_cast<i64>
 constexpr u64 operator""_u64(ulonglong value) noexcept { return static_cast<u64>(value); }
 
 #if NEX_HAS_BUILTIN_INT128
-    constexpr i128 operator""_i128(const char* str) noexcept { return __builtin_strtoll(str, nullptr, 10); }
-    constexpr u128 operator""_u128(const char* str) noexcept { return __builtin_strtoull(str, nullptr, 10); }
+    constexpr i128 operator""_i128(ulonglong value) noexcept { return static_cast<i128>(value); }
+    constexpr u128 operator""_u128(ulonglong value) noexcept { return static_cast<u128>(value); }
+
+    template <char... Chars>
+    constexpr i128 operator""_i128() noexcept { return meta::__parseRawInteger<i128, Chars...>(); }
+
+    template <char... Chars>
+    constexpr u128 operator""_u128() noexcept { return meta::__parseRawInteger<u128, Chars...>(); }
 #endif  // ^^NEX_HAS_BUILTIN_INT128
+
+NEX_INLINE_NAMESPACE_END(literals)
 
 // =================================================================================
 // Macro definitions for fixed-width integer literal suffixes (C-style)
@@ -307,9 +317,13 @@ using ssize         = isize;        // Represents the difference between pointer
 // Literal suffixes for standard size and pointer difference types (Rust-style)
 // =================================================================================
 
+NEX_INLINE_NAMESPACE_BEGIN(literals)
+
 constexpr usize operator""_uz(ulonglong value) noexcept   { return static_cast<usize>(value); }
 constexpr isize operator""_iz(ulonglong value) noexcept   { return static_cast<isize>(value); }
 constexpr max_align operator""_ma(ldouble value) noexcept { return static_cast<max_align>(value); }
+
+NEX_INLINE_NAMESPACE_END(literals)
 
 // ================================================================================
 // Macro definitions for size and pointer difference literal suffixes (C-style)
@@ -384,6 +398,8 @@ using f64       = float64;              // 64-bit floating point (IEEE 754 binar
 // Literal suffixes for standard floating-point types (Rust-style)
 // =================================================================================
 
+NEX_INLINE_NAMESPACE_BEGIN(literals)
+
 constexpr f16 operator""_f16(ldouble value) noexcept { 
     // Note: This conversion may not be exact due to the limited precision of float16, 
     // but it allows for convenient literals.
@@ -394,8 +410,17 @@ constexpr f64 operator""_f64(ldouble value) noexcept    { return static_cast<f64
 constexpr ldouble operator""_ld(ldouble value) noexcept { return value; }
 
 #if NEX_HAS_BUILTIN_FLOAT128
-    constexpr f128 operator""_f128(const char* str) noexcept { return __builtin_strtof128(str, nullptr); }
+    constexpr f128 operator""_f128(ldouble value) noexcept { return static_cast<f128>(value); }
+
+    #if NEX_HAS_BUILTIN(__strtof128)
+        constexpr f128 operator""_f128(const char* str) noexcept { return __builtin_strtof128(str, nullptr); }
+    #else  // Safe fallback for compilers without __strtof128 builtin support
+        template <char... Chars>
+        constexpr f128 operator""_f128() noexcept { return meta::__parseRawFloating<f128, Chars...>(); }
+    #endif  // ^^NEX_HAS_BUILTIN(__strtof128)
 #endif  // ^^NEX_HAS_BUILTIN_FLOAT128
+
+NEX_INLINE_NAMESPACE_END(literals)
 
 // =================================================================================
 // Macro definitions for standard floating-point literal suffixes (C-style)
@@ -451,6 +476,8 @@ using c32       = char32;                   // UTF-32 code unit (since C++11)
 // Literal suffixes for standard character types (Rust-style)
 // =================================================================================
 
+NEX_INLINE_NAMESPACE_BEGIN(literals)
+
 constexpr c8 operator""_c8(char8 value) noexcept         { return value; }
 constexpr c16 operator""_c16(char16 value) noexcept      { return value; }
 constexpr c32 operator""_c32(char32 value) noexcept      { return value; }
@@ -459,6 +486,8 @@ constexpr c8 operator""_c8(nchar value) noexcept         { return static_cast<c8
 constexpr nchar operator""_nc(nchar value) noexcept      { return value; }
 constexpr wchar operator""_wc(wchar value) noexcept      { return value; }
 constexpr codepoint operator""_cp(char32 value) noexcept { return value; }
+
+NEX_INLINE_NAMESPACE_END(literals)
 
 // =================================================================================
 // Macro definitions for standard character literal suffixes (C-style)
@@ -520,6 +549,8 @@ enum class byte : uint8 {};                 // Single-byte object-representation
  * The use of `static_cast` are intentional to ensure that the operations are performed correctly while maintaining 
  * type safety and avoiding unintended implicit conversions.
  */
+
+NEX_INLINE_NAMESPACE_BEGIN(byte_operations)
 
 // Bitwise left shift operator for 'byte' type
 template <class IntType>
@@ -624,6 +655,8 @@ NEX_NODISCARD constexpr byte toByte(BoolType value) noexcept
 requires (meta::IsSameV<BoolType, bool>) {
     return static_cast<byte>(value ? 1u : 0u);
 }
+
+NEX_INLINE_NAMESPACE_END(byte_operations)
 
 using raw_byte                  = uint8;                // Arithmetic byte type (8-bit unsigned integer)
 using byte_ptr                  = raw_byte*;            // Pointer to arithmetic byte data

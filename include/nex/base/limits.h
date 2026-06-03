@@ -90,20 +90,21 @@ struct NumericLimitConstants {
     static constexpr float16 f16roundError          = 0.00048828125_f16;
     // Minimum positive subnormal value for IEEE 754 half-precision binary16
     static constexpr float16 f16denormMin           = 5.9604644775390625e-8_f16;
+
     // Positive infinity for IEEE 754 half-precision binary16 (exponent all 1s, fraction all 0s)
     static constexpr float16 f16infinity            = static_cast<float16>(0x7c00_u16);
     // Quiet NaN for IEEE 754 half-precision binary16 (exponent all 1s, fraction non-zero with leading bit 1)
     static constexpr float16 f16quietNaN            = static_cast<float16>(0x7e00_u16);
     // Signaling NaN for IEEE 754 half-precision binary16 (exponent all 1s, fraction non-zero with leading bit 0)
     static constexpr float16 f16signalingNaN        = static_cast<float16>(0x7d00_u16);
-    // Minimum positive subnormal value for IEEE 754 half-precision binary16
-    static constexpr float16 f16minPositive         = f16denormMin;
+
     static constexpr float16 f16maxFinite           = f16max;
     static constexpr float16 f16lowestFinite        = f16lowest;
     // Maximum exponent value for normal numbers in float16
     static constexpr float16 f16maxExponent         = 15.0_f16;
     static constexpr float16 f16minExponent         = -14.0_f16;
-    static constexpr float16 f16exponentBias        = 15.0_f16;     // Bias for the exponent in float16
+    // Bias for the exponent in float16 (exponent is stored as an unsigned value with this bias)
+    static constexpr float16 f16exponentBias        = 15.0_f16;
     static constexpr float16 f16maxDigits           = 3.0_f16;
     static constexpr float16 f16minDigits           = 3.0_f16;
     static constexpr float16 f16maxDecimalDigits    = 5.0_f16;
@@ -129,13 +130,12 @@ struct NumericLimitConstants {
     // Signaling NaN for IEEE 754 single-precision binary32 (exponent all 1s, fraction non-zero with leading bit 0)
     static constexpr float32 f32signalingNaN         = __builtin_nansf("");
 
-    // Minimum positive normal value for IEEE 754 single-precision binary32
-    static constexpr float32 f32minPositive         = f32denormMin;
     static constexpr float32 f32maxFinite           = f32max;
     static constexpr float32 f32lowestFinite        = f32lowest;
     static constexpr float32 f32maxExponent         = 127.0_f32;
     static constexpr float32 f32minExponent         = -126.0_f32;
-    static constexpr float32 f32exponentBias        = 127.0_f32;    // Bias for the exponent in float32
+    // Bias for the exponent in float32 (exponent is stored as an unsigned value with this bias)
+    static constexpr float32 f32exponentBias        = 127.0_f32;
     static constexpr float32 f32maxDigits           = 6.0_f32;
     static constexpr float32 f32minDigits           = 6.0_f32;
     static constexpr float32 f32maxDecimalDigits    = 9.0_f32;
@@ -161,13 +161,12 @@ struct NumericLimitConstants {
     // Signaling NaN for IEEE 754 double-precision binary64 (exponent all 1s, fraction non-zero with leading bit 0)
     static constexpr float64 f64signalingNaN        = __builtin_nans("");
 
-    // Minimum positive normal value for IEEE 754 double-precision binary64
-    static constexpr float64 f64minPositive         = f64denormMin;
     static constexpr float64 f64maxFinite           = f64max;
     static constexpr float64 f64lowestFinite        = f64lowest;
     static constexpr float64 f64maxExponent         = 1023.0_f64;
     static constexpr float64 f64minExponent         = -1022.0_f64;
-    static constexpr float64 f64exponentBias        = 1023.0_f64;   // Bias for the exponent in float64
+    // Bias for the exponent in float64 (exponent is stored as an unsigned value with this bias)
+    static constexpr float64 f64exponentBias        = 1023.0_f64;
     static constexpr float64 f64maxDigits           = 15.0_f64;
     static constexpr float64 f64minDigits           = 15.0_f64;
     static constexpr float64 f64maxDecimalDigits    = 17.0_f64;
@@ -194,13 +193,12 @@ struct NumericLimitConstants {
     // Signaling NaN for IEEE 754 quadruple-precision binary128 (exponent all 1s, fraction non-zero with leading bit 0)
     static constexpr float128 f128signalingNaN     = __builtin_nansq("");
 
-    // Minimum positive normal value for IEEE 754 quadruple-precision binary128
-    static constexpr float128 f128minPositive      = f128denormMin;
     static constexpr float128 f128maxFinite        = f128max;
     static constexpr float128 f128lowestFinite     = f128lowest;
     static constexpr float128 f128maxExponent      = 16383.0q_f128;
     static constexpr float128 f128minExponent      = -16382.0q_f128;
-    static constexpr float128 f128exponentBias     = 16383.0q_f128;  // Bias for the exponent in float128
+    // Bias for the exponent in float128 (exponent is stored as an unsigned value with this bias)
+    static constexpr float128 f128exponentBias     = 16383.0q_f128;
     static constexpr float128 f128maxDigits        = 33.0q_f128;
     static constexpr float128 f128minDigits        = 33.0q_f128;
     static constexpr float128 f128maxDecimalDigits = 36.0q_f128;

@@ -13,15 +13,6 @@
 #include "nex/base/export.h"
 #include "nex/base/namespace.h"
 
-// Undefine min/max macros if defined 
-// (to avoid conflicts with std::min/std::max)
-#ifdef min
-    #undef min
-#endif
-#ifdef max
-    #undef max
-#endif
-
 /**
  * @section Copy and Move Semantics Macros
  * @brief   Defines macros for default and deleted copy and move constructors and assignment operators for classes.

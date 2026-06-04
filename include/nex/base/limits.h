@@ -63,11 +63,18 @@ struct NumericLimitConstants {
     static constexpr uint128 u128max    = ~static_cast<uint128>(0);
 #endif  // ^^NEX_HAS_BUILTIN_INT128
 
+    static constexpr ilong ilmin        = static_cast<ilong>(sizeof(ilong) == 4 ? i32min : i64min);
+    static constexpr ilong ilmax        = static_cast<ilong>(sizeof(ilong) == 4 ? i32max : i64max);
+    static constexpr ulong ulmax        = static_cast<ulong>(sizeof(ulong) == 4 ? u32max : u64max);
+    static constexpr longlong llmin     = static_cast<longlong>(i64min);
+    static constexpr longlong llmax     = static_cast<longlong>(i64max);
+    static constexpr ulonglong ullmax   = static_cast<ulonglong>(u64max);
+
 #if NEX_BUILD_ENV_IS_64_BIT
     static constexpr uint64 sizemax     = ~static_cast<uintptr>(0_u64);
 #else  // Non-64-bit environment, assume 32-bit
     static constexpr uint32 sizemax     = 0xffffffff_u32;
-#endif
+#endif  // ^^sizemax
 
     // =================================================================================
     // Floating-point Limits (IEEE 754)
@@ -100,15 +107,22 @@ struct NumericLimitConstants {
 
     static constexpr float16 f16maxFinite           = f16max;
     static constexpr float16 f16lowestFinite        = f16lowest;
-    // Maximum exponent value for normal numbers in float16
-    static constexpr float16 f16maxExponent         = 15.0_f16;
+    // Number of radix digits in the mantissa, including the implicit hidden bit
+    static constexpr float16 f16binaryDigits        = 11.0_f16;
+    // Minimum negative integer exponent such that 2^(X-1) is a normalized float
     static constexpr float16 f16minExponent         = -14.0_f16;
-    // Bias for the exponent in float16 (exponent is stored as an unsigned value with this bias)
+    // Maximum positive integer exponent such that 2^(X-1) is a finite float
+    static constexpr float16 f16maxExponent         = 15.0_f16;
+    // The exponent bias value used in the IEEE 754 representation of float16
     static constexpr float16 f16exponentBias        = 15.0_f16;
-    static constexpr float16 f16maxDigits           = 3.0_f16;
-    static constexpr float16 f16minDigits           = 3.0_f16;
+    // Minimum decimal precision: number of decimal digits that can be round-tripped without loss
+    static constexpr float16 f16decimalDigits       = 3.0_f16;
+    // Maximum decimal precision: number of decimal digits required to uniquely identify a distinct value
     static constexpr float16 f16maxDecimalDigits    = 5.0_f16;
-    static constexpr float16 f16minDecimalDigits    = 5.0_f16;
+    // Minimum negative integer exponent such that 10^X is a normalized float
+    static constexpr float16 f16minDecimalExponent  = -4.0_f16;
+    // Maximum positive integer exponent such that 10^X is a finite float
+    static constexpr float16 f16maxDecimalExponent  = 4.0_f16;
 
     // Minimum positive normal value for IEEE 754 single-precision binary32
     static constexpr float32 f32min                 = 1.175494350822287507969e-38_f32;
@@ -123,23 +137,37 @@ struct NumericLimitConstants {
     // Minimum positive subnormal value for IEEE 754 single-precision binary32
     static constexpr float32 f32denormMin           = 1.401298464324817070923e-45_f32;
 
+#if NEX_HAS_BUILTIN(__builtin_inff)
     // Positive infinity for IEEE 754 single-precision binary32 (exponent all 1s, fraction all 0s)
-    static constexpr float32 f32infinity             = __builtin_huge_valf();
+    static constexpr float32 f32infinity            = __builtin_inff();
+#else    // Compilers does not support __builtin_inff
+    // Positive infinity for IEEE 754 single-precision binary32 (exponent all 1s, fraction all 0s)
+    static constexpr float32 f32infinity            = __builtin_huge_valf();
+#endif  // ^^float32 f32infinity
+
     // Quiet NaN for IEEE 754 single-precision binary32 (exponent all 1s, fraction non-zero with leading bit 1)
-    static constexpr float32 f32quietNaN             = __builtin_nanf("");
+    static constexpr float32 f32quietNaN            = __builtin_nanf("");
     // Signaling NaN for IEEE 754 single-precision binary32 (exponent all 1s, fraction non-zero with leading bit 0)
-    static constexpr float32 f32signalingNaN         = __builtin_nansf("");
+    static constexpr float32 f32signalingNaN        = __builtin_nansf("");
 
     static constexpr float32 f32maxFinite           = f32max;
     static constexpr float32 f32lowestFinite        = f32lowest;
-    static constexpr float32 f32maxExponent         = 127.0_f32;
+    // Number of radix digits in the mantissa, including the implicit hidden bit
+    static constexpr float32 f32binaryDigits        = 24.0_f32;
+    // Minimum negative integer exponent such that 2^(X-1) is a normalized float
     static constexpr float32 f32minExponent         = -126.0_f32;
-    // Bias for the exponent in float32 (exponent is stored as an unsigned value with this bias)
+    // Maximum positive integer exponent such that 2^(X-1) is a finite float
+    static constexpr float32 f32maxExponent         = 127.0_f32;
+    // The exponent bias value used in the IEEE 754 representation of float32
     static constexpr float32 f32exponentBias        = 127.0_f32;
-    static constexpr float32 f32maxDigits           = 6.0_f32;
-    static constexpr float32 f32minDigits           = 6.0_f32;
+    // Minimum decimal precision: number of decimal digits that can be round-tripped without loss
+    static constexpr float32 f32decimalDigits       = 6.0_f32;
+    // Maximum decimal precision: number of decimal digits required to uniquely identify a distinct value
     static constexpr float32 f32maxDecimalDigits    = 9.0_f32;
-    static constexpr float32 f32minDecimalDigits    = 9.0_f32;
+    // Minimum negative integer exponent such that 10^X is a normalized float
+    static constexpr float32 f32minDecimalExponent  = -37.0_f32;
+    // Maximum positive integer exponent such that 10^X is a finite float
+    static constexpr float32 f32maxDecimalExponent  = 38.0_f32;
 
     // Minimum positive normal value for IEEE 754 double-precision binary64
     static constexpr float64 f64min                 = 2.225073858507201383090e-308_f64;
@@ -154,8 +182,14 @@ struct NumericLimitConstants {
     // Minimum positive subnormal value for IEEE 754 double-precision binary64
     static constexpr float64 f64denormMin           = 4.940656458412465441765e-324_f64;
 
+#if NEX_HAS_BUILTIN(__builtin_inf)
+    // Positive infinity for IEEE 754 double-precision binary64 (exponent all 1s, fraction all 0s)
+    static constexpr float64 f64infinity            = __builtin_inf();
+#else  // Compilers does not support __builtin_inf
     // Positive infinity for IEEE 754 double-precision binary64 (exponent all 1s, fraction all 0s)
     static constexpr float64 f64infinity            = __builtin_huge_val();
+#endif  // ^^float64 f64infinity
+
     // Quiet NaN for IEEE 754 double-precision binary64 (exponent all 1s, fraction non-zero with leading bit 1)
     static constexpr float64 f64quietNaN            = __builtin_nan("");
     // Signaling NaN for IEEE 754 double-precision binary64 (exponent all 1s, fraction non-zero with leading bit 0)
@@ -163,38 +197,126 @@ struct NumericLimitConstants {
 
     static constexpr float64 f64maxFinite           = f64max;
     static constexpr float64 f64lowestFinite        = f64lowest;
-    static constexpr float64 f64maxExponent         = 1023.0_f64;
+    // Number of radix digits in the mantissa, including the implicit hidden bit
+    static constexpr float64 f64binaryDigits        = 53.0_f64;
+    // Minimum negative integer exponent such that 2^(X-1) is a normalized float
     static constexpr float64 f64minExponent         = -1022.0_f64;
-    // Bias for the exponent in float64 (exponent is stored as an unsigned value with this bias)
+    // Maximum positive integer exponent such that 2^(X-1) is a finite float
+    static constexpr float64 f64maxExponent         = 1023.0_f64;
+    // The exponent bias value used in the IEEE 754 representation of float64
     static constexpr float64 f64exponentBias        = 1023.0_f64;
-    static constexpr float64 f64maxDigits           = 15.0_f64;
-    static constexpr float64 f64minDigits           = 15.0_f64;
+    // Minimum decimal precision: number of decimal digits that can be round-tripped without loss
+    static constexpr float64 f64decimalDigits       = 15.0_f64;
+    // Maximum decimal precision: number of decimal digits required to uniquely identify a distinct value
     static constexpr float64 f64maxDecimalDigits    = 17.0_f64;
-    static constexpr float64 f64minDecimalDigits    = 17.0_f64;
+    // Minimum negative integer exponent such that 10^X is a normalized float
+    static constexpr float64 f64minDecimalExponent  = -307.0_f64;
+    // Maximum positive integer exponent such that 10^X is a finite float
+    static constexpr float64 f64maxDecimalExponent  = 308.0_f64;
+
+#if (NEX_SIZEOF_LONG_DOUBLE == 8)
+    // Minimum positive normal value for IEEE 754 extended precision
+    static constexpr ldouble ldmin                  = 2.22507385850720138309e-308_ld;
+    // Maximum finite value for IEEE 754 extended precision
+    static constexpr ldouble ldmax                  = 1.79769313486231570815e+308_ld;
+    // Minimum finite value for IEEE 754 extended precision
+    static constexpr ldouble ldlowest               = -1.79769313486231570815e+308_ld;
+    // Difference between 1.0 and the next representable value for IEEE 754 extended precision
+    static constexpr ldouble ldepsilon              = 2.22044604925031308085e-16_ld;
+    // Half of epsilon, maximum rounding error for extended precision
+    static constexpr ldouble ldroundError           = 0.5_ld * ldepsilon;
+    // Minimum positive subnormal value for IEEE 754 extended precision
+    static constexpr ldouble lddenormMin            = 4.94065645841246544177e-324_ld;
+#else
+    // Minimum positive normal value for IEEE 754 extended precision
+    static constexpr ldouble ldmin                  = 3.36210314311209350626267781732175260e-4932_ld;
+    // Maximum finite value for IEEE 754 extended precision
+    static constexpr ldouble ldmax                  = 1.18973149535723176508575932662800702e+4932_ld;
+    // Minimum finite value for IEEE 754 extended precision
+    static constexpr ldouble ldlowest               = -1.18973149535723176508575932662800702e+4932_ld;
+    // Difference between 1.0 and the next representable value for IEEE 754 extended precision
+    static constexpr ldouble ldepsilon              = 1.92592994438723585305597794258492732e-34_ld;
+    // Half of epsilon, maximum rounding error for extended precision
+    static constexpr ldouble ldroundError           = 0.5_ld * ldepsilon;
+    // Minimum positive subnormal value for IEEE 754 extended precision
+    static constexpr ldouble lddenormMin            = 6.47517511943802511092443895822764655e-4966_ld;
+#endif  // ^^^^ldouble
+
+#if NEX_HAS_BUILTIN(__builtin_infl)
+    // Positive infinity for IEEE 754 extended precision
+    static constexpr ldouble ldinfinity             = __builtin_infl();
+#else  // Compilers does not support __builtin_infl
+    // Positive infinity for IEEE 754 extended precision
+    static constexpr ldouble ldinfinity             = __builtin_huge_vall();
+#endif  // ^^ldouble ldinfinity
+
+    // Quiet NaN for IEEE 754 extended precision
+    static constexpr ldouble ldquietNaN             = __builtin_nanl("");
+    // Signaling NaN for IEEE 754 extended precision
+    static constexpr ldouble ldsignalingNaN         = __builtin_nansl("");
+
+    static constexpr ldouble ldmaxFinite            = ldmax;
+    static constexpr ldouble ldlowestFinite         = ldlowest;
+
+#if (NEX_SIZEOF_LONG_DOUBLE == 8)
+    // Number of radix digits in the mantissa, including the implicit hidden bit
+    static constexpr ldouble ldbinaryDigits         = 53.0_ld;
+    // Minimum negative integer exponent such that 2^(X-1) is a normalized float
+    static constexpr ldouble ldminExponent          = -1022.0_ld;
+    // Maximum positive integer exponent such that 2^(X-1) is a finite float
+    static constexpr ldouble ldmaxExponent          = 1023.0_ld;
+    // The exponent bias value used in the IEEE 754 representation of extended precision
+    static constexpr ldouble ldexponentBias         = 1023.0_ld;
+    // Minimum decimal precision: number of decimal digits that can be round-tripped without loss
+    static constexpr ldouble lddecimalDigits        = 15.0_ld;
+    // Maximum decimal precision: number of decimal digits required to uniquely identify a distinct value
+    static constexpr ldouble ldmaxDecimalDigits     = 17.0_ld;
+    // Minimum negative integer exponent such that 10^X is a normalized float
+    static constexpr ldouble ldminDecimalExponent   = -307.0_ld;
+    // Maximum positive integer exponent such that 10^X is a finite float
+    static constexpr ldouble ldmaxDecimalExponent   = 308.0_ld;
+#else
+    // Number of radix digits in the mantissa, including the implicit hidden bit
+    static constexpr ldouble ldbinaryDigits         = 113.0_ld;
+    // Minimum negative integer exponent such that 2^(X-1) is a normalized float
+    static constexpr ldouble ldminExponent          = -16382.0_ld;
+    // Maximum positive integer exponent such that 2^(X-1) is a finite float
+    static constexpr ldouble ldmaxExponent          = 16383.0_ld;
+    // The exponent bias value used in the IEEE 754 representation of extended precision
+    static constexpr ldouble ldexponentBias         = 16383.0_ld;
+    // Minimum decimal precision: number of decimal digits that can be round-tripped without loss
+    static constexpr ldouble lddecimalDigits        = 33.0_ld;
+    // Maximum decimal precision: number of decimal digits required to uniquely identify a distinct value
+    static constexpr ldouble ldmaxDecimalDigits     = 36.0_ld;
+    // Minimum negative integer exponent such that 10^X is a normalized float
+    static constexpr ldouble ldminDecimalExponent   = -4931.0_ld;
+    // Maximum positive integer exponent such that 10^X is a finite float
+    static constexpr ldouble ldmaxDecimalExponent   = 4932.0_ld;
+#endif  // ^^^^ldouble
 
 #if NEX_HAS_BUILTIN_FLOAT128
     // Minimum positive normal value for IEEE 754 quadruple-precision binary128
-    static constexpr float128 f128min              = 3.36210314311209350626267781732175260e-4932q_f128;
+    static constexpr float128 f128min               = 3.36210314311209350626267781732175260e-4932q_f128;
     // Maximum finite value for IEEE 754 quadruple-precision binary128
-    static constexpr float128 f128max              = 1.18973149535723176508575932662800702e+4932q_f128;
+    static constexpr float128 f128max               = 1.18973149535723176508575932662800702e+4932q_f128;
     // Minimum finite value for IEEE 754 quadruple-precision binary128
-    static constexpr float128 f128lowest           = -1.18973149535723176508575932662800702e+4932q_f128;
+    static constexpr float128 f128lowest            = -1.18973149535723176508575932662800702e+4932q_f128;
     // Difference between 1.0 and the next representable value for IEEE 754 quadruple-precision binary128
-    static constexpr float128 f128epsilon          = 1.92592994438723585305597794258492732e-34q_f128;
+    static constexpr float128 f128epsilon           = 1.92592994438723585305597794258492732e-34q_f128;
     // Half of epsilon, maximum rounding error for float128
-    static constexpr float128 f128roundError       = 0.5q_f128 * f128epsilon;
+    static constexpr float128 f128roundError        = 0.5q_f128 * f128epsilon;
     // Minimum positive subnormal value for IEEE 754 quadruple-precision binary128
-    static constexpr float128 f128denormMin        = 6.47517511943802511092443895822764655e-4966q_f128;
+    static constexpr float128 f128denormMin         = 6.47517511943802511092443895822764655e-4966q_f128;
 
     // Positive infinity for IEEE 754 quadruple-precision binary128 (exponent all 1s, fraction all 0s)
-    static constexpr float128 f128infinity         = __builtin_huge_valq();
+    static constexpr float128 f128infinity          = __builtin_huge_valq();
     // Quiet NaN for IEEE 754 quadruple-precision binary128 (exponent all 1s, fraction non-zero with leading bit 1)
-    static constexpr float128 f128quietNaN         = __builtin_nanq("");
+    static constexpr float128 f128quietNaN          = __builtin_nanq("");
     // Signaling NaN for IEEE 754 quadruple-precision binary128 (exponent all 1s, fraction non-zero with leading bit 0)
-    static constexpr float128 f128signalingNaN     = __builtin_nansq("");
+    static constexpr float128 f128signalingNaN      = __builtin_nansq("");
 
-    static constexpr float128 f128maxFinite        = f128max;
-    static constexpr float128 f128lowestFinite     = f128lowest;
+    static constexpr float128 f128maxFinite         = f128max;
+    static constexpr float128 f128lowestFinite      = f128lowest;
     static constexpr float128 f128maxExponent      = 16383.0q_f128;
     static constexpr float128 f128minExponent      = -16382.0q_f128;
     // Bias for the exponent in float128 (exponent is stored as an unsigned value with this bias)
@@ -203,6 +325,23 @@ struct NumericLimitConstants {
     static constexpr float128 f128minDigits        = 33.0q_f128;
     static constexpr float128 f128maxDecimalDigits = 36.0q_f128;
     static constexpr float128 f128minDecimalDigits = 36.0q_f128;
+    
+    // Number of radix digits in the mantissa, including the implicit hidden bit
+    static constexpr float128 f128binaryDigits      = 113.0q_f128;
+    // Minimum negative integer exponent such that 2^(X-1) is a normalized float
+    static constexpr float128 f128minExponent       = -16382.0q_f128;
+    // Maximum positive integer exponent such that 2^(X-1) is a finite float
+    static constexpr float128 f128maxExponent       = 16383.0q_f128;
+    // The exponent bias value used in the IEEE 754 representation of float64
+    static constexpr float128 f128exponentBias      = 16383.0q_f128;
+    // Minimum decimal precision: number of decimal digits that can be round-tripped without loss
+    static constexpr float128 f128decimalDigits     = 33.0q_f128;
+    // Maximum decimal precision: number of decimal digits required to uniquely identify a distinct value
+    static constexpr float128 f128maxDecimalDigits  = 36.0q_f128;
+    // Minimum negative integer exponent such that 10^X is a normalized float
+    static constexpr float128 f128minDecimalExponent = -4931.0q_f128;
+    // Maximum positive integer exponent such that 10^X is a finite float
+    static constexpr float128 f128maxDecimalExponent = 4932.0q_f128;
 #endif  // ^^NEX_HAS_BUILTIN_FLOAT128
 
     // =================================================================================
@@ -210,11 +349,11 @@ struct NumericLimitConstants {
     // =================================================================================
 
     static constexpr char8 c8min        = static_cast<char8>(0x00);
-    static constexpr char8 c8max        = static_cast<char8>(0xFF);
+    static constexpr char8 c8max        = static_cast<char8>(0xff);
     static constexpr char16 c16min      = static_cast<char16>(0x0000);
-    static constexpr char16 c16max      = static_cast<char16>(0xFFFF);
+    static constexpr char16 c16max      = static_cast<char16>(0xffff);
     static constexpr char32 c32min      = static_cast<char32>(0x00000000);
-    static constexpr char32 c32max      = static_cast<char32>(0xFFFFFFFF);
+    static constexpr char32 c32max      = static_cast<char32>(0xffffffff);
 
     // =============================================================================
     // Native & Wide Character Constants (Platform/ABI Dependent)
@@ -241,7 +380,7 @@ struct NumericLimitConstants {
     static constexpr wchar wcharmax     = static_cast<wchar>(0xffff_u16);
     static constexpr wint wintmin       = static_cast<wint>(0x0000_u16);
     static constexpr wint wintmax       = static_cast<wint>(0xffff_u16);
-#else
+#else  // Non-Windows ABIs
     /**
      * @note
      * Unix/Linux/macOS/Android ABIs define wchar_t/wint_t as 32-bit (usually signed or unsigned 
@@ -258,7 +397,7 @@ struct NumericLimitConstants {
                                             ? static_cast<wint>(-2147483647 - 1)  : static_cast<wint>(0);
     static constexpr wint wintmax       = (static_cast<wint>(-1) < 0) 
                                             ? static_cast<wint>(2147483647) : static_cast<wint>(0xffffffff_u32);
-#endif
+#endif  // ^^wchar/wint limits
 
     // =============================================================================
     // Boolean Logical Constants
@@ -352,110 +491,237 @@ struct NumericLimitConstants {
 #define NEX_WINT_MAX            NEX_PREPEND_NAMESPACE(NumericLimitConstants::wintmax)
 
 // =================================================================================
-// Base template for numeric limits (C++-style)
+// Base template for numeric limits (C++20 compile-time)
 // =================================================================================
+
+//  Enumeration for different IEEE rounding styles
+enum class NumericRoundStyle : int32 {
+    RoundIndeterminate      = -1,
+    RoundTowardZero         = 0,
+    RoundToNearest          = 1,
+    RoundTowardInfinity     = 2,
+    RoundTowardNegInfinity  = 3
+};
 
 template<typename Type>
 struct NumericLimitsBase {
-    static_assert(sizeof(Type) == 0, "NumericLimits is not specialized for this type");
+    static_assert((sizeof(Type) > 0), 
+        "Error: NumericLimits is not specialized for this type");
 
-    // Indicates whether limits are defined for this type
-    static constexpr bool isSpecialized     = false;
-    // Indicates whether the type is signed (only meaningful for integer types)
-    static constexpr bool isSigned          = false;
-    // Indicates whether the type is an integer type 
-    // (true for integral types, false for floating-point types)
-    static constexpr bool isInteger         = false;
-    // Indicates whether the type is an exact type 
-    // (true for integer types, false for floating-point types)
-    static constexpr bool isExact           = false;
-    // Indicates whether the type supports infinity 
-    // (only meaningful for floating-point types)
-    static constexpr bool hasInfinity       = false;
-    // Indicates whether the type supports quiet NaN 
-    // (only meaningful for floating-point types)
-    static constexpr bool hasQuietNaN       = false;
-    // Indicates whether the type supports signaling NaN 
-    // (only meaningful for floating-point types)
-    static constexpr bool hasSignalingNaN   = false;
-    // Indicates whether the type supports denormalized numbers 
-    // (only meaningful for floating-point types)
-    static constexpr bool hasDenorm         = false;
-    // Indicates whether loss of precision is detected when denormalized numbers are used 
-    // (only meaningful for floating-point types)
-    static constexpr bool hasDenormLoss     = false;
-    // Indicates whether the type has finite bounds (true for all built-in types)
-    static constexpr bool isBounded         = false;
-    // Indicates whether the type is a modulo type 
-    // (true for unsigned integer types, false for signed integer and floating-point types)
-    static constexpr bool isModulo          = false;
+    /**
+     * @brief Core Type Identification
+     * @note  False for all types by default; specializations will set to true for specific types.
+     */
+
+    // Indicates whether a meaningful specialization exists for the data type
+    // It is false by default in the base struct and set to true for specific types (like int, float, etc.) 
+    // to signal that the rest of the values are valid.
+    static constexpr bool isSpecialized             = false;
+    // Identifies if the type can represent both positive and negative values. 
+    // For example, it is true for int and float, but false for uint32.
+    static constexpr bool isSigned                  = false;
+    // Specifies whether the type is an integer type (e.g., int, char, long). 
+    // It is false for floating-point types like float or double.
+    static constexpr bool isInteger                 = false;
+    // Indicates if the type uses an exact representation without rounding errors. 
+    // This is true for all integer types and false for floating-point types due to precision limits.
+    static constexpr bool isExact                   = false;
+    // Determines whether the type is a boolean type (bool).
+    static constexpr bool isBoolean                 = false;
+
+    /**
+     * @brief Standards & Hardware Behavior
+     * @note False or zero by default; specializations for floating-point types will set them 
+     * according to IEC 60559 / IEEE 754 compliance.
+     */
+
+    // Specifies if the type adheres to the IEC 60559 / IEEE 754 standard for floating-point arithmetic. 
+    // Most modern systems set this to true for standard float and double.
+    static constexpr bool isIEC559                  = false;
+    // Indicates whether an arithmetic operation that causes an error (like division by zero or overflow) 
+    // will trap, causing a hardware signal or terminating the program.
+    static constexpr bool traps                     = false;
+
+    /**
+     * @brief Floating-Point Special Values
+     * @note False by default; specializations for floating-point types will set to true if the type
+     * supports these special values according to the IEC 60559 / IEEE 754 standard.
+     */
+
+    // Identifies whether the type has a special representation for positive infinity (+∞). 
+    // Generally true for IEEE 754 floating-point numbers.
+    static constexpr bool hasInfinity               = false;
+    // Determines if the type can represent a Quiet NaN (Not-a-Number). 
+    // Quiet NaNs propagate through arithmetic operations without raising hardware exceptions.
+    static constexpr bool hasQuietNaN               = false;
+    // Determines if the type can represent a Signaling NaN. 
+    // Unlike a Quiet NaN, using a Signaling NaN in an operation triggers an immediate hardware exception/trap.
+    static constexpr bool hasSignalingNaN           = false;
+
+    /**
+     * @brief Subnormal / Denormalized Numbers
+     * @note False by default; specializations for floating-point types will set to true if the type
+     * supports subnormal or denormalized numbers according to the IEC 60559 / IEEE 754 standard.
+     */
+
+    // Indicates whether the floating-point type supports subnormal (denormalized) numbers, 
+    // which are numbers closer to zero than the smallest normal representation allows.
+    static constexpr bool hasDenorm                 = false;
+    // Indicates if a loss of precision is detected as a "denormalization loss" 
+    // rather than an inexact result error.
+    static constexpr bool hasDenormLoss             = false;
+    // Determines whether a floating-point type detects "tinyness" (underflow) 
+    // before or after rounding the result.
+    static constexpr bool tinynessBefore            = false;
+
+    /**
+     * @brief Value Boundaries & Overflow Behavior
+     * @note False by default; specializations for integer types will set them according to the type's limits.
+     */
+
+    // Specifies whether the set of values representable by the type is finite. 
+    // Practically all built-in types are bounded (true), while an arbitrary-precision BigInt class 
+    // would be unbounded (false).
+    static constexpr bool isBounded                 = false;
+    // Indicates if mathematically overflowing an operation rolls over to the opposite end of the spectrum 
+    // (modulo arithmetic). This is traditionally true for unsigned integers (e.g., MAX_UINT + 1 == 0).
+    static constexpr bool isModulo                  = false;
+
+    /**
+     * @brief Digital Radix & Precision
+     * @note Zero by default; specializations for integer and floating-point types will set them according to 
+     * the type's characteristics.
+     */
+
+    // The base of the representation system for the type. 
+    // For integers and typical floating-point numbers, this is 2 (binary), but it could be 10 for decimal types.
+    static constexpr int32 radix                    = 0;
+    // The number of radix digits that the type can represent without losing precision. 
+    // For integers, this is the number of non-sign bits. 
+    // For floating-point numbers, it's the number of bits in the mantissa.
+    static constexpr int32 digits                   = 0;
+    // The number of base-10 (decimal) digits that can be represented by the type without alteration. 
+    // For example, any 5-digit decimal number can fit perfectly into a type whose digits10 is >= 5.
+    static constexpr int32 digits10                 = 0;
+    // The number of base-10 digits required to uniquely identify every possible distinct value of this type. 
+    // This is highly useful when serializing floating-point numbers to text and back without losing data.
+    static constexpr int32 maxDigits10              = 0;
+
+    /**
+     * @brief Exponent Limits (Floating-Point Only)
+     * @note Zero by default; specializations for floating-point types will set them according to 
+     * the type's characteristics.
+     */
+
+    // The maximum positive integer power that the radix can be raised to such that the type can still represent 
+    // a finite floating-point number without overflowing.
+    static constexpr int32 maxExponent              = 0;
+    // The maximum positive integer power of 10 that can be represented as a finite floating-point number.
+    static constexpr int32 maxExponent10            = 0;
+    // The minimum negative integer power that the radix can be raised to such that the type can still represent 
+    // a normalized floating-point number.
+    static constexpr int32 minExponent              = 0;
+    // The minimum negative integer power of 10 that can be represented as a normalized floating-point number.
+    static constexpr int32 minExponent10            = 0;
+
+    /**
+     * @brief Rounding Behavior
+     * @note RoundTowardZero by default; specializations for floating-point types will set to 
+     * the appropriate rounding style according to the IEC 60559 / IEEE 754 standard.
+     */
+
+    // Identifies the default rounding mode used by the type 
+    // when a real number cannot fit into its precision constraints.
+    static constexpr NumericRoundStyle roundStyle   = NumericRoundStyle::RoundTowardZero;
 };
 
 // =================================================================================
-// Specializations of NumericLimitsBase for built-in types (C++-style)
+// Specializations of NumericLimitsBase for character and fixed-width integer types
 // =================================================================================
 
 template<typename Type>
-struct IntegerLimitsBase : public NumericLimitsBase<Type> {
-    static_assert(sizeof(Type) == 0, "IntegerLimits is not specialized for this type");
+struct SignedIntegerLimitsBase : public NumericLimitsBase<Type> {
+    static_assert(meta::IsSignedIntegralV<Type>, 
+        "Error: SignedIntegerLimits is only specialized for signed integral types");
 
-    // Indicates whether limits are defined for this type
     static constexpr bool isSpecialized     = true;
-    // Indicates whether the type is signed 
-    // (true for signed integer types, false for unsigned integer types)
-    static constexpr bool isSigned          = (Type(-1) < Type(0));
-    // Indicates whether the type is an integer type
+    static constexpr bool isSigned          = true;
     static constexpr bool isInteger         = true;
-    // Indicates whether the type is an exact type
     static constexpr bool isExact           = true;
-    // Indicates whether the type has finite bounds
     static constexpr bool isBounded         = true;
-    // Indicates whether the type is a modulo type 
-    // (true for unsigned integer types, false for signed integer types)
-    static constexpr bool isModulo          = !isSigned;
+    static constexpr int32 radix            = 2;
+
+    // For signed integers, the number of radix digits is typically the number of bits minus one for the sign bit.
+    static constexpr int32 digits     = sizeof(Type) * 8 - 1;
+    // The number of base-10 digits is calculated based on the number of binary digits and log10(2).
+    static constexpr int32 digits10   = (digits * 30103) / 100000; // Approximation of digits * log10(2)
+};
+
+template<typename Type>
+struct UnsignedIntegerLimitsBase : public NumericLimitsBase<Type> {
+    static_assert(meta::IsUnsignedIntegralV<Type>, 
+        "Error: UnsignedIntegerLimits is only specialized for unsigned integral types");
+
+    static constexpr bool isSpecialized     = true;
+    static constexpr bool isInteger         = true;
+    static constexpr bool isExact           = true;
+    static constexpr bool isBounded         = true;
+    static constexpr bool isModulo          = true;
+    static constexpr int32 radix            = 2;
+
+    // For unsigned integers, the number of radix digits is typically the number of bits since there is no sign bit.
+    static constexpr int32 digits     = sizeof(Type) * 8;
+    // The number of base-10 digits is calculated based on the number of binary digits and log10(2).
+    static constexpr int32 digits10   = (digits * 30103) / 100000; // Approximation of digits * log10(2)
+};
+
+struct NCharLimitsBase 
+    : public meta::ConditionalT<
+        meta::IsSignedIntegralV<char>, 
+        SignedIntegerLimitsBase<char>, 
+        UnsignedIntegerLimitsBase<char>
+    > {
+    static constexpr bool isSigned          = (meta::IsSignedIntegralV<char>);
+    static constexpr bool isModulo          = (!meta::IsSignedIntegralV<char>);
+    static constexpr int32 digits           = sizeof(char) * 8 - (meta::IsSignedIntegralV<char>);
+    static constexpr int32 digits10         = 2;  // Always 2 decimal digits, no matter the signedness
+};
+
+struct WCharLimitsBase 
+    : public meta::ConditionalT<
+        meta::IsSignedIntegralV<wchar_t>, 
+        SignedIntegerLimitsBase<wchar_t>, 
+        UnsignedIntegerLimitsBase<wchar_t>
+    > {
+    static constexpr bool isSigned          = (meta::IsSignedIntegralV<wchar_t>);
+    static constexpr bool isModulo          = (!meta::IsSignedIntegralV<wchar_t>);
+    static constexpr int32 digits           = sizeof(wchar_t) * 8 - (meta::IsSignedIntegralV<wchar_t>);
+    static constexpr int32 digits10         = (digits * 30103) / 100000; // Approximation of digits * log10(2)
 };
 
 // =================================================================================
-// Specializations of NumericLimitsBase for floating-point types (C++-style)
+// Specializations of NumericLimitsBase for floating-point types
 // =================================================================================
 
 template<typename Type>
 struct FloatingPointLimitsBase : public NumericLimitsBase<Type> {
-    static_assert(sizeof(Type) == 0, "FloatingPointLimits is not specialized for this type");
+    static_assert((meta::IsFloatingPointV<Type>), 
+        "Error: FloatingPointLimits is only specialized for floating-point types");
 
-    // Indicates whether limits are defined for this type
-    static constexpr bool isSpecialized     = true;
-    // Indicates whether the type is signed 
-    // (all floating-point types are signed)
-    static constexpr bool isSigned          = true;
-    // Indicates whether the type is an integer type 
-    // (false for all floating-point types)
-    static constexpr bool isInteger         = false;
-    // Indicates whether the type is an exact type 
-    // (false for all floating-point types)
-    static constexpr bool isExact           = false;
-    // Indicates whether the type supports infinity 
-    // (true for all floating-point types)
-    static constexpr bool hasInfinity       = true;
-    // Indicates whether the type supports quiet NaN 
-    // (true for all floating-point types)
-    static constexpr bool hasQuietNaN       = true;
-    // Indicates whether the type supports signaling NaN 
-    // (true for all floating-point types)
-    static constexpr bool hasSignalingNaN   = true;
-    // Indicates whether the type supports denormalized numbers 
-    // (true for all floating-point types)
-    static constexpr bool hasDenorm         = true;
-    // Indicates whether loss of precision is detected when denormalized numbers are used 
-    // (true for all floating-point types that support denormals)
-    static constexpr bool hasDenormLoss     = true;
-    // Indicates whether the type has finite bounds 
-    // (true for all built-in types, including floating-point)
-    static constexpr bool isBounded         = true;
+    static constexpr bool isSpecialized             = true;
+    static constexpr bool isSigned                  = true;
+    static constexpr bool isIEC559                  = true;
+    static constexpr bool hasInfinity               = true;
+    static constexpr bool hasQuietNaN               = true;
+    static constexpr bool hasSignalingNaN           = true;
+    static constexpr bool hasDenorm                 = true;
+    static constexpr bool isBounded                 = true;
+    static constexpr int32 radix                    = 2;
+    static constexpr NumericRoundStyle roundStyle   = NumericRoundStyle::RoundToNearest;
 };
 
 // =================================================================================
-// Primary template for NumericLimits (C++-style)
+// Primary template for NumericLimits (C++20 compile-time)
 // =================================================================================
 
 /**
@@ -475,27 +741,726 @@ struct FloatingPointLimitsBase : public NumericLimitsBase<Type> {
 
 template<typename Type>
 struct NumericLimits : public NumericLimitsBase<Type> {
-    static_assert(sizeof(Type) == 0, "NumericLimits is not specialized for this type");
+    static_assert((meta::IsArithmeticV<Type>), 
+        "Error: NumericLimits is only specialized for arithmetic types (integral and floating-point)");
 
-    NEX_NODISCARD static constexpr Type min() noexcept { return Type(0); }
-    NEX_NODISCARD static constexpr Type max() noexcept { return Type(0); }
-    NEX_NODISCARD static constexpr Type lowest() noexcept { return Type(0); }
-    NEX_NODISCARD static constexpr Type epsilon() noexcept { return Type(0); }
-    NEX_NODISCARD static constexpr Type roundError() noexcept { return Type(0); }
-    NEX_NODISCARD static constexpr Type denormMin() noexcept { return Type(0); }
-    NEX_NODISCARD static constexpr Type infinity() noexcept { return Type(0); }
-    NEX_NODISCARD static constexpr Type quietNaN() noexcept { return Type(0); }
+    NEX_NODISCARD static constexpr Type min() noexcept          { return Type(0); }
+    NEX_NODISCARD static constexpr Type max() noexcept          { return Type(0); }
+    NEX_NODISCARD static constexpr Type lowest() noexcept       { return Type(0); }
+    NEX_NODISCARD static constexpr Type epsilon() noexcept      { return Type(0); }
+    NEX_NODISCARD static constexpr Type roundError() noexcept   { return Type(0); }
+    NEX_NODISCARD static constexpr Type denormMin() noexcept    { return Type(0); }
+
+    NEX_NODISCARD static constexpr Type infinity() noexcept     { return Type(0); }
+    NEX_NODISCARD static constexpr Type quietNaN() noexcept     { return Type(0); }
     NEX_NODISCARD static constexpr Type signalingNaN() noexcept { return Type(0); }
-    NEX_NODISCARD static constexpr Type minPositive() noexcept { return Type(0); }
-    NEX_NODISCARD static constexpr Type maxFinite() noexcept { return Type(0); }
-    NEX_NODISCARD static constexpr Type lowestFinite() noexcept { return Type(0); }
-    NEX_NODISCARD static constexpr Type maxExponent() noexcept { return Type(0); }
-    NEX_NODISCARD static constexpr Type minExponent() noexcept { return Type(0); }
-    NEX_NODISCARD static constexpr Type exponentBias() noexcept { return Type(0); }
-    NEX_NODISCARD static constexpr Type maxDigits() noexcept { return Type(0); }
-    NEX_NODISCARD static constexpr Type minDigits() noexcept { return Type(0); }
-    NEX_NODISCARD static constexpr Type maxDecimalDigits() noexcept { return Type(0); }
-    NEX_NODISCARD static constexpr Type minDecimalDigits() noexcept { return Type(0); }
+
+    NEX_NODISCARD static constexpr int32 exponentBias() noexcept { return 0; }
+    NEX_NODISCARD static constexpr int32 minDecimalExponent() noexcept { return 0; }
+    NEX_NODISCARD static constexpr int32 maxDecimalExponent() noexcept { return 0; }
+
+    NEX_NODISCARD static constexpr int32 minDigits() noexcept        { return 0; }
+    NEX_NODISCARD static constexpr int32 maxDigits() noexcept        { return 0; }
+    NEX_NODISCARD static constexpr int32 minDecimalDigits() noexcept { return 0; }
+    NEX_NODISCARD static constexpr int32 maxDecimalDigits() noexcept { return 0; }
 };
+
+// =================================================================================
+// Specializations of NumericLimits for top-level const/volatile qualifiers
+// =================================================================================
+
+template<typename Type>
+struct NumericLimits<const Type> : public NumericLimits<Type> {};
+
+template<typename Type>
+struct NumericLimits<volatile Type> : public NumericLimits<Type> {};
+
+template<typename Type>
+struct NumericLimits<const volatile Type> : public NumericLimits<Type> {};
+
+// =================================================================================
+// Specializations of NumericLimits for boolean type
+// =================================================================================
+
+template<>
+class NumericLimits<bool> : public NumericLimitsBase<bool> {
+public:
+    NEX_NODISCARD static constexpr bool(min)() noexcept { return NumericLimitConstants::boolmin; }
+    NEX_NODISCARD static constexpr bool(max)() noexcept { return NumericLimitConstants::boolmax; }
+
+    static constexpr bool isSpecialized     = true;
+    static constexpr bool isInteger         = true;
+    static constexpr bool isExact           = true;
+    static constexpr bool isBoolean         = true;
+    static constexpr bool isBounded         = true;
+    static constexpr int32 radix            = 2;
+    static constexpr int32 digits           = 1;
+};
+
+// =================================================================================
+// Specializations of NumericLimits for character types
+// =================================================================================
+
+template<>
+class NumericLimits<nchar> : public NCharLimitsBase {
+public:
+    NEX_NODISCARD static constexpr nchar (min)() noexcept { return NumericLimitConstants::ncharmin; }
+    NEX_NODISCARD static constexpr nchar (max)() noexcept { return NumericLimitConstants::ncharmax; }
+
+    NEX_NODISCARD static constexpr nchar (lowest)() noexcept       { return (min)(); }
+    NEX_NODISCARD static constexpr nchar (epsilon)() noexcept      { return 0; }
+    NEX_NODISCARD static constexpr nchar (roundError)() noexcept   { return 0; }
+    NEX_NODISCARD static constexpr nchar (denormMin)() noexcept    { return 0; }
+
+    NEX_NODISCARD static constexpr nchar (infinity)() noexcept     { return 0; }
+    NEX_NODISCARD static constexpr nchar (quietNaN)() noexcept     { return 0; }
+    NEX_NODISCARD static constexpr nchar (signalingNaN)() noexcept { return 0; }
+
+    NEX_NODISCARD static constexpr int32 exponentBias() noexcept { return 0; }
+    NEX_NODISCARD static constexpr int32 minDecimalExponent() noexcept { return 0; }
+    NEX_NODISCARD static constexpr int32 maxDecimalExponent() noexcept { return 0; }
+
+    NEX_NODISCARD static constexpr int32 minDigits() noexcept     { return digits; }
+    NEX_NODISCARD static constexpr int32 maxDigits() noexcept     { return digits; }
+    NEX_NODISCARD static constexpr int32 minDecimalDigits() noexcept { return maxDigits10; }
+    NEX_NODISCARD static constexpr int32 maxDecimalDigits() noexcept { return digits10; }
+};
+
+template<>
+class NumericLimits<schar> : public SignedIntegerLimitsBase<schar> {
+public:
+    NEX_NODISCARD static constexpr schar (min)() noexcept { return NumericLimitConstants::i8min; }
+    NEX_NODISCARD static constexpr schar (max)() noexcept { return NumericLimitConstants::i8max; }
+
+    NEX_NODISCARD static constexpr schar (lowest)() noexcept       { return (min)(); }
+    NEX_NODISCARD static constexpr schar (epsilon)() noexcept      { return 0; }
+    NEX_NODISCARD static constexpr schar (roundError)() noexcept   { return 0; }
+    NEX_NODISCARD static constexpr schar (denormMin)() noexcept    { return 0; }
+
+    NEX_NODISCARD static constexpr schar (infinity)() noexcept     { return 0; }
+    NEX_NODISCARD static constexpr schar (quietNaN)() noexcept     { return 0; }
+    NEX_NODISCARD static constexpr schar (signalingNaN)() noexcept { return 0; }
+
+    NEX_NODISCARD static constexpr int32 exponentBias() noexcept { return 0; }
+    NEX_NODISCARD static constexpr int32 minDecimalExponent() noexcept { return 0; }
+    NEX_NODISCARD static constexpr int32 maxDecimalExponent() noexcept { return 0; }
+
+    NEX_NODISCARD static constexpr int32 minDigits() noexcept    { return digits; }
+    NEX_NODISCARD static constexpr int32 maxDigits() noexcept    { return digits; }
+    NEX_NODISCARD static constexpr int32 minDecimalDigits() noexcept { return digits10; }
+    NEX_NODISCARD static constexpr int32 maxDecimalDigits() noexcept { return maxDigits10; }
+};
+
+template<>
+class NumericLimits<uchar> : public UnsignedIntegerLimitsBase<uchar> {
+public:
+    NEX_NODISCARD static constexpr uchar (min)() noexcept { return 0; }
+    NEX_NODISCARD static constexpr uchar (max)() noexcept { return NumericLimitConstants::u8max; }
+
+    NEX_NODISCARD static constexpr uchar (lowest)() noexcept       { return (min)(); }
+    NEX_NODISCARD static constexpr uchar (epsilon)() noexcept      { return 0; }
+    NEX_NODISCARD static constexpr uchar (roundError)() noexcept   { return 0; }
+    NEX_NODISCARD static constexpr uchar (denormMin)() noexcept    { return 0; }
+
+    NEX_NODISCARD static constexpr uchar (infinity)() noexcept     { return 0; }
+    NEX_NODISCARD static constexpr uchar (quietNaN)() noexcept     { return 0; }
+    NEX_NODISCARD static constexpr uchar (signalingNaN)() noexcept { return 0; }
+
+    NEX_NODISCARD static constexpr int32 exponentBias() noexcept { return 0; }
+    NEX_NODISCARD static constexpr int32 minDecimalExponent() noexcept { return 0; }
+    NEX_NODISCARD static constexpr int32 maxDecimalExponent() noexcept { return 0; }
+
+    NEX_NODISCARD static constexpr int32 minDigits() noexcept    { return digits; }
+    NEX_NODISCARD static constexpr int32 maxDigits() noexcept    { return digits; }
+    NEX_NODISCARD static constexpr int32 minDecimalDigits() noexcept { return digits10; }
+    NEX_NODISCARD static constexpr int32 maxDecimalDigits() noexcept { return maxDigits10; }
+};
+
+template<>
+class NumericLimits<char8> : public UnsignedIntegerLimitsBase<char8> {
+public:
+    NEX_NODISCARD static constexpr char8 (min)() noexcept { return NumericLimitConstants::c8min; }
+    NEX_NODISCARD static constexpr char8 (max)() noexcept { return NumericLimitConstants::c8max; }
+
+    NEX_NODISCARD static constexpr char8 (lowest)() noexcept       { return (min)(); }
+    NEX_NODISCARD static constexpr char8 (epsilon)() noexcept      { return 0; }
+    NEX_NODISCARD static constexpr char8 (roundError)() noexcept   { return 0; }
+    NEX_NODISCARD static constexpr char8 (denormMin)() noexcept    { return 0; }
+
+    NEX_NODISCARD static constexpr char8 (infinity)() noexcept     { return 0; }
+    NEX_NODISCARD static constexpr char8 (quietNaN)() noexcept     { return 0; }
+    NEX_NODISCARD static constexpr char8 (signalingNaN)() noexcept { return 0; }
+
+    NEX_NODISCARD static constexpr int32 exponentBias() noexcept { return 0; }
+    NEX_NODISCARD static constexpr int32 minDecimalExponent() noexcept { return 0; }
+    NEX_NODISCARD static constexpr int32 maxDecimalExponent() noexcept { return 0; }
+
+    NEX_NODISCARD static constexpr int32 minDigits() noexcept     { return digits; }
+    NEX_NODISCARD static constexpr int32 maxDigits() noexcept     { return digits; }
+    NEX_NODISCARD static constexpr int32 minDecimalDigits() noexcept { return digits10; }
+    NEX_NODISCARD static constexpr int32 maxDecimalDigits() noexcept { return maxDigits10; }
+};
+
+template<>
+class NumericLimits<char16> : public UnsignedIntegerLimitsBase<char16> {
+public:
+    NEX_NODISCARD static constexpr char16 (min)() noexcept { return NumericLimitConstants::c16min; }
+    NEX_NODISCARD static constexpr char16 (max)() noexcept { return NumericLimitConstants::c16max; }
+
+    NEX_NODISCARD static constexpr char16 (lowest)() noexcept       { return (min)(); }
+    NEX_NODISCARD static constexpr char16 (epsilon)() noexcept      { return 0; }
+    NEX_NODISCARD static constexpr char16 (roundError)() noexcept   { return 0; }
+    NEX_NODISCARD static constexpr char16 (denormMin)() noexcept    { return 0; }
+
+    NEX_NODISCARD static constexpr char16 (infinity)() noexcept     { return 0; }
+    NEX_NODISCARD static constexpr char16 (quietNaN)() noexcept     { return 0; }
+    NEX_NODISCARD static constexpr char16 (signalingNaN)() noexcept { return 0; }
+
+    NEX_NODISCARD static constexpr int32 exponentBias() noexcept { return 0; }
+    NEX_NODISCARD static constexpr int32 minDecimalExponent() noexcept { return 0; }
+    NEX_NODISCARD static constexpr int32 maxDecimalExponent() noexcept { return 0; }
+
+    NEX_NODISCARD static constexpr int32 minDigits() noexcept     { return digits; }
+    NEX_NODISCARD static constexpr int32 maxDigits() noexcept     { return digits; }
+    NEX_NODISCARD static constexpr int32 minDecimalDigits() noexcept { return digits10; }
+    NEX_NODISCARD static constexpr int32 maxDecimalDigits() noexcept { return maxDigits10; }
+};
+
+template<>
+class NumericLimits<char32> : public UnsignedIntegerLimitsBase<char32> {
+public:
+    NEX_NODISCARD static constexpr char32 (min)() noexcept { return NumericLimitConstants::c32min; }
+    NEX_NODISCARD static constexpr char32 (max)() noexcept { return NumericLimitConstants::c32max; }
+
+    NEX_NODISCARD static constexpr char32 (lowest)() noexcept       { return (min)(); }
+    NEX_NODISCARD static constexpr char32 (epsilon)() noexcept      { return 0; }
+    NEX_NODISCARD static constexpr char32 (roundError)() noexcept   { return 0; }
+    NEX_NODISCARD static constexpr char32 (denormMin)() noexcept    { return 0; }
+
+    NEX_NODISCARD static constexpr char32 (infinity)() noexcept     { return 0; }
+    NEX_NODISCARD static constexpr char32 (quietNaN)() noexcept     { return 0; }
+    NEX_NODISCARD static constexpr char32 (signalingNaN)() noexcept { return 0; }
+
+    NEX_NODISCARD static constexpr int32 exponentBias() noexcept { return 0; }
+    NEX_NODISCARD static constexpr int32 minDecimalExponent() noexcept { return 0; }
+    NEX_NODISCARD static constexpr int32 maxDecimalExponent() noexcept { return 0; }
+
+    NEX_NODISCARD static constexpr int32 minDigits() noexcept     { return digits; }
+    NEX_NODISCARD static constexpr int32 maxDigits() noexcept     { return digits; }
+    NEX_NODISCARD static constexpr int32 minDecimalDigits() noexcept { return digits10; }
+    NEX_NODISCARD static constexpr int32 maxDecimalDigits() noexcept { return maxDigits10; }
+};
+
+template<>
+class NumericLimits<wchar> : public WCharLimitsBase {
+public:
+    NEX_NODISCARD static constexpr wchar (min)() noexcept { return NumericLimitConstants::wcharmin; }
+    NEX_NODISCARD static constexpr wchar (max)() noexcept { return NumericLimitConstants::wcharmax; }
+
+    NEX_NODISCARD static constexpr wchar (lowest)() noexcept       { return (min)(); }
+    NEX_NODISCARD static constexpr wchar (epsilon)() noexcept      { return 0; }
+    NEX_NODISCARD static constexpr wchar (roundError)() noexcept   { return 0; }
+    NEX_NODISCARD static constexpr wchar (denormMin)() noexcept    { return 0; }
+
+    NEX_NODISCARD static constexpr wchar (infinity)() noexcept     { return 0; }
+    NEX_NODISCARD static constexpr wchar (quietNaN)() noexcept     { return 0; }
+    NEX_NODISCARD static constexpr wchar (signalingNaN)() noexcept { return 0; }
+
+    NEX_NODISCARD static constexpr int32 exponentBias() noexcept { return 0; }
+    NEX_NODISCARD static constexpr int32 minDecimalExponent() noexcept { return 0; }
+    NEX_NODISCARD static constexpr int32 maxDecimalExponent() noexcept { return 0; }
+
+    NEX_NODISCARD static constexpr int32 minDigits() noexcept     { return digits; }
+    NEX_NODISCARD static constexpr int32 maxDigits() noexcept     { return digits; }
+    NEX_NODISCARD static constexpr int32 minDecimalDigits() noexcept { return digits10; }
+    NEX_NODISCARD static constexpr int32 maxDecimalDigits() noexcept { return maxDigits10; }
+};
+
+// =================================================================================
+// Specializations of NumericLimits for fixed-width integer types
+// =================================================================================
+
+template<>
+class NumericLimits<int16> : public SignedIntegerLimitsBase<int16> {
+public:
+    NEX_NODISCARD static constexpr int16 (min)() noexcept { return NumericLimitConstants::i16min; }
+    NEX_NODISCARD static constexpr int16 (max)() noexcept { return NumericLimitConstants::i16max; }
+
+    NEX_NODISCARD static constexpr int16 (lowest)() noexcept       { return (min)(); }
+    NEX_NODISCARD static constexpr int16 (epsilon)() noexcept      { return 0; }
+    NEX_NODISCARD static constexpr int16 (roundError)() noexcept   { return 0; }
+    NEX_NODISCARD static constexpr int16 (denormMin)() noexcept    { return 0; }
+
+    NEX_NODISCARD static constexpr int16 (infinity)() noexcept     { return 0; }
+    NEX_NODISCARD static constexpr int16 (quietNaN)() noexcept     { return 0; }
+    NEX_NODISCARD static constexpr int16 (signalingNaN)() noexcept { return 0; }
+
+    NEX_NODISCARD static constexpr int32 exponentBias() noexcept { return 0; }
+    NEX_NODISCARD static constexpr int32 minDecimalExponent() noexcept { return 0; }
+    NEX_NODISCARD static constexpr int32 maxDecimalExponent() noexcept { return 0; }
+
+    NEX_NODISCARD static constexpr int32 minDigits() noexcept    { return digits; }
+    NEX_NODISCARD static constexpr int32 maxDigits() noexcept    { return digits; }
+    NEX_NODISCARD static constexpr int32 minDecimalDigits() noexcept { return digits10; }
+    NEX_NODISCARD static constexpr int32 maxDecimalDigits() noexcept { return maxDigits10; }
+};
+
+template<>
+class NumericLimits<uint16> : public UnsignedIntegerLimitsBase<uint16> {
+public:
+    NEX_NODISCARD static constexpr uint16 (min)() noexcept { return 0; }
+    NEX_NODISCARD static constexpr uint16 (max)() noexcept { return NumericLimitConstants::u16max; }
+
+    NEX_NODISCARD static constexpr uint16 (lowest)() noexcept       { return (min)(); }
+    NEX_NODISCARD static constexpr uint16 (epsilon)() noexcept      { return 0; }
+    NEX_NODISCARD static constexpr uint16 (roundError)() noexcept   { return 0; }
+    NEX_NODISCARD static constexpr uint16 (denormMin)() noexcept    { return 0; }
+
+    NEX_NODISCARD static constexpr uint16 (infinity)() noexcept     { return 0; }
+    NEX_NODISCARD static constexpr uint16 (quietNaN)() noexcept     { return 0; }
+    NEX_NODISCARD static constexpr uint16 (signalingNaN)() noexcept { return 0; }
+
+    NEX_NODISCARD static constexpr int32 exponentBias() noexcept { return 0; }
+    NEX_NODISCARD static constexpr int32 minDecimalExponent() noexcept { return 0; }
+    NEX_NODISCARD static constexpr int32 maxDecimalExponent() noexcept { return 0; }
+
+    NEX_NODISCARD static constexpr int32 minDigits() noexcept    { return digits; }
+    NEX_NODISCARD static constexpr int32 maxDigits() noexcept    { return digits; }
+    NEX_NODISCARD static constexpr int32 minDecimalDigits() noexcept { return digits10; }
+    NEX_NODISCARD static constexpr int32 maxDecimalDigits() noexcept { return maxDigits10; }
+};
+
+template<>
+class NumericLimits<int32> : public SignedIntegerLimitsBase<int32> {
+public:
+    NEX_NODISCARD static constexpr int32 (min)() noexcept { return NumericLimitConstants::i32min; }
+    NEX_NODISCARD static constexpr int32 (max)() noexcept { return NumericLimitConstants::i32max; }
+
+    NEX_NODISCARD static constexpr int32 (lowest)() noexcept       { return (min)(); }
+    NEX_NODISCARD static constexpr int32 (epsilon)() noexcept      { return 0; }
+    NEX_NODISCARD static constexpr int32 (roundError)() noexcept   { return 0; }
+    NEX_NODISCARD static constexpr int32 (denormMin)() noexcept    { return 0; }
+
+    NEX_NODISCARD static constexpr int32 (infinity)() noexcept     { return 0; }
+    NEX_NODISCARD static constexpr int32 (quietNaN)() noexcept     { return 0; }
+    NEX_NODISCARD static constexpr int32 (signalingNaN)() noexcept { return 0; }
+
+    NEX_NODISCARD static constexpr int32 exponentBias() noexcept { return 0; }
+    NEX_NODISCARD static constexpr int32 minDecimalExponent() noexcept { return 0; }
+    NEX_NODISCARD static constexpr int32 maxDecimalExponent() noexcept { return 0; }
+
+    NEX_NODISCARD static constexpr int32 minDigits() noexcept    { return digits; }
+    NEX_NODISCARD static constexpr int32 maxDigits() noexcept    { return digits; }
+    NEX_NODISCARD static constexpr int32 minDecimalDigits() noexcept { return digits10; }
+    NEX_NODISCARD static constexpr int32 maxDecimalDigits() noexcept { return maxDigits10; }
+};
+
+template<>
+class NumericLimits<uint32> : public UnsignedIntegerLimitsBase<uint32> {
+public:
+    NEX_NODISCARD static constexpr uint32 (min)() noexcept { return 0; }
+    NEX_NODISCARD static constexpr uint32 (max)() noexcept { return NumericLimitConstants::u32max; }
+
+    NEX_NODISCARD static constexpr uint32 (lowest)() noexcept       { return (min)(); }
+    NEX_NODISCARD static constexpr uint32 (epsilon)() noexcept      { return 0; }
+    NEX_NODISCARD static constexpr uint32 (roundError)() noexcept   { return 0; }
+    NEX_NODISCARD static constexpr uint32 (denormMin)() noexcept    { return 0; }
+
+    NEX_NODISCARD static constexpr uint32 (infinity)() noexcept     { return 0; }
+    NEX_NODISCARD static constexpr uint32 (quietNaN)() noexcept     { return 0; }
+    NEX_NODISCARD static constexpr uint32 (signalingNaN)() noexcept { return 0; }
+
+    NEX_NODISCARD static constexpr int32 exponentBias() noexcept { return 0; }
+    NEX_NODISCARD static constexpr int32 minDecimalExponent() noexcept { return 0; }
+    NEX_NODISCARD static constexpr int32 maxDecimalExponent() noexcept { return 0; }
+
+    NEX_NODISCARD static constexpr int32 minDigits() noexcept    { return digits; }
+    NEX_NODISCARD static constexpr int32 maxDigits() noexcept    { return digits; }
+    NEX_NODISCARD static constexpr int32 minDecimalDigits() noexcept { return digits10; }
+    NEX_NODISCARD static constexpr int32 maxDecimalDigits() noexcept { return maxDigits10; }
+};
+
+template<>
+class NumericLimits<ilong> : public SignedIntegerLimitsBase<ilong> {
+public:
+    NEX_NODISCARD static constexpr ilong (min)() noexcept { return NumericLimitConstants::ilmin; }
+    NEX_NODISCARD static constexpr ilong (max)() noexcept { return NumericLimitConstants::ilmax; }
+
+    NEX_NODISCARD static constexpr ilong (lowest)() noexcept       { return (min)(); }
+    NEX_NODISCARD static constexpr ilong (epsilon)() noexcept      { return 0; }
+    NEX_NODISCARD static constexpr ilong (roundError)() noexcept   { return 0; }
+    NEX_NODISCARD static constexpr ilong (denormMin)() noexcept    { return 0; }
+
+    NEX_NODISCARD static constexpr ilong (infinity)() noexcept     { return 0; }
+    NEX_NODISCARD static constexpr ilong (quietNaN)() noexcept     { return 0; }
+    NEX_NODISCARD static constexpr ilong (signalingNaN)() noexcept { return 0; }
+
+    NEX_NODISCARD static constexpr int32 exponentBias() noexcept { return 0; }
+    NEX_NODISCARD static constexpr int32 minDecimalExponent() noexcept { return 0; }
+    NEX_NODISCARD static constexpr int32 maxDecimalExponent() noexcept { return 0; }
+
+    NEX_NODISCARD static constexpr int32 minDigits() noexcept    { return digits; }
+    NEX_NODISCARD static constexpr int32 maxDigits() noexcept    { return digits; }
+    NEX_NODISCARD static constexpr int32 minDecimalDigits() noexcept { return digits10; }
+    NEX_NODISCARD static constexpr int32 maxDecimalDigits() noexcept { return maxDigits10; }
+};
+
+template<>
+class NumericLimits<ulong> : public UnsignedIntegerLimitsBase<ulong> {
+public:
+    NEX_NODISCARD static constexpr ulong (min)() noexcept { return 0; }
+    NEX_NODISCARD static constexpr ulong (max)() noexcept { return NumericLimitConstants::ulmax; }
+
+    NEX_NODISCARD static constexpr ulong (lowest)() noexcept       { return (min)(); }
+    NEX_NODISCARD static constexpr ulong (epsilon)() noexcept      { return 0; }
+    NEX_NODISCARD static constexpr ulong (roundError)() noexcept   { return 0; }
+    NEX_NODISCARD static constexpr ulong (denormMin)() noexcept    { return 0; }
+
+    NEX_NODISCARD static constexpr ulong (infinity)() noexcept     { return 0; }
+    NEX_NODISCARD static constexpr ulong (quietNaN)() noexcept     { return 0; }
+    NEX_NODISCARD static constexpr ulong (signalingNaN)() noexcept { return 0; }
+
+    NEX_NODISCARD static constexpr int32 exponentBias() noexcept { return 0; }
+    NEX_NODISCARD static constexpr int32 minDecimalExponent() noexcept { return 0; }
+    NEX_NODISCARD static constexpr int32 maxDecimalExponent() noexcept { return 0; }
+
+    NEX_NODISCARD static constexpr int32 minDigits() noexcept    { return digits; }
+    NEX_NODISCARD static constexpr int32 maxDigits() noexcept    { return digits; }
+    NEX_NODISCARD static constexpr int32 minDecimalDigits() noexcept { return digits10; }
+    NEX_NODISCARD static constexpr int32 maxDecimalDigits() noexcept { return maxDigits10; }
+};
+
+template<>
+class NumericLimits<int64> : public SignedIntegerLimitsBase<int64> {
+public:
+    NEX_NODISCARD static constexpr int64 (min)() noexcept { return NumericLimitConstants::i64min; }
+    NEX_NODISCARD static constexpr int64 (max)() noexcept { return NumericLimitConstants::i64max; }
+
+    NEX_NODISCARD static constexpr int64 (lowest)() noexcept       { return (min)(); }
+    NEX_NODISCARD static constexpr int64 (epsilon)() noexcept      { return 0; }
+    NEX_NODISCARD static constexpr int64 (roundError)() noexcept   { return 0; }
+    NEX_NODISCARD static constexpr int64 (denormMin)() noexcept    { return 0; }
+
+    NEX_NODISCARD static constexpr int64 (infinity)() noexcept     { return 0; }
+    NEX_NODISCARD static constexpr int64 (quietNaN)() noexcept     { return 0; }
+    NEX_NODISCARD static constexpr int64 (signalingNaN)() noexcept { return 0; }
+
+    NEX_NODISCARD static constexpr int32 exponentBias() noexcept { return 0; }
+    NEX_NODISCARD static constexpr int32 minDecimalExponent() noexcept { return 0; }
+    NEX_NODISCARD static constexpr int32 maxDecimalExponent() noexcept { return 0; }
+
+    NEX_NODISCARD static constexpr int32 minDigits() noexcept    { return digits; }
+    NEX_NODISCARD static constexpr int32 maxDigits() noexcept    { return digits; }
+    NEX_NODISCARD static constexpr int32 minDecimalDigits() noexcept { return digits10; }
+    NEX_NODISCARD static constexpr int32 maxDecimalDigits() noexcept { return maxDigits10; }
+};
+
+template<>
+class NumericLimits<uint64> : public UnsignedIntegerLimitsBase<uint64> {
+public:
+    NEX_NODISCARD static constexpr uint64 (min)() noexcept { return 0; }
+    NEX_NODISCARD static constexpr uint64 (max)() noexcept { return NumericLimitConstants::u64max; }
+
+    NEX_NODISCARD static constexpr uint64 (lowest)() noexcept       { return (min)(); }
+    NEX_NODISCARD static constexpr uint64 (epsilon)() noexcept      { return 0; }
+    NEX_NODISCARD static constexpr uint64 (roundError)() noexcept   { return 0; }
+    NEX_NODISCARD static constexpr uint64 (denormMin)() noexcept    { return 0; }
+
+    NEX_NODISCARD static constexpr uint64 (infinity)() noexcept     { return 0; }
+    NEX_NODISCARD static constexpr uint64 (quietNaN)() noexcept     { return 0; }
+    NEX_NODISCARD static constexpr uint64 (signalingNaN)() noexcept { return 0; }
+
+    NEX_NODISCARD static constexpr int32 exponentBias() noexcept { return 0; }
+    NEX_NODISCARD static constexpr int32 minDecimalExponent() noexcept { return 0; }
+    NEX_NODISCARD static constexpr int32 maxDecimalExponent() noexcept { return 0; }
+
+    NEX_NODISCARD static constexpr int32 minDigits() noexcept    { return digits; }
+    NEX_NODISCARD static constexpr int32 maxDigits() noexcept    { return digits; }
+    NEX_NODISCARD static constexpr int32 minDecimalDigits() noexcept { return digits10; }
+    NEX_NODISCARD static constexpr int32 maxDecimalDigits() noexcept { return maxDigits10; }
+};
+
+#if NEX_HAS_BUILTIN_INT128
+    template<>
+    class NumericLimits<int128> : public SignedIntegerLimitsBase<int128> {
+    public:
+        NEX_NODISCARD static constexpr int128 (min)() noexcept { return NumericLimitConstants::i128min; }
+        NEX_NODISCARD static constexpr int128 (max)() noexcept { return NumericLimitConstants::i128max; }
+
+        NEX_NODISCARD static constexpr int128 (lowest)() noexcept       { return (min)(); }
+        NEX_NODISCARD static constexpr int128 (epsilon)() noexcept      { return 0; }
+        NEX_NODISCARD static constexpr int128 (roundError)() noexcept   { return 0; }
+        NEX_NODISCARD static constexpr int128 (denormMin)() noexcept    { return 0; }
+
+        NEX_NODISCARD static constexpr int128 (infinity)() noexcept     { return 0; }
+        NEX_NODISCARD static constexpr int128 (quietNaN)() noexcept     { return 0; }
+        NEX_NODISCARD static constexpr int128 (signalingNaN)() noexcept { return 0; }
+
+        NEX_NODISCARD static constexpr int32 exponentBias() noexcept { return 0; }
+        NEX_NODISCARD static constexpr int32 minDecimalExponent() noexcept { return 0; }
+        NEX_NODISCARD static constexpr int32 maxDecimalExponent() noexcept { return 0; }
+
+        NEX_NODISCARD static constexpr int32 minDigits() noexcept    { return digits; }
+        NEX_NODISCARD static constexpr int32 maxDigits() noexcept    { return digits; }
+        NEX_NODISCARD static constexpr int32 minDecimalDigits() noexcept { return digits10; }
+        NEX_NODISCARD static constexpr int32 maxDecimalDigits() noexcept { return maxDigits10; }
+    };
+
+    template<>
+    class NumericLimits<uint128> : public UnsignedIntegerLimitsBase<uint128> {
+    public:
+        NEX_NODISCARD static constexpr uint128 (min)() noexcept { return 0; }
+        NEX_NODISCARD static constexpr uint128 (max)() noexcept { return NumericLimitConstants::u128max; }
+
+        NEX_NODISCARD static constexpr uint128 (lowest)() noexcept       { return (min)(); }
+        NEX_NODISCARD static constexpr uint128 (epsilon)() noexcept      { return 0; }
+        NEX_NODISCARD static constexpr uint128 (roundError)() noexcept   { return 0; }
+        NEX_NODISCARD static constexpr uint128 (denormMin)() noexcept    { return 0; }
+
+        NEX_NODISCARD static constexpr uint128 (infinity)() noexcept     { return 0; }
+        NEX_NODISCARD static constexpr uint128 (quietNaN)() noexcept     { return 0; }
+        NEX_NODISCARD static constexpr uint128 (signalingNaN)() noexcept { return 0; }
+
+        NEX_NODISCARD static constexpr int32 exponentBias() noexcept { return 0; }
+        NEX_NODISCARD static constexpr int32 minDecimalExponent() noexcept { return 0; }
+        NEX_NODISCARD static constexpr int32 maxDecimalExponent() noexcept { return 0; }
+
+        NEX_NODISCARD static constexpr int32 minDigits() noexcept    { return digits; }
+        NEX_NODISCARD static constexpr int32 maxDigits() noexcept    { return digits; }
+        NEX_NODISCARD static constexpr int32 minDecimalDigits() noexcept { return digits10; }
+        NEX_NODISCARD static constexpr int32 maxDecimalDigits() noexcept { return maxDigits10; }
+    };
+#endif
+
+// =================================================================================
+// Specializations of NumericLimits for floating-point types
+// =================================================================================
+
+template<>
+class NumericLimits<float16> : public FloatingPointLimitsBase<float16> {
+public:
+    NEX_NODISCARD static constexpr float16 (min)() noexcept { return NumericLimitConstants::f16min; }
+    NEX_NODISCARD static constexpr float16 (max)() noexcept { return NumericLimitConstants::f16max; }
+
+    NEX_NODISCARD static constexpr float16 (lowest)() noexcept       { return NumericLimitConstants::f16lowest; }
+    NEX_NODISCARD static constexpr float16 (epsilon)() noexcept      { return NumericLimitConstants::f16epsilon; }
+    NEX_NODISCARD static constexpr float16 (roundError)() noexcept   { return NumericLimitConstants::f16roundError; }
+    NEX_NODISCARD static constexpr float16 (denormMin)() noexcept    { return NumericLimitConstants::f16denormMin; }
+
+    NEX_NODISCARD static constexpr float16 (infinity)() noexcept     { return NumericLimitConstants::f16infinity; }
+    NEX_NODISCARD static constexpr float16 (quietNaN)() noexcept     { return NumericLimitConstants::f16quietNaN; }
+    NEX_NODISCARD static constexpr float16 (signalingNaN)() noexcept { return NumericLimitConstants::f16signalingNaN; }
+
+    NEX_NODISCARD static constexpr int32 exponentBias() noexcept { 
+        return static_cast<int32>(NumericLimitConstants::f16exponentBias); 
+    }
+    NEX_NODISCARD static constexpr int32 minDecimalExponent() noexcept { return minExponent10; }
+    NEX_NODISCARD static constexpr int32 maxDecimalExponent() noexcept { return maxExponent10; }
+
+    NEX_NODISCARD static constexpr int32 minDigits() noexcept     { return digits; }
+    NEX_NODISCARD static constexpr int32 maxDigits() noexcept     { return digits; }
+    NEX_NODISCARD static constexpr int32 minDecimalDigits() noexcept { return digits10; }
+    NEX_NODISCARD static constexpr int32 maxDecimalDigits() noexcept { return maxDigits10; }
+
+    // Number of radix digits in the mantissa, including the implicit hidden bit
+    static constexpr int32 digits           = static_cast<int32>(NumericLimitConstants::f16binaryDigits);
+    // Minimum decimal precision: number of decimal digits that can be round-tripped without alteration.
+    static constexpr int32 digits10         = static_cast<int32>(NumericLimitConstants::f16decimalDigits);
+    // Maximum decimal precision: number of decimal digits required to uniquely identify a distinct value
+    static constexpr int32 maxDigits10      = static_cast<int32>(NumericLimitConstants::f16maxDecimalDigits);
+
+    // The maximum positive integer power that the radix can be raised to such that the type can still represent 
+    // a finite floating-point number without overflowing.
+    static constexpr int32 maxExponent      = static_cast<int32>(NumericLimitConstants::f16maxExponent);
+    // The maximum positive integer power of 10 that can be represented as a finite floating-point number.
+    static constexpr int32 maxExponent10    = static_cast<int32>(NumericLimitConstants::f16maxDecimalExponent);
+    // The minimum negative integer power that the radix can be raised to such that the type can still represent 
+    // a normalized floating-point number.
+    static constexpr int32 minExponent      = static_cast<int32>(NumericLimitConstants::f16minExponent);
+    // The minimum negative integer power of 10 that can be represented as a normalized floating-point number.
+    static constexpr int32 minExponent10    = static_cast<int32>(NumericLimitConstants::f16minDecimalExponent);
+};
+
+template<>
+class NumericLimits<float32> : public FloatingPointLimitsBase<float32> {
+public:
+    NEX_NODISCARD static constexpr float32 (min)() noexcept { return NumericLimitConstants::f32min; }
+    NEX_NODISCARD static constexpr float32 (max)() noexcept { return NumericLimitConstants::f32max; }
+
+    NEX_NODISCARD static constexpr float32 (lowest)() noexcept       { return NumericLimitConstants::f32lowest; }
+    NEX_NODISCARD static constexpr float32 (epsilon)() noexcept      { return NumericLimitConstants::f32epsilon; }
+    NEX_NODISCARD static constexpr float32 (roundError)() noexcept   { return NumericLimitConstants::f32roundError; }
+    NEX_NODISCARD static constexpr float32 (denormMin)() noexcept    { return NumericLimitConstants::f32denormMin; }
+
+    NEX_NODISCARD static constexpr float32 (infinity)() noexcept     { return NumericLimitConstants::f32infinity; }
+    NEX_NODISCARD static constexpr float32 (quietNaN)() noexcept     { return NumericLimitConstants::f32quietNaN; }
+    NEX_NODISCARD static constexpr float32 (signalingNaN)() noexcept { return NumericLimitConstants::f32signalingNaN; }
+
+    NEX_NODISCARD static constexpr int32 exponentBias() noexcept { 
+        return static_cast<int32>(NumericLimitConstants::f32exponentBias); 
+    }
+    NEX_NODISCARD static constexpr int32 minDecimalExponent() noexcept { return minExponent10; }
+    NEX_NODISCARD static constexpr int32 maxDecimalExponent() noexcept { return maxExponent10; }
+
+    NEX_NODISCARD static constexpr int32 minDigits() noexcept     { return digits; }
+    NEX_NODISCARD static constexpr int32 maxDigits() noexcept     { return digits; }
+    NEX_NODISCARD static constexpr int32 minDecimalDigits() noexcept { return digits10; }
+    NEX_NODISCARD static constexpr int32 maxDecimalDigits() noexcept { return maxDigits10; }
+
+    // Number of radix digits in the mantissa, including the implicit hidden bit
+    static constexpr int32 digits           = static_cast<int32>(NumericLimitConstants::f32binaryDigits);
+    // Minimum decimal precision: number of decimal digits that can be round-tripped without alteration.
+    static constexpr int32 digits10         = static_cast<int32>(NumericLimitConstants::f32decimalDigits);
+    // Maximum decimal precision: number of decimal digits required to uniquely identify a distinct value
+    static constexpr int32 maxDigits10      = static_cast<int32>(NumericLimitConstants::f32maxDecimalDigits);
+
+    // The maximum positive integer power that the radix can be raised to such that the type can still represent 
+    // a finite floating-point number without overflowing.
+    static constexpr int32 maxExponent      = static_cast<int32>(NumericLimitConstants::f32maxExponent);
+    // The maximum positive integer power of 10 that can be represented as a finite floating-point number.
+    static constexpr int32 maxExponent10    = static_cast<int32>(NumericLimitConstants::f32maxDecimalExponent);
+    // The minimum negative integer power that the radix can be raised to such that the type can still represent 
+    // a normalized floating-point number.
+    static constexpr int32 minExponent      = static_cast<int32>(NumericLimitConstants::f32minExponent);
+    // The minimum negative integer power of 10 that can be represented as a normalized floating-point number.
+    static constexpr int32 minExponent10    = static_cast<int32>(NumericLimitConstants::f32minDecimalExponent);
+};
+
+template<>
+class NumericLimits<float64> : public FloatingPointLimitsBase<float64> {
+public:
+    NEX_NODISCARD static constexpr float64 (min)() noexcept { return NumericLimitConstants::f64min; }
+    NEX_NODISCARD static constexpr float64 (max)() noexcept { return NumericLimitConstants::f64max; }
+
+    NEX_NODISCARD static constexpr float64 (lowest)() noexcept       { return NumericLimitConstants::f64lowest; }
+    NEX_NODISCARD static constexpr float64 (epsilon)() noexcept      { return NumericLimitConstants::f64epsilon; }
+    NEX_NODISCARD static constexpr float64 (roundError)() noexcept   { return NumericLimitConstants::f64roundError; }
+    NEX_NODISCARD static constexpr float64 (denormMin)() noexcept    { return NumericLimitConstants::f64denormMin; }
+
+    NEX_NODISCARD static constexpr float64 (infinity)() noexcept     { return NumericLimitConstants::f64infinity; }
+    NEX_NODISCARD static constexpr float64 (quietNaN)() noexcept     { return NumericLimitConstants::f64quietNaN; }
+    NEX_NODISCARD static constexpr float64 (signalingNaN)() noexcept { return NumericLimitConstants::f64signalingNaN; }
+
+    NEX_NODISCARD static constexpr int32 exponentBias() noexcept { 
+        return static_cast<int32>(NumericLimitConstants::f64exponentBias); 
+    }
+    NEX_NODISCARD static constexpr int32 minDecimalExponent() noexcept { return minExponent10; }
+    NEX_NODISCARD static constexpr int32 maxDecimalExponent() noexcept { return maxExponent10; }
+
+    NEX_NODISCARD static constexpr int32 minDigits() noexcept     { return digits; }
+    NEX_NODISCARD static constexpr int32 maxDigits() noexcept     { return digits; }
+    NEX_NODISCARD static constexpr int32 minDecimalDigits() noexcept { return digits10; }
+    NEX_NODISCARD static constexpr int32 maxDecimalDigits() noexcept { return maxDigits10; }
+
+    // Number of radix digits in the mantissa, including the implicit hidden bit
+    static constexpr int32 digits           = static_cast<int32>(NumericLimitConstants::f64binaryDigits);
+    // Minimum decimal precision: number of decimal digits that can be round-tripped without alteration.
+    static constexpr int32 digits10         = static_cast<int32>(NumericLimitConstants::f64decimalDigits);
+    // Maximum decimal precision: number of decimal digits required to uniquely identify a distinct value
+    static constexpr int32 maxDigits10      = static_cast<int32>(NumericLimitConstants::f64maxDecimalDigits);
+
+    // The maximum positive integer power that the radix can be raised to such that the type can still represent 
+    // a finite floating-point number without overflowing.
+    static constexpr int32 maxExponent      = static_cast<int32>(NumericLimitConstants::f64maxExponent);
+    // The maximum positive integer power of 10 that can be represented as a finite floating-point number.
+    static constexpr int32 maxExponent10    = static_cast<int32>(NumericLimitConstants::f64maxDecimalExponent);
+    // The minimum negative integer power that the radix can be raised to such that the type can still represent 
+    // a normalized floating-point number.
+    static constexpr int32 minExponent      = static_cast<int32>(NumericLimitConstants::f64minExponent);
+    // The minimum negative integer power of 10 that can be represented as a normalized floating-point number.
+    static constexpr int32 minExponent10    = static_cast<int32>(NumericLimitConstants::f64minDecimalExponent);
+};
+
+template<>
+class NumericLimits<ldouble> : public FloatingPointLimitsBase<ldouble> {
+public:
+    NEX_NODISCARD static constexpr ldouble (min)() noexcept { return NumericLimitConstants::ldmin; }
+    NEX_NODISCARD static constexpr ldouble (max)() noexcept { return NumericLimitConstants::ldmax; }
+
+    NEX_NODISCARD static constexpr ldouble (lowest)() noexcept       { return NumericLimitConstants::ldlowest; }
+    NEX_NODISCARD static constexpr ldouble (epsilon)() noexcept      { return NumericLimitConstants::ldepsilon; }
+    NEX_NODISCARD static constexpr ldouble (roundError)() noexcept   { return NumericLimitConstants::ldroundError; }
+    NEX_NODISCARD static constexpr ldouble (denormMin)() noexcept    { return NumericLimitConstants::lddenormMin; }
+
+    NEX_NODISCARD static constexpr ldouble (infinity)() noexcept     { return NumericLimitConstants::ldinfinity; }
+    NEX_NODISCARD static constexpr ldouble (quietNaN)() noexcept     { return NumericLimitConstants::ldquietNaN; }
+    NEX_NODISCARD static constexpr ldouble (signalingNaN)() noexcept { return NumericLimitConstants::ldsignalingNaN; }
+
+    NEX_NODISCARD static constexpr int32 exponentBias() noexcept { 
+        return static_cast<int32>(NumericLimitConstants::ldexponentBias); 
+    }
+    NEX_NODISCARD static constexpr int32 minDecimalExponent() noexcept { return minExponent10; }
+    NEX_NODISCARD static constexpr int32 maxDecimalExponent() noexcept { return maxExponent10; }
+
+    NEX_NODISCARD static constexpr int32 minDigits() noexcept     { return digits; }
+    NEX_NODISCARD static constexpr int32 maxDigits() noexcept     { return digits; }
+    NEX_NODISCARD static constexpr int32 minDecimalDigits() noexcept { return digits10; }
+    NEX_NODISCARD static constexpr int32 maxDecimalDigits() noexcept { return maxDigits10; }
+
+    // Number of radix digits in the mantissa, including the implicit hidden bit
+    static constexpr int32 digits           = static_cast<int32>(NumericLimitConstants::ldbinaryDigits);
+    // Minimum decimal precision: number of decimal digits that can be round-tripped without alteration.
+    static constexpr int32 digits10         = static_cast<int32>(NumericLimitConstants::lddecimalDigits);
+    // Maximum decimal precision: number of decimal digits required to uniquely identify a distinct value
+    static constexpr int32 maxDigits10      = static_cast<int32>(NumericLimitConstants::ldmaxDecimalDigits);
+
+    // The maximum positive integer power that the radix can be raised to such that the type can still represent 
+    // a finite floating-point number without overflowing.
+    static constexpr int32 maxExponent      = static_cast<int32>(NumericLimitConstants::ldmaxExponent);
+    // The maximum positive integer power of 10 that can be represented as a finite floating-point number.
+    static constexpr int32 maxExponent10    = static_cast<int32>(NumericLimitConstants::ldmaxDecimalExponent);
+    // The minimum negative integer power that the radix can be raised to such that the type can still represent 
+    // a normalized floating-point number.
+    static constexpr int32 minExponent      = static_cast<int32>(NumericLimitConstants::ldminExponent);
+    // The minimum negative integer power of 10 that can be represented as a normalized floating-point number.
+    static constexpr int32 minExponent10    = static_cast<int32>(NumericLimitConstants::ldminDecimalExponent);
+};
+
+#if NEX_HAS_BUILTIN_FLOAT128
+    template<>
+    class NumericLimits<float128> : public FloatingPointLimitsBase<float128> {
+    public:
+        NEX_NODISCARD static constexpr float128 (min)() noexcept { return NumericLimitConstants::f128min; }
+        NEX_NODISCARD static constexpr float128 (max)() noexcept { return NumericLimitConstants::f128max; }
+
+        NEX_NODISCARD static constexpr float128 (lowest)() noexcept       { return NumericLimitConstants::f128lowest; }
+        NEX_NODISCARD static constexpr float128 (epsilon)() noexcept      { return NumericLimitConstants::f128epsilon; }
+        NEX_NODISCARD static constexpr float128 (roundError)() noexcept   { return NumericLimitConstants::f128roundError; }
+        NEX_NODISCARD static constexpr float128 (denormMin)() noexcept    { return NumericLimitConstants::f128denormMin; }
+
+        NEX_NODISCARD static constexpr float128 (infinity)() noexcept     { return NumericLimitConstants::f128infinity; }
+        NEX_NODISCARD static constexpr float128 (quietNaN)() noexcept     { return NumericLimitConstants::f128quietNaN; }
+        NEX_NODISCARD static constexpr float128 (signalingNaN)() noexcept { return NumericLimitConstants::f128signalingNaN; }
+
+        NEX_NODISCARD static constexpr int32 exponentBias() noexcept { 
+            return static_cast<int32>(NumericLimitConstants::f128exponentBias); 
+        }
+        NEX_NODISCARD static constexpr int32 minDecimalExponent() noexcept { return minExponent10; }
+        NEX_NODISCARD static constexpr int32 maxDecimalExponent() noexcept { return maxExponent10; }
+
+        NEX_NODISCARD static constexpr int32 minDigits() noexcept     { return digits; }
+        NEX_NODISCARD static constexpr int32 maxDigits() noexcept     { return digits; }
+        NEX_NODISCARD static constexpr int32 minDecimalDigits() noexcept { return digits10; }
+        NEX_NODISCARD static constexpr int32 maxDecimalDigits() noexcept { return maxDigits10; }
+
+        // Number of radix digits in the mantissa, including the implicit hidden bit
+        static constexpr int32 digits           = static_cast<int32>(NumericLimitConstants::f128binaryDigits);
+        // Minimum decimal precision: number of decimal digits that can be round-tripped without alteration.
+        static constexpr int32 digits10         = static_cast<int32>(NumericLimitConstants::f128decimalDigits);
+        // Maximum decimal precision: number of decimal digits required to uniquely identify a distinct value
+        static constexpr int32 maxDigits10      = static_cast<int32>(NumericLimitConstants::f128maxDecimalDigits);
+
+        // The maximum positive integer power that the radix can be raised to such that the type can still represent 
+        // a finite floating-point number without overflowing.
+        static constexpr int32 maxExponent      = static_cast<int32>(NumericLimitConstants::f128maxExponent);
+        // The maximum positive integer power of 10 that can be represented as a finite floating-point number.
+        static constexpr int32 maxExponent10    = static_cast<int32>(NumericLimitConstants::f128maxDecimalExponent);
+        // The minimum negative integer power that the radix can be raised to such that the type can still represent 
+        // a normalized floating-point number.
+        static constexpr int32 minExponent      = static_cast<int32>(NumericLimitConstants::f128minExponent);
+        // The minimum negative integer power of 10 that can be represented as a normalized floating-point number.
+        static constexpr int32 minExponent10    = static_cast<int32>(NumericLimitConstants::f128minDecimalExponent);
+    };
+#endif
 
 NEX_NAMESPACE_END

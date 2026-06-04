@@ -720,7 +720,6 @@ NEX_NODISCARD constexpr int __char2Val(char c) {
 // Parse a sequence of characters representing an integer literal in base 2, 8, 10, or 16 
 // into its integer value at compile time
 template <typename TargetType, char... Chars>
-requires (IsIntegralV<TargetType> && sizeof...(Chars) > 0)
 NEX_NODISCARD constexpr TargetType __parseRawInteger() noexcept {
     static_assert(IsIntegralV<TargetType>, "Error: TargetType must be an integral type");
     static_assert(sizeof...(Chars) > 0, 
@@ -753,7 +752,6 @@ NEX_NODISCARD constexpr TargetType __parseRawInteger() noexcept {
 // Parse a sequence of characters representing a floating-point literal in base 10 
 // into its value at compile time
 template <typename TargetType, char... Chars>
-requires (IsFloatingPointV<TargetType> && sizeof...(Chars) > 0)
 NEX_NODISCARD constexpr TargetType __parseRawFloating() noexcept {
     static_assert(IsFloatingPointV<TargetType>, "Error: TargetType must be a floating-point type");
     static_assert(sizeof...(Chars) > 0, 

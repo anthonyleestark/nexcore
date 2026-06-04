@@ -35,19 +35,37 @@ NEX_NAMESPACE_BEGIN
     #define NEX_HAS_BUILTIN_INT128 1
 #else // Compiler does not support __int128
     #define NEX_HAS_BUILTIN_INT128 0
-#endif  // defined(__SIZEOF_INT128__) && !NEX_COMPILER_MSVC_COMPATIBLE
+#endif  // ^^NEX_HAS_BUILTIN_INT128
 
 #if defined(__FLT16_DIG__) || defined(__fp16) || defined(_Float16)
     #define NEX_HAS_BUILTIN_FLOAT16 1
 #else  // Compiler does not support __float16
     #define NEX_HAS_BUILTIN_FLOAT16 0
-#endif  // defined(__FLT16_DIG__) || defined(__fp16) || defined(_Float16)
+#endif  // ^^NEX_HAS_BUILTIN_FLOAT16
 
 #if defined(__SIZEOF_FLOAT128__) && !NEX_COMPILER_MSVC_COMPATIBLE
     #define NEX_HAS_BUILTIN_FLOAT128 1
 #else  // Compiler does not support __float128
     #define NEX_HAS_BUILTIN_FLOAT128 0
-#endif  // defined(__SIZEOF_FLOAT128__) && !NEX_COMPILER_MSVC_COMPATIBLE
+#endif  // ^^NEX_HAS_BUILTIN_FLOAT128
+
+#if NEX_COMPILER_IS_MSVC
+    #define NEX_SIZEOF_LONG_DOUBLE 8
+#elif defined(__SIZEOF_LONG_DOUBLE__)
+    // GCC and Clang provide this exact size macro in bytes
+    #define NEX_SIZEOF_LONG_DOUBLE __SIZEOF_LONG_DOUBLE__
+#elif defined(__LDBL_MANT_DIG__)
+    // If the compiler provides the number of mantissa digits, we can calculate the size in bytes
+    #if __LDBL_MANT_DIG__ == 64
+        #define NEX_SIZEOF_LONG_DOUBLE 12 // x86 80-bit extended
+    #elif __LDBL_MANT_DIG__ == 113
+        #define NEX_SIZEOF_LONG_DOUBLE 16 // 128-bit quad
+    #else  // Fallback to standard double
+        #define NEX_SIZEOF_LONG_DOUBLE 8
+    #endif  // ^^__LDBL_MANT_DIG__
+#else  // Last resort fallback
+    #define NEX_SIZEOF_LONG_DOUBLE  sizeof(long double)
+#endif  // ^^NEX_SIZEOF_LONG_DOUBLE
 
 // =================================================================================
 // Standard fixed-width integer types
@@ -68,12 +86,15 @@ using uint64    = unsigned long long;       // 64-bit unsigned integer
     using uint128   = unsigned __int128;    // 128-bit unsigned integer
 #endif  // ^^NEX_HAS_BUILTIN_INT128
 
-using ushort        = unsigned short;       // 16-bit unsigned integer (alternative name)
-using uint          = unsigned int;         // 32-bit unsigned integer (alternative name)
+using ishort        = int16;                // 16-bit signed integer (alternative name)
+using ushort        = uint16;               // 16-bit unsigned integer (alternative name)
+using iint          = int32;                // 32-bit signed integer (alternative name)
+using uint          = uint32;               // 32-bit unsigned integer (alternative name)
+using ilong         = long;                 // 32 or 64-bit signed integer (alternative name, platform-dependent)
 using ulong         = unsigned long;        // 32 or 64-bit unsigned integer (alternative name, platform-dependent)
 
-using longlong      = long long;            // 64-bit signed integer (alternative name)
-using ulonglong     = unsigned long long;   // 64-bit unsigned integer (alternative name)
+using longlong      = int64;                // 64-bit signed integer (alternative name)
+using ulonglong     = uint64;               // 64-bit unsigned integer (alternative name)
 
 // =================================================================================
 // Compile-time assertions to verify fixed-width integer type sizes

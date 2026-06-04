@@ -63,12 +63,12 @@ struct NumericLimitConstants {
     static constexpr uint128 u128max    = ~static_cast<uint128>(0);
 #endif  // ^^NEX_HAS_BUILTIN_INT128
 
-    static constexpr ilong ilmin        = static_cast<ilong>(sizeof(ilong) == 4 ? i32min : i64min);
-    static constexpr ilong ilmax        = static_cast<ilong>(sizeof(ilong) == 4 ? i32max : i64max);
+    static constexpr slong slmin        = static_cast<slong>(sizeof(slong) == 4 ? i32min : i64min);
+    static constexpr slong slmax        = static_cast<slong>(sizeof(slong) == 4 ? i32max : i64max);
     static constexpr ulong ulmax        = static_cast<ulong>(sizeof(ulong) == 4 ? u32max : u64max);
     static constexpr longlong llmin     = static_cast<longlong>(i64min);
     static constexpr longlong llmax     = static_cast<longlong>(i64max);
-    static constexpr ulonglong ullmax   = static_cast<ulonglong>(u64max);
+    static constexpr ulonglong ullmax   = u64max;  // no cast needed since ulonglong is uint64
 
 #if NEX_BUILD_ENV_IS_64_BIT
     static constexpr uint64 sizemax     = ~static_cast<uintptr>(0_u64);
@@ -1081,19 +1081,19 @@ public:
 };
 
 template<>
-class NumericLimits<ilong> : public SignedIntegerLimitsBase<ilong> {
+class NumericLimits<slong> : public SignedIntegerLimitsBase<slong> {
 public:
-    NEX_NODISCARD static constexpr ilong (min)() noexcept { return NumericLimitConstants::ilmin; }
-    NEX_NODISCARD static constexpr ilong (max)() noexcept { return NumericLimitConstants::ilmax; }
+    NEX_NODISCARD static constexpr slong (min)() noexcept { return NumericLimitConstants::slmin; }
+    NEX_NODISCARD static constexpr slong (max)() noexcept { return NumericLimitConstants::slmax; }
 
-    NEX_NODISCARD static constexpr ilong (lowest)() noexcept       { return (min)(); }
-    NEX_NODISCARD static constexpr ilong (epsilon)() noexcept      { return 0; }
-    NEX_NODISCARD static constexpr ilong (roundError)() noexcept   { return 0; }
-    NEX_NODISCARD static constexpr ilong (denormMin)() noexcept    { return 0; }
+    NEX_NODISCARD static constexpr slong (lowest)() noexcept       { return (min)(); }
+    NEX_NODISCARD static constexpr slong (epsilon)() noexcept      { return 0; }
+    NEX_NODISCARD static constexpr slong (roundError)() noexcept   { return 0; }
+    NEX_NODISCARD static constexpr slong (denormMin)() noexcept    { return 0; }
 
-    NEX_NODISCARD static constexpr ilong (infinity)() noexcept     { return 0; }
-    NEX_NODISCARD static constexpr ilong (quietNaN)() noexcept     { return 0; }
-    NEX_NODISCARD static constexpr ilong (signalingNaN)() noexcept { return 0; }
+    NEX_NODISCARD static constexpr slong (infinity)() noexcept     { return 0; }
+    NEX_NODISCARD static constexpr slong (quietNaN)() noexcept     { return 0; }
+    NEX_NODISCARD static constexpr slong (signalingNaN)() noexcept { return 0; }
 
     NEX_NODISCARD static constexpr int32 exponentBias() noexcept { return 0; }
     NEX_NODISCARD static constexpr int32 minDecimalExponent() noexcept { return 0; }

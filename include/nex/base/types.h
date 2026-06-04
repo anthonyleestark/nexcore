@@ -86,16 +86,6 @@ using uint64    = unsigned long long;       // 64-bit unsigned integer
     using uint128   = unsigned __int128;    // 128-bit unsigned integer
 #endif  // ^^NEX_HAS_BUILTIN_INT128
 
-using ishort        = int16;                // 16-bit signed integer (alternative name)
-using ushort        = uint16;               // 16-bit unsigned integer (alternative name)
-using iint          = int32;                // 32-bit signed integer (alternative name)
-using uint          = uint32;               // 32-bit unsigned integer (alternative name)
-using ilong         = long;                 // 32 or 64-bit signed integer (alternative name, platform-dependent)
-using ulong         = unsigned long;        // 32 or 64-bit unsigned integer (alternative name, platform-dependent)
-
-using longlong      = int64;                // 64-bit signed integer (alternative name)
-using ulonglong     = uint64;               // 64-bit unsigned integer (alternative name)
-
 // =================================================================================
 // Compile-time assertions to verify fixed-width integer type sizes
 // =================================================================================
@@ -133,27 +123,24 @@ using u64       = uint64;                   // 64-bit unsigned integer (uint64)
     using u128  = uint128;                  // 128-bit unsigned integer (uint128)
 #endif  // ^^NEX_HAS_BUILTIN_INT128
 
-using ll        = longlong;                 // 64-bit signed integer (long long)
-using ull       = ulonglong;                // 64-bit unsigned integer (unsigned long long)
-
 // =================================================================================
 // Literal suffixes for standard fixed-width integer types (Rust-style)
 // =================================================================================
 
 NEX_INLINE_NAMESPACE_BEGIN(literals)
 
-constexpr i8 operator""_i8(ulonglong value) noexcept   { return static_cast<i8>(value); }
-constexpr u8 operator""_u8(ulonglong value) noexcept   { return static_cast<u8>(value); }
-constexpr i16 operator""_i16(ulonglong value) noexcept { return static_cast<i16>(value); }
-constexpr u16 operator""_u16(ulonglong value) noexcept { return static_cast<u16>(value); }
-constexpr i32 operator""_i32(ulonglong value) noexcept { return static_cast<i32>(value); }
-constexpr u32 operator""_u32(ulonglong value) noexcept { return static_cast<u32>(value); }
-constexpr i64 operator""_i64(ulonglong value) noexcept { return static_cast<i64>(value); }
-constexpr u64 operator""_u64(ulonglong value) noexcept { return static_cast<u64>(value); }
+constexpr i8 operator""_i8(uint64 value) noexcept   { return static_cast<i8>(value); }
+constexpr u8 operator""_u8(uint64 value) noexcept   { return static_cast<u8>(value); }
+constexpr i16 operator""_i16(uint64 value) noexcept { return static_cast<i16>(value); }
+constexpr u16 operator""_u16(uint64 value) noexcept { return static_cast<u16>(value); }
+constexpr i32 operator""_i32(uint64 value) noexcept { return static_cast<i32>(value); }
+constexpr u32 operator""_u32(uint64 value) noexcept { return static_cast<u32>(value); }
+constexpr i64 operator""_i64(uint64 value) noexcept { return static_cast<i64>(value); }
+constexpr u64 operator""_u64(uint64 value) noexcept { return value; }  // no cast needed
 
 #if NEX_HAS_BUILTIN_INT128
-    constexpr i128 operator""_i128(ulonglong value) noexcept { return static_cast<i128>(value); }
-    constexpr u128 operator""_u128(ulonglong value) noexcept { return static_cast<u128>(value); }
+    constexpr i128 operator""_i128(uint64 value) noexcept { return static_cast<i128>(value); }
+    constexpr u128 operator""_u128(uint64 value) noexcept { return static_cast<u128>(value); }
 
     template <char... Chars>
     constexpr i128 operator""_i128() noexcept { return meta::__parseRawInteger<i128, Chars...>(); }
@@ -331,8 +318,8 @@ static_assert(alignof(void*) == alignof(max_align), "Error: max_align must have 
 // Short aliases for standard size and pointer difference types (Rust-style)
 // =================================================================================
 
-using size          = usize;        // Represents sizes of objects in bytes, array lengths, etc. (usize)
-using ssize         = isize;        // Represents the difference between pointers in terms of array indexing (isize)
+using size      = usize;        // Represents sizes of objects in bytes, array lengths, etc. (usize)
+using ssize     = isize;        // Represents the difference between pointers in terms of array indexing (isize)
 
 // =================================================================================
 // Literal suffixes for standard size and pointer difference types (Rust-style)
@@ -340,8 +327,8 @@ using ssize         = isize;        // Represents the difference between pointer
 
 NEX_INLINE_NAMESPACE_BEGIN(literals)
 
-constexpr usize operator""_uz(ulonglong value) noexcept   { return static_cast<usize>(value); }
-constexpr isize operator""_iz(ulonglong value) noexcept   { return static_cast<isize>(value); }
+constexpr usize operator""_uz(uint64 value) noexcept      { return static_cast<usize>(value); }
+constexpr isize operator""_iz(uint64 value) noexcept      { return static_cast<isize>(value); }
 constexpr max_align operator""_ma(ldouble value) noexcept { return static_cast<max_align>(value); }
 
 NEX_INLINE_NAMESPACE_END(literals)
@@ -363,6 +350,57 @@ using align2   = uint16;                          // 2-byte alignment
 using align4   = uint32;                          // 4-byte alignment
 using align8   = uint64;                          // 8-byte alignment
 using align16  = struct { uint64 a; uint64 b; };  // 16-byte alignment storage
+
+// =================================================================================
+// Convenient alternative names for common integer types (maybe platform-dependent)
+// =================================================================================
+
+using sshort    = int16;                // 16-bit signed integer
+using ushort    = uint16;               // 16-bit unsigned integer
+using sint      = int32;                // 32-bit signed integer
+using uint      = uint32;               // 32-bit unsigned integer
+using slong     = long;                 // 32 or 64-bit signed integer (platform-dependent)
+using ulong     = unsigned long;        // 32 or 64-bit unsigned integer (platform-dependent)
+
+using longlong  = int64;                // 64-bit signed integer
+using ulonglong = uint64;               // 64-bit unsigned integer
+
+// =================================================================================
+// Short aliases for common integer types (Rust-style)
+// =================================================================================
+
+using ll        = longlong;             // 64-bit signed integer (long long)
+using ull       = ulonglong;            // 64-bit unsigned integer (unsigned long long)
+
+// =================================================================================
+// Literal suffixes for common integer types (Rust-style)
+// =================================================================================
+
+NEX_INLINE_NAMESPACE_BEGIN(literals)
+
+constexpr sshort operator""_ssh(uint64 value) noexcept     { return static_cast<sshort>(value); }
+constexpr ushort operator""_ush(uint64 value) noexcept     { return static_cast<ushort>(value); }
+constexpr sint operator""_si(uint64 value) noexcept        { return static_cast<sint>(value); }
+constexpr uint operator""_ui(uint64 value) noexcept        { return static_cast<uint>(value); }
+constexpr slong operator""_sl(uint64 value) noexcept       { return static_cast<slong>(value); }
+constexpr ulong operator""_ul(uint64 value) noexcept       { return static_cast<ulong>(value); }
+constexpr longlong operator""_ll(uint64 value) noexcept    { return static_cast<longlong>(value); }
+constexpr ulonglong operator""_ull(uint64 value) noexcept  { return value; }  // no cast needed
+
+NEX_INLINE_NAMESPACE_END(literals)
+
+// =================================================================================
+// Macro definitions for common integer literal suffixes (C-style)
+// =================================================================================
+
+#define NEX_SSHORT_C(x)     (x ## _ssh)
+#define NEX_USHORT_C(x)     (x ## _ush)
+#define NEX_SINT_C(x)       (x ## _si)
+#define NEX_UINT_C(x)       (x ## _ui)
+#define NEX_SLONG_C(x)      (x ## _sl)
+#define NEX_ULONG_C(x)      (x ## _ul)
+#define NEX_LONGLONG_C(x)   (x ## _ll)
+#define NEX_ULONGLONG_C(x)  (x ## _ull)
 
 // =================================================================================
 // Standard floating-point types
@@ -428,7 +466,7 @@ constexpr f16 operator""_f16(ldouble value) noexcept {
 }
 constexpr f32 operator""_f32(ldouble value) noexcept    { return static_cast<f32>(value); }
 constexpr f64 operator""_f64(ldouble value) noexcept    { return static_cast<f64>(value); }
-constexpr ldouble operator""_ld(ldouble value) noexcept { return value; }
+constexpr ldouble operator""_ld(ldouble value) noexcept { return value; }  // no cast needed
 
 #if NEX_HAS_BUILTIN_FLOAT128
     constexpr f128 operator""_f128(ldouble value) noexcept { return static_cast<f128>(value); }
@@ -506,6 +544,8 @@ constexpr c32 operator""_c32(char32 value) noexcept      { return value; }
 constexpr c8 operator""_c8(nchar value) noexcept         { return static_cast<c8>(value); }
 constexpr nchar operator""_nc(nchar value) noexcept      { return value; }
 constexpr wchar operator""_wc(wchar value) noexcept      { return value; }
+constexpr schar operator""_sc(nchar value) noexcept      { return static_cast<schar>(value); }
+constexpr uchar operator""_uc(nchar value) noexcept      { return static_cast<uchar>(value); }
 constexpr codepoint operator""_cp(char32 value) noexcept { return value; }
 
 NEX_INLINE_NAMESPACE_END(literals)
@@ -520,6 +560,8 @@ NEX_INLINE_NAMESPACE_END(literals)
 
 #define NEX_NCHAR_C(x)      (x ## _nc)
 #define NEX_WCHAR_C(x)      (x ## _wc)
+#define NEX_SCHAR_C(x)      (x ## _sc)
+#define NEX_UCHAR_C(x)      (x ## _uc)
 #define NEX_CODEPOINT_C(x)  (x ## _cp)
 
 // =================================================================================

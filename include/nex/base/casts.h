@@ -259,7 +259,8 @@ Derived* safeDowncast(Base* base) noexcept {
     static_assert(meta::IsBaseOfV<Base, Derived>, 
         "Error: 'safeDowncast' requires 'Derived' to be a valid subclass of 'Base'. "
         "If you are attempting cross-casting between independent interfaces, consider using 'polymorphicCast' instead.");
-    if consteval {
+
+    if NEX_CONSTEVAL_CONTEXT {
         // In a constant evaluation context, we can safely use static_cast() 
         // since the compiler will enforce the inheritance relationship at compile time
         return static_cast<Derived*>(base);

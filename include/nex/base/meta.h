@@ -165,12 +165,20 @@ using RemoveCvT = typename RemoveCv<Type>::type;
 template <class Type, class... Types>
 constexpr bool IsAnyOfV = (IsSameV<Type, Types> || ...);
 
-#if NEX_HAS_CXX20
-    // Check if we are in a constant evaluation context
-    NEX_NODISCARD constexpr bool IsConstantEvaluated() noexcept {
-        return __builtin_is_constant_evaluated();
-    }
-#endif  // NEX_HAS_CXX20
+// Check if we are in a constant evaluation context
+NEX_NODISCARD constexpr bool IsConstantEvaluated() noexcept {
+    return __builtin_is_constant_evaluated();
+}
+
+#if NEX_HAS_CXX23
+    // C++23 introduces the consteval specifier, 
+    // which enforces that a function is evaluated at compile time.
+    #define NEX_CONSTEVAL_CONTEXT consteval
+#else
+    // For C++20, we can use the IsConstantEvaluated() function 
+    // to check if we are in a constant evaluation context.
+    #define NEX_CONSTEVAL_CONTEXT (meta::IsConstantEvaluated())
+#endif  // ^^NEX_CONSTEVAL_CONTEXT
 
 #if NEX_HAS_BUILTIN(__is_integral)
     // Determine whether a type is an integral type
@@ -347,16 +355,14 @@ using _ConstThruRef = typename RemoveReference<Type>::_ConstThruRefType;
 template <class Type>
 using _RemoveCvrefT NEX_MSVC_KNOWN_SEMANTICS = RemoveCvT<RemoveReferenceT<Type>>;
 
-#if NEX_HAS_CXX20
-    // Remove reference and cv-qualifiers from a type
-    template <class Type>
-    using RemoveCvrefT = _RemoveCvrefT<Type>;
+// Remove reference and cv-qualifiers from a type
+template <class Type>
+using RemoveCvrefT = _RemoveCvrefT<Type>;
 
-    template <class Type>
-    struct RemoveCvref {
-        using type = RemoveCvrefT<Type>;
-    };
-#endif  // NEX_HAS_CXX20
+template <class Type>
+struct RemoveCvref {
+    using type = RemoveCvrefT<Type>;
+};
 
 // Retrieve the underlying type of an enumeration type
 template <class Type>

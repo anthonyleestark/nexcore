@@ -179,17 +179,21 @@ constexpr bool IsAnyOfV = (IsSameV<Type, Types> || ...);
 #else
     // Determine whether a type is an integral type
     template <class Type>
-    constexpr bool IsIntegralV = IsAnyOfV<
-        RemoveCvT<Type>, bool, 
-        char, signed char, unsigned char, wchar_t,
+    constexpr bool IsIntegralV = IsAnyOfV<RemoveCvT<Type>, 
+        bool,                               // Boolean type
+        char, signed char, unsigned char,   // Narrow character types
+        wchar_t,                            // Wide character type (platform-dependent)
     #if defined(__cpp_char8_t)
-        char8_t,
-    #endif // defined(__cpp_char8_t)
-        char16_t, char32_t, 
-        short, unsigned short, 
-        int, unsigned int, 
-        long, unsigned long, 
-        long long, unsigned long long
+        char8_t,                            // UTF-8 code unit type (since C++20)
+    #endif // ^^defined(__cpp_char8_t)
+        char16_t, char32_t,                 // UTF-16 and UTF-32 code unit types (since C++11)
+        short, unsigned short,              // 16-bit integer types
+        int, unsigned int,                  // 32-bit integer types
+        long, unsigned long,                // Platform-dependent integer types (32-bit or 64-bit)
+        long long, unsigned long long       // 64-bit integer types
+    #if NEX_HAS_BUILTIN_INT128
+        , __int128, unsigned __int128       // 128-bit integer types (if supported by the compiler)
+    #endif  // ^^NEX_HAS_BUILTIN_INT128
     >;
 #endif
 
@@ -200,7 +204,17 @@ constexpr bool IsAnyOfV = (IsSameV<Type, Types> || ...);
 #else
     // Determine whether a type is a floating-point type
     template <class Type>
-    constexpr bool IsFloatingPointV = IsAnyOfV<RemoveCvT<Type>, float, double, long double>;
+    constexpr bool IsFloatingPointV = IsAnyOfV<RemoveCvT<Type>, 
+    #if NEX_HAS_BUILTIN_FLOAT16
+        __float16_t,                        // 16-bit half-precision IEEE 754 (binary16)
+    #endif  // ^^NEX_HAS_BUILTIN_FLOAT16
+        float,                              // 32-bit single-precision IEEE 754 (binary32)
+        double,                             // 64-bit double-precision IEEE 754 (binary64)
+        long double                         // Extended-precision IEEE 754 (platform-dependent width)
+    #if NEX_HAS_BUILTIN_FLOAT128
+        , __float128                        // 128-bit quadruple-precision IEEE 754 (binary128)
+    #endif  // ^^NEX_HAS_BUILTIN_FLOAT128
+    >;
 #endif
 
 // Determine whether integral type Type is signed or unsigned

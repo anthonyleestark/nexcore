@@ -28,46 +28,6 @@
 NEX_NAMESPACE_BEGIN
 
 // =================================================================================
-// Compiler-specific type definitions and feature detection
-// =================================================================================
-
-#if defined(__SIZEOF_INT128__) && !NEX_COMPILER_MSVC_COMPATIBLE
-    #define NEX_HAS_BUILTIN_INT128 1
-#else // Compiler does not support __int128
-    #define NEX_HAS_BUILTIN_INT128 0
-#endif  // ^^NEX_HAS_BUILTIN_INT128
-
-#if defined(__FLT16_DIG__) || defined(__fp16) || defined(_Float16)
-    #define NEX_HAS_BUILTIN_FLOAT16 1
-#else  // Compiler does not support __float16
-    #define NEX_HAS_BUILTIN_FLOAT16 0
-#endif  // ^^NEX_HAS_BUILTIN_FLOAT16
-
-#if defined(__SIZEOF_FLOAT128__) && !NEX_COMPILER_MSVC_COMPATIBLE
-    #define NEX_HAS_BUILTIN_FLOAT128 1
-#else  // Compiler does not support __float128
-    #define NEX_HAS_BUILTIN_FLOAT128 0
-#endif  // ^^NEX_HAS_BUILTIN_FLOAT128
-
-#if NEX_COMPILER_IS_MSVC
-    #define NEX_SIZEOF_LONG_DOUBLE 8
-#elif defined(__SIZEOF_LONG_DOUBLE__)
-    // GCC and Clang provide this exact size macro in bytes
-    #define NEX_SIZEOF_LONG_DOUBLE __SIZEOF_LONG_DOUBLE__
-#elif defined(__LDBL_MANT_DIG__)
-    // If the compiler provides the number of mantissa digits, we can calculate the size in bytes
-    #if __LDBL_MANT_DIG__ == 64
-        #define NEX_SIZEOF_LONG_DOUBLE 12 // x86 80-bit extended
-    #elif __LDBL_MANT_DIG__ == 113
-        #define NEX_SIZEOF_LONG_DOUBLE 16 // 128-bit quad
-    #else  // Fallback to standard double
-        #define NEX_SIZEOF_LONG_DOUBLE 8
-    #endif  // ^^__LDBL_MANT_DIG__
-#else  // Last resort fallback
-    #define NEX_SIZEOF_LONG_DOUBLE  sizeof(long double)
-#endif  // ^^NEX_SIZEOF_LONG_DOUBLE
-
-// =================================================================================
 // Standard fixed-width integer types
 // =================================================================================
 
@@ -407,23 +367,15 @@ NEX_INLINE_NAMESPACE_END(literals)
 // =================================================================================
 
 #if NEX_HAS_BUILTIN_FLOAT16
-    #if NEX_COMPILER_GCC_COMPATIBLE || NEX_COMPILER_IS_CLANG
-        using float16  = __fp16;        // 16-bit floating point (IEEE 754 binary16)
-    #elif defined(_Float16)
-        using float16  = _Float16;      // 16-bit floating point (IEEE 754 binary16)
-    #else  // Safe fallback for other compilers
-        using float16  = uint16;        // 16-bit floating point (IEEE 754 binary16) represented as raw bits (uint16)
-    #endif
-#else  // Compiler does not support __float16
-    using float16      = uint16;        // 16-bit floating point (IEEE 754 binary16) represented as raw bits (uint16)
+    using float16  = __float16_t;       // 16-bit half-precision IEEE 754 (binary16)
 #endif  // ^^NEX_HAS_BUILTIN_FLOAT16
 
-using float32       = float;            // 32-bit floating point (IEEE 754 binary32)
-using float64       = double;           // 64-bit floating point (IEEE 754 binary64)
-using ldouble       = long double;      // Extended precision floating point (platform dependent)
+using float32       = float;            // 32-bit single-precision IEEE 754 (binary32)
+using float64       = double;           // 64-bit double-precision IEEE 754 (binary64)
+using ldouble       = long double;      // Extended precision IEEE 754 (platform dependent)
 
 #if NEX_HAS_BUILTIN_FLOAT128
-    using float128  = __float128;       // 128-bit floating point (IEEE 754 binary128)
+    using float128  = __float128;       // 128-bit quadruple-precision IEEE 754 (binary128)
     using floatmax  = float128;         // Widest standard floating-point type
 #else  // No support for 128-bit floating point
     using floatmax  = ldouble;          // Widest standard floating-point type
@@ -433,7 +385,10 @@ using ldouble       = long double;      // Extended precision floating point (pl
 // Compile-time assertions to verify floating-point type sizes
 // =================================================================================
 
-static_assert(sizeof(float16) == 2, "Error: float16 must be 2 bytes");
+#if NEX_HAS_BUILTIN_FLOAT16
+    static_assert(sizeof(float16) == 2, "Error: float16 must be 2 bytes");
+#endif  // ^^NEX_HAS_BUILTIN_FLOAT16
+
 static_assert(sizeof(float32) == 4, "Error: float32 must be 4 bytes");
 static_assert(sizeof(float64) == 8, "Error: float64 must be 8 bytes");
 
@@ -445,7 +400,10 @@ static_assert(sizeof(float64) == 8, "Error: float64 must be 8 bytes");
 // Short aliases for standard floating-point types (Rust-style)
 // =================================================================================
 
-using f16       = float16;              // 16-bit floating point (IEEE 754 binary16) (float16)
+#if NEX_HAS_BUILTIN_FLOAT16
+    using f16       = float16;          // 16-bit floating point (IEEE 754 binary16) (float16)
+#endif  // ^^NEX_HAS_BUILTIN_FLOAT16
+
 using f32       = float32;              // 32-bit floating point (IEEE 754 binary32) (float32)
 using f64       = float64;              // 64-bit floating point (IEEE 754 binary64) (float64)
 
@@ -459,11 +417,14 @@ using f64       = float64;              // 64-bit floating point (IEEE 754 binar
 
 NEX_INLINE_NAMESPACE_BEGIN(literals)
 
-constexpr f16 operator""_f16(ldouble value) noexcept { 
-    // Note: This conversion may not be exact due to the limited precision of float16, 
-    // but it allows for convenient literals.
-    return static_cast<f16>(value); 
-}
+#if NEX_HAS_BUILTIN_FLOAT16
+    constexpr f16 operator""_f16(ldouble value) noexcept { 
+        // Note: This conversion may not be exact due to the limited precision of float16, 
+        // but it allows for convenient literals.
+        return static_cast<f16>(value); 
+    }
+#endif  // ^^NEX_HAS_BUILTIN_FLOAT16
+
 constexpr f32 operator""_f32(ldouble value) noexcept    { return static_cast<f32>(value); }
 constexpr f64 operator""_f64(ldouble value) noexcept    { return static_cast<f64>(value); }
 constexpr ldouble operator""_ld(ldouble value) noexcept { return value; }  // no cast needed
@@ -485,7 +446,10 @@ NEX_INLINE_NAMESPACE_END(literals)
 // Macro definitions for standard floating-point literal suffixes (C-style)
 // =================================================================================
 
-#define NEX_FLOAT16_C(x)        (x ## _f16)
+#if NEX_HAS_BUILTIN_FLOAT16
+    #define NEX_FLOAT16_C(x)    (x ## _f16)
+#endif  // ^^NEX_HAS_BUILTIN_FLOAT16
+
 #define NEX_FLOAT32_C(x)        (x ## _f32)
 #define NEX_FLOAT64_C(x)        (x ## _f64)
 

@@ -170,3 +170,50 @@
 #if NEX_HAS_CXX26 && !NEX_HAS_CXX23
     #error NEX_HAS_CXX26 must imply NEX_HAS_CXX23.
 #endif
+
+// =================================================================================
+// Compiler-specific type definitions and feature detection
+// =================================================================================
+
+#if defined(__SIZEOF_INT128__) && !NEX_COMPILER_MSVC_COMPATIBLE
+    #define NEX_HAS_BUILTIN_INT128 1
+#else // Compiler does not support __int128
+    #define NEX_HAS_BUILTIN_INT128 0
+#endif  // ^^NEX_HAS_BUILTIN_INT128
+
+#if defined(__FLT16_DIG__) || defined(__fp16) || defined(_Float16)
+    #define NEX_HAS_BUILTIN_FLOAT16 1
+    #if defined(__fp16) && (NEX_COMPILER_GCC_COMPATIBLE || NEX_COMPILER_IS_CLANG)
+        // Clang and GCC support __fp16 as a native 16-bit floating-point type, 
+        // but only as a storage-only format and only on certain targets (e.g., ARM)
+        using __float16_t = __fp16;
+    #else  // _Float16 
+        using __float16_t = _Float16;
+    #endif
+#else  // Compiler does not support __float16_t
+    #define NEX_HAS_BUILTIN_FLOAT16 0
+#endif  // ^^NEX_HAS_BUILTIN_FLOAT16
+
+#if defined(__SIZEOF_FLOAT128__) && !NEX_COMPILER_MSVC_COMPATIBLE
+    #define NEX_HAS_BUILTIN_FLOAT128 1
+#else  // Compiler does not support __float128
+    #define NEX_HAS_BUILTIN_FLOAT128 0
+#endif  // ^^NEX_HAS_BUILTIN_FLOAT128
+
+#if NEX_COMPILER_IS_MSVC
+    #define NEX_SIZEOF_LONG_DOUBLE 8
+#elif defined(__SIZEOF_LONG_DOUBLE__)
+    // GCC and Clang provide this exact size macro in bytes
+    #define NEX_SIZEOF_LONG_DOUBLE __SIZEOF_LONG_DOUBLE__
+#elif defined(__LDBL_MANT_DIG__)
+    // If the compiler provides the number of mantissa digits, we can calculate the size in bytes
+    #if __LDBL_MANT_DIG__ == 64
+        #define NEX_SIZEOF_LONG_DOUBLE 12 // x86 80-bit extended
+    #elif __LDBL_MANT_DIG__ == 113
+        #define NEX_SIZEOF_LONG_DOUBLE 16 // 128-bit quad
+    #else  // Fallback to standard double
+        #define NEX_SIZEOF_LONG_DOUBLE 8
+    #endif  // ^^__LDBL_MANT_DIG__
+#else  // Last resort fallback
+    #define NEX_SIZEOF_LONG_DOUBLE  sizeof(long double)
+#endif  // ^^NEX_SIZEOF_LONG_DOUBLE

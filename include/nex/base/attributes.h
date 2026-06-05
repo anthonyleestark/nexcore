@@ -794,3 +794,23 @@
 #else  // Compiler does not support [[reinitializes]] attribute, or we are not using Clang
     #define NEX_REINITIALIZES_AFTER_MOVE
 #endif  // NEX_REINITIALIZES_AFTER_MOVE
+
+/**
+ * @def NEX_LIFETIMEBOUND
+ * @brief Annotate a pointer or reference to indicate it is lifetime-bound to the object it points to
+ * 
+ * @details
+ * This macro expands to the appropriate compiler-specific attribute to indicate that a pointer or reference is 
+ * lifetime-bound to the object it points to. This can help the compiler optimize code and generate better warnings 
+ * about potential use-after-free errors. If the compiler does not support a lifetimebound attribute, the macro 
+ * expands to nothing, allowing the code to compile without errors.
+ * 
+ * @see https://clang.llvm.org/docs/AttributeReference.html#lifetimebound
+ */
+#if NEX_HAS_CLANG_ATTRIBUTE(lifetimebound)
+    #define NEX_LIFETIMEBOUND NEX_CLANG_ATTRIBUTE(lifetimebound)
+#elif NEX_HAS_MSVC_ATTRIBUTE(lifetimebound)
+    #define NEX_LIFETIMEBOUND NEX_MSVC_ATTRIBUTE(lifetimebound)
+#else  // Compiler does not support [[lifetimebound]] attribute
+    #define NEX_LIFETIMEBOUND
+#endif  // NEX_LIFETIMEBOUND

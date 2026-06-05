@@ -142,10 +142,9 @@ private:
         ErrorType error;
     };
 
-    // Storage for either the success value or the error, 
-    // using a union to avoid unnecessary overhead.
-    union NEX_ALIGNAS((alignof(ReturnType) > alignof(ErrorType) 
-            ? alignof(ReturnType) : alignof(ErrorType))) {
+    // Storage for either the success value or the error, using a union to avoid unnecessary overhead.
+    // Aligned to the maximum alignment requirement of either ReturnType or ErrorType to ensure proper storage.
+    union NEX_ALIGNAS(meta::__maxAlignOf<ReturnType, ErrorType>()) {
         ReturnType value_;
         ErrorType error_;
     } storage_;

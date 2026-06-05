@@ -152,7 +152,7 @@ template <class Dest, class Source>
               meta::IsTriviallyCopyableV<Dest>)
 NEX_NODISCARD NEX_MSVC_INTRINSIC constexpr 
 Dest bitCast(const Source& source) noexcept {
-    return __builtin_bit_cast(Dest, source);
+    return meta::__bitCast<Dest>(source);
 }
 
 /**

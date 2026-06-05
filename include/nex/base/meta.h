@@ -729,6 +729,68 @@ constexpr bool IsNothrowDestructibleV = IsNothrowDestructible<Type>::value;
 // Internal utilities for compile-time logic processing to support metaprogramming
 // =================================================================================
 
+// Compute the minimum of two values at compile time
+template <class Type>
+NEX_NODISCARD constexpr 
+const Type& __minOf(const Type& left NEX_LIFETIMEBOUND, const Type& right NEX_LIFETIMEBOUND)
+noexcept(noexcept(left < right)) {
+    return left < right ? left : right;
+}
+
+// Compute the maximum of two values at compile time
+template <class Type>
+NEX_NODISCARD constexpr 
+const Type& __maxOf(const Type& left NEX_LIFETIMEBOUND, const Type& right NEX_LIFETIMEBOUND)
+noexcept(noexcept(left < right)) {
+    return left < right ? right : left;
+}
+
+// Compute the minimum of two values at compile time based on a custom predicate
+template <class Type, class Predicate>
+NEX_NODISCARD constexpr 
+const Type& __minOfIf(const Type& left NEX_LIFETIMEBOUND, const Type& right NEX_LIFETIMEBOUND, Predicate pred)
+noexcept(noexcept(pred(left, right))) {
+    return pred(left, right) ? left : right;
+}
+
+// Compute the maximum of two values at compile time based on a custom predicate
+template <class Type, class Predicate>
+NEX_NODISCARD constexpr 
+const Type& __maxOfIf(const Type& left NEX_LIFETIMEBOUND, const Type& right NEX_LIFETIMEBOUND, Predicate pred)
+noexcept(noexcept(pred(left, right))) {
+    return pred(left, right) ? right : left;
+}
+
+// Compute the minimum of the sizes of two types at compile time
+template <class Type1, class Type2>
+NEX_NODISCARD constexpr auto __minSizeOf() -> decltype(__minOf(sizeof(Type1), sizeof(Type2))) {
+    return __minOf(sizeof(Type1), sizeof(Type2));
+}
+
+// Compute the maximum of the sizes of two types at compile time
+template <class Type1, class Type2>
+NEX_NODISCARD constexpr auto __maxSizeOf() -> decltype(__maxOf(sizeof(Type1), sizeof(Type2))) {
+    return __maxOf(sizeof(Type1), sizeof(Type2));
+}
+
+// Compute the minimum of the alignments of two types at compile time
+template <class Type1, class Type2>
+NEX_NODISCARD constexpr auto __minAlignOf() -> decltype(__minOf(alignof(Type1), alignof(Type2))) {
+    return __minOf(alignof(Type1), alignof(Type2));
+}
+
+// Compute the maximum of the alignments of two types at compile time
+template <class Type1, class Type2>
+NEX_NODISCARD constexpr auto __maxAlignOf() -> decltype(__maxOf(alignof(Type1), alignof(Type2))) {
+    return __maxOf(alignof(Type1), alignof(Type2));
+}
+
+template <class Dest, class Source>
+    requires (sizeof(Dest) == sizeof(Source) && IsTriviallyCopyableV<Source> && IsTriviallyCopyableV<Dest>)
+NEX_NODISCARD NEX_MSVC_INTRINSIC constexpr Dest __bitCast(const Source& source) noexcept {
+    return __builtin_bit_cast(Dest, source);
+}
+
 // Convert a character representing a digit in base 2, 8, 10, or 16 to its integer value
 NEX_NODISCARD constexpr int __char2Val(char c) {
     if (c >= '0' && c <= '9') return c - '0';

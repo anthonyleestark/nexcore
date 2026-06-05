@@ -87,7 +87,7 @@ public:
     }
 
 private:
-    // Internal tag type for representing an unexpected error
+    // Represents an unexpected error
     struct Unexpected {
         Error error;
     };
@@ -103,7 +103,7 @@ private:
 
     // Constructs a successful status (default)
     constexpr Status() noexcept : isOk_(true) {
-        NEX_STD construct_at(&storage_.dummy_);  // Construct the dummy member for successful status
+        NEX_STD construct_at(&storage_.dummy_, nchar{});
     }
 
     // Constructs a Status object with an unexpected error
@@ -116,7 +116,7 @@ private:
         isOk_ = other.isOk_;
         if (isOk_) {
             // Construct the dummy member for successful status
-            NEX_STD construct_at(&storage_.dummy_);
+            NEX_STD construct_at(&storage_.dummy_, nchar{});
         } else {
             // Copy the error information from the other Status object
             NEX_STD construct_at(&storage_.error_, other.storage_.error_);
@@ -128,7 +128,7 @@ private:
         isOk_ = other.isOk_;
         if (isOk_) {
             // Construct the dummy member for successful status
-            NEX_STD construct_at(&storage_.dummy_);
+            NEX_STD construct_at(&storage_.dummy_, nchar{});
         } else {
             // Move the error information from the other Status object
             NEX_STD construct_at(&storage_.error_, NEX_MOVE(other.storage_.error_));

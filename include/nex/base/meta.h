@@ -763,27 +763,19 @@ noexcept(noexcept(pred(left, right))) {
 
 // Compute the minimum of the sizes of two types at compile time
 template <class Type1, class Type2>
-NEX_NODISCARD constexpr auto __minSizeOf() -> decltype(__minOf(sizeof(Type1), sizeof(Type2))) {
-    return __minOf(sizeof(Type1), sizeof(Type2));
-}
+constexpr auto __MinSizeOfV = __minOf(sizeof(Type1), sizeof(Type2));
 
 // Compute the maximum of the sizes of two types at compile time
 template <class Type1, class Type2>
-NEX_NODISCARD constexpr auto __maxSizeOf() -> decltype(__maxOf(sizeof(Type1), sizeof(Type2))) {
-    return __maxOf(sizeof(Type1), sizeof(Type2));
-}
+constexpr auto __MaxSizeOfV = __maxOf(sizeof(Type1), sizeof(Type2));
 
 // Compute the minimum of the alignments of two types at compile time
 template <class Type1, class Type2>
-NEX_NODISCARD constexpr auto __minAlignOf() -> decltype(__minOf(alignof(Type1), alignof(Type2))) {
-    return __minOf(alignof(Type1), alignof(Type2));
-}
+constexpr auto __MinAlignOfV = __minOf(alignof(Type1), alignof(Type2));
 
 // Compute the maximum of the alignments of two types at compile time
 template <class Type1, class Type2>
-NEX_NODISCARD constexpr auto __maxAlignOf() -> decltype(__maxOf(alignof(Type1), alignof(Type2))) {
-    return __maxOf(alignof(Type1), alignof(Type2));
-}
+constexpr auto __MaxAlignOfV = __maxOf(alignof(Type1), alignof(Type2));
 
 template <class Dest, class Source>
     requires (sizeof(Dest) == sizeof(Source) && IsTriviallyCopyableV<Source> && IsTriviallyCopyableV<Dest>)

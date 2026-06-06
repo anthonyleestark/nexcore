@@ -13,8 +13,9 @@
 #include "nex/base/location.h"
 #include "nex/base/types.h"
 
-#if NEX_PLATFORM_IS_WINDOWS
-    #include <intrin.h> // For __fastfail on MSVC
+#if NEX_COMPILER_IS_MSVC
+    // Forward declare __fastfail to avoid including <intrin.h>
+    NEX_EXTERN_C NEX_NORETURN void __fastfail(unsigned int);
 #endif
 
 // ======================================================================================
@@ -100,7 +101,7 @@ NEX_NORETURN inline void immediateCrash() {
     // which is a special kind of crash that is designed to be fatal, unique, and non-allocating. 
     // It does not generate any code on its own, so we also need to trigger a trap or abort 
     // to ensure the program does not continue executing.
-    __fastfail(0); // or __fastfail(FAST_FAIL_ILLEGAL_INSTRUCTION);
+    __fastfail(5);  // FAST_FAIL_INVALID_ARG
 
 #elif NEX_COMPILER_GCC_COMPATIBLE || NEX_COMPILER_IS_CLANG || defined(__INTEL_COMPILER)
     // GCC / Clang / ICC / AppleClang: trap immediately (illegal instruction)

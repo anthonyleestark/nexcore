@@ -217,3 +217,12 @@
 #else  // Last resort fallback
     #define NEX_SIZEOF_LONG_DOUBLE  sizeof(long double)
 #endif  // ^^NEX_SIZEOF_LONG_DOUBLE
+
+// ================================================================================
+// Extern "C" macros for C++ code that needs to be callable from C
+// =================================================================================
+
+#define NEX_EXTERN_C                extern "C"
+#define NEX_EXTERN_C_BEGIN          extern "C" {
+#define NEX_EXTERN_C_END            }
+#define NEX_EXTERN_C_BLOCK(...)     NEX_EXTERN_C_BEGIN __VA_ARGS__ NEX_EXTERN_C_END

@@ -731,7 +731,7 @@ constexpr bool IsNothrowDestructibleV = IsNothrowDestructible<Type>::value;
 
 // Compute the minimum of two values at compile time
 template <class Type>
-NEX_NODISCARD constexpr 
+NEX_NODISCARD NEX_HIDDEN_FROM_ABI NEX_ALWAYS_INLINE constexpr
 const Type& __minOf(const Type& left NEX_LIFETIMEBOUND, const Type& right NEX_LIFETIMEBOUND)
 noexcept(noexcept(left < right)) {
     return left < right ? left : right;
@@ -739,7 +739,7 @@ noexcept(noexcept(left < right)) {
 
 // Compute the maximum of two values at compile time
 template <class Type>
-NEX_NODISCARD constexpr 
+NEX_NODISCARD NEX_HIDDEN_FROM_ABI NEX_ALWAYS_INLINE constexpr
 const Type& __maxOf(const Type& left NEX_LIFETIMEBOUND, const Type& right NEX_LIFETIMEBOUND)
 noexcept(noexcept(left < right)) {
     return left < right ? right : left;
@@ -747,7 +747,7 @@ noexcept(noexcept(left < right)) {
 
 // Compute the minimum of two values at compile time based on a custom predicate
 template <class Type, class Predicate>
-NEX_NODISCARD constexpr 
+NEX_NODISCARD NEX_HIDDEN_FROM_ABI NEX_ALWAYS_INLINE constexpr
 const Type& __minOfIf(const Type& left NEX_LIFETIMEBOUND, const Type& right NEX_LIFETIMEBOUND, Predicate pred)
 noexcept(noexcept(pred(left, right))) {
     return pred(left, right) ? left : right;
@@ -755,36 +755,100 @@ noexcept(noexcept(pred(left, right))) {
 
 // Compute the maximum of two values at compile time based on a custom predicate
 template <class Type, class Predicate>
-NEX_NODISCARD constexpr 
+NEX_NODISCARD NEX_HIDDEN_FROM_ABI NEX_ALWAYS_INLINE constexpr
 const Type& __maxOfIf(const Type& left NEX_LIFETIMEBOUND, const Type& right NEX_LIFETIMEBOUND, Predicate pred)
 noexcept(noexcept(pred(left, right))) {
     return pred(left, right) ? right : left;
 }
 
-// Compute the minimum of the sizes of two types at compile time
-template <class Type1, class Type2>
-constexpr auto __MinSizeOfV = __minOf(sizeof(Type1), sizeof(Type2));
+// Base case for computing the minimum of a variadic list of values at compile time
+template <typename Type>
+NEX_NODISCARD NEX_HIDDEN_FROM_ABI NEX_ALWAYS_INLINE constexpr
+const Type& __minOfVariadic(const Type& first NEX_LIFETIMEBOUND) noexcept {
+    return first;
+}
 
-// Compute the maximum of the sizes of two types at compile time
-template <class Type1, class Type2>
-constexpr auto __MaxSizeOfV = __maxOf(sizeof(Type1), sizeof(Type2));
+// Compute the minimum of a variadic list of values at compile time
+template <typename Type, typename... Types>
+NEX_NODISCARD NEX_HIDDEN_FROM_ABI NEX_ALWAYS_INLINE constexpr
+const Type& __minOfVariadic(const Type& first NEX_LIFETIMEBOUND, const Types&... rest NEX_LIFETIMEBOUND)
+noexcept(noexcept((__minOf(first, __minOfVariadic(rest...))))) {
+    return __minOf(first, __minOfVariadic(rest...));
+}
 
-// Compute the minimum of the alignments of two types at compile time
-template <class Type1, class Type2>
-constexpr auto __MinAlignOfV = __minOf(alignof(Type1), alignof(Type2));
+// Base case for computing the maximum of a variadic list of values at compile time
+template <typename Type>
+NEX_NODISCARD NEX_HIDDEN_FROM_ABI NEX_ALWAYS_INLINE constexpr
+const Type& __maxOfVariadic(const Type& first NEX_LIFETIMEBOUND) noexcept {
+    return first;
+}
 
-// Compute the maximum of the alignments of two types at compile time
-template <class Type1, class Type2>
-constexpr auto __MaxAlignOfV = __maxOf(alignof(Type1), alignof(Type2));
+// Compute the maximum of a variadic list of values at compile time
+template <typename Type, typename... Types>
+NEX_NODISCARD NEX_HIDDEN_FROM_ABI NEX_ALWAYS_INLINE constexpr
+const Type& __maxOfVariadic(const Type& first NEX_LIFETIMEBOUND, const Types&... rest NEX_LIFETIMEBOUND)
+noexcept(noexcept((__maxOf(first, __maxOfVariadic(rest...))))) {
+    return __maxOf(first, __maxOfVariadic(rest...));
+}
 
+// Base case for computing the minimum of a variadic list of values at compile time based on a custom predicate
+template <typename Predicate, typename Type>
+NEX_NODISCARD NEX_HIDDEN_FROM_ABI NEX_ALWAYS_INLINE constexpr
+const Type& __minOfVariadicIf(Predicate pred, const Type& first NEX_LIFETIMEBOUND) noexcept {
+    return first;
+}
+
+// Compute the minimum of a variadic list of values at compile time based on a custom predicate
+template <typename Predicate, typename Type, typename... Types>
+NEX_NODISCARD NEX_HIDDEN_FROM_ABI NEX_ALWAYS_INLINE constexpr
+const Type& __minOfVariadicIf(Predicate pred, const Type& first NEX_LIFETIMEBOUND, const Types&... rest NEX_LIFETIMEBOUND)
+noexcept(noexcept((__minOfIf(first, __minOfVariadicIf(pred, rest...), pred)))) {
+    return __minOfIf(first, __minOfVariadicIf(pred, rest...), pred);
+}
+
+// Base case for computing the maximum of a variadic list of values at compile time based on a custom predicate
+template <typename Predicate, typename Type>
+NEX_NODISCARD NEX_HIDDEN_FROM_ABI NEX_ALWAYS_INLINE constexpr
+const Type& __maxOfVariadicIf(Predicate pred, const Type& first NEX_LIFETIMEBOUND) noexcept {
+    return first;
+}
+
+// Compute the maximum of a variadic list of values at compile time based on a custom predicate
+template <typename Predicate, typename Type, typename... Types>
+NEX_NODISCARD NEX_HIDDEN_FROM_ABI NEX_ALWAYS_INLINE constexpr
+const Type& __maxOfVariadicIf(Predicate pred, const Type& first NEX_LIFETIMEBOUND, const Types&... rest NEX_LIFETIMEBOUND)
+noexcept(noexcept((__maxOfIf(first, __maxOfVariadicIf(pred, rest...), pred)))) {
+    return __maxOfIf(first, __maxOfVariadicIf(pred, rest...), pred);
+}
+
+// Compute the minimum of the sizes of a variadic list of types at compile time
+template <class Type, class... Types>
+constexpr auto MinSizeOfV = __minOfVariadic(sizeof(Type), sizeof(Types)...);
+
+// Compute the maximum of the sizes of a variadic list of types at compile time
+template <class Type, class... Types>
+constexpr auto MaxSizeOfV = __maxOfVariadic(sizeof(Type), sizeof(Types)...);
+
+// Compute the minimum of the alignments of a variadic list of types at compile time
+template <class Type, class... Types>
+constexpr auto MinAlignOfV = __minOfVariadic(alignof(Type), alignof(Types)...);
+
+// Compute the maximum of the alignments of a variadic list of types at compile time
+template <class Type, class... Types>
+constexpr auto MaxAlignOfV = __maxOfVariadic(alignof(Type), alignof(Types)...);
+
+// Perform a bitwise cast from Source to Dest at compile time, 
+// ensuring that the types have the same size and are trivially copyable
 template <class Dest, class Source>
     requires (sizeof(Dest) == sizeof(Source) && IsTriviallyCopyableV<Source> && IsTriviallyCopyableV<Dest>)
-NEX_NODISCARD NEX_MSVC_INTRINSIC constexpr Dest __bitCast(const Source& source) noexcept {
+NEX_NODISCARD NEX_MSVC_INTRINSIC NEX_HIDDEN_FROM_ABI NEX_ALWAYS_INLINE constexpr
+Dest __bitCastImpl(const Source& source) noexcept {
     return __builtin_bit_cast(Dest, source);
 }
 
 // Convert a character representing a digit in base 2, 8, 10, or 16 to its integer value
-NEX_NODISCARD constexpr int __char2Val(char c) {
+NEX_NODISCARD NEX_HIDDEN_FROM_ABI NEX_ALWAYS_INLINE constexpr 
+int __char2Val(char c) {
     if (c >= '0' && c <= '9') return c - '0';
     if (c >= 'a' && c <= 'f') return 10 + (c - 'a');
     if (c >= 'A' && c <= 'F') return 10 + (c - 'A');
@@ -794,7 +858,8 @@ NEX_NODISCARD constexpr int __char2Val(char c) {
 // Parse a sequence of characters representing an integer literal in base 2, 8, 10, or 16 
 // into its integer value at compile time
 template <typename TargetType, char... Chars>
-NEX_NODISCARD constexpr TargetType __parseRawInteger() noexcept {
+NEX_NODISCARD NEX_HIDDEN_FROM_ABI inline constexpr 
+TargetType __parseRawInteger() noexcept {
     static_assert(IsIntegralV<TargetType>, "Error: TargetType must be an integral type");
     static_assert(sizeof...(Chars) > 0, 
         "Error: At least one character is required to parse an integer literal");
@@ -826,7 +891,8 @@ NEX_NODISCARD constexpr TargetType __parseRawInteger() noexcept {
 // Parse a sequence of characters representing a floating-point literal in base 10 
 // into its value at compile time
 template <typename TargetType, char... Chars>
-NEX_NODISCARD constexpr TargetType __parseRawFloating() noexcept {
+NEX_NODISCARD NEX_HIDDEN_FROM_ABI inline constexpr 
+TargetType __parseRawFloating() noexcept {
     static_assert(IsFloatingPointV<TargetType>, "Error: TargetType must be a floating-point type");
     static_assert(sizeof...(Chars) > 0, 
         "Error: At least one character is required to parse a floating-point literal");

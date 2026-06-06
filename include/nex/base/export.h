@@ -39,15 +39,15 @@
     // On MSVC, it expands to `__declspec(dllexport)` when building the shared library, 
     // and `__declspec(dllimport)` when using the shared library.
     #if NEX_BUILDING_SHARED
-        #define NEX_API __declspec(dllexport)
+        #define NEX_API NEX_MSVC_DECLSPEC(dllexport)
     #elif NEX_USING_SHARED
-        #define NEX_API __declspec(dllimport)
+        #define NEX_API NEX_MSVC_DECLSPEC(dllimport)
     #endif
 #elif NEX_COMPILER_GCC_COMPATIBLE
     // On GCC, it expands to `__attribute__((visibility("default")))` 
     // to make symbols visible for export, only when building the shared library.
     #if NEX_BUILDING_SHARED
-        #define NEX_API __attribute__((visibility("default")))
+        #define NEX_API NEX_VISIBILITY(default)
     #endif
 #endif // NEX_API
 
@@ -113,12 +113,9 @@
  * @brief Mark a symbol as internal (not exported) for shared libraries
  * 
  * @details
- * This macro can be used to mark symbols as internal, meaning they will not be exported from the shared library. 
- * This can help to reduce the exported symbol count and improve encapsulation by hiding implementation details. 
- * The NEX_INTERNAL macro expands to the appropriate compiler-specific attribute based on the detected compiler. 
- * On Windows (MSVC), there is no direct equivalent, so it expands to nothing. If the compiler does not support 
- * a visibility attribute, it also expands to nothing.
- * On macOS/Linux (GCC/Clang), it expands to `__attribute__((visibility("hidden")))`. 
+ * This macro can be used to mark a symbol as internal, meaning it should not be exported from a shared library.
+ * On Windows, there is no direct equivalent, so it expands to nothing. On macOS/Linux (GCC/Clang), it uses
+ * the visibility attribute to hide the symbol.
  */
 
 #if NEX_PLATFORM_IS_WINDOWS
@@ -126,5 +123,5 @@
     #define NEX_INTERNAL
 #else
     // On macOS/Linux (GCC/Clang), we can use the visibility attribute to hide symbols from being exported.
-    #define NEX_INTERNAL __attribute__((visibility("hidden")))
+    #define NEX_INTERNAL NEX_VISIBILITY(hidden)
 #endif  // NEX_PLATFORM_IS_WINDOWS

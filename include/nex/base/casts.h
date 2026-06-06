@@ -46,7 +46,7 @@ NEX_NAMESPACE_BEGIN
  * @return The forwarded reference (Type&&).
  */
 template <class Type>
-NEX_NODISCARD NEX_MSVC_INTRINSIC constexpr 
+NEX_NODISCARD NEX_MSVC_INTRINSIC NEX_ALWAYS_INLINE constexpr 
 Type&& forwardCast(meta::RemoveReferenceT<Type>& arg) noexcept {
     return static_cast<Type&&>(arg);
 }
@@ -59,7 +59,7 @@ Type&& forwardCast(meta::RemoveReferenceT<Type>& arg) noexcept {
  * @return The forwarded rvalue reference (Type&&).
  */
 template <class Type>
-NEX_NODISCARD NEX_MSVC_INTRINSIC constexpr 
+NEX_NODISCARD NEX_MSVC_INTRINSIC NEX_ALWAYS_INLINE constexpr 
 Type&& forwardCast(meta::RemoveReferenceT<Type>&& arg) noexcept {
     static_assert(!meta::IsLvalueReferenceV<Type>, 
         "Error: Bad forward call, cannot forward an rvalue as an lvalue reference!");
@@ -75,7 +75,7 @@ Type&& forwardCast(meta::RemoveReferenceT<Type>&& arg) noexcept {
  */
 template <class Type> 
 requires (!meta::IsLvalueReferenceV<Type>)
-NEX_NODISCARD NEX_MSVC_INTRINSIC constexpr 
+NEX_NODISCARD NEX_MSVC_INTRINSIC NEX_ALWAYS_INLINE constexpr 
 meta::RemoveReferenceT<Type>&& moveCast(Type& arg) noexcept {
     static_assert(!meta::IsConstV<meta::RemoveReferenceT<Type>>, 
         "Error: Cannot move from a const-qualified type, as it would result in a silent copy instead of a move!");
@@ -91,7 +91,7 @@ meta::RemoveReferenceT<Type>&& moveCast(Type& arg) noexcept {
  * @return An rvalue reference pointing to the object.
  */
 template <class Type>
-NEX_NODISCARD NEX_MSVC_INTRINSIC constexpr 
+NEX_NODISCARD NEX_MSVC_INTRINSIC NEX_ALWAYS_INLINE constexpr 
 meta::RemoveReferenceT<Type>&& moveCast(Type&& arg) noexcept {
     static_assert(!meta::IsLvalueReferenceV<Type>, 
         "Error: Moving on an rvalue temporary object is redundant and unnecessary!");
@@ -106,7 +106,7 @@ meta::RemoveReferenceT<Type>&& moveCast(Type&& arg) noexcept {
  * @return An rvalue reference if noexcept move-constructible; otherwise, a const lvalue reference for safe copying.
  */
 template <class Type>
-NEX_NODISCARD NEX_MSVC_INTRINSIC constexpr
+NEX_NODISCARD NEX_MSVC_INTRINSIC NEX_ALWAYS_INLINE constexpr
 meta::ConditionalT<
     !meta::IsNothrowMoveConstructibleV<Type> && meta::IsCopyConstructibleV<Type>, 
     const Type&, 
@@ -125,7 +125,7 @@ moveIfNoexcept(Type& arg) noexcept {
  * @return A pointer to the object (Type*).
  */
 template <class Type>
-NEX_NODISCARD NEX_MSVC_INTRINSIC constexpr 
+NEX_NODISCARD NEX_MSVC_INTRINSIC NEX_ALWAYS_INLINE constexpr 
 Type* addressOf(Type& Value) noexcept {
     return __builtin_addressof(Value);
 }
@@ -137,6 +137,7 @@ Type* addressOf(Type& Value) noexcept {
  * @tparam Type The type of the rvalue temporary.
  */
 template <class Type>
+NEX_NODISCARD NEX_MSVC_INTRINSIC NEX_ALWAYS_INLINE constexpr 
 const Type* addressOf(const Type&&) = delete;
 
 /**
@@ -150,9 +151,9 @@ template <class Dest, class Source>
     requires (sizeof(Dest) == sizeof(Source) && 
               meta::IsTriviallyCopyableV<Source> && 
               meta::IsTriviallyCopyableV<Dest>)
-NEX_NODISCARD NEX_MSVC_INTRINSIC constexpr 
+NEX_NODISCARD NEX_MSVC_INTRINSIC NEX_ALWAYS_INLINE constexpr 
 Dest bitCast(const Source& source) noexcept {
-    return meta::__bitCast<Dest>(source);
+    return meta::__bitCastImpl<Dest>(source);
 }
 
 /**
@@ -162,7 +163,7 @@ Dest bitCast(const Source& source) noexcept {
  */
 template <class Dest, class Source>
 requires meta::IsConvertibleV<Source, Dest>
-NEX_NODISCARD NEX_MSVC_INTRINSIC constexpr 
+NEX_NODISCARD NEX_MSVC_INTRINSIC NEX_ALWAYS_INLINE constexpr 
 Dest implicitCast(Source&& source) noexcept {
     return forwardCast<Source>(source);
 }
@@ -172,7 +173,8 @@ Dest implicitCast(Source&& source) noexcept {
  * @note Acts as a standard static_cast in Release builds, but panics in Debug if data loss occurs.
  */
 template <class Dest, class Source>
-NEX_NODISCARD NEX_MSVC_INTRINSIC constexpr Dest numericCast(Source value) noexcept {
+NEX_NODISCARD NEX_MSVC_INTRINSIC NEX_ALWAYS_INLINE constexpr 
+Dest numericCast(Source value) noexcept {
     #if NEX_BUILD_MODE_IS_DEBUG
         // Perform a checked cast that panics if the value cannot be represented in the destination type
         Dest casted = static_cast<Dest>(value);
@@ -190,7 +192,8 @@ NEX_NODISCARD NEX_MSVC_INTRINSIC constexpr Dest numericCast(Source value) noexce
  * @note Requires RTTI to be enabled only during Debug builds for verification.
  */
 template <class Dest, class Source>
-NEX_NODISCARD NEX_MSVC_INTRINSIC Dest polymorphicCast(Source* polyPointer) noexcept {
+NEX_NODISCARD NEX_MSVC_INTRINSIC NEX_ALWAYS_INLINE constexpr 
+Dest polymorphicCast(Source* polyPointer) noexcept {
     #if NEX_BUILD_MODE_IS_DEBUG
         if (polyPointer == nullptr) return nullptr;
         Dest result = dynamic_cast<Dest>(polyPointer);
@@ -207,7 +210,7 @@ NEX_NODISCARD NEX_MSVC_INTRINSIC Dest polymorphicCast(Source* polyPointer) noexc
  * @tparam MemberPtr A pointer to the member within the struct/class.
  */
 template <typename Type, auto MemberPtr>
-NEX_NODISCARD NEX_MSVC_INTRINSIC constexpr 
+NEX_NODISCARD NEX_MSVC_INTRINSIC NEX_ALWAYS_INLINE constexpr 
 Type* containerOf(
     meta::RemoveReferenceT<decltype(meta::declval<Type>().*MemberPtr)>* ptr
 ) noexcept {
@@ -227,7 +230,7 @@ Type* containerOf(
  * @tparam MemberPtr The compile-time member pointer.
  */
 template <typename Type, auto MemberPtr>
-NEX_NODISCARD NEX_MSVC_INTRINSIC constexpr 
+NEX_NODISCARD NEX_MSVC_INTRINSIC NEX_ALWAYS_INLINE constexpr 
 Type* downcastMember(
     meta::RemoveReferenceT<decltype(meta::declval<Type>().*MemberPtr)>* memberPtr
 ) noexcept {
@@ -240,7 +243,7 @@ Type* downcastMember(
  * @tparam MemberPtr The compile-time member pointer.
  */
 template <typename Type, auto MemberPtr>
-NEX_NODISCARD NEX_MSVC_INTRINSIC constexpr 
+NEX_NODISCARD NEX_MSVC_INTRINSIC NEX_ALWAYS_INLINE constexpr 
 Type& derefMember(
     meta::RemoveReferenceT<decltype(meta::declval<Type>().*MemberPtr)>* memberPtr
 ) noexcept {
@@ -254,7 +257,7 @@ Type& derefMember(
  *       In runtime debug builds, it falls back to polymorphicCast for dynamic verification.
  */
 template <typename Derived, typename Base>
-NEX_NODISCARD NEX_MSVC_INTRINSIC constexpr 
+NEX_NODISCARD NEX_MSVC_INTRINSIC NEX_ALWAYS_INLINE constexpr 
 Derived* safeDowncast(Base* base) noexcept {
     static_assert(meta::IsBaseOfV<Base, Derived>, 
         "Error: 'safeDowncast' requires 'Derived' to be a valid subclass of 'Base'. "

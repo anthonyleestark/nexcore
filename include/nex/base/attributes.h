@@ -23,6 +23,7 @@
  */
 
 #include "nex/base/compiler.h"
+#include "nex/base/build.h"
 
 /**
  * @def NEX_HAS_CPP_ATTRIBUTE(x)
@@ -177,6 +178,20 @@
 #endif  // NEX_COMPILER_MSVC_COMPATIBLE
 
 /**
+ * @def NEX_MSVC_DECLSPEC
+ * @brief Annotate a symbol with a Microsoft-specific declspec attribute
+ * 
+ * @details
+ * This macro allows you to annotate a symbol with a Microsoft-specific declspec attribute. It expands to the appropriate 
+ * attribute syntax if the compiler is MSVC-compatible, and expands to nothing on other compilers.
+ */
+#if NEX_COMPILER_MSVC_COMPATIBLE
+    #define NEX_MSVC_DECLSPEC(x) __declspec(x)
+#else
+    #define NEX_MSVC_DECLSPEC(x)
+#endif  // NEX_COMPILER_MSVC_COMPATIBLE
+
+/**
  * @def NEX_NOINLINE
  * @brief Annotate a function indicating it should not be inlined.
  * 
@@ -230,18 +245,44 @@
  *   }
  * @endcode
  */
-#if defined(NDEBUG)
+#if NEX_BUILD_MODE_IS_RELEASE
+    // In release builds, we can use the appropriate always-inline attribute for the compiler
     #if NEX_HAS_CLANG_ATTRIBUTE(always_inline)
         #define NEX_ALWAYS_INLINE NEX_CLANG_ATTRIBUTE(always_inline) inline
     #elif NEX_HAS_GCC_ATTRIBUTE(always_inline)
         #define NEX_ALWAYS_INLINE NEX_GCC_ATTRIBUTE(always_inline) inline
     #elif NEX_COMPILER_MSVC_COMPATIBLE
         #define NEX_ALWAYS_INLINE __forceinline
+    #else  // Compiler does not support an always-inline attribute
+        #define NEX_ALWAYS_INLINE inline
     #endif
+#else
+    // In debug builds, we avoid forcing inlining 
+    // to preserve function boundaries for better debugging experience
+    #define NEX_ALWAYS_INLINE inline
+#endif  // ^^NEX_ALWAYS_INLINE
+
+/**
+ * @def NEX_VISIBILITY
+ * @brief Annotate a symbol with a specific visibility for shared libraries
+ * 
+ * @details
+ * This macro can be used to control the visibility of symbols in shared libraries. It expands to the appropriate 
+ * compiler-specific attribute based on the detected compiler. 
+ */
+#if NEX_COMPILER_IS_CLANG || NEX_COMPILER_GCC_COMPATIBLE
+    // On Clang and GCC, we can use the visibility attribute to control symbol export.
+    #define NEX_VISIBILITY(vis) __attribute__((visibility(#vis)))
+#else
+    // On MSVC, there is no direct equivalent to GCC's visibility attribute, 
+    // so we define it as a no-op.
+    #define NEX_VISIBILITY(vis)
 #endif
 
-#if !defined(NEX_ALWAYS_INLINE)
-    #define NEX_ALWAYS_INLINE inline
+#if !defined(NEX_HIDDEN_FROM_ABI)
+    // Mark a symbol as hidden from the public ABI, 
+    // which can help reduce symbol collisions and improve load times in shared libraries
+    #define NEX_HIDDEN_FROM_ABI NEX_VISIBILITY(hidden)
 #endif
 
 /**
@@ -379,7 +420,7 @@
 #if NEX_CXX_VER >= NEX_CXX11_VER_NUMBER
     #define NEX_ALIGNAS(byte_alignment) alignas(byte_alignment)
 #elif NEX_COMPILER_MSVC_COMPATIBLE
-    #define NEX_ALIGNAS(byte_alignment) __declspec(align(byte_alignment))
+    #define NEX_ALIGNAS(byte_alignment) NEX_MSVC_DECLSPEC(align(byte_alignment))
 #elif NEX_COMPILER_GCC_COMPATIBLE
     #define NEX_ALIGNAS(byte_alignment) __attribute__((aligned(byte_alignment)))
 #endif  // NEX_ALIGNAS
@@ -494,7 +535,7 @@
  * support a noreturn attribute, the macro expands to nothing, allowing the code to compile without errors.
  */
 #if NEX_COMPILER_MSVC_COMPATIBLE
-    #define NEX_NORETURN __declspec(noreturn)
+    #define NEX_NORETURN NEX_MSVC_DECLSPEC(noreturn)
 #elif NEX_COMPILER_GCC_COMPATIBLE
     #define NEX_NORETURN __attribute__((noreturn))
 #else  // Compiler does not support noreturn attribute
@@ -520,7 +561,7 @@
  * @endcode
  */
 #if NEX_COMPILER_MSVC_COMPATIBLE
-    #define NEX_DEPRECATED(msg) __declspec(deprecated(msg))
+    #define NEX_DEPRECATED(msg) NEX_MSVC_DECLSPEC(deprecated(msg))
 #elif NEX_COMPILER_GCC_COMPATIBLE
     #define NEX_DEPRECATED(msg) __attribute__((deprecated(msg)))
 #else  // Compiler does not support deprecation attribute

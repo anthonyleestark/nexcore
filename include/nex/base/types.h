@@ -99,11 +99,21 @@ constexpr i64 operator""_i64(uint64 value) noexcept { return static_cast<i64>(va
 constexpr u64 operator""_u64(uint64 value) noexcept { return value; }  // no cast needed
 
 #if NEX_HAS_BUILTIN_INT128
+    /**
+     * @note
+     * For 128-bit integer literals, we provide both ways to cast:
+     * - Directly from an unsigned 64-bit literal (for small values that fit in 64 bits)
+     * - From a character sequence (for larger literals that exceed 64 bits)
+     */
+
     constexpr i128 operator""_i128(uint64 value) noexcept { return static_cast<i128>(value); }
     constexpr u128 operator""_u128(uint64 value) noexcept { return static_cast<u128>(value); }
 
     template <char... Chars>
-    constexpr i128 operator""_i128() noexcept { return meta::__parseRawInteger<i128, Chars...>(); }
+    constexpr i128 operator""_i128() noexcept {
+        // Parse to unsigned first to avoid overflow issues with negative literals, then cast to signed
+        return static_cast<i128>(meta::__parseRawInteger<u128, Chars...>()); 
+    }
 
     template <char... Chars>
     constexpr u128 operator""_u128() noexcept { return meta::__parseRawInteger<u128, Chars...>(); }
@@ -430,6 +440,13 @@ constexpr f64 operator""_f64(ldouble value) noexcept    { return static_cast<f64
 constexpr ldouble operator""_ld(ldouble value) noexcept { return value; }  // no cast needed
 
 #if NEX_HAS_BUILTIN_FLOAT128
+    /**
+     * @note
+     * For 128-bit floating-point literals, we also provide both ways to cast:
+     * - Directly from a long double literal (for values that fit within long double precision)
+     * - From a character sequence (for larger literals that require full 128-bit precision)
+     */
+
     constexpr f128 operator""_f128(ldouble value) noexcept { return static_cast<f128>(value); }
 
     #if NEX_HAS_BUILTIN(__strtof128)
@@ -581,7 +598,8 @@ NEX_INLINE_NAMESPACE_BEGIN(byte_operations)
 
 // Bitwise left shift operator for 'byte' type
 template <class IntType>
-NEX_NODISCARD constexpr byte operator<<(const byte arg, const IntType shift) noexcept 
+NEX_NODISCARD NEX_ALWAYS_INLINE constexpr 
+byte operator<<(const byte arg, const IntType shift) noexcept 
 requires (meta::IsIntegralV<IntType> && !meta::IsSameV<IntType, bool>) {
     if constexpr (meta::IsConstantEvaluated()) {
         static_assert(shift >= 0 && shift < 8, 
@@ -593,7 +611,8 @@ requires (meta::IsIntegralV<IntType> && !meta::IsSameV<IntType, bool>) {
 
 // Bitwise right shift operator for 'byte' type
 template <class IntType>
-NEX_NODISCARD constexpr byte operator>>(const byte arg, const IntType shift) noexcept 
+NEX_NODISCARD NEX_ALWAYS_INLINE constexpr 
+byte operator>>(const byte arg, const IntType shift) noexcept 
 requires (meta::IsIntegralV<IntType> && !meta::IsSameV<IntType, bool>) {
     if constexpr (meta::IsConstantEvaluated()) {
         static_assert(shift >= 0 && shift < 8, 
@@ -604,81 +623,84 @@ requires (meta::IsIntegralV<IntType> && !meta::IsSameV<IntType, bool>) {
 }
 
 // Bitwise OR operator for 'byte' type
-NEX_NODISCARD constexpr byte operator|(const byte left, const byte right) noexcept {
+NEX_NODISCARD NEX_ALWAYS_INLINE constexpr 
+byte operator|(const byte left, const byte right) noexcept {
     return static_cast<byte>(
         static_cast<meta::UnderlyingTypeT<byte>>(left) | static_cast<meta::UnderlyingTypeT<byte>>(right));
 }
 
 // Bitwise AND operator for 'byte' type
-NEX_NODISCARD constexpr byte operator&(const byte left, const byte right) noexcept {
+NEX_NODISCARD NEX_ALWAYS_INLINE constexpr 
+byte operator&(const byte left, const byte right) noexcept {
     return static_cast<byte>(
         static_cast<meta::UnderlyingTypeT<byte>>(left) & static_cast<meta::UnderlyingTypeT<byte>>(right));
 }
 
 // Bitwise XOR operator for 'byte' type
-NEX_NODISCARD constexpr byte operator^(const byte left, const byte right) noexcept {
+NEX_NODISCARD NEX_ALWAYS_INLINE constexpr 
+byte operator^(const byte left, const byte right) noexcept {
     return static_cast<byte>(
         static_cast<meta::UnderlyingTypeT<byte>>(left) ^ static_cast<meta::UnderlyingTypeT<byte>>(right));
 }
 
 // Bitwise NOT operator for 'byte' type
-NEX_NODISCARD constexpr byte operator~(const byte arg) noexcept {
+NEX_NODISCARD NEX_ALWAYS_INLINE constexpr byte operator~(const byte arg) noexcept {
     return static_cast<byte>(~static_cast<meta::UnderlyingTypeT<byte>>(arg));
 }
 
 // Bitwise left shift compound assignment operator for 'byte' type
 template <class IntType>
-constexpr byte& operator<<=(byte& arg, const IntType shift) noexcept 
+NEX_ALWAYS_INLINE constexpr byte& operator<<=(byte& arg, const IntType shift) noexcept 
 requires (meta::IsIntegralV<IntType> && !meta::IsSameV<IntType, bool>) {
     return arg = arg << shift;
 }
 
 // Bitwise right shift compound assignment operator for 'byte' type
 template <class IntType>
-constexpr byte& operator>>=(byte& arg, const IntType shift) noexcept 
+NEX_ALWAYS_INLINE constexpr byte& operator>>=(byte& arg, const IntType shift) noexcept 
 requires (meta::IsIntegralV<IntType> && !meta::IsSameV<IntType, bool>) {
     return arg = arg >> shift;
 }
 
 // Bitwise OR compound assignment operator for 'byte' type
-constexpr byte& operator|=(byte& left, const byte right) noexcept {
+NEX_ALWAYS_INLINE constexpr byte& operator|=(byte& left, const byte right) noexcept {
     return left = left | right;
 }
 
 // Bitwise AND compound assignment operator for 'byte' type
-constexpr byte& operator&=(byte& left, const byte right) noexcept {
+NEX_ALWAYS_INLINE constexpr byte& operator&=(byte& left, const byte right) noexcept {
     return left = left & right;
 }
 
 // Bitwise XOR compound assignment operator for 'byte' type
-constexpr byte& operator^=(byte& left, const byte right) noexcept {
+NEX_ALWAYS_INLINE constexpr byte& operator^=(byte& left, const byte right) noexcept {
     return left = left ^ right;
 }
 
 // Convert 'byte' to an integral type
 template <class IntType>
-NEX_NODISCARD NEX_MSVC_INTRINSIC constexpr IntType toInteger(const byte arg) noexcept
+NEX_NODISCARD NEX_MSVC_INTRINSIC NEX_ALWAYS_INLINE constexpr IntType toInteger(const byte arg) noexcept
 requires (meta::IsIntegralV<IntType> && !meta::IsSameV<IntType, bool>) {
     return static_cast<IntType>(static_cast<meta::UnderlyingTypeT<byte>>(arg));
 }
 
 // Explicit conversion from 'byte' to 'bool'
 template <class ByteType>
-NEX_NODISCARD NEX_MSVC_INTRINSIC constexpr bool toBool(const ByteType arg) noexcept 
+NEX_NODISCARD NEX_MSVC_INTRINSIC NEX_ALWAYS_INLINE constexpr bool toBool(const ByteType arg) noexcept 
 requires (meta::IsSameV<ByteType, byte>) {
     return static_cast<meta::UnderlyingTypeT<byte>>(arg) != 0;
 }
 
 // Convert an integral type to 'byte' (symmetric to toInteger)
 template <class IntType>
-NEX_NODISCARD constexpr byte toByte(IntType value) noexcept 
+NEX_NODISCARD NEX_MSVC_INTRINSIC NEX_ALWAYS_INLINE constexpr byte toByte(IntType value) noexcept 
 requires (meta::IsIntegralV<IntType> && !meta::IsSameV<IntType, bool>) {
     return static_cast<byte>(static_cast<meta::UnderlyingTypeT<byte>>(value));
 }
 
 // Explicit conversion from 'bool' to 'byte'
 template <class BoolType>
-NEX_NODISCARD constexpr byte toByte(BoolType value) noexcept
+NEX_NODISCARD NEX_MSVC_INTRINSIC NEX_ALWAYS_INLINE constexpr byte toByte(BoolType value) noexcept
 requires (meta::IsSameV<BoolType, bool>) {
     return static_cast<byte>(value ? 1u : 0u);
 }

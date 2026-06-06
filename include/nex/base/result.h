@@ -144,7 +144,7 @@ private:
 
     // Storage for either the success value or the error, using a union to avoid unnecessary overhead.
     // Aligned to the maximum alignment requirement of either ReturnType or ErrorType to ensure proper storage.
-    static constexpr usize StorageAlignment = meta::__MaxAlignOfV<ReturnType, ErrorType>;
+    static constexpr usize StorageAlignment = meta::MaxAlignOfV<ReturnType, ErrorType>;
     union NEX_ALIGNAS(StorageAlignment) {
         ReturnType value_;
         ErrorType error_;

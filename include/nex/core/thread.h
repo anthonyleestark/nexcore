@@ -13,7 +13,7 @@
 #include "nex/base/casts.h"
 #include "nex/base/primitives.h"
 #include "nex/base/wrappers.h"
-#include "nex/core/meta/runtime_id.h"
+#include "nex/core/metadata/runtime_id.h"
 #include "nex/core/text/string_view.h"
 #include "nex/base/error.h"
 #include "nex/base/result.h"

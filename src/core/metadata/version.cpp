@@ -9,7 +9,7 @@
 #include "nex/core/text/encoding.h"
 #include "nex/core/text/format.h"
 #include "nex/core/text/text.h"
-#include "nex/core/meta/version.h"
+#include "nex/core/metadata/version.h"
 
 NEX_NAMESPACE_BEGIN
 

@@ -11,6 +11,7 @@
 #include "nex/base/types.h"
 #include "nex/base/string.h"
 #include "nex/base/result.h"
+#include "nex/core/text/string.h"
 
 NEX_NAMESPACE_BEGIN
 

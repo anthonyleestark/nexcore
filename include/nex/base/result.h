@@ -271,7 +271,7 @@ public:
     // Create an error result with perfect forwarding of arguments to construct the error
     template<typename... Args>
     static Result error(Args&&... args) noexcept {
-        return Result(Unexpected { ErrorType(NEX_FORWARD(Args, args)...) });
+        return Result(Unexpected { ErrorType(NEX_FORWARD<Args>(args)...) });
     }
 
     // Check if result is successful

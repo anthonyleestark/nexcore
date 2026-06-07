@@ -9,8 +9,7 @@
 
 #include "nex/base/macros.h"
 #include "nex/base/types.h"
-#include "nex/core/text/string.h"
-#include "nex/core/text/string_view.h"
+#include "nex/base/string.h"
 
 NEX_NAMESPACE_BEGIN
 
@@ -29,20 +28,60 @@ NEX_NAMESPACE_BEGIN
  * and other non-exception-based error handling mechanisms where appropriate, and to reserve exceptions for 
  * truly exceptional circumstances.
  */
-class NEX_API Exception : public NEX_STD exception {
+class NEX_API Exception {
 private:
     // The message of the exception
-    String message_;
+    StdString message_;
 
 public:
     // Constructor with a message
-    Exception(const StringView& message) : message_(message) {}
+    Exception(const StdStringView& message) noexcept 
+        : message_(message) {}
+
+    // Default copy and move semantics
+    NEX_DEFAULT_COPY_AND_MOVE(Exception);
+
+    // Construct with a standard exception
+    Exception(const NEX_STD exception& e) noexcept 
+        : message_(e.what()) {}
+
+    // Assignment operator for standard exceptions
+    Exception& operator=(const NEX_STD exception& e) noexcept {
+        message_ = e.what();
+        return *this;
+    }
 
     // Destructor
     virtual ~Exception() noexcept = default;
 
     // Get the message of the exception
-    virtual const StringView& message() const noexcept { return message_.view(); }
+    virtual cstring what() const noexcept { 
+        return !message_.empty() ? message_.c_str() : "Unknown exception"; 
+    }
+
+    // Get the message as a string view
+    virtual const StdStringView& message() const noexcept { return what(); }
+};
+
+/**
+ * @class  BadException
+ * @brief  Exception for bad or unexpected errors.
+ * 
+ * @details
+ * This exception is thrown when a bad or unexpected error occurs. It serves as a general-purpose
+ * exception for situations that do not fit into other specific exception categories.
+ */
+class NEX_API BadException : public Exception {
+public:
+    // Constructor with a message
+    BadException() noexcept 
+        : Exception("Bad exception") {}
+
+    // Default copy and move semantics
+    NEX_DEFAULT_COPY_AND_MOVE(BadException);
+
+    // Destructor
+    virtual ~BadException() noexcept override = default;
 };
 
 /**
@@ -60,7 +99,8 @@ public:
 class NEX_API InvalidArgument : public Exception {
 public:
     // Constructor with a message
-    InvalidArgument(const StringView& message) : Exception(message) {}
+    InvalidArgument(const StdStringView& message) noexcept
+        : Exception(message) {}
 
     // Destructor
     virtual ~InvalidArgument() noexcept = default;
@@ -80,7 +120,8 @@ public:
 class NEX_API RuntimeError : public Exception {
 public:
     // Constructor with a message
-    RuntimeError(const StringView& message) : Exception(message) {}
+    RuntimeError(const StdStringView& message) noexcept 
+        : Exception(message) {}
 
     // Destructor
     virtual ~RuntimeError() noexcept = default;
@@ -98,7 +139,8 @@ public:
 class NEX_API LogicError : public Exception {
 public:
     // Constructor with a message
-    LogicError(const StringView& message) : Exception(message) {}
+    LogicError(const StdStringView& message) noexcept 
+        : Exception(message) {}
 
     // Destructor
     virtual ~LogicError() noexcept = default;
@@ -117,7 +159,8 @@ public:
 class NEX_API OutOfRange : public Exception {
 public:
     // Constructor with a message
-    OutOfRange(const StringView& message) : Exception(message) {}
+    OutOfRange(const StdStringView& message) noexcept 
+        : Exception(message) {}
 
     // Destructor
     virtual ~OutOfRange() noexcept = default;
@@ -136,7 +179,7 @@ public:
 class NEX_API DivisionByZero : public InvalidArgument {
 public:
     // Constructor with a message
-    DivisionByZero(const StringView& context = u"Division by zero")
+    DivisionByZero(const StdStringView& context = "Division by zero") noexcept
         : InvalidArgument(context) {}
 
     // Destructor
@@ -156,7 +199,7 @@ public:
 class NEX_API NullPointer : public InvalidArgument {
 public:
     // Constructor with a message
-    NullPointer(const StringView& context = u"Null pointer")
+    NullPointer(const StdStringView& context = "Null pointer") noexcept
         : InvalidArgument(context) {}
 
     // Destructor
@@ -176,7 +219,7 @@ public:
 class NEX_API Overflow : public RuntimeError {
 public:
     // Constructor with a message
-    Overflow(const StringView& message = u"Overflow error")
+    Overflow(const StdStringView& message = "Overflow error") noexcept
         : RuntimeError(message) {}
 
     // Destructor
@@ -196,7 +239,7 @@ public:
 class NEX_API Underflow : public RuntimeError {
 public:
     // Constructor with a message
-    Underflow(const StringView& message = u"Underflow error")
+    Underflow(const StdStringView& message = "Underflow error") noexcept
         : RuntimeError(message) {}
 
     // Destructor
@@ -215,7 +258,7 @@ public:
 class NEX_API NotImplemented : public LogicError {
 public:
     // Constructor with a message
-    NotImplemented(const StringView& feature = u"Feature not implemented")
+    NotImplemented(const StdStringView& feature = "Feature not implemented") noexcept
         : LogicError(feature) {}
 
     // Destructor
@@ -234,7 +277,7 @@ public:
 class NEX_API NotSupported : public LogicError {
 public:
     // Constructor with a message
-    NotSupported(const StringView& operation = u"Operation not supported")
+    NotSupported(const StdStringView& operation = "Operation not supported") noexcept
         : LogicError(operation) {}
 
     // Destructor
@@ -253,7 +296,7 @@ public:
 class NEX_API InvalidState : public LogicError {
 public:
     // Constructor with a message
-    InvalidState(const StringView& message = u"Invalid state")
+    InvalidState(const StdStringView& message = "Invalid state") noexcept
         : LogicError(message) {}
 
     // Destructor
@@ -272,7 +315,7 @@ public:
 class NEX_API FormatError : public InvalidArgument {
 public:
     // Constructor with a message
-    FormatError(const StringView& message = u"Format error")
+    FormatError(const StdStringView& message = "Format error") noexcept
         : InvalidArgument(message) {}
 
     // Destructor

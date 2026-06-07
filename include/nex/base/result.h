@@ -15,6 +15,32 @@
 NEX_NAMESPACE_BEGIN
 
 /**
+ * @note
+ * The NEX_REPORT_RESULT_INVALID_ACCESS macro is specialized for the Result class to handle invalid access 
+ * attempts when trying to retrieve a value from a Result that is in an error state, or trying to retrieve 
+ * an error from a Result that is in a success state. 
+ * In such cases, it will either throw an exception with the provided message if in a constexpr context, 
+ * or it will call NEX_FATAL to crash the program with the message. 
+ * This ensures that invalid access attempts are caught and handled appropriately, preventing undefined behavior 
+ * and providing clear feedback about the nature of the error.
+ * The use of a separate non-constexpr handler allows for more efficient error handling in runtime contexts 
+ * while still providing safety in compile-time contexts.
+ */
+#if !defined(NEX_REPORT_RESULT_INVALID_ACCESS)
+    NEX_HIDDEN_FROM_ABI inline 
+    void __runtimeResultInvalidAccessHandler(cstring msg) { NEX_FATAL(msg); }
+    #define NEX_REPORT_RESULT_INVALID_ACCESS(msg) \
+        do { \
+            if NEX_CONSTEVAL_CONTEXT { \
+                throw(msg); \
+            } else { \
+                __runtimeResultInvalidAccessHandler(msg); \
+            } \
+        } while (0)
+#endif  // !defined(NEX_REPORT_RESULT_INVALID_ACCESS)
+
+
+/**
  * @class Result
  * @brief Represents the result of an operation that can either succeed with a value or fail with an error.
  * 
@@ -52,24 +78,24 @@ template<typename ReturnType, typename ErrorType = Error>
 class NEX_API NEX_NODISCARD Result {
 public:
     // Create a successful result with an expected value
-    static Result ok(ReturnType value) noexcept {
+    static constexpr Result ok(ReturnType value) noexcept {
         return Result(Expected { NEX_MOVE(value) });
     }
 
     // Create a successful result with perfect forwarding of arguments to construct the value
     template<typename... Args>
-    static Result ok(Args&&... args) noexcept {
+    static constexpr Result ok(Args&&... args) noexcept {
         return Result(Expected { ReturnType(NEX_FORWARD<Args>(args)...) });
     }
 
     // Create an error result with an unexpected error
-    static Result error(ErrorType error) noexcept {
+    static constexpr Result error(ErrorType error) noexcept {
         return Result(Unexpected { NEX_MOVE(error) });
     }
 
     // Create an error result with perfect forwarding of arguments to construct the error
     template<typename... Args>
-    static Result error(Args&&... args) noexcept {
+    static constexpr Result error(Args&&... args) noexcept {
         return Result(Unexpected { ErrorType(NEX_FORWARD<Args>(args)...) });
     }
 
@@ -78,25 +104,25 @@ public:
     constexpr explicit operator bool() const noexcept { return isOk_; }
 
     // Get the success value (crash if result is an error)
-    ReturnType& value() {
+    constexpr ReturnType& value() {
         if (!isOk_) {
-            NEX_FATAL(
-                "Attempted to access value of error Result");
+            NEX_REPORT_RESULT_INVALID_ACCESS(
+                "Error: Attempted to access value of error Result");
         }
         return storage_.value_;
     }
 
     // Get the success value (const, crash if result is an error)
-    const ReturnType& value() const noexcept {
+    constexpr const ReturnType& value() const noexcept {
         if (!isOk_) {
-            NEX_FATAL(
-                "Attempted to access value of error Result");
+            NEX_REPORT_RESULT_INVALID_ACCESS(
+                "Error: Attempted to access value of error Result");
         }
         return storage_.value_;
     }
 
     // Get the success value or a default
-    ReturnType valueOr(ReturnType defaultValue) const noexcept {
+    constexpr ReturnType valueOr(ReturnType defaultValue) const noexcept {
         if (isOk_) {
             return storage_.value_;
         }
@@ -104,30 +130,30 @@ public:
     }
 
     // Get the error value (crash if result is successful)
-    ErrorType& error() noexcept {
+    constexpr ErrorType& error() noexcept {
         if (isOk_) {
-            NEX_FATAL(
-                "Attempted to access error of success Result");
+            NEX_REPORT_RESULT_INVALID_ACCESS(
+                "Error: Attempted to access error of success Result");
         }
         return storage_.error_;
     }
 
     // Get the error value (const, crash if result is successful)
-    const ErrorType& error() const noexcept {
+    constexpr const ErrorType& error() const noexcept {
         if (isOk_) {
-            NEX_FATAL(
-                "Attempted to access error of success Result");
+            NEX_REPORT_RESULT_INVALID_ACCESS(
+                "Error: Attempted to access error of success Result");
         }
         return storage_.error_;
     }
 
     // Try to get the success value pointer (returns a nullptr if result is an error)
-    const ReturnType* tryValue() const noexcept {
+    constexpr const ReturnType* tryValue() const noexcept {
         return isOk_ ? &storage_.value_ : nullptr;
     }
 
     // Try to get the error value pointer (returns a nullptr if result is successful)
-    const ErrorType* tryError() const noexcept {
+    constexpr const ErrorType* tryError() const noexcept {
         return isOk_ ? nullptr : &storage_.error_;
     }
 
@@ -154,17 +180,17 @@ private:
     bool isOk_ = false;
 
     // Construct a successful Result with an expected value
-    Result(Expected expected) noexcept : isOk_(true) {
+    constexpr Result(Expected expected) noexcept : isOk_(true) {
         NEX_STD construct_at(&storage_.value_, NEX_MOVE(expected.value));
     }
 
     // Construct an error Result with an unexpected error
-    Result(Unexpected unexpected) noexcept : isOk_(false) {
+    constexpr Result(Unexpected unexpected) noexcept : isOk_(false) {
         NEX_STD construct_at(&storage_.error_, NEX_MOVE(unexpected.error));
     }
 
     // Copy the contents of another Result object into this one
-    void copyStatus(const Result& other) noexcept {
+    constexpr void copyStatus(const Result& other) noexcept {
         isOk_ = other.isOk_;
         if (isOk_) {
             // Copy the success value from the other Result object
@@ -176,7 +202,7 @@ private:
     }
 
     // Move the contents of another Result object into this one
-    void moveStatus(Result&& other) noexcept {
+    constexpr void moveStatus(Result&& other) noexcept {
         isOk_ = other.isOk_;
         if (isOk_) {
             // Move the success value from the other Result object
@@ -188,7 +214,7 @@ private:
     }
 
     // Destroy the existing value or error if this Result holds one
-    void destroy() noexcept {
+    constexpr void destroy() noexcept {
         if (isOk_) {
             NEX_STD destroy_at(&storage_.value_);
         } else {
@@ -198,12 +224,12 @@ private:
 
 public:
     // Copy constructor for copying a Result object
-    Result(const Result& other) noexcept {
+    constexpr Result(const Result& other) noexcept {
         copyStatus(other);
     }
 
     // Copy assignment operator for copying a Result object
-    Result& operator=(const Result& other) noexcept {
+    constexpr Result& operator=(const Result& other) noexcept {
         if (this != &other) {
             destroy();
             copyStatus(other);
@@ -212,12 +238,12 @@ public:
     }
 
     // Constructor for moving a Result object
-    Result(Result&& other) noexcept {
+    constexpr Result(Result&& other) noexcept {
         moveStatus(NEX_MOVE(other));
     }
 
     // Move assignment operator for moving a Result object
-    Result& operator=(Result&& other) noexcept {
+    constexpr Result& operator=(Result&& other) noexcept {
         if (this != &other) {
             destroy();
             moveStatus(NEX_MOVE(other));
@@ -226,7 +252,7 @@ public:
     }
 
     // Destructor to clean up the contained value or error
-    ~Result() {
+    constexpr ~Result() {
         destroy();
     }
 };
@@ -259,18 +285,18 @@ template<typename ErrorType>
 class NEX_API NEX_NODISCARD Result<void, ErrorType> {
 public:
     // Create a successful result with no return value
-    static Result ok() noexcept {
+    static constexpr Result ok() noexcept {
         return Result();
     }
     
     // Create an error result with an unexpected error
-    static Result error(ErrorType error) noexcept {
+    static constexpr Result error(ErrorType error) noexcept {
         return Result(Unexpected { NEX_MOVE(error) });
     }
 
     // Create an error result with perfect forwarding of arguments to construct the error
     template<typename... Args>
-    static Result error(Args&&... args) noexcept {
+    static constexpr Result error(Args&&... args) noexcept {
         return Result(Unexpected { ErrorType(NEX_FORWARD<Args>(args)...) });
     }
 
@@ -279,25 +305,25 @@ public:
     constexpr explicit operator bool() const noexcept { return isOk_; }
 
     // Get the error value (crash if result is successful)
-    ErrorType& error() noexcept {
+    constexpr ErrorType& error() noexcept {
         if (isOk_) {
-            NEX_FATAL(
-                "Attempted to access error of success Result");
+            NEX_REPORT_RESULT_INVALID_ACCESS(
+                "Error: Attempted to access error of success Result");
         }
         return storage_.error_;
     }
 
     // Get the error value (const, crash if result is successful)
-    const ErrorType& error() const noexcept {
+    constexpr const ErrorType& error() const noexcept {
         if (isOk_) {
-            NEX_FATAL(
-                "Attempted to access error of success Result");
+            NEX_REPORT_RESULT_INVALID_ACCESS(
+                "Error: Attempted to access error of success Result");
         }
         return storage_.error_;
     }
 
     // Try to get the error value pointer (returns a nullptr if result is successful)
-    const ErrorType* tryError() const noexcept {
+    constexpr const ErrorType* tryError() const noexcept {
         return isOk_ ? nullptr : &storage_.error_;
     }
 
@@ -317,17 +343,17 @@ private:
     bool isOk_ = false;
 
     // Construct a successful Result with an expected value
-    Result() noexcept : isOk_(true) {
+    constexpr Result() noexcept : isOk_(true) {
         NEX_STD construct_at(&storage_.dummy_, nchar{});
     }
 
     // Construct an error Result with an unexpected error
-    Result(Unexpected unexpected) noexcept : isOk_(false) {
+    constexpr Result(Unexpected unexpected) noexcept : isOk_(false) {
         NEX_STD construct_at(&storage_.error_, NEX_MOVE(unexpected.error));
     }
 
     // Copy the contents of another Result object into this one
-    void copyResult(const Result& other) noexcept {
+    constexpr void copyResult(const Result& other) noexcept {
         isOk_ = other.isOk_;
         if (isOk_) {
             // Construct the dummy member for successful result
@@ -339,7 +365,7 @@ private:
     }
 
     // Move the contents of another Result object into this one
-    void moveResult(Result&& other) noexcept {
+    constexpr void moveResult(Result&& other) noexcept {
         isOk_ = other.isOk_;
         if (isOk_) {
             // Construct the dummy member for successful result
@@ -351,7 +377,7 @@ private:
     }
 
     // Destroy the existing error information if this Result holds an error
-    void destroy() noexcept {
+    constexpr void destroy() noexcept {
         if (!isOk_) {
             NEX_STD destroy_at(&storage_.error_);
         }
@@ -359,12 +385,12 @@ private:
 
 public:
     // Copy constructor for copying a Result object
-    Result(const Result& other) noexcept {
+    constexpr Result(const Result& other) noexcept {
         copyResult(other);
     }
 
     // Copy assignment operator for copying a Result object
-    Result& operator=(const Result& other) noexcept {
+    constexpr Result& operator=(const Result& other) noexcept {
         if (this != &other) {
             destroy();
             copyResult(other);
@@ -373,12 +399,12 @@ public:
     }
 
     // Constructor for moving a Result object
-    Result(Result&& other) noexcept {
+    constexpr Result(Result&& other) noexcept {
         moveResult(NEX_MOVE(other));
     }
 
     // Move assignment operator for moving a Result object
-    Result& operator=(Result&& other) noexcept {
+    constexpr Result& operator=(Result&& other) noexcept {
         if (this != &other) {
             destroy();
             moveResult(NEX_MOVE(other));
@@ -387,7 +413,7 @@ public:
     }
 
     // Destructor
-    ~Result() {
+    constexpr ~Result() {
         destroy();
     }
 };

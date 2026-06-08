@@ -9,12 +9,26 @@
 #include <functional>
 
 #include "nex/base/macros.h"
+#include "nex/base/meta.h"
 #include "nex/base/types.h"
 #include "nex/base/casts.h"
 #include "nex/base/string.h"
 #include "nex/base/error.h"
 
 NEX_NAMESPACE_BEGIN
+
+// Forward declaration of the Status class
+class Status;
+
+// Traits to identify if a type is a Status
+template <typename Type> 
+struct IsStatus : meta::FalseType {};
+
+template <> 
+struct IsStatus<Status> : meta::TrueType {};
+
+template <typename Type> 
+inline constexpr bool IsStatusV = IsStatus<Type>::value;
 
 /**
  * @class   Status
@@ -59,31 +73,42 @@ public:
         return Status(Unexpected { NEX_MOVE(error) });
     }
 
-    // Check if the status is OK (without error)
-    constexpr bool isOk() const noexcept { return isOk_; }
-    constexpr explicit operator bool() const noexcept { return isOk_; }
+    // Check if the status is successful
+    constexpr bool isSuccess() const noexcept { return isSuccess_; }
+    constexpr explicit operator bool() const noexcept { return isSuccess_; }
 
     // Get the error code (returns ErrorCode::Ok if status is successful)
     constexpr ErrorCode code() const noexcept {
-        return isOk_ ? ErrorCode::Ok : storage_.error_.code;
+        return isSuccess_ ? ErrorCode::Ok : storage_.error_.code;
     }
 
-    // Get the error message (returns "Ok" if status is successful)
+    // Get the error if the status is an error, otherwise returns a default "Ok" error
     constexpr Error error() const noexcept {
-        if (isOk_) {
+        if (isSuccess_) {
             return {
-                .code = ErrorCode::Ok,    // No error code for successful/okay status
-                .message = "Ok"           // Message indicating successful/okay status
+                .code = ErrorCode::Ok,    // No error code for successful status
+                .message = "Ok"           // Message indicating successful status
             };
         }
         return storage_.error_;
     }
 
-    // Execute a function if the status is OK, otherwise propagate the error
+    // Execute a function if the status is successful, otherwise propagate the error
     template <typename Func>
     constexpr auto andThen(Func&& func) const noexcept -> decltype(func()) {
-        if (isOk_) return NEX_STD invoke(NEX_FORWARD(Func, func));
+        using ReturnType = NEX_STD invoke_result_t<Func>;
+        static_assert(IsStatusV<ReturnType>, "Error: andThen function must return a Status");
+        if (isSuccess_) return NEX_STD invoke(NEX_FORWARD<Func>(func));
         return Status(Unexpected { storage_.error_ });
+    }
+
+    // Execute a function if the status is an error, otherwise propagate the success status
+    template <typename Func>
+    constexpr auto orElse(Func&& func) const noexcept -> decltype(func()) {
+        using ReturnType = NEX_STD invoke_result_t<Func, const Error&>;
+        static_assert(IsStatusV<ReturnType>, "Error: orElse function must return a Status");
+        if (!isSuccess_) return NEX_STD invoke(NEX_FORWARD<Func>(func), storage_.error_);
+        return Status::ok();
     }
 
 private:
@@ -94,51 +119,51 @@ private:
 
     // Storage for either a successful status (no error) or an error status (with error details)
     union NEX_ALIGNAS(alignof(Error)) {
-        nchar dummy_;    // Dummy member to allow default construction of the union; not used for actual storage
-        Error error_;    // Error information for failure cases; valid only if isOk_ is false
+        monostate success_;     // Represents a successful status
+        Error error_;           // Error information for failure cases
     } storage_;
 
-    // Flag indicating whether the status is OK (true) or an error (false)
-    bool isOk_ = true;
+    // Flag indicating whether the status is successful (true) or an error (false)
+    bool isSuccess_ = true;
 
     // Constructs a successful status (default)
-    constexpr Status() noexcept : isOk_(true) {
-        NEX_STD construct_at(&storage_.dummy_, nchar{});
+    constexpr Status() noexcept : isSuccess_(true) {
+        NEX_STD construct_at(NEX_ADDRESS_OF(storage_.success_), monostate{});
     }
 
     // Constructs a Status object with an unexpected error
-    constexpr Status(Unexpected unexpected) noexcept : isOk_(false) {
-        NEX_STD construct_at(&storage_.error_, NEX_MOVE(unexpected.error));
+    constexpr Status(Unexpected unexpected) noexcept : isSuccess_(false) {
+        NEX_STD construct_at(NEX_ADDRESS_OF(storage_.error_), NEX_MOVE(unexpected.error));
     }
 
     // Copy the contents of another Status object into this one
     constexpr void copyStatus(const Status& other) noexcept {
-        isOk_ = other.isOk_;
-        if (isOk_) {
+        isSuccess_ = other.isSuccess_;
+        if (isSuccess_) {
             // Construct the dummy member for successful status
-            NEX_STD construct_at(&storage_.dummy_, nchar{});
+            NEX_STD construct_at(NEX_ADDRESS_OF(storage_.success_), monostate{});
         } else {
             // Copy the error information from the other Status object
-            NEX_STD construct_at(&storage_.error_, other.storage_.error_);
+            NEX_STD construct_at(NEX_ADDRESS_OF(storage_.error_), other.storage_.error_);
         }
     }
 
     // Move the contents of another Status object into this one
     constexpr void moveStatus(Status&& other) noexcept {
-        isOk_ = other.isOk_;
-        if (isOk_) {
+        isSuccess_ = other.isSuccess_;
+        if (isSuccess_) {
             // Construct the dummy member for successful status
-            NEX_STD construct_at(&storage_.dummy_, nchar{});
+            NEX_STD construct_at(NEX_ADDRESS_OF(storage_.success_), monostate{});
         } else {
             // Move the error information from the other Status object
-            NEX_STD construct_at(&storage_.error_, NEX_MOVE(other.storage_.error_));
+            NEX_STD construct_at(NEX_ADDRESS_OF(storage_.error_), NEX_MOVE(other.storage_.error_));
         }
     }
 
     // Destroy the existing error information if this Status holds an error
-    constexpr void destroy() noexcept {
-        if (!isOk_) {
-            NEX_STD destroy_at(&storage_.error_);
+    constexpr void destroyExistingError() noexcept {
+        if (!isSuccess_) {
+            NEX_STD destroy_at(NEX_ADDRESS_OF(storage_.error_));
         }
     }
 
@@ -151,7 +176,7 @@ public:
     // Copy assignment operator for copying a Status object
     constexpr Status& operator=(const Status& other) noexcept {
         if (this != &other) {
-            destroy();
+            destroyExistingError();
             copyStatus(other);
         }
         return *this;
@@ -165,7 +190,7 @@ public:
     // Move assignment operator for moving a Status object
     constexpr Status& operator=(Status&& other) noexcept {
         if (this != &other) {
-            destroy();
+            destroyExistingError();
             moveStatus(NEX_MOVE(other));
         }
         return *this;
@@ -173,7 +198,7 @@ public:
 
     // Destructor
     constexpr ~Status() {
-        destroy();
+        destroyExistingError();
     }
 };
 

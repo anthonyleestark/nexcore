@@ -805,4 +805,28 @@ using wcstr         = wcstring;                 // Null-terminated wide string (
 #define NEX_U32CSTR_C(x)     (u32 ## x)         // Null-terminated UTF-32 string literal
 #define NEX_WCSTR_C(x)       (L ## x)           // Null-terminated wide string literal
 
+// =================================================================================
+// Monostate/unit type serves as a placeholder for a "nothing" or "empty" state
+// =================================================================================
+
+struct monostate {};                            // Representing a "monostate" or "unit" type
+
+NEX_HIDDEN_FROM_ABI NEX_ALWAYS_INLINE
+constexpr bool operator==(monostate, monostate) noexcept { return true; }
+
+NEX_HIDDEN_FROM_ABI NEX_ALWAYS_INLINE
+constexpr bool operator!=(monostate, monostate) noexcept { return false; }
+
+NEX_HIDDEN_FROM_ABI NEX_ALWAYS_INLINE
+constexpr bool operator<(monostate, monostate) noexcept { return false; }
+
+NEX_HIDDEN_FROM_ABI NEX_ALWAYS_INLINE
+constexpr bool operator>(monostate, monostate) noexcept { return false; }
+
+NEX_HIDDEN_FROM_ABI NEX_ALWAYS_INLINE
+constexpr bool operator<=(monostate, monostate) noexcept { return true; }
+
+NEX_HIDDEN_FROM_ABI NEX_ALWAYS_INLINE
+constexpr bool operator>=(monostate, monostate) noexcept { return true; }
+
 NEX_NAMESPACE_END

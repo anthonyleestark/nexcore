@@ -616,7 +616,7 @@ private:
 // without having to explicitly specify the type of the callable object.
 template <typename FuncType>
 NEX_NODISCARD auto makeScopeGuard(FuncType&& f) {
-    return ScopeGuard<Decay<FuncType>>(NEX_FORWARD(FuncType, f));
+    return ScopeGuard<Decay<FuncType>>(NEX_FORWARD<FuncType>(f));
 }
 
 // DEFER macro for scope-based excution of code blocks, similar to the DEFER statement in languages like Go

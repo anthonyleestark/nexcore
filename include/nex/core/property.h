@@ -155,14 +155,14 @@ public:
     template <typename ValidatorFunc>
     void setValidator(ValidatorFunc&& func)
     requires Policy.hasValidator && IsInvocableRV<bool, ValidatorFunc, const ValueType&> {
-        validator_ = NEX_FORWARD(ValidatorFunc, func);
+        validator_ = NEX_FORWARD<ValidatorFunc>(func);
     }
 
     // Sets the callback function for the property (only if the policy includes a callback)
     template <typename CallbackFunc>
     void setCallback(CallbackFunc&& func)
     requires Policy.hasCallback && IsInvocableRV<void, CallbackFunc, const ValueType&> {
-        callback_ = NEX_FORWARD(CallbackFunc, func);
+        callback_ = NEX_FORWARD<CallbackFunc>(func);
     }
 };
 

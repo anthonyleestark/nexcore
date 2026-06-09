@@ -1212,6 +1212,19 @@ TargetType __parseRawFloating() noexcept {
     return isNegative ? -result : result;
 }
 
+// This function returns whether the type `Second` can be stuffed into the tail padding
+// of the `First` type if both of them are given `[[no_unique_address]]`.
+template <class First, class Second>
+NEX_HIDDEN_FROM_ABI inline constexpr 
+bool __fitsInTailPadding = []() {
+    struct X {
+        NEX_NO_UNIQUE_ADDRESS First first;
+        NEX_NO_UNIQUE_ADDRESS Second second;
+    };
+
+    return sizeof(X) == sizeof(First);
+}();
+
 NEX_SUBNAMESPACE_END(meta)
 
 NEX_NAMESPACE_END

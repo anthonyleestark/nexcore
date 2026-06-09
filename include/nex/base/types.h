@@ -806,10 +806,11 @@ using wcstr         = wcstring;                 // Null-terminated wide string (
 #define NEX_WCSTR_C(x)       (L ## x)           // Null-terminated wide string literal
 
 // =================================================================================
-// Monostate/unit type serves as a placeholder for a "nothing" or "empty" state
+// Empty structs / tag types for various purposes
 // =================================================================================
 
-struct monostate {};                            // Representing a "monostate" or "unit" type
+// Representing a "monostate" or "unit" type
+struct NEX_API monostate {};
 
 NEX_HIDDEN_FROM_ABI NEX_ALWAYS_INLINE constexpr 
 bool operator==(monostate, monostate) noexcept { return true; }
@@ -828,5 +829,30 @@ bool operator<=(monostate, monostate) noexcept { return true; }
 
 NEX_HIDDEN_FROM_ABI NEX_ALWAYS_INLINE constexpr 
 bool operator>=(monostate, monostate) noexcept { return true; }
+
+// In-place construction tag type 
+// (for specifying in-place construction without additional data)
+struct NEX_API in_place_tag {
+    explicit in_place_tag() = default;
+};
+inline constexpr in_place_tag in_place{};
+
+// In-place construction tag type for a specific type 
+// (for specifying in-place construction with type information)
+template <class Type>
+struct NEX_API in_place_type : in_place_tag {
+    explicit in_place_type() = default;
+};
+
+// In-place construction tag type for a specific index 
+// (for specifying in-place construction with index information)
+template <sizetype Index>
+struct NEX_API in_place_index : in_place_tag {
+    explicit in_place_index() = default;
+};
+
+// Represents an unexpected value or error state
+struct NEX_API unexpected_type {};
+inline constexpr unexpected_type unexpected{};
 
 NEX_NAMESPACE_END

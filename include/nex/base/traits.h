@@ -108,6 +108,12 @@ using IsUnion = NEX_STD is_union<Type>;
 template <typename Type>
 inline constexpr bool IsUnionV = IsUnion<Type>::value;
 
+/// Check whether Type is a monostate type (i.e., a type that has only one possible value).
+template <typename Type>
+using IsMonostate = meta::IsSame<Type, monostate>;
+template <typename Type>
+inline constexpr bool IsMonostateV = IsMonostate<Type>::value;
+
 /// Checks whether Type is a class type (i.e., a struct or class).
 template <typename Type>
 using IsClass = meta::IsClass<Type>;
@@ -210,6 +216,12 @@ template <typename Type1, typename Type2>
 using IsSame = meta::IsSame<Type1, Type2>;
 template <typename Type1, typename Type2>
 inline constexpr bool IsSameV = IsSame<Type1, Type2>::value;
+
+/// Checks whether Type is a specialization of the class template Template.
+template <typename Type, template <typename...> class Template>
+using IsSpecialization = meta::IsSpecialization<Type, Template>;
+template <typename Type, template <typename...> class Template>
+inline constexpr bool IsSpecializationV = IsSpecialization<Type, Template>::value;
 
 /// Checks whether Base is a base class of Derived.
 template <typename Base, typename Derived>

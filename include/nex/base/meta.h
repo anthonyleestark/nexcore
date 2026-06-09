@@ -99,6 +99,17 @@ using ConditionalT = typename Conditional<Test, Type1, Type2>::type;
 template <class Type1, class Type2>
 struct IsSame : BoolConstant<IsSameV<Type1, Type2>> {};
 
+// Determine whether a type is a specialization of a class template
+
+template <class Type, template <class...> class Template>
+constexpr bool IsSpecializationV = false; // true if and only if Type is a specialization of Template
+
+template <template <class...> class Template, class... Types>
+constexpr bool IsSpecializationV<Template<Types...>, Template> = true;
+
+template <class Type, template <class...> class Template>
+struct IsSpecialization : BoolConstant<IsSpecializationV<Type, Template>> {};
+
 // RemoveConst implementation to remove top-level const qualifier from a type
 template <class Type>
 struct RemoveConst {

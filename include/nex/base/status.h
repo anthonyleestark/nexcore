@@ -17,19 +17,6 @@
 
 NEX_NAMESPACE_BEGIN
 
-// Forward declaration of the Status class
-class Status;
-
-// Traits to identify if a type is a Status
-template <typename Type> 
-struct IsStatus : meta::FalseType {};
-
-template <> 
-struct IsStatus<Status> : meta::TrueType {};
-
-template <typename Type> 
-inline constexpr bool IsStatusV = IsStatus<Type>::value;
-
 /**
  * @class   Status
  * @brief   Represents the result of an operation, indicating success or failure, 
@@ -95,18 +82,18 @@ public:
 
     // Execute a function if the status is successful, otherwise propagate the error
     template <typename Func>
-    constexpr auto andThen(Func&& func) const noexcept -> decltype(func()) {
-        using ReturnType = NEX_STD invoke_result_t<Func>;
-        static_assert(IsStatusV<ReturnType>, "Error: andThen function must return a Status");
+    constexpr auto andThen(Func&& func) const noexcept {
+        using ReturnType = meta::RemoveCvrefT<NEX_STD invoke_result_t<Func>>;
+        static_assert(meta::IsSameV<ReturnType, Status>, "Error: andThen function must return a Status");
         if (isSuccess_) return NEX_STD invoke(NEX_FORWARD<Func>(func));
         return Status(Unexpected { storage_.error_ });
     }
 
     // Execute a function if the status is an error, otherwise propagate the success status
     template <typename Func>
-    constexpr auto orElse(Func&& func) const noexcept -> decltype(func()) {
-        using ReturnType = NEX_STD invoke_result_t<Func, const Error&>;
-        static_assert(IsStatusV<ReturnType>, "Error: orElse function must return a Status");
+    constexpr auto orElse(Func&& func) const noexcept {
+        using ReturnType = meta::RemoveCvrefT<NEX_STD invoke_result_t<Func, const Error&>>;
+        static_assert(meta::IsSameV<ReturnType, Status>, "Error: orElse function must return a Status");
         if (!isSuccess_) return NEX_STD invoke(NEX_FORWARD<Func>(func), storage_.error_);
         return Status::ok();
     }

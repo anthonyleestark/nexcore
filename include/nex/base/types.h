@@ -811,22 +811,22 @@ using wcstr         = wcstring;                 // Null-terminated wide string (
 
 struct monostate {};                            // Representing a "monostate" or "unit" type
 
-NEX_HIDDEN_FROM_ABI NEX_ALWAYS_INLINE
-constexpr bool operator==(monostate, monostate) noexcept { return true; }
+NEX_HIDDEN_FROM_ABI NEX_ALWAYS_INLINE constexpr 
+bool operator==(monostate, monostate) noexcept { return true; }
 
-NEX_HIDDEN_FROM_ABI NEX_ALWAYS_INLINE
-constexpr bool operator!=(monostate, monostate) noexcept { return false; }
+NEX_HIDDEN_FROM_ABI NEX_ALWAYS_INLINE constexpr 
+bool operator!=(monostate, monostate) noexcept { return false; }
 
-NEX_HIDDEN_FROM_ABI NEX_ALWAYS_INLINE
-constexpr bool operator<(monostate, monostate) noexcept { return false; }
+NEX_HIDDEN_FROM_ABI NEX_ALWAYS_INLINE constexpr 
+bool operator<(monostate, monostate) noexcept { return false; }
 
-NEX_HIDDEN_FROM_ABI NEX_ALWAYS_INLINE
-constexpr bool operator>(monostate, monostate) noexcept { return false; }
+NEX_HIDDEN_FROM_ABI NEX_ALWAYS_INLINE constexpr 
+bool operator>(monostate, monostate) noexcept { return false; }
 
-NEX_HIDDEN_FROM_ABI NEX_ALWAYS_INLINE
-constexpr bool operator<=(monostate, monostate) noexcept { return true; }
+NEX_HIDDEN_FROM_ABI NEX_ALWAYS_INLINE constexpr 
+bool operator<=(monostate, monostate) noexcept { return true; }
 
-NEX_HIDDEN_FROM_ABI NEX_ALWAYS_INLINE
-constexpr bool operator>=(monostate, monostate) noexcept { return true; }
+NEX_HIDDEN_FROM_ABI NEX_ALWAYS_INLINE constexpr 
+bool operator>=(monostate, monostate) noexcept { return true; }
 
 NEX_NAMESPACE_END

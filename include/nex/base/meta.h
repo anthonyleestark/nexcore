@@ -100,9 +100,8 @@ template <class Type1, class Type2>
 struct IsSame : BoolConstant<IsSameV<Type1, Type2>> {};
 
 // Determine whether a type is a specialization of a class template
-
 template <class Type, template <class...> class Template>
-constexpr bool IsSpecializationV = false; // true if and only if Type is a specialization of Template
+constexpr bool IsSpecializationV = false;
 
 template <template <class...> class Template, class... Types>
 constexpr bool IsSpecializationV<Template<Types...>, Template> = true;
@@ -303,12 +302,75 @@ constexpr bool IsNullPointerV = IsSameV<RemoveCvT<Type>, decltype(nullptr)>;
 template <class Type>
 struct IsNullPointer : BoolConstant<IsNullPointerV<Type>> {};
 
+// Determine whether type argument is const qualified
+template <class>
+constexpr bool IsConstV = false;
+
+template <class Type>
+constexpr bool IsConstV<const Type> = true;
+
+template <class Type>
+struct IsConst : BoolConstant<IsConstV<Type>> {};
+
+// Determine whether type argument is volatile qualified
+template <class>
+constexpr bool IsVolatileV = false;
+
+template <class Type>
+constexpr bool IsVolatileV<volatile Type> = true;
+
+template <class Type>
+struct IsVolatile : BoolConstant<IsVolatileV<Type>> {};
+
+// Determine whether a type is an array type
+template <class>
+constexpr bool IsArrayV = false;
+
+// Determine whether a type is a bounded array type (i.e., an array with a known size)
+template <class Type>
+constexpr bool IsBoundedArrayV = false;
+
+// Determine whether a type is an unbounded array type (i.e., an array with an unknown size)
+template <class Type>
+constexpr bool IsUnboundedArrayV = false;
+
+// Specialization of IsBoundedArrayV for bounded array types, which checks if the type is of the form Type[Size]
+template <class Type, unsigned long long Size>
+constexpr bool IsBoundedArrayV<Type[Size]> = true;
+
+// Specialization of IsUnboundedArrayV for unbounded array types, which checks if the type is of the form Type[]
+template <class Type>
+constexpr bool IsUnboundedArrayV<Type[]> = true;
+
+template <class Type>
+struct IsArray : BoolConstant<IsBoundedArrayV<Type> || IsUnboundedArrayV<Type>> {};
+
+template <class Type>
+struct IsBoundedArray : BoolConstant<IsBoundedArrayV<Type>> {};
+
+template <class Type>
+struct IsUnboundedArray : BoolConstant<IsUnboundedArrayV<Type>> {};
+
 // Determine whether a type is an enumeration type
 template <class Type>
 struct IsEnum : BoolConstant<__is_enum(RemoveCvT<Type>)> {};
 
 template <class Type>
 constexpr bool IsEnumV = IsEnum<Type>::value;
+
+// Determine whether an enumeration type is a scoped enum (i.e., an enum class)
+template <class Type>
+struct IsEnumClass : BoolConstant<IsEnumV<Type> && !IsConvertibleV<Type, int>> {};
+
+template <class Type>
+constexpr bool IsEnumClassV = IsEnumClass<Type>::value;
+
+// Determine whether a type is a union type
+template <class Type>
+struct IsUnion : BoolConstant<__is_union(RemoveCvT<Type>)> {};
+
+template <class Type>
+constexpr bool IsUnionV = IsUnion<Type>::value;
 
 // Determine whether a type is a class type
 template <class Type>
@@ -324,9 +386,39 @@ struct IsConvertible : BoolConstant<__is_convertible_to(From, To)> {};
 template <class From, class To>
 constexpr bool IsConvertibleV = IsConvertible<From, To>::value;
 
+// Determine whether a class is empty 
+// (i.e., a class type with no non-static data members, no virtual functions, and no virtual base classes)
+template <class Type>
+struct IsEmpty : BoolConstant<__is_empty(RemoveCvT<Type>)> {};
+
+template <class Type>
+constexpr bool IsEmptyV = IsEmpty<Type>::value;
+
+// Determine whether a class is polymorphic (i.e., a class that has at least one virtual function)
+template <class Type>
+struct IsPolymorphic : BoolConstant<__is_polymorphic(RemoveCvT<Type>)> {};
+
+template <class Type>
+constexpr bool IsPolymorphicV = IsPolymorphic<Type>::value;
+
+// Determine whether a class is abstract 
+// (i.e., a class that cannot be instantiated and has at least one pure virtual function)
+template <class Type>
+struct IsAbstract : BoolConstant<__is_abstract(RemoveCvT<Type>)> {};
+
+template <class Type>
+constexpr bool IsAbstractV = IsAbstract<Type>::value;
+
+// Determine whether a class is final (i.e., a class that cannot be inherited from)
+template <class Type>
+struct IsFinal : BoolConstant<__is_final(RemoveCvT<Type>)> {};
+
+template <class Type>
+constexpr bool IsFinalV = IsFinal<Type>::value;
+
 // Determine whether Type is a standard-layout type
 template <class Type>
-struct IsStandardLayout : BoolConstant<__is_standard_layout(Type)> {};
+struct IsStandardLayout : BoolConstant<__is_standard_layout(RemoveCvT<Type>)> {};
 
 template <class Type>
 constexpr bool IsStandardLayoutV = IsStandardLayout<Type>::value;
@@ -376,13 +468,28 @@ struct RemoveCvref {
 };
 
 // Retrieve the underlying type of an enumeration type
-template <class Type>
+template <class Type, bool = IsEnumV<Type>>
 struct UnderlyingType {
     using type = __underlying_type(Type);
 };
 
 template <class Type>
+struct UnderlyingType<Type, false> {
+    using type = void;   // Not an enumeration type, so no underlying type
+};
+
+template <class Type>
 using UnderlyingTypeT = typename UnderlyingType<Type>::type;
+
+// Retrive the identity of a type, which is the type itself. 
+// This can be used in unevaluated contexts to obtain a type without needing to construct it.
+template <class Type>
+struct TypeIdentity {
+    using type = Type;
+};
+
+template <class Type>
+using TypeIdentityT = typename TypeIdentity<Type>::type;
 
 // Maps a sequence of any types to the type void 
 template <class... Types>
@@ -490,6 +597,21 @@ constexpr bool IsReferenceV<Type&&> = true;
 // Check if a type is a reference (either lvalue or rvalue)
 template <class Type>
 struct IsReference : BoolConstant<IsReferenceV<Type>> {};
+
+// Determine whether Type is a function type 
+// (i.e., a type that can be called with a function call syntax, excluding reference types and void types)
+template <class Type>
+constexpr bool IsFunctionV = !IsConstV<const Type> && !IsReferenceV<Type>;
+
+template <class Type>
+struct IsFunction : BoolConstant<IsFunctionV<Type>> {};
+
+// Determine whether Type is an object type (i.e., a type that is not a function, reference, or void)
+template <class Type>
+constexpr bool IsObjectV = IsConstV<const Type> && !IsVoidV<Type>;
+
+template <class Type>
+struct IsObject : BoolConstant<IsObjectV<Type>> {};
 
 // Determine whether Type is a trivial type
 template <class Type>

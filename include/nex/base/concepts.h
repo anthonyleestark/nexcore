@@ -61,11 +61,17 @@ concept SameAs =
 
 /// Checks whether Derived publicly and unambiguously derives from Base.
 template <typename Derived, typename Base>
-concept DerivedFrom = NEX_STD derived_from<Derived, Base>;
+concept DerivedFrom = 
+    meta::IsBaseOfV<Base, Derived> && 
+    meta::IsConvertibleV<const volatile Derived*, const volatile Base*>;
 
 /// Checks whether From is implicitly convertible to To.
 template <typename From, typename To>
-concept ConvertibleTo = NEX_STD convertible_to<From, To>;
+concept ConvertibleTo = 
+    meta::IsConvertibleV<From, To> &&
+    requires {
+        static_cast<To>(meta::declval<From>());
+    };
 
 /// Checks whether two types share a common reference type.
 template <typename Type1, typename Type2>
@@ -110,15 +116,25 @@ concept ConstructibleFrom =
 
 /// Checks whether Type can be default-initialized.
 template <typename Type>
-concept DefaultInitializable = NEX_STD default_initializable<Type>;
+concept DefaultInitializable = 
+    ConstructibleFrom<Type> &&
+    requires {
+        Type{};
+        ::new (static_cast<void_ptr>(nullptr)) Type;
+    };
 
 /// Checks whether Type can be move-constructed.
 template <typename Type>
-concept MoveConstructible = NEX_STD move_constructible<Type>;
+concept MoveConstructible = 
+    ConstructibleFrom<Type, Type> &&
+    ConvertibleTo<Type, Type>;
 
 /// Checks whether Type can be copy-constructed.
 template <typename Type>
-concept CopyConstructible = NEX_STD copy_constructible<Type>;
+concept CopyConstructible = 
+    MoveConstructible<Type> && ConstructibleFrom<Type, Type&> && ConvertibleTo<Type&, Type> && 
+    ConstructibleFrom<Type, const Type&> && ConvertibleTo<const Type&, Type> && 
+    ConstructibleFrom<Type, const Type> && ConvertibleTo<const Type, Type>;
 
 /// Checks whether Type can be moved, assigned, and swapped.
 template <typename Type>
@@ -139,8 +155,8 @@ concept Regular = NEX_STD regular<Type>;
 /// Checks whether the decayed type is copy constructible and move constructible.
 template <typename Type>
 concept DecayCopyable =
-    NEX_STD copy_constructible<NEX_STD decay_t<Type>> &&
-    NEX_STD move_constructible<NEX_STD decay_t<Type>>;
+    CopyConstructible<NEX_STD decay_t<Type>> &&
+    MoveConstructible<NEX_STD decay_t<Type>>;
 
 /// Alias kept for existing code that uses RegularValue.
 template <typename Type>

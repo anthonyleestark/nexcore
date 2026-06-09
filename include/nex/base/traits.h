@@ -80,19 +80,19 @@ inline constexpr bool IsPointerV = IsPointer<Type>::value;
 
 /// Checks whether Type is an array type.
 template <typename Type>
-using IsArray = NEX_STD is_array<Type>;
+using IsArray = meta::IsArray<Type>;
 template <typename Type>
 inline constexpr bool IsArrayV = IsArray<Type>::value;
 
 /// Checks whether Type is a bounded array type (i.e., an array with a known size).
 template <typename Type>
-using IsBoundedArray = NEX_STD is_bounded_array<Type>;
+using IsBoundedArray = meta::IsBoundedArray<Type>;
 template <typename Type>
 inline constexpr bool IsBoundedArrayV = IsBoundedArray<Type>::value;
 
 /// Checks whether Type is an unbounded array type (i.e., an array with an unknown size).
 template <typename Type>
-using IsUnboundedArray = NEX_STD is_unbounded_array<Type>;
+using IsUnboundedArray = meta::IsUnboundedArray<Type>;
 template <typename Type>
 inline constexpr bool IsUnboundedArrayV = IsUnboundedArray<Type>::value;
 
@@ -102,9 +102,15 @@ using IsEnum = meta::IsEnum<Type>;
 template <typename Type>
 inline constexpr bool IsEnumV = IsEnum<Type>::value;
 
+/// Checks whether Type is a scoped enumeration type (i.e., an enum class).
+template <typename Type>
+using IsEnumClass = meta::IsEnumClass<Type>;
+template <typename Type>
+inline constexpr bool IsEnumClassV = IsEnumClass<Type>::value;
+
 /// Checks whether Type is a union type.
 template <typename Type>
-using IsUnion = NEX_STD is_union<Type>;
+using IsUnion = meta::IsUnion<Type>;
 template <typename Type>
 inline constexpr bool IsUnionV = IsUnion<Type>::value;
 
@@ -122,7 +128,7 @@ inline constexpr bool IsClassV = IsClass<Type>::value;
 
 /// Checks whether Type is a function type.
 template <typename Type>
-using IsFunction = NEX_STD is_function<Type>;
+using IsFunction = meta::IsFunction<Type>;
 template <typename Type>
 inline constexpr bool IsFunctionV = IsFunction<Type>::value;
 
@@ -170,7 +176,7 @@ inline constexpr bool IsFundamentalV = IsFundamental<Type>::value;
 
 /// Checks whether Type is an object type (i.e., a type that is not a function, reference, or void).
 template <typename Type>
-using IsObject = NEX_STD is_object<Type>;
+using IsObject = meta::IsObject<Type>;
 template <typename Type>
 inline constexpr bool IsObjectV = IsObject<Type>::value;
 
@@ -189,13 +195,13 @@ inline constexpr bool IsCompoundV = IsCompound<Type>::value;
 
 /// Checks whether Type is a const-qualified type.
 template <typename Type>
-using IsConst = NEX_STD is_const<Type>;
+using IsConst = meta::IsConst<Type>;
 template <typename Type>
 inline constexpr bool IsConstV = IsConst<Type>::value;
 
 /// Checks whether Type is a volatile-qualified type.
 template <typename Type>
-using IsVolatile = NEX_STD is_volatile<Type>;
+using IsVolatile = meta::IsVolatile<Type>;
 template <typename Type>
 inline constexpr bool IsVolatileV = IsVolatile<Type>::value;
 
@@ -225,7 +231,7 @@ inline constexpr bool IsSpecializationV = IsSpecialization<Type, Template>::valu
 
 /// Checks whether Base is a base class of Derived.
 template <typename Base, typename Derived>
-using IsBaseOf = NEX_STD is_base_of<Base, Derived>;
+using IsBaseOf = meta::IsBaseOf<Base, Derived>;
 template <typename Base, typename Derived>
 inline constexpr bool IsBaseOfV = IsBaseOf<Base, Derived>::value;
 
@@ -401,31 +407,31 @@ inline constexpr bool IsTriviallyCopyableV = IsTriviallyCopyable<Type>::value;
 /// Checks whether Type is a standard layout type (i.e., a type that has a standard memory layout 
 /// and can be used in C-style APIs).
 template <typename Type>
-using IsStandardLayout = NEX_STD is_standard_layout<Type>;
+using IsStandardLayout = meta::IsStandardLayout<Type>;
 template <typename Type>
 inline constexpr bool IsStandardLayoutV = IsStandardLayout<Type>::value;
 
 /// Checks whether Type is an empty class (i.e., a class with no non-static data members).
 template <typename Type>
-using IsEmpty = NEX_STD is_empty<Type>;
+using IsEmpty = meta::IsEmpty<Type>;
 template <typename Type>
 inline constexpr bool IsEmptyV = IsEmpty<Type>::value;
 
 /// Checks whether Type is a polymorphic class (i.e., a class that has at least one virtual function).
 template <typename Type>
-using IsPolymorphic = NEX_STD is_polymorphic<Type>;
+using IsPolymorphic = meta::IsPolymorphic<Type>;
 template <typename Type>
 inline constexpr bool IsPolymorphicV = IsPolymorphic<Type>::value;
 
 /// Checks whether Type is an abstract class (i.e., a class that cannot be instantiated).
 template <typename Type>
-using IsAbstract = NEX_STD is_abstract<Type>;
+using IsAbstract = meta::IsAbstract<Type>;
 template <typename Type>
 inline constexpr bool IsAbstractV = IsAbstract<Type>::value;
 
 /// Checks whether Type is a final class (i.e., a class that cannot be inherited from).
 template <typename Type>
-using IsFinal = NEX_STD is_final<Type>;
+using IsFinal = meta::IsFinal<Type>;
 template <typename Type>
 inline constexpr bool IsFinalV = IsFinal<Type>::value;
 
@@ -505,7 +511,9 @@ using Decay = NEX_STD decay_t<Type>;
 
 /// Provides the identity of a Type (i.e., it simply returns the same type).
 template <typename Type>
-using TypeIdentity = NEX_STD type_identity_t<Type>;
+using TypeIdentity = meta::TypeIdentity<Type>;
+template <typename Type>
+using TypeIdentityT = typename TypeIdentity<Type>::type;
 
 /// Represents the void type for a given list of types. 
 /// It is commonly used in SFINAE (Substitution Failure Is Not An Error) contexts to detect the presence 
@@ -584,7 +592,9 @@ using InvokeResult = NEX_STD invoke_result_t<Fn, Args...>;
 
 /// A type alias for the underlying type of an enumeration type.
 template <typename Type>
-using UnderlyingType = NEX_STD underlying_type_t<Type>;
+using UnderlyingType = meta::UnderlyingType<Type>;
+template <typename Type>
+using UnderlyingTypeT = typename UnderlyingType<Type>::type;
 
 /// Checks whether Fn can be invoked with Args.
 template <typename Fn, typename... Args>

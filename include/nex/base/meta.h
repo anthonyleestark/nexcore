@@ -121,6 +121,11 @@ struct RemoveConst<const Type> {
 };
 
 template <class Type>
+struct RemoveConst<Type const> {
+    using type = Type;
+};
+
+template <class Type>
 using RemoveConstT = typename RemoveConst<Type>::type;
 
 // RemoveVolatile implementation to remove top-level volatile qualifier from a type
@@ -135,6 +140,11 @@ struct RemoveVolatile<volatile Type> {
 };
 
 template <class Type>
+struct RemoveVolatile<Type volatile> {
+    using type = Type;
+};
+
+template <class Type>
 using RemoveVolatileT = typename RemoveVolatile<Type>::type;
 
 // RemoveCv implementation to remove top-level const and volatile qualifiers
@@ -142,30 +152,30 @@ template <class Type>
 struct RemoveCv {
     using type = Type;
 
-    // apply cv-qualifiers from the class template argument to __Fn<Type>
+    // apply cv-qualifiers from the class template argument to Fn<Type>
     template <template <class> class Fn>
-    using _Apply = Fn<Type>;
+    using Apply = Fn<Type>;
 };
 
 template <class Type>
 struct RemoveCv<const Type> {
     using type = Type;
     template <template <class> class Fn>
-    using _Apply = const Fn<Type>;
+    using Apply = const Fn<Type>;
 };
 
 template <class Type>
 struct RemoveCv<volatile Type> {
     using type = Type;
     template <template <class> class Fn>
-    using _Apply = volatile Fn<Type>;
+    using Apply = volatile Fn<Type>;
 };
 
 template <class Type>
 struct RemoveCv<const volatile Type> {
     using type = Type;
     template <template <class> class Fn>
-    using _Apply = const volatile Fn<Type>;
+    using Apply = const volatile Fn<Type>;
 };
 
 template <class Type>
@@ -379,6 +389,20 @@ struct IsClass : BoolConstant<__is_class(RemoveCvT<Type>)> {};
 template <class Type>
 constexpr bool IsClassV = IsClass<Type>::value;
 
+// Determine whether a type is a fundamental type (i.e., an arithmetic type, void, nullptr_t, etc.)
+template <class Type>
+constexpr bool IsFundamentalV = IsArithmeticV<Type> || IsVoidV<Type> || IsNullPointerV<Type>;
+
+template <class Type>
+struct IsFundamental : BoolConstant<IsFundamentalV<Type>> {};
+
+// Determine whether a type is a compound type (i.e., an array, class, union, or enumeration type)
+template <class Type>
+struct IsCompound : BoolConstant<!IsFundamentalV<Type>> {};
+
+template <class Type>
+constexpr bool IsCompoundV = IsCompound<Type>::value;
+
 // Determine whether From is convertible to To
 template <class From, class To>
 struct IsConvertible : BoolConstant<__is_convertible_to(From, To)> {};
@@ -466,6 +490,73 @@ template <class Type>
 struct RemoveCvref {
     using type = RemoveCvrefT<Type>;
 };
+
+// Remove array extent from a type
+template <class Type>
+struct RemoveExtent {
+    using type = Type;
+};
+
+template <class Type, unsigned long long Size>
+struct RemoveExtent<Type[Size]> {
+    using type = Type;
+};
+
+template <class Type>
+struct RemoveExtent<Type[]> {
+    using type = Type;
+};
+
+template <class Type>
+using RemoveExtentT = typename RemoveExtent<Type>::type;
+
+// Remove all array extents from a type
+template <class Type>
+struct RemoveAllExtents {
+    using type = Type;
+};
+
+template <class Type, unsigned long long Size>
+struct RemoveAllExtents<Type[Size]> {
+    using type = typename RemoveAllExtents<Type>::type;
+};
+
+template <class Type>
+struct RemoveAllExtents<Type[]> {
+    using type = typename RemoveAllExtents<Type>::type;
+};
+
+template <class Type>
+using RemoveAllExtentsT = typename RemoveAllExtents<Type>::type;
+
+// Remove pointer qualifiers from a type
+template <class Type>
+struct RemovePointer {
+    using type = Type;
+};
+
+template <class Type>
+struct RemovePointer<Type*> {
+    using type = Type;
+};
+
+template <class Type>
+struct RemovePointer<Type* const> {
+    using type = Type;
+};
+
+template <class Type>
+struct RemovePointer<Type* volatile> {
+    using type = Type;
+};
+
+template <class Type>
+struct RemovePointer<Type* const volatile> {
+    using type = Type;
+};
+
+template <class Type>
+using RemovePointerT = typename RemovePointer<Type>::type;
 
 // Retrieve the underlying type of an enumeration type
 template <class Type, bool = IsEnumV<Type>>
@@ -857,6 +948,30 @@ struct IsNothrowDestructible : BoolConstant<__is_nothrow_destructible(Type)> {};
 
 template <class Type>
 constexpr bool IsNothrowDestructibleV = IsNothrowDestructible<Type>::value;
+
+// Selects one of two types based on a boolean condition.
+template <bool>
+struct Selector {
+    template <class First, class Second>
+    using Select = First;
+};
+
+template <>
+struct Selector<false> {
+    template <class First, class Second>
+    using Select = Second;
+};
+
+// Transform a type into a form suitable for use in most contexts (e.g., as a function argument or return type)
+template <class Type>
+struct Decay {
+    using Type1 = RemoveReferenceT<Type>;
+    using Type2 = typename Selector<IsFunctionV<Type1>>::template Select<AddPointer<Type1>, RemoveCvT<Type1>>;
+    using type = typename Selector<IsArrayV<Type1>>::template Select<AddPointer<RemoveExtentT<Type1>>, Type2>::type;
+};
+
+template <class Type>
+using DecayT = typename Decay<Type>::type;
 
 // =================================================================================
 // Internal utilities for compile-time logic processing to support metaprogramming

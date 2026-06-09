@@ -532,8 +532,8 @@ auto async(Executor& executor, Fn&& fn, Args&&... args)
     using ReturnType = InvokeResult<Fn, Args...>;
     using Task = NEX_DETAIL AsyncTask<
         ReturnType,
-        Decay<Fn>,
-        Decay<Args>...
+        DecayT<Fn>,
+        DecayT<Args>...
     >;
 
     Promise<ReturnType> promise;

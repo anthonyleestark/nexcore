@@ -170,7 +170,7 @@ inline constexpr bool IsReferenceV = IsReference<Type>::value;
 
 /// Checks whether Type is a fundamental type (i.e., arithmetic types, void, nullptr_t, etc.).
 template <typename Type>
-using IsFundamental = NEX_STD is_fundamental<Type>;
+using IsFundamental = meta::IsFundamental<Type>;
 template <typename Type>
 inline constexpr bool IsFundamentalV = IsFundamental<Type>::value;
 
@@ -189,7 +189,7 @@ inline constexpr bool IsScalarV = IsScalar<Type>::value;
 
 /// Checks whether Type is a compound type (i.e., an array, class, union, or enumeration type).
 template <typename Type>
-using IsCompound = NEX_STD is_compound<Type>;
+using IsCompound = meta::IsCompound<Type>;
 template <typename Type>
 inline constexpr bool IsCompoundV = IsCompound<Type>::value;
 
@@ -443,55 +443,81 @@ inline constexpr bool IsAggregateV = IsAggregate<Type>::value;
 
 /// Removes the const qualifier from a Type.
 template <typename Type>
-using RemoveConst = meta::RemoveConstT<Type>;
+using RemoveConst = meta::RemoveConst<Type>;
+template <typename Type>
+using RemoveConstT = typename RemoveConst<Type>::type;
 
 /// Removes the volatile qualifier from a Type.
 template <typename Type>
-using RemoveVolatile = meta::RemoveVolatileT<Type>;
+using RemoveVolatile = meta::RemoveVolatile<Type>;
+template <typename Type>
+using RemoveVolatileT = typename RemoveVolatile<Type>::type;
 
 /// Removes const and volatile qualifiers from a Type.
 template <typename Type>
-using RemoveCv = meta::RemoveCvT<Type>;
+using RemoveCv = meta::RemoveCv<Type>;
+template <typename Type>
+using RemoveCvT = typename RemoveCv<Type>::type;
 
 /// Removes reference qualifiers from a Type.
 template <typename Type>
-using RemoveReference = meta::RemoveReferenceT<Type>;
+using RemoveReference = meta::RemoveReference<Type>;
+template <typename Type>
+using RemoveReferenceT = typename RemoveReference<Type>::type;
 
 /// Removes const, volatile, and reference qualifiers from a Type.
 template <typename Type>
-using RemoveCvref = meta::RemoveCvrefT<Type>;
+using RemoveCvref = meta::RemoveCvref<Type>;
+template <typename Type>
+using RemoveCvrefT = typename RemoveCvref<Type>::type;
 
 /// Removes the pointer qualifier from a Type.
 template <typename Type>
-using RemovePointer = NEX_STD remove_pointer_t<Type>;
+using RemovePointer = meta::RemovePointer<Type>;
+template <typename Type>
+using RemovePointerT = typename RemovePointer<Type>::type;
 
 /// Removes one level of array extent from a Type.
 template <typename Type>
-using RemoveExtent = NEX_STD remove_extent_t<Type>;
+using RemoveExtent = meta::RemoveExtent<Type>;
+template <typename Type>
+using RemoveExtentT = typename RemoveExtent<Type>::type;
 
 /// Removes all levels of array extent from a Type.
 template <typename Type>
-using RemoveAllExtents = NEX_STD remove_all_extents_t<Type>;
+using RemoveAllExtents = meta::RemoveAllExtents<Type>;
+template <typename Type>
+using RemoveAllExtentsT = typename RemoveAllExtents<Type>::type;
 
 /// Adds the const qualifier to a Type.
 template <typename Type>
-using AddConst = meta::AddConstT<Type>;
+using AddConst = meta::AddConst<Type>;
+template <typename Type>
+using AddConstT = typename AddConst<Type>::type;
 
 /// Adds the volatile qualifier to a Type.
 template <typename Type>
-using AddVolatile = meta::AddVolatileT<Type>;
+using AddVolatile = meta::AddVolatile<Type>;
+template <typename Type>
+using AddVolatileT = typename AddVolatile<Type>::type;
 
 /// Adds const and volatile qualifiers to a Type.
 template <typename Type>
-using AddCv = meta::AddCvT<Type>;
+using AddCv = meta::AddCv<Type>;
+template <typename Type>
+using AddCvT = typename AddCv<Type>::type;
 
 /// Adds an lvalue reference to a Type.
 template <typename Type>
-using AddLvalueReference = meta::AddLvalueReferenceT<Type>;
+using AddLvalueReference = meta::AddLvalueReference<Type>;
+template <typename Type>
+using AddLvalueReferenceT = typename AddLvalueReference<Type>::type;
 
 /// Adds an rvalue reference to a Type.
 template <typename Type>
-using AddRvalueReference = meta::AddRvalueReferenceT<Type>;
+using AddRvalueReference = meta::AddRvalueReference<Type>;
+template <typename Type>
+using AddRvalueReferenceT = typename AddRvalueReference<Type>::type;
 
 /// Adds a pointer qualifier to a Type.
 template <typename Type>
@@ -507,7 +533,9 @@ using MakeUnsigned = NEX_STD make_unsigned_t<Type>;
 
 /// A type alias for the decayed type of a given Type.
 template <typename Type>
-using Decay = NEX_STD decay_t<Type>;
+using Decay = meta::Decay<Type>;
+template <typename Type>
+using DecayT = typename Decay<Type>::type;
 
 /// Provides the identity of a Type (i.e., it simply returns the same type).
 template <typename Type>
@@ -622,7 +650,7 @@ inline constexpr bool IsNothrowInvocableRV = IsNothrowInvocableR<Return, Fn, Arg
 
 /// A type alias for the resolved return type of invoking a callable with specific arguments.
 template <typename Fn, typename... Args>
-using ResolvedReturnType = Decay<InvokeResult<Fn, Args...>>;
+using ResolvedReturnType = DecayT<InvokeResult<Fn, Args...>>;
 
 /// Extracts the element type from a container Type.
 template <typename Type>

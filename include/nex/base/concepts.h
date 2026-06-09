@@ -155,8 +155,8 @@ concept Regular = NEX_STD regular<Type>;
 /// Checks whether the decayed type is copy constructible and move constructible.
 template <typename Type>
 concept DecayCopyable =
-    CopyConstructible<NEX_STD decay_t<Type>> &&
-    MoveConstructible<NEX_STD decay_t<Type>>;
+    CopyConstructible<meta::DecayT<Type>> &&
+    MoveConstructible<meta::DecayT<Type>>;
 
 /// Alias kept for existing code that uses RegularValue.
 template <typename Type>

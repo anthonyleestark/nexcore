@@ -171,6 +171,77 @@
     #error NEX_HAS_CXX26 must imply NEX_HAS_CXX23.
 #endif
 
+// ================================================================================
+// Compiler-specific attribute and feature detection macros
+// ================================================================================
+
+/**
+ * @def NEX_HAS_CPP_ATTRIBUTE(x)
+ * @brief Check if a C++ attribute is supported by the compiler
+ * 
+ * @details
+ * This is a wrapper around `__has_cpp_attribute`, which can be used to test for the presence of an attribute. 
+ * In case the compiler does not support this macro it will simply evaluate to 0.
+ * 
+ * @see https://wg21.link/sd6#testing-for-the-presence-of-an-attribute-__has_cpp_attribute
+ * @see https://wg21.link/cpp.cond#:__has_cpp_attribute
+ */
+#if defined(__has_cpp_attribute)
+    #define NEX_HAS_CPP_ATTRIBUTE(x) __has_cpp_attribute(x)
+#else  // Compiler does not support __has_cpp_attribute
+    #define NEX_HAS_CPP_ATTRIBUTE(x) 0
+#endif  // defined(__has_cpp_attribute)
+
+/**
+ * @def NEX_HAS_BUILTIN(x)
+ * @brief Check if a compiler builtin is available
+ * 
+ * @details
+ * This is a wrapper around `__has_builtin`, similar to NEX_HAS_CPP_ATTRIBUTE.
+ * If the compiler does not support `__has_builtin`, this macro evaluates to 0.
+ */
+#if defined(__has_builtin)
+    #define NEX_HAS_BUILTIN(x) __has_builtin(x)
+#else  // Compiler does not support __has_builtin
+    #define NEX_HAS_BUILTIN(x) 0
+#endif  // defined(__has_builtin)
+
+/**
+ * @def NEX_HAS_FEATURE(x)
+ * @brief Check if a compiler feature is available
+ * 
+ * @details
+ * This is a wrapper around `__has_feature`, similar to NEX_HAS_CPP_ATTRIBUTE.
+ * If the compiler does not support `__has_feature`, this macro evaluates to 0.
+ */
+
+// __has_feature is not available in MSVC.
+#if !defined(__has_feature)
+    #define __has_feature(x) 0
+#endif  // !defined(__has_feature)
+
+#if !defined(NEX_HAS_FEATURE)
+    #define NEX_HAS_FEATURE(x) __has_feature(x)
+#endif  // !defined(NEX_HAS_FEATURE)
+
+/**
+ * @def NEX_HAS_ATTRIBUTE(x)
+ * @brief Check if a compiler attribute is supported by the compiler
+ * 
+ * @details
+ * This is a wrapper around `__has_attribute`, similar to NEX_HAS_CPP_ATTRIBUTE.
+ * If the compiler does not support `__has_attribute`, this macro evaluates to 0.
+ */
+
+// __has_attribute is not available in MSVC.
+#if !defined(__has_attribute)
+    #define __has_attribute(x) 0
+#endif  // !defined(__has_attribute)
+
+#if !defined(NEX_HAS_ATTRIBUTE)
+    #define NEX_HAS_ATTRIBUTE(x) __has_attribute(x)
+#endif  // !defined(NEX_HAS_ATTRIBUTE)
+
 // =================================================================================
 // Compiler-specific type definitions and feature detection
 // =================================================================================
@@ -226,3 +297,12 @@
 #define NEX_EXTERN_C_BEGIN          extern "C" {
 #define NEX_EXTERN_C_END            }
 #define NEX_EXTERN_C_BLOCK(...)     NEX_EXTERN_C_BEGIN __VA_ARGS__ NEX_EXTERN_C_END
+
+// ================================================================================
+// Extern "C++" macros for C code that needs to be callable from C++
+// ================================================================================
+
+#define NEX_EXTERN_CPP              extern "C++"
+#define NEX_EXTERN_CPP_BEGIN        extern "C++" {
+#define NEX_EXTERN_CPP_END          }
+#define NEX_EXTERN_CPP_BLOCK(...)   NEX_EXTERN_CPP_BEGIN __VA_ARGS__ NEX_EXTERN_CPP_END

@@ -33,6 +33,7 @@
  * @see https://en.cppreference.com/w/cpp/utility/any for more information on std::any.
  * @see https://en.cppreference.com/w/cpp/utility/variant for more information on std::variant.
  * @see https://en.cppreference.com/w/cpp/utility/expected for more information on std::expected.
+ * @see https://en.cppreference.com/w/cpp/utility/expected/unexpected for more information on std::unexpected.
  * @see https://en.cppreference.com/w/cpp/utility/initializer_list for more information on std::initializer_list.
  * @see https://en.cppreference.com/w/cpp/types/type_index for more information on std::type_index.
  * @see https://en.cppreference.com/w/cpp/types/type_info for more information on std::type_info.
@@ -49,15 +50,16 @@
 #include <utility>
 #include <any>
 #include <variant>
-#include <initializer_list>
-#include <typeindex>
-#include <typeinfo>
-#include <functional>
-#include <shared_mutex>
 
 #if NEX_HAS_CXX23
     #include <expected>
 #endif // NEX_HAS_CXX23
+
+#include <initializer_list>
+#include <typeinfo>
+#include <typeindex>
+#include <functional>
+#include <shared_mutex>
 
 #include "nex/base/namespace.h"
 #include "nex/base/types.h"
@@ -173,6 +175,18 @@ using Variant = NEX_STD variant<Args...>;
 #endif // NEX_HAS_CXX23
 
 /**
+ * @brief A wrapper for unexpected error values.
+ * @details 
+ * Represents an error state without a valid value. 
+ * Use this in conjunction with Expected to represent failure cases explicitly.
+ * @note This is a C++23 feature, so ensure your compiler supports it or use Result instead.
+ */
+#if NEX_HAS_CXX23
+    template <typename ErrorType>
+    using Unexpected = NEX_STD unexpected<ErrorType>;
+#endif // NEX_HAS_CXX23
+
+/**
  * @brief A wrapper for initializer lists, allowing for uniform handling of list initialization.
  * @details 
  * Provides a convenient way to pass a list of values to functions or constructors that accept 
@@ -183,20 +197,20 @@ template <typename ElementType>
 using InitList = NEX_STD initializer_list<ElementType>;
 
 /**
- * @brief A wrapper for type_info to allow usage in associative containers.
- * @details 
- * Provides a copyable and comparable representation of a type. 
- * Commonly used as a key in Maps or HashMaps to associate data with specific types.
- */
-using TypeIndex = NEX_STD type_index;
-
-/**
  * @brief Metadata representing a type at runtime.
  * @details 
  * Provides access to type names and comparison logic. 
  * Use this primarily through the 'typeid' operator for low-level RTTI operations.
  */
 using TypeInfo = NEX_STD type_info;
+
+/**
+ * @brief A wrapper for type_info to allow usage in associative containers.
+ * @details 
+ * Provides a copyable and comparable representation of a type. 
+ * Commonly used as a key in Maps or HashMaps to associate data with specific types.
+ */
+using TypeIndex = NEX_STD type_index;
 
 /**
  * @brief A general-purpose polymorphic function wrapper.

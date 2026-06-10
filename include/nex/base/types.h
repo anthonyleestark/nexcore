@@ -125,15 +125,20 @@ NEX_INLINE_NAMESPACE_END(literals)
 // Macro definitions for fixed-width integer literal suffixes (C-style)
 // =================================================================================
 
-#define NEX_INT8_C(x)       (x ## _i8)
-#define NEX_INT16_C(x)      (x ## _i16)
-#define NEX_INT32_C(x)      (x ## _i32)
-#define NEX_INT64_C(x)      (x ## _i64)
+#define NEX_INT8_C(x)           (x ## _i8)
+#define NEX_INT16_C(x)          (x ## _i16)
+#define NEX_INT32_C(x)          (x ## _i32)
+#define NEX_INT64_C(x)          (x ## _i64)
 
-#define NEX_UINT8_C(x)      (x ## _u8)
-#define NEX_UINT16_C(x)     (x ## _u16)
-#define NEX_UINT32_C(x)     (x ## _u32)
-#define NEX_UINT64_C(x)     (x ## _u64)
+#define NEX_UINT8_C(x)          (x ## _u8)
+#define NEX_UINT16_C(x)         (x ## _u16)
+#define NEX_UINT32_C(x)         (x ## _u32)
+#define NEX_UINT64_C(x)         (x ## _u64)
+
+#if NEX_HAS_BUILTIN_INT128
+    #define NEX_INT128_C(x)     (x ## _i128)
+    #define NEX_UINT128_C(x)    (x ## _u128)
+#endif  // ^^NEX_HAS_BUILTIN_INT128
 
 // =================================================================================
 // Standard pointer-sized integer types
@@ -378,7 +383,7 @@ NEX_INLINE_NAMESPACE_END(literals)
 
 #if NEX_HAS_BUILTIN_FLOAT16
     // Compilers with native 16-bit floating-point type support
-    using float16  = __float16_t;       // 16-bit half-precision IEEE 754 (binary16)
+    using float16   = __float16_t;      // 16-bit half-precision IEEE 754 (binary16)
 #endif  // ^^NEX_HAS_BUILTIN_FLOAT16
 
 using float32       = float;            // 32-bit single-precision IEEE 754 (binary32)
@@ -413,7 +418,7 @@ static_assert(sizeof(float64) == 8, "Error: float64 must be 8 bytes");
 // =================================================================================
 
 #if NEX_HAS_BUILTIN_FLOAT16
-    using f16       = float16;          // 16-bit floating point (IEEE 754 binary16) (float16)
+    using f16   = float16;              // 16-bit floating point (IEEE 754 binary16) (float16)
 #endif  // ^^NEX_HAS_BUILTIN_FLOAT16
 
 using f32       = float32;              // 32-bit floating point (IEEE 754 binary32) (float32)

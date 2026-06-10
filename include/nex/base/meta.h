@@ -109,6 +109,13 @@ constexpr bool IsSpecializationV<Template<Types...>, Template> = true;
 template <class Type, template <class...> class Template>
 struct IsSpecialization : BoolConstant<IsSpecializationV<Type, Template>> {};
 
+// Determine whether From is convertible to To
+template <class From, class To>
+struct IsConvertible : BoolConstant<__is_convertible_to(From, To)> {};
+
+template <class From, class To>
+constexpr bool IsConvertibleV = IsConvertible<From, To>::value;
+
 // RemoveConst implementation to remove top-level const qualifier from a type
 template <class Type>
 struct RemoveConst {
@@ -117,11 +124,6 @@ struct RemoveConst {
 
 template <class Type>
 struct RemoveConst<const Type> {
-    using type = Type;
-};
-
-template <class Type>
-struct RemoveConst<Type const> {
     using type = Type;
 };
 
@@ -136,11 +138,6 @@ struct RemoveVolatile {
 
 template <class Type>
 struct RemoveVolatile<volatile Type> {
-    using type = Type;
-};
-
-template <class Type>
-struct RemoveVolatile<Type volatile> {
     using type = Type;
 };
 
@@ -370,7 +367,8 @@ constexpr bool IsEnumV = IsEnum<Type>::value;
 
 // Determine whether an enumeration type is a scoped enum (i.e., an enum class)
 template <class Type>
-struct IsEnumClass : BoolConstant<IsEnumV<Type> && !IsConvertibleV<Type, int>> {};
+struct IsEnumClass 
+    : BoolConstant<IsEnumV<Type> && (!IsReferenceV<Type> && !IsVoidV<Type> && !IsConvertibleV<RemoveCvrefT<Type>, int>)> {};
 
 template <class Type>
 constexpr bool IsEnumClassV = IsEnumClass<Type>::value;
@@ -402,13 +400,6 @@ struct IsCompound : BoolConstant<!IsFundamentalV<Type>> {};
 
 template <class Type>
 constexpr bool IsCompoundV = IsCompound<Type>::value;
-
-// Determine whether From is convertible to To
-template <class From, class To>
-struct IsConvertible : BoolConstant<__is_convertible_to(From, To)> {};
-
-template <class From, class To>
-constexpr bool IsConvertibleV = IsConvertible<From, To>::value;
 
 // Determine whether a class is empty 
 // (i.e., a class type with no non-static data members, no virtual functions, and no virtual base classes)
@@ -561,7 +552,7 @@ using RemovePointerT = typename RemovePointer<Type>::type;
 // Retrieve the underlying type of an enumeration type
 template <class Type, bool = IsEnumV<Type>>
 struct UnderlyingType {
-    using type = __underlying_type(Type);
+    using type = typename __underlying_type(Type);
 };
 
 template <class Type>
@@ -585,6 +576,25 @@ using TypeIdentityT = typename TypeIdentity<Type>::type;
 // Maps a sequence of any types to the type void 
 template <class... Types>
 using VoidT = void;
+
+// Add pointer (pointer type cannot be formed)
+template <class Type, class = void>
+struct NEX_HIDDEN_FROM_ABI AddPointerImpl {
+    using type = Type;
+};
+
+template <class Type>
+struct NEX_HIDDEN_FROM_ABI AddPointerImpl<Type, VoidT<RemoveReferenceT<Type>*>> {
+    using type = RemoveReferenceT<Type>*;
+};
+
+template <class Type>
+struct AddPointer {
+    using type = typename AddPointerImpl<Type>::type;
+};
+
+template <class Type>
+using AddPointerT = typename AddPointerImpl<Type>::type;
 
 // Add top-level const qualifier to a type
 template <class Type>
@@ -650,7 +660,8 @@ using AddRvalueReferenceT = typename AddReferenceImpl<Type>::Rvalue;
 // to obtain a value of a specified type without needing to construct it.
 template <class Type>
 AddRvalueReferenceT<Type> declval() noexcept {
-    static_assert(false, "declval not allowed in an evaluated context");
+    static_assert(IsSameV<Type, void> && !IsSameV<Type, void>, 
+        "Error: declval not allowed in an evaluated context");
 }
 
 // Determine whether type argument is an lvalue reference
@@ -957,13 +968,13 @@ constexpr bool IsNothrowDestructibleV = IsNothrowDestructible<Type>::value;
 // Selects one of two types based on a boolean condition.
 template <bool>
 struct Selector {
-    template <class First, class Second>
+    template <class First, class>
     using Select = First;
 };
 
 template <>
 struct Selector<false> {
-    template <class First, class Second>
+    template <class, class Second>
     using Select = Second;
 };
 
@@ -971,8 +982,8 @@ struct Selector<false> {
 template <class Type>
 struct Decay {
     using Type1 = RemoveReferenceT<Type>;
-    using Type2 = typename Selector<IsFunctionV<Type1>>::template Select<AddPointer<Type1>, RemoveCvT<Type1>>;
-    using type = typename Selector<IsArrayV<Type1>>::template Select<AddPointer<RemoveExtentT<Type1>>, Type2>::type;
+    using Type2 = typename Selector<IsFunctionV<Type1>>::template Select<AddPointerT<Type1>, RemoveCvT<Type1>>;
+    using type = typename Selector<IsArrayV<Type1>>::template Select<AddPointerT<RemoveExtentT<Type1>>, Type2>;
 };
 
 template <class Type>

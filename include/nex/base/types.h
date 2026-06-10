@@ -169,7 +169,7 @@ NEX_INLINE_NAMESPACE_END(literals)
 // Compile-time assertions to verify pointer-sized integer type sizes
 // =================================================================================
 
-static_assert(sizeof(void*) == sizeof(intptr), "Error: intptr must be the same size as a pointer");
+static_assert(sizeof(void*) == sizeof(intptr),  "Error: intptr must be the same size as a pointer");
 static_assert(sizeof(void*) == sizeof(uintptr), "Error: uintptr must be the same size as a pointer");
 
 // =================================================================================
@@ -895,6 +895,6 @@ struct NEX_API in_place_index : in_place_tag {
 
 // Represents an unexpected value or error state
 struct NEX_API unexpected_type {};
-inline constexpr unexpected_type unexpected{};
+inline constexpr unexpected_type unexpect{};
 
 NEX_NAMESPACE_END

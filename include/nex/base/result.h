@@ -335,7 +335,7 @@ class NEX_INTERNAL ResultStorage {
             if (hasVal) {
                 return StorageUnion(in_place, NEX_FORWARD<OtherStorageUnion>(other).value_);
             } else {
-                return StorageUnion(unexpected, NEX_FORWARD<OtherStorageUnion>(other).error_);
+                return StorageUnion(unexpect, NEX_FORWARD<OtherStorageUnion>(other).error_);
             }
         }
 
@@ -355,7 +355,7 @@ class NEX_INTERNAL ResultStorage {
         if (hasVal) {
             return Repr(in_place, NEX_FORWARD<OtherStorageUnion>(other).value_);
         } else {
-            return Repr(unexpected, NEX_FORWARD<OtherStorageUnion>(other).error_);
+            return Repr(unexpect, NEX_FORWARD<OtherStorageUnion>(other).error_);
         }
     }
 
@@ -588,7 +588,7 @@ private:
             storage_.construct(in_place, other.storage_.value_);
         } else {
             // Copy the error information from the other Result object
-            storage_.construct(unexpected, other.storage_.error_);
+            storage_.construct(unexpect, other.storage_.error_);
         }
     }
 
@@ -600,7 +600,7 @@ private:
             storage_.construct(in_place, NEX_MOVE(other.storage_.value_));
         } else {
             // Move the error information from the other Result object
-            storage_.construct(unexpected, NEX_MOVE(other.storage_.error_));
+            storage_.construct(unexpect, NEX_MOVE(other.storage_.error_));
         }
     }
 

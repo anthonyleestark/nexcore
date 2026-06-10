@@ -394,14 +394,14 @@ struct NumericLimitConstants {
      * rather than assuming signedness.
      */
     static constexpr wchar wcharmin     = (static_cast<wchar>(-1) < 0) 
-                                            ? static_cast<wchar>(-2147483647 - 1) : static_cast<wchar>(0);
+                                            ? static_cast<wchar>(-2147483647u32 - 1) : static_cast<wchar>(0);
     static constexpr wchar wcharmax     = (static_cast<wchar>(-1) < 0) 
-                                            ? static_cast<wchar>(2147483647) : static_cast<wchar>(0xffffffff_u32);
+                                            ? static_cast<wchar>(2147483647u32) : static_cast<wchar>(0xffffffff_u32);
     
     static constexpr wint wintmin       = (static_cast<wint>(-1) < 0) 
-                                            ? static_cast<wint>(-2147483647 - 1)  : static_cast<wint>(0);
+                                            ? static_cast<wint>(-2147483647u32 - 1)  : static_cast<wint>(0);
     static constexpr wint wintmax       = (static_cast<wint>(-1) < 0) 
-                                            ? static_cast<wint>(2147483647) : static_cast<wint>(0xffffffff_u32);
+                                            ? static_cast<wint>(2147483647u32) : static_cast<wint>(0xffffffff_u32);
 #endif  // ^^wchar/wint limits
 
     // =============================================================================
@@ -416,84 +416,163 @@ struct NumericLimitConstants {
 // Macro definitions for fixed-width integer limits (C-style)
 // =================================================================================
 
-#define NEX_INT8_MIN            NEX_PREPEND_NAMESPACE(NumericLimitConstants::i8min)
-#define NEX_INT16_MIN           NEX_PREPEND_NAMESPACE(NumericLimitConstants::i16min)
-#define NEX_INT32_MIN           NEX_PREPEND_NAMESPACE(NumericLimitConstants::i32min)
-#define NEX_INT64_MIN           NEX_PREPEND_NAMESPACE(NumericLimitConstants::i64min)
-#define NEX_INT8_MAX            NEX_PREPEND_NAMESPACE(NumericLimitConstants::i8max)
-#define NEX_INT16_MAX           NEX_PREPEND_NAMESPACE(NumericLimitConstants::i16max)
-#define NEX_INT32_MAX           NEX_PREPEND_NAMESPACE(NumericLimitConstants::i32max)
-#define NEX_INT64_MAX           NEX_PREPEND_NAMESPACE(NumericLimitConstants::i64max)
-#define NEX_UINT8_MAX           NEX_PREPEND_NAMESPACE(NumericLimitConstants::u8max)
-#define NEX_UINT16_MAX          NEX_PREPEND_NAMESPACE(NumericLimitConstants::u16max)
-#define NEX_UINT32_MAX          NEX_PREPEND_NAMESPACE(NumericLimitConstants::u32max)
-#define NEX_UINT64_MAX          NEX_PREPEND_NAMESPACE(NumericLimitConstants::u64max)
+#define NEX_INT8_MIN                NEX_PREPEND_NAMESPACE(NumericLimitConstants::i8min)
+#define NEX_INT16_MIN               NEX_PREPEND_NAMESPACE(NumericLimitConstants::i16min)
+#define NEX_INT32_MIN               NEX_PREPEND_NAMESPACE(NumericLimitConstants::i32min)
+#define NEX_INT64_MIN               NEX_PREPEND_NAMESPACE(NumericLimitConstants::i64min)
+#define NEX_INT8_MAX                NEX_PREPEND_NAMESPACE(NumericLimitConstants::i8max)
+#define NEX_INT16_MAX               NEX_PREPEND_NAMESPACE(NumericLimitConstants::i16max)
+#define NEX_INT32_MAX               NEX_PREPEND_NAMESPACE(NumericLimitConstants::i32max)
+#define NEX_INT64_MAX               NEX_PREPEND_NAMESPACE(NumericLimitConstants::i64max)
+#define NEX_UINT8_MAX               NEX_PREPEND_NAMESPACE(NumericLimitConstants::u8max)
+#define NEX_UINT16_MAX              NEX_PREPEND_NAMESPACE(NumericLimitConstants::u16max)
+#define NEX_UINT32_MAX              NEX_PREPEND_NAMESPACE(NumericLimitConstants::u32max)
+#define NEX_UINT64_MAX              NEX_PREPEND_NAMESPACE(NumericLimitConstants::u64max)
 
-#define NEX_INT_LEAST8_MIN      NEX_INT8_MIN
-#define NEX_INT_LEAST16_MIN     NEX_INT16_MIN
-#define NEX_INT_LEAST32_MIN     NEX_INT32_MIN
-#define NEX_INT_LEAST64_MIN     NEX_INT64_MIN
-#define NEX_INT_LEAST8_MAX      NEX_INT8_MAX
-#define NEX_INT_LEAST16_MAX     NEX_INT16_MAX
-#define NEX_INT_LEAST32_MAX     NEX_INT32_MAX
-#define NEX_INT_LEAST64_MAX     NEX_INT64_MAX
-#define NEX_UINT_LEAST8_MAX     NEX_UINT8_MAX
-#define NEX_UINT_LEAST16_MAX    NEX_UINT16_MAX
-#define NEX_UINT_LEAST32_MAX    NEX_UINT32_MAX
-#define NEX_UINT_LEAST64_MAX    NEX_UINT64_MAX
+#if NEX_HAS_BUILTIN_INT128
+    #define NEX_INT128_MIN          NEX_PREPEND_NAMESPACE(NumericLimitConstants::i128min)
+    #define NEX_INT128_MAX          NEX_PREPEND_NAMESPACE(NumericLimitConstants::i128max)
+    #define NEX_UINT128_MAX         NEX_PREPEND_NAMESPACE(NumericLimitConstants::u128max)
+#endif  // ^^NEX_HAS_BUILTIN_INT128
 
-#define NEX_INT_FAST8_MIN       NEX_INT8_MIN
-#define NEX_INT_FAST16_MIN      NEX_INT16_MIN
-#define NEX_INT_FAST32_MIN      NEX_INT32_MIN
-#define NEX_INT_FAST64_MIN      NEX_INT64_MIN
-#define NEX_INT_FAST8_MAX       NEX_INT8_MAX
-#define NEX_INT_FAST16_MAX      NEX_INT16_MAX
-#define NEX_INT_FAST32_MAX      NEX_INT32_MAX
-#define NEX_INT_FAST64_MAX      NEX_INT64_MAX
-#define NEX_UINT_FAST8_MAX      NEX_UINT8_MAX
-#define NEX_UINT_FAST16_MAX     NEX_UINT16_MAX
-#define NEX_UINT_FAST32_MAX     NEX_UINT32_MAX
-#define NEX_UINT_FAST64_MAX     NEX_UINT64_MAX
+#define NEX_INT_LEAST8_MIN          NEX_INT8_MIN
+#define NEX_INT_LEAST16_MIN         NEX_INT16_MIN
+#define NEX_INT_LEAST32_MIN         NEX_INT32_MIN
+#define NEX_INT_LEAST64_MIN         NEX_INT64_MIN
+#define NEX_INT_LEAST8_MAX          NEX_INT8_MAX
+#define NEX_INT_LEAST16_MAX         NEX_INT16_MAX
+#define NEX_INT_LEAST32_MAX         NEX_INT32_MAX
+#define NEX_INT_LEAST64_MAX         NEX_INT64_MAX
+#define NEX_UINT_LEAST8_MAX         NEX_UINT8_MAX
+#define NEX_UINT_LEAST16_MAX        NEX_UINT16_MAX
+#define NEX_UINT_LEAST32_MAX        NEX_UINT32_MAX
+#define NEX_UINT_LEAST64_MAX        NEX_UINT64_MAX
+
+#if NEX_HAS_BUILTIN_INT128
+    #define NEX_INT_LEAST128_MIN    NEX_INT128_MIN
+    #define NEX_INT_LEAST128_MAX    NEX_INT128_MAX
+    #define NEX_UINT_LEAST128_MAX   NEX_UINT128_MAX
+#endif  // ^^NEX_HAS_BUILTIN_INT128
+
+#define NEX_INT_FAST8_MIN           NEX_INT8_MIN
+#define NEX_INT_FAST16_MIN          NEX_INT16_MIN
+#define NEX_INT_FAST32_MIN          NEX_INT32_MIN
+#define NEX_INT_FAST64_MIN          NEX_INT64_MIN
+#define NEX_INT_FAST8_MAX           NEX_INT8_MAX
+#define NEX_INT_FAST16_MAX          NEX_INT16_MAX
+#define NEX_INT_FAST32_MAX          NEX_INT32_MAX
+#define NEX_INT_FAST64_MAX          NEX_INT64_MAX
+#define NEX_UINT_FAST8_MAX          NEX_UINT8_MAX
+#define NEX_UINT_FAST16_MAX         NEX_UINT16_MAX
+#define NEX_UINT_FAST32_MAX         NEX_UINT32_MAX
+#define NEX_UINT_FAST64_MAX         NEX_UINT64_MAX
+
+#if NEX_HAS_BUILTIN_INT128
+    #define NEX_INT_FAST128_MIN     NEX_INT128_MIN
+    #define NEX_INT_FAST128_MAX     NEX_INT128_MAX
+    #define NEX_UINT_FAST128_MAX    NEX_UINT128_MAX
+#endif  // ^^NEX_HAS_BUILTIN_INT128
 
 #if NEX_BUILD_ENV_IS_64_BIT
-    #define NEX_INTPTR_MIN      NEX_INT64_MIN
-    #define NEX_INTPTR_MAX      NEX_INT64_MAX
-    #define NEX_UINTPTR_MAX     NEX_UINT64_MAX
+    #define NEX_INTPTR_MIN          NEX_INT64_MIN
+    #define NEX_INTPTR_MAX          NEX_INT64_MAX
+    #define NEX_UINTPTR_MAX         NEX_UINT64_MAX
 #else  // Non-64-bit environment, assume 32-bit
-    #define NEX_INTPTR_MIN      NEX_INT32_MIN
-    #define NEX_INTPTR_MAX      NEX_INT32_MAX
-    #define NEX_UINTPTR_MAX     NEX_UINT32_MAX
-#endif
+    #define NEX_INTPTR_MIN          NEX_INT32_MIN
+    #define NEX_INTPTR_MAX          NEX_INT32_MAX
+    #define NEX_UINTPTR_MAX         NEX_UINT32_MAX
+#endif  // ^^NEX_INTPTR_MIN/MAX / NEX_UINTPTR_MIN/MAX
 
-#define NEX_INTMAX_MIN          NEX_INT64_MIN
-#define NEX_INTMAX_MAX          NEX_INT64_MAX
-#define NEX_UINTMAX_MAX         NEX_UINT64_MAX
+#if NEX_HAS_BUILTIN_INT128
+    #define NEX_INTMAX_MIN          NEX_INT128_MIN
+    #define NEX_INTMAX_MAX          NEX_INT128_MAX
+    #define NEX_UINTMAX_MAX         NEX_UINT128_MAX
+#else  // Safe fallback to 64-bit integer limits
+    #define NEX_INTMAX_MIN          NEX_INT64_MIN
+    #define NEX_INTMAX_MAX          NEX_INT64_MAX
+    #define NEX_UINTMAX_MAX         NEX_UINT64_MAX
+#endif  // ^^NEX_HAS_BUILTIN_INT_128
 
 // =================================================================================
 // Macro definitions for pointer difference and size limits (C-style)
 // =================================================================================
 
-#define NEX_PTRDIFF_MIN         NEX_INTPTR_MIN
-#define NEX_PTRDIFF_MAX         NEX_INTPTR_MAX
+#define NEX_PTRDIFF_MIN             NEX_INTPTR_MIN
+#define NEX_PTRDIFF_MAX             NEX_INTPTR_MAX
 
-#define NEX_SIZE_MAX            NEX_PREPEND_NAMESPACE(NumericLimitConstants::sizemax)
+#define NEX_SIZE_MAX                NEX_PREPEND_NAMESPACE(NumericLimitConstants::sizemax)
 
 // =================================================================================
 // Macro definitions for signal atomic type limits (C-style)
 // =================================================================================
 
-#define NEX_SIG_ATOMIC_MIN      NEX_PREPEND_NAMESPACE(NumericLimitConstants::i32min)
-#define NEX_SIG_ATOMIC_MAX      NEX_PREPEND_NAMESPACE(NumericLimitConstants::i32max)
+#define NEX_SIG_ATOMIC_MIN          NEX_PREPEND_NAMESPACE(NumericLimitConstants::i32min)
+#define NEX_SIG_ATOMIC_MAX          NEX_PREPEND_NAMESPACE(NumericLimitConstants::i32max)
 
 // =================================================================================
-// Macro definitions for wide character limits (C-style)
+// Macro definitions for UTF character limits (C-style)
 // =================================================================================
 
-#define NEX_WCHAR_MIN           NEX_PREPEND_NAMESPACE(NumericLimitConstants::wcharmin)
-#define NEX_WCHAR_MAX           NEX_PREPEND_NAMESPACE(NumericLimitConstants::wcharmax)
+#if NEX_HAS_BUILTIN_CHAR8_T
+    #define NEX_CHAR8_MIN           NEX_PREPEND_NAMESPACE(NumericLimitConstants::char8min)
+    #define NEX_CHAR8_MAX           NEX_PREPEND_NAMESPACE(NumericLimitConstants::char8max)
+#endif  // ^^NEX_HAS_BUILTIN_CHAR8_T
 
-#define NEX_WINT_MIN            NEX_PREPEND_NAMESPACE(NumericLimitConstants::wintmin)
-#define NEX_WINT_MAX            NEX_PREPEND_NAMESPACE(NumericLimitConstants::wintmax)
+#define NEX_CHAR16_MIN              NEX_PREPEND_NAMESPACE(NumericLimitConstants::char16min)
+#define NEX_CHAR32_MIN              NEX_PREPEND_NAMESPACE(NumericLimitConstants::char16min)
+#define NEX_CHAR16_MAX              NEX_PREPEND_NAMESPACE(NumericLimitConstants::char32max)
+#define NEX_CHAR32_MAX              NEX_PREPEND_NAMESPACE(NumericLimitConstants::char32max)
+
+// =================================================================================
+// Macro definitions for narrow/native & wide character limits (C-style)
+// =================================================================================
+
+#define NEX_NCHAR_MIN               NEX_PREPEND_NAMESPACE(NumericLimitConstants::ncharmin)
+#define NEX_NCHAR_MAX               NEX_PREPEND_NAMESPACE(NumericLimitConstants::ncharmax)
+
+#define NEX_WCHAR_MIN               NEX_PREPEND_NAMESPACE(NumericLimitConstants::wcharmin)
+#define NEX_WCHAR_MAX               NEX_PREPEND_NAMESPACE(NumericLimitConstants::wcharmax)
+
+#define NEX_WINT_MIN                NEX_PREPEND_NAMESPACE(NumericLimitConstants::wintmin)
+#define NEX_WINT_MAX                NEX_PREPEND_NAMESPACE(NumericLimitConstants::wintmax)
+
+// =================================================================================
+// Macro definitions for floating-point type limits (C-style)
+// =================================================================================
+
+#if NEX_HAS_BUILTIN_FLOAT16
+    #define NEX_FLOAT16_MIN         NEX_PREPEND_NAMESPACE(NumericLimitConstants::f16min)
+    #define NEX_FLOAT16_MAX         NEX_PREPEND_NAMESPACE(NumericLimitConstants::f16max)
+    #define NEX_FLOAT16_LOWEST      NEX_PREPEND_NAMESPACE(NumericLimitConstants::f16lowest)
+    #define NEX_FLOAT16_EPSILON     NEX_PREPEND_NAMESPACE(NumericLimitConstants::f16epsilon)
+    #define NEX_FLOAT16_INFINITY    NEX_PREPEND_NAMESPACE(NumericLimitConstants::f16infinity)
+#endif  // ^^NEX_HAS_BUILTIN_FLOAT16
+
+#define NEX_FLOAT32_MIN             NEX_PREPEND_NAMESPACE(NumericLimitConstants::f32min)
+#define NEX_FLOAT32_MAX             NEX_PREPEND_NAMESPACE(NumericLimitConstants::f32max)
+#define NEX_FLOAT32_LOWEST          NEX_PREPEND_NAMESPACE(NumericLimitConstants::f32lowest)
+#define NEX_FLOAT32_EPSILON         NEX_PREPEND_NAMESPACE(NumericLimitConstants::f32epsilon)
+#define NEX_FLOAT32_INFINITY        NEX_PREPEND_NAMESPACE(NumericLimitConstants::f32infinity)
+
+#define NEX_FLOAT64_MIN             NEX_PREPEND_NAMESPACE(NumericLimitConstants::f64min)
+#define NEX_FLOAT64_MAX             NEX_PREPEND_NAMESPACE(NumericLimitConstants::f64max)
+#define NEX_FLOAT64_LOWEST          NEX_PREPEND_NAMESPACE(NumericLimitConstants::f64lowest)
+#define NEX_FLOAT64_EPSILON         NEX_PREPEND_NAMESPACE(NumericLimitConstants::f64epsilon)
+#define NEX_FLOAT64_INFINITY        NEX_PREPEND_NAMESPACE(NumericLimitConstants::f64infinity)
+
+#define NEX_LDOUBLE_MIN             NEX_PREPEND_NAMESPACE(NumericLimitConstants::ldmin)
+#define NEX_LDOUBLE_MAX             NEX_PREPEND_NAMESPACE(NumericLimitConstants::ldmax)
+#define NEX_LDOUBLE_LOWEST          NEX_PREPEND_NAMESPACE(NumericLimitConstants::ldlowest)
+#define NEX_LDOUBLE_EPSILON         NEX_PREPEND_NAMESPACE(NumericLimitConstants::ldepsilon)
+#define NEX_LDOUBLE_INFINITY        NEX_PREPEND_NAMESPACE(NumericLimitConstants::ldinfinity)
+
+#if NEX_HAS_BUILTIN_FLOAT128
+    #define NEX_FLOAT128_MIN        NEX_PREPEND_NAMESPACE(NumericLimitConstants::f128min)
+    #define NEX_FLOAT128_MAX        NEX_PREPEND_NAMESPACE(NumericLimitConstants::f128max)
+    #define NEX_FLOAT128_LOWEST     NEX_PREPEND_NAMESPACE(NumericLimitConstants::f128lowest)
+    #define NEX_FLOAT128_EPSILON    NEX_PREPEND_NAMESPACE(NumericLimitConstants::f128epsilon)
+    #define NEX_FLOAT128_INFINITY   NEX_PREPEND_NAMESPACE(NumericLimitConstants::f128infinity)
+#endif  // ^^NEX_HAS_BUILTIN_FLOAT128
 
 // =================================================================================
 // Base template for numeric limits (C++20 compile-time)
@@ -880,7 +959,6 @@ public:
     NEX_NODISCARD static constexpr int32 minDecimalDigits() noexcept { return digits10; }
     NEX_NODISCARD static constexpr int32 maxDecimalDigits() noexcept { return maxDigits10; }
 };
-
 
 #if NEX_HAS_BUILTIN_CHAR8_T
     template<>

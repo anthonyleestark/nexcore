@@ -247,40 +247,40 @@ NEX_NODISCARD constexpr bool IsConstantEvaluated() noexcept {
 
 // Determine whether integral type Type is signed or unsigned
 template <class Type, bool = IsIntegralV<Type>>
-struct _SignCheckBase {
-    using _Underlying = RemoveCvT<Type>;
+struct NEX_HIDDEN_FROM_ABI SignCheckBase {
+    using Underlying = RemoveCvT<Type>;
 
-    static constexpr bool _Signed   = static_cast<_Underlying>(-1) < static_cast<_Underlying>(0);
-    static constexpr bool _Unsigned = !_Signed;
+    static constexpr bool Signed   = static_cast<Underlying>(-1) < static_cast<Underlying>(0);
+    static constexpr bool Unsigned = !Signed;
 };
 
 // Specialization of _SignCheckBase for non-integral types
 template <class Type>
-struct _SignCheckBase<Type, false> {
-    static constexpr bool _Signed   = IsFloatingPointV<Type>;   // floating-point Type is signed
-    static constexpr bool _Unsigned = false;                    // non-arithmetic Type is neither signed nor unsigned
+struct NEX_HIDDEN_FROM_ABI SignCheckBase<Type, false> {
+    static constexpr bool Signed   = IsFloatingPointV<Type>;   // floating-point Type is signed
+    static constexpr bool Unsigned = false;                    // non-arithmetic Type is neither signed nor unsigned
 };
 
 // Determine whether an integral type is signed
 template <class Type>
-struct IsSignedIntegral : BoolConstant<_SignCheckBase<Type>::_Signed> {};
+struct IsSignedIntegral : BoolConstant<SignCheckBase<Type>::Signed> {};
 
 template <class Type>
 constexpr bool IsSignedIntegralV = IsSignedIntegral<Type>::value;
 
 // Determine whether an integral type is unsigned
 template <class Type>
-struct IsUnsignedIntegral : BoolConstant<_SignCheckBase<Type>::_Unsigned> {};
+struct IsUnsignedIntegral : BoolConstant<SignCheckBase<Type>::Unsigned> {};
 
 template <class Type>
 constexpr bool IsUnsignedIntegralV = IsUnsignedIntegral<Type>::value;
 
 // Determine whether a type is an arithmetic type (either integral or floating-point)
 template <class Type>
-constexpr bool _IsArithmeticV = IsIntegralV<Type> || IsFloatingPointV<Type>;
+NEX_HIDDEN_FROM_ABI constexpr bool IsArithmeticVImpl = IsIntegralV<Type> || IsFloatingPointV<Type>;
 
 template <class Type>
-struct IsArithmetic : BoolConstant<_IsArithmeticV<Type>> {};
+struct IsArithmetic : BoolConstant<IsArithmeticVImpl<Type>> {};
 
 template <class Type>
 constexpr bool IsArithmeticV = IsArithmetic<Type>::value;
@@ -294,16 +294,16 @@ struct IsVoid : BoolConstant<IsVoidV<Type>> {};
 
 // Determine whether a type is a raw pointer
 template <class>
-constexpr bool _IsPointerV = false;
+NEX_HIDDEN_FROM_ABI constexpr bool IsPointerVImpl = false;
 
 // Specialization of _IsPointerV for pointer types, 
 // which checks if the type is a pointer by checking if it is of the form Type*
 template <class Type>
-constexpr bool _IsPointerV<Type*> = true;
+NEX_HIDDEN_FROM_ABI constexpr bool IsPointerVImpl<Type*> = true;
 
 // Determine whether a type is a raw pointer
 template <class Type>
-constexpr bool IsPointerV = _IsPointerV<RemoveCvT<Type>>;
+constexpr bool IsPointerV = IsPointerVImpl<RemoveCvT<Type>>;
 
 // Determine whether a cv-qualified type is a null-pointer type
 template <class Type>
@@ -458,33 +458,33 @@ constexpr bool IsBaseOfV = IsBaseOf<Base, Derived>::value;
 template <class Type>
 struct RemoveReference {
     using type = Type;
-    using _ConstThruRefType = const Type;
+    using ConstThruRefType = const Type;
 };
 
 template <class Type>
 struct RemoveReference<Type&> {
     using type = Type;
-    using _ConstThruRefType = const Type&;
+    using ConstThruRefType = const Type&;
 };
 
 template <class Type>
 struct RemoveReference<Type&&> {
     using type = Type;
-    using _ConstThruRefType = const Type&&;
+    using ConstThruRefType = const Type&&;
 };
 
 template <class Type>
 using RemoveReferenceT = typename RemoveReference<Type>::type;
 
 template <class Type>
-using _ConstThruRef = typename RemoveReference<Type>::_ConstThruRefType;
+using ConstThruRefImpl = typename RemoveReference<Type>::ConstThruRefType;
 
 template <class Type>
-using _RemoveCvrefT NEX_MSVC_KNOWN_SEMANTICS = RemoveCvT<RemoveReferenceT<Type>>;
+using RemoveCvrefTImpl NEX_MSVC_KNOWN_SEMANTICS = RemoveCvT<RemoveReferenceT<Type>>;
 
 // Remove reference and cv-qualifiers from a type
 template <class Type>
-using RemoveCvrefT = _RemoveCvrefT<Type>;
+using RemoveCvrefT = RemoveCvrefTImpl<Type>;
 
 template <class Type>
 struct RemoveCvref {
@@ -616,35 +616,35 @@ using AddCvT = typename AddCv<Type>::type;
 
 // Add reference to a type (non-referenceable type)
 template <class Type, class = void>
-struct _AddReference {
-    using _Lvalue = Type;
-    using _Rvalue = Type;
+struct NEX_HIDDEN_FROM_ABI AddReferenceImpl {
+    using Lvalue = Type;
+    using Rvalue = Type;
 };
 
 // Add reference to a type (referenceable type)
 template <class Type>
-struct _AddReference<Type, VoidT<Type&>> {
-    using _Lvalue = Type&;
-    using _Rvalue = Type&&;
+struct NEX_HIDDEN_FROM_ABI AddReferenceImpl<Type, VoidT<Type&>> {
+    using Lvalue = Type&;
+    using Rvalue = Type&&;
 };
 
 // Add an lvalue reference to a type
 template <class Type>
 struct AddLvalueReference {
-    using type = typename _AddReference<Type>::_Lvalue;
+    using type = typename AddReferenceImpl<Type>::Lvalue;
 };
 
 template <class Type>
-using AddLvalueReferenceT = typename _AddReference<Type>::_Lvalue;
+using AddLvalueReferenceT = typename AddReferenceImpl<Type>::Lvalue;
 
 // Add an rvalue reference to a type
 template <class Type>
 struct AddRvalueReference {
-    using type = typename _AddReference<Type>::_Rvalue;
+    using type = typename AddReferenceImpl<Type>::Rvalue;
 };
 
 template <class Type>
-using AddRvalueReferenceT = typename _AddReference<Type>::_Rvalue;
+using AddRvalueReferenceT = typename AddReferenceImpl<Type>::Rvalue;
 
 // A utility function that can be used in unevaluated contexts 
 // to obtain a value of a specified type without needing to construct it.
@@ -741,14 +741,17 @@ constexpr bool IsDefaultConstructibleV = IsDefaultConstructible<Type>::value;
 
 // Determine whether Type can be copy-initialized with {}
 template <class Type, class = void>
-struct _IsImplicitlyDefaultConstructible : FalseType {};
+struct NEX_HIDDEN_FROM_ABI IsImplicitlyDefaultConstructibleImpl : FalseType {};
 
 // Helper function to test whether Type can be copy-initialized with {}
 template <class Type>
-void _ImplicitlyDefaultConstruct(const Type&);
+NEX_HIDDEN_FROM_ABI void ImplicitlyDefaultConstructImpl(const Type&);
 
 template <class Type>
-struct _IsImplicitlyDefaultConstructible<Type, VoidT<decltype(_ImplicitlyDefaultConstruct<Type>({}))>> : TrueType {};
+struct NEX_HIDDEN_FROM_ABI IsImplicitlyDefaultConstructibleImpl<
+    Type, 
+    VoidT<decltype(ImplicitlyDefaultConstructImpl<Type>({}))>
+    > : TrueType {};
 
 // Determine whether Type can be direct-initialized from an rvalue Type
 template <class Type>
@@ -772,11 +775,11 @@ constexpr bool IsAssignableV = IsAssignable<To, From>::value;
  */
 #if defined(NEX_IS_ASSIGNABLE_NOCHECK_SUPPORTED) && !defined(__CUDACC__)
     template <class To, class From>
-    struct _IsAssignableNoPreconditionCheck 
+    struct NEX_HIDDEN_FROM_ABI IsAssignableNoPreconditionCheckImpl 
         : BoolConstant<__is_assignable_no_precondition_check(To, From)> {};
 #else // Use standard type trait as fallback when intrinsic is not supported
     template <class To, class From>
-    using _IsAssignableNoPreconditionCheck = IsAssignable<To, From>;
+    using IsAssignableNoPreconditionCheckImpl = IsAssignable<To, From>;
 #endif // intrinsic support
 
 // Determine whether an lvalue const Type can be assigned to an lvalue Type
@@ -790,18 +793,19 @@ constexpr bool IsCopyAssignableV = IsCopyAssignable<Type>::value;
 // Determine whether an rvalue Type can be assigned to an lvalue Type without checking preconditions
 #if defined(NEX_IS_ASSIGNABLE_NOCHECK_SUPPORTED) && !defined(__CUDACC__)
     template <class Type>
-    struct _IsCopyAssignableNoPreconditionCheck
+    struct NEX_HIDDEN_FROM_ABI IsCopyAssignableNoPreconditionCheckImpl
         : BoolConstant<__is_assignable_no_precondition_check(
             AddLvalueReferenceT<Type>, AddLvalueReferenceT<const Type>)> {};
 
     template <class Type>
-    constexpr bool _IsCopyAssignableUncheckedV = _IsCopyAssignableNoPreconditionCheck<Type>::value;
+    NEX_HIDDEN_FROM_ABI constexpr 
+    bool IsCopyAssignableUncheckedVImpl = IsCopyAssignableNoPreconditionCheckImpl<Type>::value;
 #else // Use standard type trait as fallback when intrinsic is not supported
     template <class Type>
-    using _IsCopyAssignableNoPreconditionCheck = IsCopyAssignable<Type>;
+    using IsCopyAssignableNoPreconditionCheckImpl = IsCopyAssignable<Type>;
 
     template <class Type>
-    constexpr bool _IsCopyAssignableUncheckedV = IsCopyAssignableV<Type>;
+    NEX_HIDDEN_FROM_ABI constexpr bool IsCopyAssignableUncheckedVImpl = IsCopyAssignableV<Type>;
 #endif // intrinsic support
 
 // Determine whether an rvalue Type can be assigned to an lvalue Type
@@ -813,17 +817,18 @@ constexpr bool IsMoveAssignableV = IsMoveAssignable<Type>::value;
 
 #if defined(NEX_IS_ASSIGNABLE_NOCHECK_SUPPORTED) && !defined(__CUDACC__)
     template <class Type>
-    struct _IsMoveAssignableNoPreconditionCheck
+    struct NEX_HIDDEN_FROM_ABI IsMoveAssignableNoPreconditionCheckImpl
         : BoolConstant<__is_assignable_no_precondition_check(AddLvalueReferenceT<Type>, Type)> {};
 
     template <class Type>
-    constexpr bool _IsMoveAssignableUncheckedV = _IsMoveAssignableNoPreconditionCheck<Type>::value;
+    NEX_HIDDEN_FROM_ABI constexpr 
+    bool IsMoveAssignableUncheckedVImpl = IsMoveAssignableNoPreconditionCheckImpl<Type>::value;
 #else // Use standard type trait as fallback when intrinsic is not supported
     template <class Type>
-    using _IsMoveAssignableNoPreconditionCheck = IsMoveAssignable<Type>;
+    using IsMoveAssignableNoPreconditionCheckImpl = IsMoveAssignable<Type>;
 
     template <class Type>
-    constexpr bool _IsMoveAssignableUncheckedV = IsMoveAssignableV<Type>;
+    NEX_HIDDEN_FROM_ABI constexpr bool IsMoveAssignableUncheckedVImpl = IsMoveAssignableV<Type>;
 #endif // intrinsic support
 
 // True if RemoveAllExtentsT<Type> is a reference type, or can be explicitly destroyed
@@ -980,7 +985,7 @@ using DecayT = typename Decay<Type>::type;
 // Compute the minimum of two values at compile time
 template <class Type>
 NEX_NODISCARD NEX_HIDDEN_FROM_ABI NEX_ALWAYS_INLINE constexpr
-const Type& __minOf(const Type& left NEX_LIFETIMEBOUND, const Type& right NEX_LIFETIMEBOUND)
+const Type& _minOf(const Type& left NEX_LIFETIMEBOUND, const Type& right NEX_LIFETIMEBOUND)
 noexcept(noexcept(left < right)) {
     return left < right ? left : right;
 }
@@ -988,7 +993,7 @@ noexcept(noexcept(left < right)) {
 // Compute the maximum of two values at compile time
 template <class Type>
 NEX_NODISCARD NEX_HIDDEN_FROM_ABI NEX_ALWAYS_INLINE constexpr
-const Type& __maxOf(const Type& left NEX_LIFETIMEBOUND, const Type& right NEX_LIFETIMEBOUND)
+const Type& _maxOf(const Type& left NEX_LIFETIMEBOUND, const Type& right NEX_LIFETIMEBOUND)
 noexcept(noexcept(left < right)) {
     return left < right ? right : left;
 }
@@ -996,7 +1001,7 @@ noexcept(noexcept(left < right)) {
 // Compute the minimum of two values at compile time based on a custom predicate
 template <class Type, class Predicate>
 NEX_NODISCARD NEX_HIDDEN_FROM_ABI NEX_ALWAYS_INLINE constexpr
-const Type& __minOfIf(const Type& left NEX_LIFETIMEBOUND, const Type& right NEX_LIFETIMEBOUND, Predicate pred)
+const Type& _minOfIf(const Type& left NEX_LIFETIMEBOUND, const Type& right NEX_LIFETIMEBOUND, Predicate pred)
 noexcept(noexcept(pred(left, right))) {
     return pred(left, right) ? left : right;
 }
@@ -1004,7 +1009,7 @@ noexcept(noexcept(pred(left, right))) {
 // Compute the maximum of two values at compile time based on a custom predicate
 template <class Type, class Predicate>
 NEX_NODISCARD NEX_HIDDEN_FROM_ABI NEX_ALWAYS_INLINE constexpr
-const Type& __maxOfIf(const Type& left NEX_LIFETIMEBOUND, const Type& right NEX_LIFETIMEBOUND, Predicate pred)
+const Type& _maxOfIf(const Type& left NEX_LIFETIMEBOUND, const Type& right NEX_LIFETIMEBOUND, Predicate pred)
 noexcept(noexcept(pred(left, right))) {
     return pred(left, right) ? right : left;
 }
@@ -1012,85 +1017,85 @@ noexcept(noexcept(pred(left, right))) {
 // Base case for computing the minimum of a variadic list of values at compile time
 template <typename Type>
 NEX_NODISCARD NEX_HIDDEN_FROM_ABI NEX_ALWAYS_INLINE constexpr
-const Type& __minOfVariadic(const Type& first NEX_LIFETIMEBOUND) noexcept {
+const Type& _minOfVariadic(const Type& first NEX_LIFETIMEBOUND) noexcept {
     return first;
 }
 
 // Compute the minimum of a variadic list of values at compile time
 template <typename Type, typename... Types>
 NEX_NODISCARD NEX_HIDDEN_FROM_ABI NEX_ALWAYS_INLINE constexpr
-const Type& __minOfVariadic(const Type& first NEX_LIFETIMEBOUND, const Types&... rest NEX_LIFETIMEBOUND)
-noexcept(noexcept((__minOf(first, __minOfVariadic(rest...))))) {
-    return __minOf(first, __minOfVariadic(rest...));
+const Type& _minOfVariadic(const Type& first NEX_LIFETIMEBOUND, const Types&... rest NEX_LIFETIMEBOUND)
+noexcept(noexcept((_minOf(first, _minOfVariadic(rest...))))) {
+    return _minOf(first, _minOfVariadic(rest...));
 }
 
 // Base case for computing the maximum of a variadic list of values at compile time
 template <typename Type>
 NEX_NODISCARD NEX_HIDDEN_FROM_ABI NEX_ALWAYS_INLINE constexpr
-const Type& __maxOfVariadic(const Type& first NEX_LIFETIMEBOUND) noexcept {
+const Type& _maxOfVariadic(const Type& first NEX_LIFETIMEBOUND) noexcept {
     return first;
 }
 
 // Compute the maximum of a variadic list of values at compile time
 template <typename Type, typename... Types>
 NEX_NODISCARD NEX_HIDDEN_FROM_ABI NEX_ALWAYS_INLINE constexpr
-const Type& __maxOfVariadic(const Type& first NEX_LIFETIMEBOUND, const Types&... rest NEX_LIFETIMEBOUND)
-noexcept(noexcept((__maxOf(first, __maxOfVariadic(rest...))))) {
-    return __maxOf(first, __maxOfVariadic(rest...));
+const Type& _maxOfVariadic(const Type& first NEX_LIFETIMEBOUND, const Types&... rest NEX_LIFETIMEBOUND)
+noexcept(noexcept((_maxOf(first, _maxOfVariadic(rest...))))) {
+    return _maxOf(first, _maxOfVariadic(rest...));
 }
 
 // Base case for computing the minimum of a variadic list of values at compile time based on a custom predicate
 template <typename Predicate, typename Type>
 NEX_NODISCARD NEX_HIDDEN_FROM_ABI NEX_ALWAYS_INLINE constexpr
-const Type& __minOfVariadicIf(Predicate pred, const Type& first NEX_LIFETIMEBOUND) noexcept {
+const Type& _minOfVariadicIf(Predicate pred, const Type& first NEX_LIFETIMEBOUND) noexcept {
     return first;
 }
 
 // Compute the minimum of a variadic list of values at compile time based on a custom predicate
 template <typename Predicate, typename Type, typename... Types>
 NEX_NODISCARD NEX_HIDDEN_FROM_ABI NEX_ALWAYS_INLINE constexpr
-const Type& __minOfVariadicIf(Predicate pred, const Type& first NEX_LIFETIMEBOUND, const Types&... rest NEX_LIFETIMEBOUND)
-noexcept(noexcept((__minOfIf(first, __minOfVariadicIf(pred, rest...), pred)))) {
-    return __minOfIf(first, __minOfVariadicIf(pred, rest...), pred);
+const Type& _minOfVariadicIf(Predicate pred, const Type& first NEX_LIFETIMEBOUND, const Types&... rest NEX_LIFETIMEBOUND)
+noexcept(noexcept((_minOfIf(first, _minOfVariadicIf(pred, rest...), pred)))) {
+    return _minOfIf(first, _minOfVariadicIf(pred, rest...), pred);
 }
 
 // Base case for computing the maximum of a variadic list of values at compile time based on a custom predicate
 template <typename Predicate, typename Type>
 NEX_NODISCARD NEX_HIDDEN_FROM_ABI NEX_ALWAYS_INLINE constexpr
-const Type& __maxOfVariadicIf(Predicate pred, const Type& first NEX_LIFETIMEBOUND) noexcept {
+const Type& _maxOfVariadicIf(Predicate pred, const Type& first NEX_LIFETIMEBOUND) noexcept {
     return first;
 }
 
 // Compute the maximum of a variadic list of values at compile time based on a custom predicate
 template <typename Predicate, typename Type, typename... Types>
 NEX_NODISCARD NEX_HIDDEN_FROM_ABI NEX_ALWAYS_INLINE constexpr
-const Type& __maxOfVariadicIf(Predicate pred, const Type& first NEX_LIFETIMEBOUND, const Types&... rest NEX_LIFETIMEBOUND)
-noexcept(noexcept((__maxOfIf(first, __maxOfVariadicIf(pred, rest...), pred)))) {
-    return __maxOfIf(first, __maxOfVariadicIf(pred, rest...), pred);
+const Type& _maxOfVariadicIf(Predicate pred, const Type& first NEX_LIFETIMEBOUND, const Types&... rest NEX_LIFETIMEBOUND)
+noexcept(noexcept((_maxOfIf(first, _maxOfVariadicIf(pred, rest...), pred)))) {
+    return _maxOfIf(first, _maxOfVariadicIf(pred, rest...), pred);
 }
 
 // Compute the minimum of the sizes of a variadic list of types at compile time
 template <class Type, class... Types>
-constexpr auto MinSizeOfV = __minOfVariadic(sizeof(Type), sizeof(Types)...);
+constexpr auto MinSizeOfV = _minOfVariadic(sizeof(Type), sizeof(Types)...);
 
 // Compute the maximum of the sizes of a variadic list of types at compile time
 template <class Type, class... Types>
-constexpr auto MaxSizeOfV = __maxOfVariadic(sizeof(Type), sizeof(Types)...);
+constexpr auto MaxSizeOfV = _maxOfVariadic(sizeof(Type), sizeof(Types)...);
 
 // Compute the minimum of the alignments of a variadic list of types at compile time
 template <class Type, class... Types>
-constexpr auto MinAlignOfV = __minOfVariadic(alignof(Type), alignof(Types)...);
+constexpr auto MinAlignOfV = _minOfVariadic(alignof(Type), alignof(Types)...);
 
 // Compute the maximum of the alignments of a variadic list of types at compile time
 template <class Type, class... Types>
-constexpr auto MaxAlignOfV = __maxOfVariadic(alignof(Type), alignof(Types)...);
+constexpr auto MaxAlignOfV = _maxOfVariadic(alignof(Type), alignof(Types)...);
 
 // Perform a bitwise cast from Source to Dest at compile time, 
 // ensuring that the types have the same size and are trivially copyable
 template <class Dest, class Source>
     requires (sizeof(Dest) == sizeof(Source) && IsTriviallyCopyableV<Source> && IsTriviallyCopyableV<Dest>)
 NEX_NODISCARD NEX_MSVC_INTRINSIC NEX_HIDDEN_FROM_ABI NEX_ALWAYS_INLINE constexpr
-Dest __bitCastImpl(const Source& source) noexcept {
+Dest _bitCastImpl(const Source& source) noexcept {
     return __builtin_bit_cast(Dest, source);
 }
 
@@ -1107,7 +1112,7 @@ int __char2Val(char c) {
 // into its integer value at compile time
 template <typename TargetType, char... Chars>
 NEX_NODISCARD NEX_HIDDEN_FROM_ABI inline constexpr 
-TargetType __parseRawInteger() noexcept {
+TargetType _parseRawInteger() noexcept {
     static_assert(IsIntegralV<TargetType>, "Error: TargetType must be an integral type");
     static_assert(sizeof...(Chars) > 0, 
         "Error: At least one character is required to parse an integer literal");
@@ -1140,7 +1145,7 @@ TargetType __parseRawInteger() noexcept {
 // into its value at compile time
 template <typename TargetType, char... Chars>
 NEX_NODISCARD NEX_HIDDEN_FROM_ABI inline constexpr 
-TargetType __parseRawFloating() noexcept {
+TargetType _parseRawFloating() noexcept {
     static_assert(IsFloatingPointV<TargetType>, "Error: TargetType must be a floating-point type");
     static_assert(sizeof...(Chars) > 0, 
         "Error: At least one character is required to parse a floating-point literal");
@@ -1216,7 +1221,7 @@ TargetType __parseRawFloating() noexcept {
 // of the `First` type if both of them are given `[[no_unique_address]]`.
 template <class First, class Second>
 NEX_HIDDEN_FROM_ABI inline constexpr 
-bool __fitsInTailPadding = []() {
+bool _fitsInTailPadding = []() {
     struct X {
         NEX_NO_UNIQUE_ADDRESS First first;
         NEX_NO_UNIQUE_ADDRESS Second second;

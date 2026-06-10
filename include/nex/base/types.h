@@ -112,11 +112,11 @@ constexpr u64 operator""_u64(uint64 value) noexcept { return value; }  // no cas
     template <char... Chars>
     constexpr i128 operator""_i128() noexcept {
         // Parse to unsigned first to avoid overflow issues with negative literals, then cast to signed
-        return static_cast<i128>(meta::__parseRawInteger<u128, Chars...>()); 
+        return static_cast<i128>(meta::_parseRawInteger<u128, Chars...>()); 
     }
 
     template <char... Chars>
-    constexpr u128 operator""_u128() noexcept { return meta::__parseRawInteger<u128, Chars...>(); }
+    constexpr u128 operator""_u128() noexcept { return meta::_parseRawInteger<u128, Chars...>(); }
 #endif  // ^^NEX_HAS_BUILTIN_INT128
 
 NEX_INLINE_NAMESPACE_END(literals)
@@ -455,7 +455,7 @@ constexpr ldouble operator""_ld(ldouble value) noexcept { return value; }  // no
         constexpr f128 operator""_f128(const char* str) noexcept { return __builtin_strtof128(str, nullptr); }
     #else  // Safe fallback for compilers without __strtof128 builtin support
         template <char... Chars>
-        constexpr f128 operator""_f128() noexcept { return meta::__parseRawFloating<f128, Chars...>(); }
+        constexpr f128 operator""_f128() noexcept { return meta::_parseRawFloating<f128, Chars...>(); }
     #endif  // ^^NEX_HAS_BUILTIN(__strtof128)
 #endif  // ^^NEX_HAS_BUILTIN_FLOAT128
 

@@ -1095,7 +1095,7 @@ constexpr auto MaxAlignOfV = _maxOfVariadic(alignof(Type), alignof(Types)...);
 template <class Dest, class Source>
     requires (sizeof(Dest) == sizeof(Source) && IsTriviallyCopyableV<Source> && IsTriviallyCopyableV<Dest>)
 NEX_NODISCARD NEX_MSVC_INTRINSIC NEX_HIDDEN_FROM_ABI NEX_ALWAYS_INLINE constexpr
-Dest _bitCastImpl(const Source& source) noexcept {
+Dest _bitCastImpl(Source source) noexcept {
     return __builtin_bit_cast(Dest, source);
 }
 

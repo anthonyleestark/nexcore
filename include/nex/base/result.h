@@ -86,20 +86,21 @@ struct NEX_INTERNAL ResultErrorTypeEvaluator : meta::TrueType {
  * These tags are used internally by the ResultStorage to differentiate between different construction scenarios,
  * such as in-place construction of the value or error, and not intended for public use.
  */
-struct NEX_INTERNAL ResultValueInPlaceConstructTag {};
-struct NEX_INTERNAL ResultErrorInPlaceConstructTag {};
+struct NEX_INTERNAL ResultValueInPlaceConstructionTag {};
+struct NEX_INTERNAL ResultErrorInPlaceConstructionTag {};
 
 /**
- * @brief Helper tag for conditional no unique address optimization in ResultStorage.
+ * @brief Helper template for conditional no unique address optimization in ResultStorage.
  * @details
- * This tag is used to indicate when the "has value" flag can be stored in the tail padding of the storage union, 
+ * This template is used to indicate when the "has value" flag can be stored in the tail padding of the storage union, 
  * allowing for the `[[no_unique_address]]` optimization to be applied to the representation of the ResultStorage. 
  * When this optimization is applicable, the `repr_` member of the ResultStorage can be marked as `[[no_unique_address]]`, 
  * which can potentially reduce the overall size of the ResultStorage by allowing the compiler to optimize away the 
  * storage for the "has value" flag when it is not needed. 
- * This tag is used in the implementation of the ResultStorage to conditionally apply the `[[no_unique_address]]` 
+ * This template is used in the implementation of the ResultStorage to conditionally apply the `[[no_unique_address]]` 
  * attribute based on whether the "has value" flag can fit in the tail padding of the storage union.
  */
+
 struct NEX_INTERNAL ConditionalNoUniqueAddressInvokeTag {};
 
 // Primary template for ConditionalNoUniqueAddress
@@ -190,13 +191,13 @@ class NEX_INTERNAL ResultStorage {
         // Constructor for in-place construction of value using a function and arguments
         template <class Func, class... Args>
         NEX_HIDDEN_FROM_ABI constexpr explicit 
-        StorageUnion(ResultValueInPlaceConstructTag, Func&& func, Args&&... args)
+        StorageUnion(ResultValueInPlaceConstructionTag, Func&& func, Args&&... args)
             : value_(NEX_STD invoke(NEX_FORWARD<Func>(func), NEX_FORWARD<Args>(args)...)) {}
 
         // Constructor for in-place construction of error using a function and arguments
         template <class Func, class... Args>
         NEX_HIDDEN_FROM_ABI constexpr explicit 
-        StorageUnion(ResultErrorInPlaceConstructTag, Func&& func, Args&&... args)
+        StorageUnion(ResultErrorInPlaceConstructionTag, Func&& func, Args&&... args)
             : error_(NEX_STD invoke(NEX_FORWARD<Func>(func), NEX_FORWARD<Args>(args)...)) {}
 
         // The destructor is trivial if both ValueType and ErrorType are trivially destructible
@@ -231,14 +232,14 @@ class NEX_INTERNAL ResultStorage {
         // Constructor for in-place construction of value using a function and arguments
         template <class Func, class... Args>
         NEX_HIDDEN_FROM_ABI constexpr explicit 
-        Repr(ResultValueInPlaceConstructTag tag, Func&& func, Args&&... args)
+        Repr(ResultValueInPlaceConstructionTag tag, Func&& func, Args&&... args)
             : actualStorage_(in_place, tag, NEX_FORWARD<Func>(func), NEX_FORWARD<Args>(args)...), 
               hasValue_(true) {}
 
         // Constructor for in-place construction of error using a function and arguments
         template <class Func, class... Args>
         NEX_HIDDEN_FROM_ABI constexpr explicit 
-        Repr(ResultErrorInPlaceConstructTag tag, Func&& func, Args&&... args)
+        Repr(ResultErrorInPlaceConstructionTag tag, Func&& func, Args&&... args)
             : actualStorage_(in_place, tag, NEX_FORWARD<Func>(func), NEX_FORWARD<Args>(args)...), 
               hasValue_(false) {}
 
@@ -366,7 +367,7 @@ protected:
 
     /**
      * @note
-     * In case we copy/move construct from another `expected` we need to create our `Result` so that 
+     * In case we copy/move construct from another `Result` we need to create our `Result` so that 
      * it either has a value or not, depending on the "hasValue_" flag of the other `Result`. 
      * To do this without falling back on `std::construct_at` we rely on guaranteed copy elision 
      * using two helper functions `makeRepresentation` and `makeStorage`. There have to be two since

@@ -320,7 +320,7 @@ NEX_INLINE_NAMESPACE_END(literals)
 // Common power-of-two alignment types (for specifying alignment requirements)
 // =================================================================================
 
-using align1   = byte;                            // 1-byte alignment
+using align1   = uint8;                           // 1-byte alignment
 using align2   = uint16;                          // 2-byte alignment
 using align4   = uint32;                          // 4-byte alignment
 using align8   = uint64;                          // 8-byte alignment
@@ -852,7 +852,7 @@ using wcstr         = wcstring;                 // Null-terminated wide string (
 // =================================================================================
 
 // Representing a "monostate" or "unit" type
-struct NEX_API monostate {};
+struct monostate {};
 
 NEX_HIDDEN_FROM_ABI NEX_ALWAYS_INLINE constexpr 
 bool operator==(monostate, monostate) noexcept { return true; }
@@ -874,7 +874,7 @@ bool operator>=(monostate, monostate) noexcept { return true; }
 
 // In-place construction tag type 
 // (for specifying in-place construction without additional data)
-struct NEX_API in_place_tag {
+struct in_place_tag {
     explicit in_place_tag() = default;
 };
 inline constexpr in_place_tag in_place{};
@@ -882,19 +882,19 @@ inline constexpr in_place_tag in_place{};
 // In-place construction tag type for a specific type 
 // (for specifying in-place construction with type information)
 template <class Type>
-struct NEX_API in_place_type : in_place_tag {
+struct in_place_type : in_place_tag {
     explicit in_place_type() = default;
 };
 
 // In-place construction tag type for a specific index 
 // (for specifying in-place construction with index information)
 template <sizetype Index>
-struct NEX_API in_place_index : in_place_tag {
+struct in_place_index : in_place_tag {
     explicit in_place_index() = default;
 };
 
 // Represents an unexpected value or error state
-struct NEX_API unexpected_type {};
+struct unexpected_type {};
 inline constexpr unexpected_type unexpect{};
 
 NEX_NAMESPACE_END

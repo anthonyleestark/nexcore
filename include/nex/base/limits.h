@@ -394,14 +394,14 @@ struct NumericLimitConstants {
      * rather than assuming signedness.
      */
     static constexpr wchar wcharmin     = (static_cast<wchar>(-1) < 0) 
-                                            ? static_cast<wchar>(-2147483647u32 - 1) : static_cast<wchar>(0);
+                                            ? static_cast<wchar>(-2147483647_u32 - 1) : static_cast<wchar>(0);
     static constexpr wchar wcharmax     = (static_cast<wchar>(-1) < 0) 
-                                            ? static_cast<wchar>(2147483647u32) : static_cast<wchar>(0xffffffff_u32);
+                                            ? static_cast<wchar>(2147483647_u32) : static_cast<wchar>(0xffffffff_u32);
     
     static constexpr wint wintmin       = (static_cast<wint>(-1) < 0) 
-                                            ? static_cast<wint>(-2147483647u32 - 1)  : static_cast<wint>(0);
+                                            ? static_cast<wint>(-2147483647_u32 - 1)  : static_cast<wint>(0);
     static constexpr wint wintmax       = (static_cast<wint>(-1) < 0) 
-                                            ? static_cast<wint>(2147483647u32) : static_cast<wint>(0xffffffff_u32);
+                                            ? static_cast<wint>(2147483647_u32) : static_cast<wint>(0xffffffff_u32);
 #endif  // ^^wchar/wint limits
 
     // =============================================================================

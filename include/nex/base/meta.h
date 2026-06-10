@@ -309,6 +309,42 @@ constexpr bool IsNullPointerV = IsSameV<RemoveCvT<Type>, decltype(nullptr)>;
 template <class Type>
 struct IsNullPointer : BoolConstant<IsNullPointerV<Type>> {};
 
+// Determine whether type argument is an lvalue reference
+template <class>
+constexpr bool IsLvalueReferenceV = false;
+
+template <class Type>
+constexpr bool IsLvalueReferenceV<Type&> = true;
+
+// Determine whether type argument is an rvalue reference
+template <class Type>
+struct IsLvalueReference : BoolConstant<IsLvalueReferenceV<Type>> {};
+
+// Determine whether type argument is an rvalue reference
+template <class>
+constexpr bool IsRvalueReferenceV = false;
+
+template <class Type>
+constexpr bool IsRvalueReferenceV<Type&&> = true;
+
+// Determine whether type argument is an rvalue reference
+template <class Type>
+struct IsRvalueReference : BoolConstant<IsRvalueReferenceV<Type>> {};
+
+// Determine whether type argument is a reference (either lvalue or rvalue)
+template <class>
+constexpr bool IsReferenceV = false;
+
+template <class Type>
+constexpr bool IsReferenceV<Type&> = true;
+
+template <class Type>
+constexpr bool IsReferenceV<Type&&> = true;
+
+// Check if a type is a reference (either lvalue or rvalue)
+template <class Type>
+struct IsReference : BoolConstant<IsReferenceV<Type>> {};
+
 // Determine whether type argument is const qualified
 template <class>
 constexpr bool IsConstV = false;
@@ -663,42 +699,6 @@ AddRvalueReferenceT<Type> declval() noexcept {
     static_assert(IsSameV<Type, void> && !IsSameV<Type, void>, 
         "Error: declval not allowed in an evaluated context");
 }
-
-// Determine whether type argument is an lvalue reference
-template <class>
-constexpr bool IsLvalueReferenceV = false;
-
-template <class Type>
-constexpr bool IsLvalueReferenceV<Type&> = true;
-
-// Determine whether type argument is an rvalue reference
-template <class Type>
-struct IsLvalueReference : BoolConstant<IsLvalueReferenceV<Type>> {};
-
-// Determine whether type argument is an rvalue reference
-template <class>
-constexpr bool IsRvalueReferenceV = false;
-
-template <class Type>
-constexpr bool IsRvalueReferenceV<Type&&> = true;
-
-// Determine whether type argument is an rvalue reference
-template <class Type>
-struct IsRvalueReference : BoolConstant<IsRvalueReferenceV<Type>> {};
-
-// Determine whether type argument is a reference (either lvalue or rvalue)
-template <class>
-constexpr bool IsReferenceV = false;
-
-template <class Type>
-constexpr bool IsReferenceV<Type&> = true;
-
-template <class Type>
-constexpr bool IsReferenceV<Type&&> = true;
-
-// Check if a type is a reference (either lvalue or rvalue)
-template <class Type>
-struct IsReference : BoolConstant<IsReferenceV<Type>> {};
 
 // Determine whether Type is a function type 
 // (i.e., a type that can be called with a function call syntax, excluding reference types and void types)
@@ -1112,7 +1112,7 @@ Dest _bitCastImpl(Source source) noexcept {
 
 // Convert a character representing a digit in base 2, 8, 10, or 16 to its integer value
 NEX_NODISCARD NEX_HIDDEN_FROM_ABI NEX_ALWAYS_INLINE constexpr 
-int __char2Val(char c) {
+int _char2Val(char c) {
     if (c >= '0' && c <= '9') return c - '0';
     if (c >= 'a' && c <= 'f') return 10 + (c - 'a');
     if (c >= 'A' && c <= 'F') return 10 + (c - 'A');
@@ -1147,7 +1147,7 @@ TargetType _parseRawInteger() noexcept {
     TargetType result = 0;
     for (; idx < len; ++idx) {
         if (arr[idx] == '\'') continue;   // ignore digit separators
-        result = static_cast<TargetType>(result * base + __char2Val(arr[idx]));
+        result = static_cast<TargetType>(result * base + _char2Val(arr[idx]));
     }
     return result;
 }
@@ -1194,7 +1194,7 @@ TargetType _parseRawFloating() noexcept {
             break;
         }
 
-        int val = __char2Val(c);
+        int val = _char2Val(c);
         if (val < 0 || val > 9) continue; // ignore invalid characters or f/F suffixes
 
         if (!isFraction) {
@@ -1214,7 +1214,7 @@ TargetType _parseRawFloating() noexcept {
         long long exponent = 0;
         for (; idx < len; ++idx) {
             if (arr[idx] == '\'') continue;   // ignore digit separators
-            int val = __char2Val(arr[idx]);
+            int val = _char2Val(arr[idx]);
             if (val >= 0 && val <= 9) exponent = exponent * 10 + val;
         }
 

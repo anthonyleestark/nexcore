@@ -350,8 +350,11 @@ struct NumericLimitConstants {
     // UTF Character Code Unit Constants (C++20 encoding-aware)
     // =================================================================================
 
+#if NEX_HAS_BUILTIN_CHAR8_T
     static constexpr char8 c8min        = static_cast<char8>(0x00);
     static constexpr char8 c8max        = static_cast<char8>(0xff);
+#endif  // ^^NEX_HAS_BUILTIN_CHAR8_T
+
     static constexpr char16 c16min      = static_cast<char16>(0x0000);
     static constexpr char16 c16max      = static_cast<char16>(0xffff);
     static constexpr char32 c32min      = static_cast<char32>(0x00000000);
@@ -878,30 +881,33 @@ public:
     NEX_NODISCARD static constexpr int32 maxDecimalDigits() noexcept { return maxDigits10; }
 };
 
-template<>
-class NumericLimits<char8> : public UnsignedIntegerLimitsBase<char8> {
-public:
-    NEX_NODISCARD static constexpr char8 (min)() noexcept { return NumericLimitConstants::c8min; }
-    NEX_NODISCARD static constexpr char8 (max)() noexcept { return NumericLimitConstants::c8max; }
 
-    NEX_NODISCARD static constexpr char8 (lowest)() noexcept       { return (min)(); }
-    NEX_NODISCARD static constexpr char8 (epsilon)() noexcept      { return 0; }
-    NEX_NODISCARD static constexpr char8 (roundError)() noexcept   { return 0; }
-    NEX_NODISCARD static constexpr char8 (denormMin)() noexcept    { return 0; }
+#if NEX_HAS_BUILTIN_CHAR8_T
+    template<>
+    class NumericLimits<char8> : public UnsignedIntegerLimitsBase<char8> {
+    public:
+        NEX_NODISCARD static constexpr char8 (min)() noexcept { return NumericLimitConstants::c8min; }
+        NEX_NODISCARD static constexpr char8 (max)() noexcept { return NumericLimitConstants::c8max; }
 
-    NEX_NODISCARD static constexpr char8 (infinity)() noexcept     { return 0; }
-    NEX_NODISCARD static constexpr char8 (quietNaN)() noexcept     { return 0; }
-    NEX_NODISCARD static constexpr char8 (signalingNaN)() noexcept { return 0; }
+        NEX_NODISCARD static constexpr char8 (lowest)() noexcept       { return (min)(); }
+        NEX_NODISCARD static constexpr char8 (epsilon)() noexcept      { return 0; }
+        NEX_NODISCARD static constexpr char8 (roundError)() noexcept   { return 0; }
+        NEX_NODISCARD static constexpr char8 (denormMin)() noexcept    { return 0; }
 
-    NEX_NODISCARD static constexpr int32 exponentBias() noexcept { return 0; }
-    NEX_NODISCARD static constexpr int32 minDecimalExponent() noexcept { return 0; }
-    NEX_NODISCARD static constexpr int32 maxDecimalExponent() noexcept { return 0; }
+        NEX_NODISCARD static constexpr char8 (infinity)() noexcept     { return 0; }
+        NEX_NODISCARD static constexpr char8 (quietNaN)() noexcept     { return 0; }
+        NEX_NODISCARD static constexpr char8 (signalingNaN)() noexcept { return 0; }
 
-    NEX_NODISCARD static constexpr int32 minDigits() noexcept     { return digits; }
-    NEX_NODISCARD static constexpr int32 maxDigits() noexcept     { return digits; }
-    NEX_NODISCARD static constexpr int32 minDecimalDigits() noexcept { return digits10; }
-    NEX_NODISCARD static constexpr int32 maxDecimalDigits() noexcept { return maxDigits10; }
-};
+        NEX_NODISCARD static constexpr int32 exponentBias() noexcept { return 0; }
+        NEX_NODISCARD static constexpr int32 minDecimalExponent() noexcept { return 0; }
+        NEX_NODISCARD static constexpr int32 maxDecimalExponent() noexcept { return 0; }
+
+        NEX_NODISCARD static constexpr int32 minDigits() noexcept     { return digits; }
+        NEX_NODISCARD static constexpr int32 maxDigits() noexcept     { return digits; }
+        NEX_NODISCARD static constexpr int32 minDecimalDigits() noexcept { return digits10; }
+        NEX_NODISCARD static constexpr int32 maxDecimalDigits() noexcept { return maxDigits10; }
+    };
+#endif  // ^^NEX_HAS_BUILTIN_CHAR8_T
 
 template<>
 class NumericLimits<char16> : public UnsignedIntegerLimitsBase<char16> {
@@ -1232,7 +1238,7 @@ public:
         NEX_NODISCARD static constexpr int32 minDecimalDigits() noexcept { return digits10; }
         NEX_NODISCARD static constexpr int32 maxDecimalDigits() noexcept { return maxDigits10; }
     };
-#endif
+#endif  // ^^NEX_HAS_BUILTIN_INT128
 
 // =================================================================================
 // Specializations of NumericLimits for floating-point types
@@ -1465,6 +1471,6 @@ public:
         // The minimum negative integer power of 10 that can be represented as a normalized floating-point number.
         static constexpr int32 minExponent10    = static_cast<int32>(NumericLimitConstants::f128minDecimalExponent);
     };
-#endif
+#endif  // ^^NEX_HAS_BUILTIN_FLOAT128
 
 NEX_NAMESPACE_END

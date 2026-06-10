@@ -211,9 +211,9 @@ NEX_NODISCARD constexpr bool IsConstantEvaluated() noexcept {
         bool,                               // Boolean type
         char, signed char, unsigned char,   // Narrow character types
         wchar_t,                            // Wide character type (platform-dependent)
-    #if defined(__cpp_char8_t)
+    #if NEX_HAS_BUILTIN_CHAR8_T
         char8_t,                            // UTF-8 code unit type (since C++20)
-    #endif // ^^defined(__cpp_char8_t)
+    #endif  // ^^NEX_HAS_BUILTIN_CHAR8_T
         char16_t, char32_t,                 // UTF-16 and UTF-32 code unit types (since C++11)
         short, unsigned short,              // 16-bit integer types
         int, unsigned int,                  // 32-bit integer types

@@ -243,8 +243,14 @@
 #endif  // !defined(NEX_HAS_ATTRIBUTE)
 
 // =================================================================================
-// Compiler-specific type definitions and feature detection
+// Language/compiler-specific type definitions and feature detection
 // =================================================================================
+
+#if NEX_HAS_CXX20 && defined(__cpp_char8_t)
+    #define NEX_HAS_BUILTIN_CHAR8_T 1
+#else  // Compiler does not support char8_t
+    #define NEX_HAS_BUILTIN_CHAR8_T 0
+#endif  // ^^NEX_HAS_BUILTIN_CHAR8_T
 
 #if defined(__SIZEOF_INT128__) && !NEX_COMPILER_MSVC_COMPATIBLE
     #define NEX_HAS_BUILTIN_INT128 1

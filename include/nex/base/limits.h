@@ -514,14 +514,14 @@ struct NumericLimitConstants {
 // =================================================================================
 
 #if NEX_HAS_BUILTIN_CHAR8_T
-    #define NEX_CHAR8_MIN           NEX_PREPEND_NAMESPACE(NumericLimitConstants::char8min)
-    #define NEX_CHAR8_MAX           NEX_PREPEND_NAMESPACE(NumericLimitConstants::char8max)
+    #define NEX_CHAR8_MIN           NEX_PREPEND_NAMESPACE(NumericLimitConstants::c8min)
+    #define NEX_CHAR8_MAX           NEX_PREPEND_NAMESPACE(NumericLimitConstants::c8max)
 #endif  // ^^NEX_HAS_BUILTIN_CHAR8_T
 
-#define NEX_CHAR16_MIN              NEX_PREPEND_NAMESPACE(NumericLimitConstants::char16min)
-#define NEX_CHAR32_MIN              NEX_PREPEND_NAMESPACE(NumericLimitConstants::char16min)
-#define NEX_CHAR16_MAX              NEX_PREPEND_NAMESPACE(NumericLimitConstants::char32max)
-#define NEX_CHAR32_MAX              NEX_PREPEND_NAMESPACE(NumericLimitConstants::char32max)
+#define NEX_CHAR16_MIN              NEX_PREPEND_NAMESPACE(NumericLimitConstants::c16min)
+#define NEX_CHAR32_MIN              NEX_PREPEND_NAMESPACE(NumericLimitConstants::c16min)
+#define NEX_CHAR16_MAX              NEX_PREPEND_NAMESPACE(NumericLimitConstants::c32max)
+#define NEX_CHAR32_MAX              NEX_PREPEND_NAMESPACE(NumericLimitConstants::c32max)
 
 // =================================================================================
 // Macro definitions for narrow/native & wide character limits (C-style)

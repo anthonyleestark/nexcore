@@ -19,8 +19,8 @@
  * fallbacks for cases where certain features may not be available.
  */
 
-#include "nex/base/build.h"
 #include "nex/base/compiler.h"
+#include "nex/base/build.h"
 #include "nex/base/attributes.h"
 #include "nex/base/namespace.h"
 #include "nex/base/meta.h"

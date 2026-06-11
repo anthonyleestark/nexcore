@@ -715,6 +715,29 @@ constexpr bool IsObjectV = IsConstV<const Type> && !IsVoidV<Type>;
 template <class Type>
 struct IsObject : BoolConstant<IsObjectV<Type>> {};
 
+// Determine whether Type is a pointer to a member object of a class or struct
+template <class>
+struct NEX_HIDDEN_FROM_ABI IsMemberObjectPointerImpl {
+    static constexpr bool value = false;
+};
+
+template <class Type1, class Type2>
+struct NEX_HIDDEN_FROM_ABI IsMemberObjectPointerImpl<Type1 Type2::*> {
+    static constexpr bool value = !IsFunctionV<Type1>;
+    using ClassType             = Type2;
+};
+
+#if NEX_HAS_BUILTIN(__is_member_object_pointer)
+    template <class Type>
+    constexpr bool IsMemberObjectPointerV = __is_member_object_pointer(Type);
+#else  // No builtin support
+    template <class Type>
+    constexpr bool IsMemberObjectPointerV = IsMemberObjectPointerImpl<RemoveCvT<Type>>::value;
+#endif
+
+template <class Type>
+struct IsMemberObjectPointer : BoolConstant<IsMemberObjectPointerV<Type>> {};
+
 // Determine whether Type is a trivial type
 template <class Type>
 struct IsTrivial : BoolConstant<__is_trivial(Type)> {};
@@ -1100,6 +1123,67 @@ constexpr auto MinAlignOfV = _minOfVariadic(alignof(Type), alignof(Types)...);
 // Compute the maximum of the alignments of a variadic list of types at compile time
 template <class Type, class... Types>
 constexpr auto MaxAlignOfV = _maxOfVariadic(alignof(Type), alignof(Types)...);
+
+// Obtains the actual address of an object, safely bypassing any overloaded operator&,
+// with checking for rvalue references to prevent misuse on temporaries.
+template <class Type>
+    requires (!IsVoidV<Type> && !IsRvalueReferenceV<Type&&>)
+NEX_NODISCARD NEX_MSVC_INTRINSIC NEX_ALWAYS_INLINE constexpr 
+RemoveReferenceT<Type>* _addressOf(Type&& Value) noexcept {
+    return __builtin_addressof(Value);
+}
+
+// Overload of _minOf that takes pointers and compares their addresses at compile time
+template <class Type>
+NEX_NODISCARD NEX_HIDDEN_FROM_ABI NEX_ALWAYS_INLINE constexpr
+Type* _minOf(Type* left NEX_LIFETIMEBOUND, Type* right NEX_LIFETIMEBOUND) noexcept {
+    // It's 100% safe to cast pointers to a 64-bit unsigned integer for comparison purposes, 
+    // as long as we don't return or dereference them or perform any arithmetic on them.
+    using addr_type = unsigned long long;
+    return static_cast<addr_type>(left) < static_cast<addr_type>(right) ? left : right;
+}
+
+// Base case for computing the minimum address of a variadic list of objects at compile time
+template <class Type>
+NEX_NODISCARD NEX_HIDDEN_FROM_ABI NEX_ALWAYS_INLINE constexpr
+auto MinAddressOfV(Type&& first NEX_LIFETIMEBOUND) noexcept 
+    -> decltype(_addressOf(static_cast<Type&&>(first))) {
+    return _addressOf(static_cast<Type&&>(first));
+}
+
+// Compute the minimum address of a variadic list of objects at compile time
+template <class Type, class... Args>
+NEX_NODISCARD NEX_HIDDEN_FROM_ABI NEX_ALWAYS_INLINE constexpr
+auto MinAddressOfV(Type&& first NEX_LIFETIMEBOUND, Args&&... rest NEX_LIFETIMEBOUND) noexcept 
+    -> decltype(_minOf(_addressOf(static_cast<Type&&>(first)), MinAddressOfV(static_cast<Args&&>(rest)...))) {
+    return _minOf(_addressOf(static_cast<Type&&>(first)), MinAddressOfV(static_cast<Args&&>(rest)...));
+}
+
+// Overload of _maxOf that takes pointers and compares their addresses at compile time
+template <class Type>
+NEX_NODISCARD NEX_HIDDEN_FROM_ABI NEX_ALWAYS_INLINE constexpr
+Type* _maxOf(Type* left NEX_LIFETIMEBOUND, Type* right NEX_LIFETIMEBOUND) noexcept {
+    // It's 100% safe to cast pointers to a 64-bit unsigned integer for comparison purposes, 
+    // as long as we don't return or dereference them or perform any arithmetic on them.
+    using addr_type = unsigned long long;
+    return static_cast<addr_type>(left) < static_cast<addr_type>(right) ? right : left;
+}
+
+// Base case for computing the maximum address of a variadic list of objects at compile time
+template <class Type>
+NEX_NODISCARD NEX_HIDDEN_FROM_ABI NEX_ALWAYS_INLINE constexpr
+auto MaxAddressOfV(Type&& first NEX_LIFETIMEBOUND) noexcept 
+    -> decltype(_addressOf(static_cast<Type&&>(first))) {
+    return _addressOf(static_cast<Type&&>(first));
+}
+
+// Compute the maximum address of a variadic list of objects at compile time
+template <class Type, class... Args>
+NEX_NODISCARD NEX_HIDDEN_FROM_ABI NEX_ALWAYS_INLINE constexpr
+auto MaxAddressOfV(Type&& first NEX_LIFETIMEBOUND, Args&&... rest NEX_LIFETIMEBOUND) noexcept 
+    -> decltype(_maxOf(_addressOf(static_cast<Type&&>(first)), MaxAddressOfV(static_cast<Args&&>(rest)...))) {
+    return _maxOf(_addressOf(static_cast<Type&&>(first)), MaxAddressOfV(static_cast<Args&&>(rest)...));
+}
 
 // Perform a bitwise cast from Source to Dest at compile time, 
 // ensuring that the types have the same size and are trivially copyable

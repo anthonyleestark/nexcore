@@ -126,8 +126,8 @@ moveIfNoexcept(Type& arg) noexcept {
  */
 template <class Type>
 NEX_NODISCARD NEX_MSVC_INTRINSIC NEX_ALWAYS_INLINE constexpr 
-Type* addressOf(Type& Value) noexcept {
-    return __builtin_addressof(Value);
+auto addressOf(Type& Value) noexcept -> decltype(meta::_addressOf(Value)) {
+    return meta::_addressOf(Value);
 }
 
 /**

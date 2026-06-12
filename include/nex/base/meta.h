@@ -82,13 +82,40 @@ struct Conditional<false, Type1, Type2> {
 template <bool Test, class Type1, class Type2>
 using ConditionalT = typename Conditional<Test, Type1, Type2>::type;
 
-#if NEX_COMPILER_IS_CLANG
-    // Clang provides a builtin type trait for is_same, 
-    // which is more efficient than our implementation, so use it when available
+// Performs a compile-time logical AND operation on a pack of type traits, 
+// evaluating to true if all traits are true, and false otherwise.
+template <class...>
+struct Conjunction : TrueType {};
+
+template <class Arg>
+struct Conjunction<Arg> : Arg {};
+
+template <class Arg1, class... Args>
+struct Conjunction<Arg1, Args...> 
+    : ConditionalT<!bool(Arg1::value), Arg1, Conjunction<Args...>> {};
+
+// Performs a compile-time logical OR operation on a pack of type traits,
+// evaluating to true if at least one trait is true, and false otherwise.
+template <class...>
+struct Disjunction : FalseType {};
+
+template <class Arg>
+struct Disjunction<Arg> : Arg {};
+
+template <class Arg1, class... Args>
+struct Disjunction<Arg1, Args...> 
+    : ConditionalT<bool(Arg1::value), Arg1, Disjunction<Args...>> {};
+
+// Performs a compile-time logical NOT operation on a type trait,
+// evaluating to true if the trait is false, and false if the trait is true.
+template <class Pred>
+struct Negation : BoolConstant<!bool(Pred::value)> {};
+
+// Determine whether arguments are the same type
+#if NEX_HAS_BUILTIN(__is_same)
     template <class Type1, class Type2>
     constexpr bool IsSameV = __is_same(Type1, Type2);
-#else
-    // Determine whether arguments are the same type
+#else  // No builtin support, fallback to template specialization
     template <class, class>
     constexpr bool IsSameV = false;
     template <class Type>
@@ -281,6 +308,13 @@ struct IsArithmetic : BoolConstant<IsArithmeticVImpl<Type>> {};
 
 template <class Type>
 constexpr bool IsArithmeticV = IsArithmetic<Type>::value;
+
+// Determine whether a type is a literal type (i.e., a type that can be used in constant expressions)
+template <class Type>
+struct IsLiteralType : BoolConstant<__is_literal_type(RemoveCvT<Type>)> {};
+
+template <class Type>
+constexpr bool IsLiteralTypeV = IsLiteralType<Type>::value;
 
 // Determine whether a type is the void type
 template <class Type>
@@ -585,10 +619,100 @@ struct RemovePointer<Type* const volatile> {
 template <class Type>
 using RemovePointerT = typename RemovePointer<Type>::type;
 
+// Copy const-qualifier from one type to another
+template <class From, class To>
+struct CopyConst {
+    using type = To;
+};
+
+template <class From, class To>
+struct CopyConst<const From, To> {
+    using type = const To;
+};
+
+template <class From, class To>
+using CopyConstT = typename CopyConst<From, To>::type;
+
+// Copy volatile-qualifier from one type to another
+template <class From, class To>
+struct CopyVolatile {
+    using type = To;
+};
+
+template <class From, class To>
+struct CopyVolatile<volatile From, To> {
+    using type = volatile To;
+};
+
+template <class From, class To>
+using CopyVolatileT = typename CopyVolatile<From, To>::type;
+
+// Copy cv-qualifiers from one type to another
+template <class From, class To>
+struct CopyCv {
+    using type = To;
+};
+
+template <class From, class To>
+struct CopyCv<const From, To> {
+    using type = const To;
+};
+
+template <class From, class To>
+struct CopyCv<volatile From, To> {
+    using type = volatile To;
+};
+
+template <class From, class To>
+struct CopyCv<const volatile From, To> {
+    using type = const volatile To;
+};
+
+template <class From, class To>
+using CopyCvT = typename CopyCv<From, To>::type;
+
+// Copy reference from one type to another
+template <class From, class To>
+struct CopyReference {
+    using type = To;
+};
+
+template <class From, class To>
+struct CopyReference<From&, To> {
+    using type = To&;
+};
+
+template <class From, class To>
+struct CopyReference<From&&, To> {
+    using type = To&&;
+};
+
+template <class From, class To>
+using CopyReferenceT = typename CopyReference<From, To>::type;
+
+// Copy reference and cv-qualifiers from one type to another
+template <class From, class To>
+struct CopyCvref {
+    using type = typename CopyCv<From, To>::type;
+};
+
+template <class From, class To>
+struct CopyCvref<From&, To> {
+    using type = typename CopyCv<From, To>::type&;
+};
+
+template <class From, class To>
+struct CopyCvref<From&&, To> {
+    using type = typename CopyCv<From, To>::type&&;
+};
+
+template <class From, class To>
+using CopyCvrefT = typename CopyCvref<From, To>::type;
+
 // Retrieve the underlying type of an enumeration type
 template <class Type, bool = IsEnumV<Type>>
 struct UnderlyingType {
-    using type = typename __underlying_type(Type);
+    using type = __underlying_type(Type);
 };
 
 template <class Type>
@@ -988,29 +1112,105 @@ struct IsNothrowDestructible : BoolConstant<__is_nothrow_destructible(Type)> {};
 template <class Type>
 constexpr bool IsNothrowDestructibleV = IsNothrowDestructible<Type>::value;
 
-// Selects one of two types based on a boolean condition.
-template <bool>
-struct Selector {
-    template <class First, class>
-    using Select = First;
-};
-
-template <>
-struct Selector<false> {
-    template <class, class Second>
-    using Select = Second;
-};
-
 // Transform a type into a form suitable for use in most contexts (e.g., as a function argument or return type)
-template <class Type>
-struct Decay {
-    using Type1 = RemoveReferenceT<Type>;
-    using Type2 = typename Selector<IsFunctionV<Type1>>::template Select<AddPointerT<Type1>, RemoveCvT<Type1>>;
-    using type = typename Selector<IsArrayV<Type1>>::template Select<AddPointerT<RemoveExtentT<Type1>>, Type2>;
-};
-
+#if NEX_HAS_BUILTIN(__decay)
+    template <class Type>
+    using Decay = __decay(Type);
+#else
+    template <class Type>
+    struct Decay {
+        using Type1 = RemoveReferenceT<Type>;
+        using Type2 = ConditionalT<IsFunctionV<Type1>, AddPointerT<Type1>, RemoveCvT<Type1>>;
+        using type = ConditionalT<IsArrayV<Type1>, AddPointerT<RemoveExtentT<Type1>>, Type2>;
+    };
+#endif
 template <class Type>
 using DecayT = typename Decay<Type>::type;
+
+// Represents a list of types as a single type
+template <class... Types>
+struct NEX_HIDDEN_FROM_ABI TypeList {};
+
+// Find the first type in TypeList that is compatible with InType and has a size greater than or equal to Size
+template <class TypeList, class InType, unsigned long long Size, bool = false>
+struct NEX_HIDDEN_FROM_ABI FindFirstCompatible;
+
+template <class Head, class... Tail, class InType, unsigned long long Size>
+struct NEX_HIDDEN_FROM_ABI FindFirstCompatible<TypeList<Head, Tail...>, InType, Size, false> {
+    using type = typename ConditionalT<
+        IsSameV<InType, Head>, TypeIdentity<Head>,  // Returns immediately if we find an exact match
+        FindFirstCompatible<TypeList<Tail...>, InType, Size, (Size <= sizeof(Head))>  // keep searching for compatible size
+    >::type;
+};
+
+// Return the first type that is compatible with the size requirement, even if it is not an exact match
+template <class Head, class... Tail, class InType, unsigned long long Size>
+struct NEX_HIDDEN_FROM_ABI FindFirstCompatible<TypeList<Head, Tail...>, InType, Size, true> {
+    using type = Head;
+};
+
+template <class InType, unsigned long long Size, bool Any>
+struct NEX_HIDDEN_FROM_ABI FindFirstCompatible<TypeList<>, InType, Size, Any> {
+    using type = void;
+};
+
+// Determine the signed integer type corresponding to an unsigned integer type
+#if NEX_HAS_BUILTIN(__make_signed)
+    template <class Type>
+    struct MakeSigned {
+        using type = __make_signed(Type);
+    };
+#else  // No builtin support, fallback to manual implementation
+    using SignedTypes = TypeList<
+        signed char, 
+        short, 
+        int, 
+        long, 
+        long long
+    #if NEX_HAS_BUILTIN_INT128
+        , __int128
+    #endif
+    >;
+
+    template <class Type>
+    struct MakeSigned {
+        using CleanType = RemoveCvT<Type>;
+        using SignedBase = typename FindFirstCompatible<SignedTypes, CleanType, sizeof(CleanType)>::type;
+        using type = CopyCvT<CleanType, SignedBase>;
+    };
+#endif
+
+template <class Type>
+using MakeSignedT = typename MakeSigned<Type>::type;
+
+// Determine the unsigned integer type corresponding to a signed integer type
+#if NEX_HAS_BUILTIN(__make_unsigned)
+    template <class Type>
+    struct MakeUnsigned {
+        using type = __make_unsigned(Type);
+    };
+#else  // No builtin support, fallback to manual implementation
+    using UnsignedTypes = TypeList<
+        unsigned char, 
+        unsigned short, 
+        unsigned int, 
+        unsigned long, 
+        unsigned long long
+    #if NEX_HAS_BUILTIN_INT128
+        , unsigned __int128
+    #endif
+    >;
+
+    template <class Type>
+    struct MakeUnsigned {
+        using CleanType = RemoveCvT<Type>;
+        using UnsignedBase = typename FindFirstCompatible<UnsignedTypes, CleanType, sizeof(CleanType)>::type;
+        using type = CopyCvT<CleanType, UnsignedBase>;
+    };
+#endif
+
+template <class Type>
+using MakeUnsignedT = typename MakeUnsigned<Type>::type;
 
 // =================================================================================
 // Internal utilities for compile-time logic processing to support metaprogramming

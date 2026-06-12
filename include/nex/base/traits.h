@@ -29,18 +29,21 @@
 
 NEX_NAMESPACE_BEGIN
 
-/// A type trait that provides a compile-time constant boolean value indicating 
-/// whether a type is an integral type.
-using TrueType = meta::TrueType;
+/// IntegralConstant is a template that represents a compile-time constant value of a specified type. 
+/// It is the basis for other type traits like BoolConstant, TrueType, and FalseType.
+template <class Type, Type Value>
+using IntegralConstant = meta::IntegralConstant<Type, Value>;
 
-/// A type trait that provides a compile-time constant boolean value indicating 
-/// whether a type is not an integral type.
-using FalseType = meta::FalseType;
-
-/// A type trait that provides a compile-time constant boolean value indicating
-/// whether a type is an integral type.
+/// BoolConstant is a specialization of IntegralConstant for boolean values, 
+/// providing a convenient way to represent compile-time boolean constants.
 template <bool BoolValue>
 using BoolConstant = meta::BoolConstant<BoolValue>;
+
+/// Represents the compile-time constant value `true`.
+using TrueType = meta::TrueType;
+
+/// Represents the compile-time constant value `false`.
+using FalseType = meta::FalseType;
 
 /// Checks whether Type is an integral type (e.g., int32, int64, nchar, etc.).
 template <class Type>
@@ -59,6 +62,12 @@ template <class Type>
 using IsArithmetic = BoolConstant<Arithmetic<Type>>;
 template <class Type>
 inline constexpr bool IsArithmeticV = IsArithmetic<Type>::value;
+
+/// Checks whether Type is a literal type (i.e., a type that can be used in constant expressions).
+template <class Type>
+using IsLiteralType = meta::IsLiteralType<Type>;
+template <class Type>
+inline constexpr bool IsLiteralTypeV = IsLiteralType<Type>::value;
 
 /// Checks whether Type is the void type.
 template <typename Type>
@@ -521,15 +530,21 @@ using AddRvalueReferenceT = typename AddRvalueReference<Type>::type;
 
 /// Adds a pointer qualifier to a Type.
 template <typename Type>
-using AddPointer = NEX_STD add_pointer_t<Type>;
+using AddPointer = meta::AddPointer<Type>;
+template <typename Type>
+using AddPointerT = typename AddPointer<Type>::type;
 
 /// Converts an integral Type to its corresponding signed type.
 template <typename Type>
-using MakeSigned = NEX_STD make_signed_t<Type>;
+using MakeSigned = meta::MakeSigned<Type>;
+template <typename Type>
+using MakeSignedT = typename MakeSigned<Type>::type;
 
 /// Converts an integral Type to its corresponding unsigned type.
 template <typename Type>
-using MakeUnsigned = NEX_STD make_unsigned_t<Type>;
+using MakeUnsigned = meta::MakeUnsigned<Type>;
+template <typename Type>
+using MakeUnsignedT = typename MakeUnsigned<Type>::type;
 
 /// A type alias for the decayed type of a given Type.
 template <typename Type>
@@ -568,21 +583,21 @@ using Conditional = meta::ConditionalT<Condition, TrueType, FalseType>;
 /// Represents the logical conjunction (AND) of a list of type traits Traits. 
 /// Conjunction evaluates to true if all traits in the list are true; otherwise, it evaluates to false.
 template <typename... Traits>
-using Conjunction = NEX_STD conjunction<Traits...>;
+using Conjunction = meta::Conjunction<Traits...>;
 template <typename... Traits>
 inline constexpr bool ConjunctionV = Conjunction<Traits...>::value;
 
 /// Represents the logical disjunction (OR) of a list of type traits Traits. 
 /// Disjunction evaluates to true if at least one trait in the list is true; otherwise, it evaluates to false.
 template <typename... Traits>
-using Disjunction = NEX_STD disjunction<Traits...>;
+using Disjunction = meta::Disjunction<Traits...>;
 template <typename... Traits>
 inline constexpr bool DisjunctionV = Disjunction<Traits...>::value;
 
 /// Represents the logical negation (NOT) of a type trait Trait. 
 /// Negation evaluates to true if Trait is false; otherwise, it evaluates to false.
 template <typename Trait>
-using Negation = NEX_STD negation<Trait>;
+using Negation = meta::Negation<Trait>;
 template <typename Trait>
 inline constexpr bool NegationV = Negation<Trait>::value;
 

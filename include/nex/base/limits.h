@@ -42,38 +42,48 @@ struct NumericLimitConstants {
      * the fact that zero is included in the range of representable values.
      */
 
-    static constexpr int8   i8min       = (-127_i8 - 1_i8);
-    static constexpr int16  i16min      = (-32767_i16 - 1_i16);
-    static constexpr int32  i32min      = (-2147483647_i32 - 1_i32);
-    static constexpr int64  i64min      = (-9223372036854775807_i64 - 1_i64);
+    static constexpr int8   i8min           = (-127_i8 - 1_i8);
+    static constexpr int16  i16min          = (-32767_i16 - 1_i16);
+    static constexpr int32  i32min          = (-2147483647_i32 - 1_i32);
+    static constexpr int64  i64min          = (-9223372036854775807_i64 - 1_i64);
 
-    static constexpr int8   i8max       = 127_i8;
-    static constexpr int16  i16max      = 32767_i16;
-    static constexpr int32  i32max      = 2147483647_i32;
-    static constexpr int64  i64max      = 9223372036854775807_i64;
+    static constexpr int8   i8max           = 127_i8;
+    static constexpr int16  i16max          = 32767_i16;
+    static constexpr int32  i32max          = 2147483647_i32;
+    static constexpr int64  i64max          = 9223372036854775807_i64;
 
-    static constexpr uint8  u8max       = static_cast<uint8>(~static_cast<uint8>(0));
-    static constexpr uint16 u16max      = static_cast<uint16>(~static_cast<uint16>(0));
-    static constexpr uint32 u32max      = ~static_cast<uint32>(0);
-    static constexpr uint64 u64max      = ~static_cast<uint64>(0);
+    static constexpr uint8  u8max           = static_cast<uint8>(~static_cast<uint8>(0));
+    static constexpr uint16 u16max          = static_cast<uint16>(~static_cast<uint16>(0));
+    static constexpr uint32 u32max          = ~static_cast<uint32>(0);
+    static constexpr uint64 u64max          = ~static_cast<uint64>(0);
 
 #if NEX_HAS_BUILTIN_INT128
-    static constexpr int128  i128min    = (static_cast<int128>(-1) << 127_i128);
-    static constexpr int128  i128max    = ~(static_cast<int128>(-1) << 127_i128);
-    static constexpr uint128 u128max    = ~static_cast<uint128>(0);
+    static constexpr int128  i128min        = (static_cast<int128>(-1) << 127_i128);
+    static constexpr int128  i128max        = ~(static_cast<int128>(-1) << 127_i128);
+    static constexpr uint128 u128max        = ~static_cast<uint128>(0);
 #endif  // ^^NEX_HAS_BUILTIN_INT128
 
-    static constexpr slong slmin        = static_cast<slong>(sizeof(slong) == 4 ? i32min : i64min);
-    static constexpr slong slmax        = static_cast<slong>(sizeof(slong) == 4 ? i32max : i64max);
-    static constexpr ulong ulmax        = static_cast<ulong>(sizeof(ulong) == 4 ? u32max : u64max);
-    static constexpr longlong llmin     = static_cast<longlong>(i64min);
-    static constexpr longlong llmax     = static_cast<longlong>(i64max);
-    static constexpr ulonglong ullmax   = u64max;  // no cast needed since ulonglong is uint64
+    static constexpr sshort sshmin          = i16min;  // no cast needed since sshort is int16
+    static constexpr sshort sshmax          = i16max;  // no cast needed since sshort is int16
+    static constexpr ushort ushmax          = u16max;  // no cast needed since ushort is uint16
+    static constexpr sint simin             = i32min;  // no cast needed since sint is int32
+    static constexpr sint simax             = i32max;  // no cast needed since sint is int32
+    static constexpr uint uimax             = u32max;  // no cast needed since uint is uint32
+    static constexpr slong slmin            = static_cast<slong>(sizeof(slong) == 4 ? i32min : i64min);
+    static constexpr slong slmax            = static_cast<slong>(sizeof(slong) == 4 ? i32max : i64max);
+    static constexpr ulong ulmax            = static_cast<ulong>(sizeof(ulong) == 4 ? u32max : u64max);
+    static constexpr longlong llmin         = i64min;  // no cast needed since longlong is int64
+    static constexpr longlong llmax         = i64max;  // no cast needed since longlong is int64
+    static constexpr ulonglong ullmax       = u64max;  // no cast needed since ulonglong is uint64
 
 #if NEX_BUILD_ENV_IS_64_BIT
-    static constexpr uint64 sizemax     = ~static_cast<uintptr>(0_u64);
+    static constexpr sizetype sizemax       = static_cast<sizetype>(u64max);
+    static constexpr ptrdiff ptrdiffmin     = static_cast<ptrdiff>(i64min);
+    static constexpr ptrdiff ptrdiffmax     = static_cast<ptrdiff>(i64max);
 #else  // Non-64-bit environment, assume 32-bit
-    static constexpr uint32 sizemax     = 0xffffffff_u32;
+    static constexpr sizetype sizemax       = static_cast<sizetype>(u32max);
+    static constexpr ptrdiff ptrdiffmin     = static_cast<ptrdiff>(i32min);
+    static constexpr ptrdiff ptrdiffmax     = static_cast<ptrdiff>(i32max);
 #endif  // ^^sizemax
 
     // =================================================================================
@@ -494,13 +504,33 @@ struct NumericLimitConstants {
 #endif  // ^^NEX_HAS_BUILTIN_INT_128
 
 // =================================================================================
-// Macro definitions for pointer difference and size limits (C-style)
+// Macro definitions for common integer type limits (C-style)
 // =================================================================================
 
-#define NEX_PTRDIFF_MIN             NEX_INTPTR_MIN
-#define NEX_PTRDIFF_MAX             NEX_INTPTR_MAX
+#define NEX_SSHORT_MIN              NEX_PREPEND_NAMESPACE(NumericLimitConstants::sshmin)
+#define NEX_SSHORT_MAX              NEX_PREPEND_NAMESPACE(NumericLimitConstants::sshmax)
+#define NEX_USHORT_MAX              NEX_PREPEND_NAMESPACE(NumericLimitConstants::ushmax)
+
+#define NEX_SINT_MIN                NEX_PREPEND_NAMESPACE(NumericLimitConstants::simin)
+#define NEX_SINT_MAX                NEX_PREPEND_NAMESPACE(NumericLimitConstants::simax)
+#define NEX_UINT_MAX                NEX_PREPEND_NAMESPACE(NumericLimitConstants::uimax)
+
+#define NEX_SLONG_MIN               NEX_PREPEND_NAMESPACE(NumericLimitConstants::slmin)
+#define NEX_SLONG_MAX               NEX_PREPEND_NAMESPACE(NumericLimitConstants::slmax)
+#define NEX_ULONG_MAX               NEX_PREPEND_NAMESPACE(NumericLimitConstants::ulmax)
+
+#define NEX_LONGLONG_MIN            NEX_PREPEND_NAMESPACE(NumericLimitConstants::llmin)
+#define NEX_LONGLONG_MAX            NEX_PREPEND_NAMESPACE(NumericLimitConstants::llmax)
+#define NEX_ULONGLONG_MAX           NEX_PREPEND_NAMESPACE(NumericLimitConstants::ullmax)
+
+// =================================================================================
+// Macro definitions for size and pointer difference limits (C-style)
+// =================================================================================
 
 #define NEX_SIZE_MAX                NEX_PREPEND_NAMESPACE(NumericLimitConstants::sizemax)
+
+#define NEX_PTRDIFF_MIN             NEX_PREPEND_NAMESPACE(NumericLimitConstants::ptrdiffmin)
+#define NEX_PTRDIFF_MAX             NEX_PREPEND_NAMESPACE(NumericLimitConstants::ptrdiffmax)
 
 // =================================================================================
 // Macro definitions for signal atomic type limits (C-style)
@@ -523,6 +553,9 @@ struct NumericLimitConstants {
 #define NEX_CHAR16_MAX              NEX_PREPEND_NAMESPACE(NumericLimitConstants::c32max)
 #define NEX_CHAR32_MAX              NEX_PREPEND_NAMESPACE(NumericLimitConstants::c32max)
 
+#define NEX_CODEPOINT_MIN           NEX_PREPEND_NAMESPACE(NumericLimitConstants::c32min)
+#define NEX_CODEPOINT_MAX           NEX_PREPEND_NAMESPACE(NumericLimitConstants::c32max)
+
 // =================================================================================
 // Macro definitions for narrow/native & wide character limits (C-style)
 // =================================================================================
@@ -532,6 +565,10 @@ struct NumericLimitConstants {
 
 #define NEX_WCHAR_MIN               NEX_PREPEND_NAMESPACE(NumericLimitConstants::wcharmin)
 #define NEX_WCHAR_MAX               NEX_PREPEND_NAMESPACE(NumericLimitConstants::wcharmax)
+
+#define NEX_SCHAR_MIN               NEX_PREPEND_NAMESPACE(NumericLimitConstants::i8min)
+#define NEX_SCHAR_MAX               NEX_PREPEND_NAMESPACE(NumericLimitConstants::i8max)
+#define NEX_UCHAR_MAX               NEX_PREPEND_NAMESPACE(NumericLimitConstants::u8max)
 
 #define NEX_WINT_MIN                NEX_PREPEND_NAMESPACE(NumericLimitConstants::wintmin)
 #define NEX_WINT_MAX                NEX_PREPEND_NAMESPACE(NumericLimitConstants::wintmax)
@@ -724,16 +761,23 @@ struct NumericLimitsBase {
 // =================================================================================
 
 template<typename Type>
-struct SignedIntegerLimitsBase : public NumericLimitsBase<Type> {
-    static_assert(meta::IsSignedIntegralV<Type>, 
-        "Error: SignedIntegerLimits is only specialized for signed integral types");
+struct IntegerLimitsBase : public NumericLimitsBase<Type> {
+    static_assert(meta::IsIntegralV<Type>, 
+        "Error: IntegerLimitsBase is only specialized for integral types");
 
     static constexpr bool isSpecialized     = true;
-    static constexpr bool isSigned          = true;
     static constexpr bool isInteger         = true;
     static constexpr bool isExact           = true;
     static constexpr bool isBounded         = true;
     static constexpr int32 radix            = 2;
+};
+
+template<typename Type>
+struct SignedIntegerLimitsBase : public IntegerLimitsBase<Type> {
+    static_assert(meta::IsSignedIntegralV<Type>, 
+        "Error: SignedIntegerLimits is only specialized for signed integral types");
+
+    static constexpr bool isSigned          = true;
 
     // For signed integers, the number of radix digits is typically the number of bits minus one for the sign bit.
     static constexpr int32 digits     = sizeof(Type) * 8 - 1;
@@ -742,16 +786,11 @@ struct SignedIntegerLimitsBase : public NumericLimitsBase<Type> {
 };
 
 template<typename Type>
-struct UnsignedIntegerLimitsBase : public NumericLimitsBase<Type> {
+struct UnsignedIntegerLimitsBase : public IntegerLimitsBase<Type> {
     static_assert(meta::IsUnsignedIntegralV<Type>, 
         "Error: UnsignedIntegerLimits is only specialized for unsigned integral types");
 
-    static constexpr bool isSpecialized     = true;
-    static constexpr bool isInteger         = true;
-    static constexpr bool isExact           = true;
-    static constexpr bool isBounded         = true;
     static constexpr bool isModulo          = true;
-    static constexpr int32 radix            = 2;
 
     // For unsigned integers, the number of radix digits is typically the number of bits since there is no sign bit.
     static constexpr int32 digits     = sizeof(Type) * 8;
@@ -824,12 +863,13 @@ struct FloatingPointLimitsBase : public NumericLimitsBase<Type> {
 #endif
 
 template<typename Type>
-struct NumericLimits : public NumericLimitsBase<Type> {
+class NumericLimits : public NumericLimitsBase<Type> {
     static_assert((meta::IsArithmeticV<Type>), 
         "Error: NumericLimits is only specialized for arithmetic types (integral and floating-point)");
 
-    NEX_NODISCARD static constexpr Type min() noexcept          { return Type(0); }
-    NEX_NODISCARD static constexpr Type max() noexcept          { return Type(0); }
+    NEX_NODISCARD static constexpr Type (min)() noexcept        { return Type(0); }
+    NEX_NODISCARD static constexpr Type (max)() noexcept        { return Type(0); }
+
     NEX_NODISCARD static constexpr Type lowest() noexcept       { return Type(0); }
     NEX_NODISCARD static constexpr Type epsilon() noexcept      { return Type(0); }
     NEX_NODISCARD static constexpr Type roundError() noexcept   { return Type(0); }
@@ -839,7 +879,7 @@ struct NumericLimits : public NumericLimitsBase<Type> {
     NEX_NODISCARD static constexpr Type quietNaN() noexcept     { return Type(0); }
     NEX_NODISCARD static constexpr Type signalingNaN() noexcept { return Type(0); }
 
-    NEX_NODISCARD static constexpr int32 exponentBias() noexcept { return 0; }
+    NEX_NODISCARD static constexpr int32 exponentBias() noexcept       { return 0; }
     NEX_NODISCARD static constexpr int32 minDecimalExponent() noexcept { return 0; }
     NEX_NODISCARD static constexpr int32 maxDecimalExponent() noexcept { return 0; }
 
@@ -854,23 +894,41 @@ struct NumericLimits : public NumericLimitsBase<Type> {
 // =================================================================================
 
 template<typename Type>
-struct NumericLimits<const Type> : public NumericLimits<Type> {};
+class NumericLimits<const Type> : public NumericLimits<Type> {};
 
 template<typename Type>
-struct NumericLimits<volatile Type> : public NumericLimits<Type> {};
+class NumericLimits<volatile Type> : public NumericLimits<Type> {};
 
 template<typename Type>
-struct NumericLimits<const volatile Type> : public NumericLimits<Type> {};
+class NumericLimits<const volatile Type> : public NumericLimits<Type> {};
 
 // =================================================================================
 // Specializations of NumericLimits for boolean type
 // =================================================================================
 
 template<>
-class NumericLimits<bool> : public NumericLimitsBase<bool> {
+class NumericLimits<bool> : public IntegerLimitsBase<bool> {
 public:
-    NEX_NODISCARD static constexpr bool(min)() noexcept { return NumericLimitConstants::boolmin; }
-    NEX_NODISCARD static constexpr bool(max)() noexcept { return NumericLimitConstants::boolmax; }
+    NEX_NODISCARD static constexpr bool (min)() noexcept { return NumericLimitConstants::boolmin; }
+    NEX_NODISCARD static constexpr bool (max)() noexcept { return NumericLimitConstants::boolmax; }
+
+    NEX_NODISCARD static constexpr bool lowest() noexcept       { return (min)(); }
+    NEX_NODISCARD static constexpr bool epsilon() noexcept      { return false; }
+    NEX_NODISCARD static constexpr bool roundError() noexcept   { return false; }
+    NEX_NODISCARD static constexpr bool denormMin() noexcept    { return false; }
+
+    NEX_NODISCARD static constexpr bool infinity() noexcept     { return false; }
+    NEX_NODISCARD static constexpr bool quietNaN() noexcept     { return false; }
+    NEX_NODISCARD static constexpr bool signalingNaN() noexcept { return false; }
+
+    NEX_NODISCARD static constexpr int32 exponentBias() noexcept       { return 0; }
+    NEX_NODISCARD static constexpr int32 minDecimalExponent() noexcept { return 0; }
+    NEX_NODISCARD static constexpr int32 maxDecimalExponent() noexcept { return 0; }
+
+    NEX_NODISCARD static constexpr int32 minDigits() noexcept     { return digits; }
+    NEX_NODISCARD static constexpr int32 maxDigits() noexcept     { return digits; }
+    NEX_NODISCARD static constexpr int32 minDecimalDigits() noexcept { return digits10; }
+    NEX_NODISCARD static constexpr int32 maxDecimalDigits() noexcept { return maxDigits10; }
 
     static constexpr bool isSpecialized     = true;
     static constexpr bool isInteger         = true;
@@ -891,23 +949,23 @@ public:
     NEX_NODISCARD static constexpr nchar (min)() noexcept { return NumericLimitConstants::ncharmin; }
     NEX_NODISCARD static constexpr nchar (max)() noexcept { return NumericLimitConstants::ncharmax; }
 
-    NEX_NODISCARD static constexpr nchar (lowest)() noexcept       { return (min)(); }
-    NEX_NODISCARD static constexpr nchar (epsilon)() noexcept      { return 0; }
-    NEX_NODISCARD static constexpr nchar (roundError)() noexcept   { return 0; }
-    NEX_NODISCARD static constexpr nchar (denormMin)() noexcept    { return 0; }
+    NEX_NODISCARD static constexpr nchar lowest() noexcept       { return (min)(); }
+    NEX_NODISCARD static constexpr nchar epsilon() noexcept      { return 0; }
+    NEX_NODISCARD static constexpr nchar roundError() noexcept   { return 0; }
+    NEX_NODISCARD static constexpr nchar denormMin() noexcept    { return 0; }
 
-    NEX_NODISCARD static constexpr nchar (infinity)() noexcept     { return 0; }
-    NEX_NODISCARD static constexpr nchar (quietNaN)() noexcept     { return 0; }
-    NEX_NODISCARD static constexpr nchar (signalingNaN)() noexcept { return 0; }
+    NEX_NODISCARD static constexpr nchar infinity() noexcept     { return 0; }
+    NEX_NODISCARD static constexpr nchar quietNaN() noexcept     { return 0; }
+    NEX_NODISCARD static constexpr nchar signalingNaN() noexcept { return 0; }
 
-    NEX_NODISCARD static constexpr int32 exponentBias() noexcept { return 0; }
+    NEX_NODISCARD static constexpr int32 exponentBias() noexcept       { return 0; }
     NEX_NODISCARD static constexpr int32 minDecimalExponent() noexcept { return 0; }
     NEX_NODISCARD static constexpr int32 maxDecimalExponent() noexcept { return 0; }
 
     NEX_NODISCARD static constexpr int32 minDigits() noexcept     { return digits; }
     NEX_NODISCARD static constexpr int32 maxDigits() noexcept     { return digits; }
-    NEX_NODISCARD static constexpr int32 minDecimalDigits() noexcept { return maxDigits10; }
-    NEX_NODISCARD static constexpr int32 maxDecimalDigits() noexcept { return digits10; }
+    NEX_NODISCARD static constexpr int32 minDecimalDigits() noexcept { return digits10; }
+    NEX_NODISCARD static constexpr int32 maxDecimalDigits() noexcept { return maxDigits10; }
 };
 
 template<>
@@ -916,14 +974,14 @@ public:
     NEX_NODISCARD static constexpr schar (min)() noexcept { return NumericLimitConstants::i8min; }
     NEX_NODISCARD static constexpr schar (max)() noexcept { return NumericLimitConstants::i8max; }
 
-    NEX_NODISCARD static constexpr schar (lowest)() noexcept       { return (min)(); }
-    NEX_NODISCARD static constexpr schar (epsilon)() noexcept      { return 0; }
-    NEX_NODISCARD static constexpr schar (roundError)() noexcept   { return 0; }
-    NEX_NODISCARD static constexpr schar (denormMin)() noexcept    { return 0; }
+    NEX_NODISCARD static constexpr schar lowest() noexcept       { return (min)(); }
+    NEX_NODISCARD static constexpr schar epsilon() noexcept      { return 0; }
+    NEX_NODISCARD static constexpr schar roundError() noexcept   { return 0; }
+    NEX_NODISCARD static constexpr schar denormMin() noexcept    { return 0; }
 
-    NEX_NODISCARD static constexpr schar (infinity)() noexcept     { return 0; }
-    NEX_NODISCARD static constexpr schar (quietNaN)() noexcept     { return 0; }
-    NEX_NODISCARD static constexpr schar (signalingNaN)() noexcept { return 0; }
+    NEX_NODISCARD static constexpr schar infinity() noexcept     { return 0; }
+    NEX_NODISCARD static constexpr schar quietNaN() noexcept     { return 0; }
+    NEX_NODISCARD static constexpr schar signalingNaN() noexcept { return 0; }
 
     NEX_NODISCARD static constexpr int32 exponentBias() noexcept { return 0; }
     NEX_NODISCARD static constexpr int32 minDecimalExponent() noexcept { return 0; }
@@ -941,14 +999,14 @@ public:
     NEX_NODISCARD static constexpr uchar (min)() noexcept { return 0; }
     NEX_NODISCARD static constexpr uchar (max)() noexcept { return NumericLimitConstants::u8max; }
 
-    NEX_NODISCARD static constexpr uchar (lowest)() noexcept       { return (min)(); }
-    NEX_NODISCARD static constexpr uchar (epsilon)() noexcept      { return 0; }
-    NEX_NODISCARD static constexpr uchar (roundError)() noexcept   { return 0; }
-    NEX_NODISCARD static constexpr uchar (denormMin)() noexcept    { return 0; }
+    NEX_NODISCARD static constexpr uchar lowest() noexcept       { return (min)(); }
+    NEX_NODISCARD static constexpr uchar epsilon() noexcept      { return 0; }
+    NEX_NODISCARD static constexpr uchar roundError() noexcept   { return 0; }
+    NEX_NODISCARD static constexpr uchar denormMin() noexcept    { return 0; }
 
-    NEX_NODISCARD static constexpr uchar (infinity)() noexcept     { return 0; }
-    NEX_NODISCARD static constexpr uchar (quietNaN)() noexcept     { return 0; }
-    NEX_NODISCARD static constexpr uchar (signalingNaN)() noexcept { return 0; }
+    NEX_NODISCARD static constexpr uchar infinity() noexcept     { return 0; }
+    NEX_NODISCARD static constexpr uchar quietNaN() noexcept     { return 0; }
+    NEX_NODISCARD static constexpr uchar signalingNaN() noexcept { return 0; }
 
     NEX_NODISCARD static constexpr int32 exponentBias() noexcept { return 0; }
     NEX_NODISCARD static constexpr int32 minDecimalExponent() noexcept { return 0; }
@@ -967,14 +1025,14 @@ public:
         NEX_NODISCARD static constexpr char8 (min)() noexcept { return NumericLimitConstants::c8min; }
         NEX_NODISCARD static constexpr char8 (max)() noexcept { return NumericLimitConstants::c8max; }
 
-        NEX_NODISCARD static constexpr char8 (lowest)() noexcept       { return (min)(); }
-        NEX_NODISCARD static constexpr char8 (epsilon)() noexcept      { return 0; }
-        NEX_NODISCARD static constexpr char8 (roundError)() noexcept   { return 0; }
-        NEX_NODISCARD static constexpr char8 (denormMin)() noexcept    { return 0; }
+        NEX_NODISCARD static constexpr char8 lowest() noexcept       { return (min)(); }
+        NEX_NODISCARD static constexpr char8 epsilon() noexcept      { return 0; }
+        NEX_NODISCARD static constexpr char8 roundError() noexcept   { return 0; }
+        NEX_NODISCARD static constexpr char8 denormMin() noexcept    { return 0; }
 
-        NEX_NODISCARD static constexpr char8 (infinity)() noexcept     { return 0; }
-        NEX_NODISCARD static constexpr char8 (quietNaN)() noexcept     { return 0; }
-        NEX_NODISCARD static constexpr char8 (signalingNaN)() noexcept { return 0; }
+        NEX_NODISCARD static constexpr char8 infinity() noexcept     { return 0; }
+        NEX_NODISCARD static constexpr char8 quietNaN() noexcept     { return 0; }
+        NEX_NODISCARD static constexpr char8 signalingNaN() noexcept { return 0; }
 
         NEX_NODISCARD static constexpr int32 exponentBias() noexcept { return 0; }
         NEX_NODISCARD static constexpr int32 minDecimalExponent() noexcept { return 0; }
@@ -993,14 +1051,14 @@ public:
     NEX_NODISCARD static constexpr char16 (min)() noexcept { return NumericLimitConstants::c16min; }
     NEX_NODISCARD static constexpr char16 (max)() noexcept { return NumericLimitConstants::c16max; }
 
-    NEX_NODISCARD static constexpr char16 (lowest)() noexcept       { return (min)(); }
-    NEX_NODISCARD static constexpr char16 (epsilon)() noexcept      { return 0; }
-    NEX_NODISCARD static constexpr char16 (roundError)() noexcept   { return 0; }
-    NEX_NODISCARD static constexpr char16 (denormMin)() noexcept    { return 0; }
+    NEX_NODISCARD static constexpr char16 lowest() noexcept       { return (min)(); }
+    NEX_NODISCARD static constexpr char16 epsilon() noexcept      { return 0; }
+    NEX_NODISCARD static constexpr char16 roundError() noexcept   { return 0; }
+    NEX_NODISCARD static constexpr char16 denormMin() noexcept    { return 0; }
 
-    NEX_NODISCARD static constexpr char16 (infinity)() noexcept     { return 0; }
-    NEX_NODISCARD static constexpr char16 (quietNaN)() noexcept     { return 0; }
-    NEX_NODISCARD static constexpr char16 (signalingNaN)() noexcept { return 0; }
+    NEX_NODISCARD static constexpr char16 infinity() noexcept     { return 0; }
+    NEX_NODISCARD static constexpr char16 quietNaN() noexcept     { return 0; }
+    NEX_NODISCARD static constexpr char16 signalingNaN() noexcept { return 0; }
 
     NEX_NODISCARD static constexpr int32 exponentBias() noexcept { return 0; }
     NEX_NODISCARD static constexpr int32 minDecimalExponent() noexcept { return 0; }
@@ -1018,14 +1076,14 @@ public:
     NEX_NODISCARD static constexpr char32 (min)() noexcept { return NumericLimitConstants::c32min; }
     NEX_NODISCARD static constexpr char32 (max)() noexcept { return NumericLimitConstants::c32max; }
 
-    NEX_NODISCARD static constexpr char32 (lowest)() noexcept       { return (min)(); }
-    NEX_NODISCARD static constexpr char32 (epsilon)() noexcept      { return 0; }
-    NEX_NODISCARD static constexpr char32 (roundError)() noexcept   { return 0; }
-    NEX_NODISCARD static constexpr char32 (denormMin)() noexcept    { return 0; }
+    NEX_NODISCARD static constexpr char32 lowest() noexcept       { return (min)(); }
+    NEX_NODISCARD static constexpr char32 epsilon() noexcept      { return 0; }
+    NEX_NODISCARD static constexpr char32 roundError() noexcept   { return 0; }
+    NEX_NODISCARD static constexpr char32 denormMin() noexcept    { return 0; }
 
-    NEX_NODISCARD static constexpr char32 (infinity)() noexcept     { return 0; }
-    NEX_NODISCARD static constexpr char32 (quietNaN)() noexcept     { return 0; }
-    NEX_NODISCARD static constexpr char32 (signalingNaN)() noexcept { return 0; }
+    NEX_NODISCARD static constexpr char32 infinity() noexcept     { return 0; }
+    NEX_NODISCARD static constexpr char32 quietNaN() noexcept     { return 0; }
+    NEX_NODISCARD static constexpr char32 signalingNaN() noexcept { return 0; }
 
     NEX_NODISCARD static constexpr int32 exponentBias() noexcept { return 0; }
     NEX_NODISCARD static constexpr int32 minDecimalExponent() noexcept { return 0; }
@@ -1043,14 +1101,14 @@ public:
     NEX_NODISCARD static constexpr wchar (min)() noexcept { return NumericLimitConstants::wcharmin; }
     NEX_NODISCARD static constexpr wchar (max)() noexcept { return NumericLimitConstants::wcharmax; }
 
-    NEX_NODISCARD static constexpr wchar (lowest)() noexcept       { return (min)(); }
-    NEX_NODISCARD static constexpr wchar (epsilon)() noexcept      { return 0; }
-    NEX_NODISCARD static constexpr wchar (roundError)() noexcept   { return 0; }
-    NEX_NODISCARD static constexpr wchar (denormMin)() noexcept    { return 0; }
+    NEX_NODISCARD static constexpr wchar lowest() noexcept       { return (min)(); }
+    NEX_NODISCARD static constexpr wchar epsilon() noexcept      { return 0; }
+    NEX_NODISCARD static constexpr wchar roundError() noexcept   { return 0; }
+    NEX_NODISCARD static constexpr wchar denormMin() noexcept    { return 0; }
 
-    NEX_NODISCARD static constexpr wchar (infinity)() noexcept     { return 0; }
-    NEX_NODISCARD static constexpr wchar (quietNaN)() noexcept     { return 0; }
-    NEX_NODISCARD static constexpr wchar (signalingNaN)() noexcept { return 0; }
+    NEX_NODISCARD static constexpr wchar infinity() noexcept     { return 0; }
+    NEX_NODISCARD static constexpr wchar quietNaN() noexcept     { return 0; }
+    NEX_NODISCARD static constexpr wchar signalingNaN() noexcept { return 0; }
 
     NEX_NODISCARD static constexpr int32 exponentBias() noexcept { return 0; }
     NEX_NODISCARD static constexpr int32 minDecimalExponent() noexcept { return 0; }
@@ -1072,14 +1130,14 @@ public:
     NEX_NODISCARD static constexpr int16 (min)() noexcept { return NumericLimitConstants::i16min; }
     NEX_NODISCARD static constexpr int16 (max)() noexcept { return NumericLimitConstants::i16max; }
 
-    NEX_NODISCARD static constexpr int16 (lowest)() noexcept       { return (min)(); }
-    NEX_NODISCARD static constexpr int16 (epsilon)() noexcept      { return 0; }
-    NEX_NODISCARD static constexpr int16 (roundError)() noexcept   { return 0; }
-    NEX_NODISCARD static constexpr int16 (denormMin)() noexcept    { return 0; }
+    NEX_NODISCARD static constexpr int16 lowest() noexcept       { return (min)(); }
+    NEX_NODISCARD static constexpr int16 epsilon() noexcept      { return 0; }
+    NEX_NODISCARD static constexpr int16 roundError() noexcept   { return 0; }
+    NEX_NODISCARD static constexpr int16 denormMin() noexcept    { return 0; }
 
-    NEX_NODISCARD static constexpr int16 (infinity)() noexcept     { return 0; }
-    NEX_NODISCARD static constexpr int16 (quietNaN)() noexcept     { return 0; }
-    NEX_NODISCARD static constexpr int16 (signalingNaN)() noexcept { return 0; }
+    NEX_NODISCARD static constexpr int16 infinity() noexcept     { return 0; }
+    NEX_NODISCARD static constexpr int16 quietNaN() noexcept     { return 0; }
+    NEX_NODISCARD static constexpr int16 signalingNaN() noexcept { return 0; }
 
     NEX_NODISCARD static constexpr int32 exponentBias() noexcept { return 0; }
     NEX_NODISCARD static constexpr int32 minDecimalExponent() noexcept { return 0; }
@@ -1097,14 +1155,14 @@ public:
     NEX_NODISCARD static constexpr uint16 (min)() noexcept { return 0; }
     NEX_NODISCARD static constexpr uint16 (max)() noexcept { return NumericLimitConstants::u16max; }
 
-    NEX_NODISCARD static constexpr uint16 (lowest)() noexcept       { return (min)(); }
-    NEX_NODISCARD static constexpr uint16 (epsilon)() noexcept      { return 0; }
-    NEX_NODISCARD static constexpr uint16 (roundError)() noexcept   { return 0; }
-    NEX_NODISCARD static constexpr uint16 (denormMin)() noexcept    { return 0; }
+    NEX_NODISCARD static constexpr uint16 lowest() noexcept       { return (min)(); }
+    NEX_NODISCARD static constexpr uint16 epsilon() noexcept      { return 0; }
+    NEX_NODISCARD static constexpr uint16 roundError() noexcept   { return 0; }
+    NEX_NODISCARD static constexpr uint16 denormMin() noexcept    { return 0; }
 
-    NEX_NODISCARD static constexpr uint16 (infinity)() noexcept     { return 0; }
-    NEX_NODISCARD static constexpr uint16 (quietNaN)() noexcept     { return 0; }
-    NEX_NODISCARD static constexpr uint16 (signalingNaN)() noexcept { return 0; }
+    NEX_NODISCARD static constexpr uint16 infinity() noexcept     { return 0; }
+    NEX_NODISCARD static constexpr uint16 quietNaN() noexcept     { return 0; }
+    NEX_NODISCARD static constexpr uint16 signalingNaN() noexcept { return 0; }
 
     NEX_NODISCARD static constexpr int32 exponentBias() noexcept { return 0; }
     NEX_NODISCARD static constexpr int32 minDecimalExponent() noexcept { return 0; }
@@ -1122,14 +1180,14 @@ public:
     NEX_NODISCARD static constexpr int32 (min)() noexcept { return NumericLimitConstants::i32min; }
     NEX_NODISCARD static constexpr int32 (max)() noexcept { return NumericLimitConstants::i32max; }
 
-    NEX_NODISCARD static constexpr int32 (lowest)() noexcept       { return (min)(); }
-    NEX_NODISCARD static constexpr int32 (epsilon)() noexcept      { return 0; }
-    NEX_NODISCARD static constexpr int32 (roundError)() noexcept   { return 0; }
-    NEX_NODISCARD static constexpr int32 (denormMin)() noexcept    { return 0; }
+    NEX_NODISCARD static constexpr int32 lowest() noexcept       { return (min)(); }
+    NEX_NODISCARD static constexpr int32 epsilon() noexcept      { return 0; }
+    NEX_NODISCARD static constexpr int32 roundError() noexcept   { return 0; }
+    NEX_NODISCARD static constexpr int32 denormMin() noexcept    { return 0; }
 
-    NEX_NODISCARD static constexpr int32 (infinity)() noexcept     { return 0; }
-    NEX_NODISCARD static constexpr int32 (quietNaN)() noexcept     { return 0; }
-    NEX_NODISCARD static constexpr int32 (signalingNaN)() noexcept { return 0; }
+    NEX_NODISCARD static constexpr int32 infinity() noexcept     { return 0; }
+    NEX_NODISCARD static constexpr int32 quietNaN() noexcept     { return 0; }
+    NEX_NODISCARD static constexpr int32 signalingNaN() noexcept { return 0; }
 
     NEX_NODISCARD static constexpr int32 exponentBias() noexcept { return 0; }
     NEX_NODISCARD static constexpr int32 minDecimalExponent() noexcept { return 0; }
@@ -1147,14 +1205,14 @@ public:
     NEX_NODISCARD static constexpr uint32 (min)() noexcept { return 0; }
     NEX_NODISCARD static constexpr uint32 (max)() noexcept { return NumericLimitConstants::u32max; }
 
-    NEX_NODISCARD static constexpr uint32 (lowest)() noexcept       { return (min)(); }
-    NEX_NODISCARD static constexpr uint32 (epsilon)() noexcept      { return 0; }
-    NEX_NODISCARD static constexpr uint32 (roundError)() noexcept   { return 0; }
-    NEX_NODISCARD static constexpr uint32 (denormMin)() noexcept    { return 0; }
+    NEX_NODISCARD static constexpr uint32 lowest() noexcept       { return (min)(); }
+    NEX_NODISCARD static constexpr uint32 epsilon() noexcept      { return 0; }
+    NEX_NODISCARD static constexpr uint32 roundError() noexcept   { return 0; }
+    NEX_NODISCARD static constexpr uint32 denormMin() noexcept    { return 0; }
 
-    NEX_NODISCARD static constexpr uint32 (infinity)() noexcept     { return 0; }
-    NEX_NODISCARD static constexpr uint32 (quietNaN)() noexcept     { return 0; }
-    NEX_NODISCARD static constexpr uint32 (signalingNaN)() noexcept { return 0; }
+    NEX_NODISCARD static constexpr uint32 infinity() noexcept     { return 0; }
+    NEX_NODISCARD static constexpr uint32 quietNaN() noexcept     { return 0; }
+    NEX_NODISCARD static constexpr uint32 signalingNaN() noexcept { return 0; }
 
     NEX_NODISCARD static constexpr int32 exponentBias() noexcept { return 0; }
     NEX_NODISCARD static constexpr int32 minDecimalExponent() noexcept { return 0; }
@@ -1172,14 +1230,14 @@ public:
     NEX_NODISCARD static constexpr slong (min)() noexcept { return NumericLimitConstants::slmin; }
     NEX_NODISCARD static constexpr slong (max)() noexcept { return NumericLimitConstants::slmax; }
 
-    NEX_NODISCARD static constexpr slong (lowest)() noexcept       { return (min)(); }
-    NEX_NODISCARD static constexpr slong (epsilon)() noexcept      { return 0; }
-    NEX_NODISCARD static constexpr slong (roundError)() noexcept   { return 0; }
-    NEX_NODISCARD static constexpr slong (denormMin)() noexcept    { return 0; }
+    NEX_NODISCARD static constexpr slong lowest() noexcept       { return (min)(); }
+    NEX_NODISCARD static constexpr slong epsilon() noexcept      { return 0; }
+    NEX_NODISCARD static constexpr slong roundError() noexcept   { return 0; }
+    NEX_NODISCARD static constexpr slong denormMin() noexcept    { return 0; }
 
-    NEX_NODISCARD static constexpr slong (infinity)() noexcept     { return 0; }
-    NEX_NODISCARD static constexpr slong (quietNaN)() noexcept     { return 0; }
-    NEX_NODISCARD static constexpr slong (signalingNaN)() noexcept { return 0; }
+    NEX_NODISCARD static constexpr slong infinity() noexcept     { return 0; }
+    NEX_NODISCARD static constexpr slong quietNaN() noexcept     { return 0; }
+    NEX_NODISCARD static constexpr slong signalingNaN() noexcept { return 0; }
 
     NEX_NODISCARD static constexpr int32 exponentBias() noexcept { return 0; }
     NEX_NODISCARD static constexpr int32 minDecimalExponent() noexcept { return 0; }
@@ -1197,14 +1255,14 @@ public:
     NEX_NODISCARD static constexpr ulong (min)() noexcept { return 0; }
     NEX_NODISCARD static constexpr ulong (max)() noexcept { return NumericLimitConstants::ulmax; }
 
-    NEX_NODISCARD static constexpr ulong (lowest)() noexcept       { return (min)(); }
-    NEX_NODISCARD static constexpr ulong (epsilon)() noexcept      { return 0; }
-    NEX_NODISCARD static constexpr ulong (roundError)() noexcept   { return 0; }
-    NEX_NODISCARD static constexpr ulong (denormMin)() noexcept    { return 0; }
+    NEX_NODISCARD static constexpr ulong lowest() noexcept       { return (min)(); }
+    NEX_NODISCARD static constexpr ulong epsilon() noexcept      { return 0; }
+    NEX_NODISCARD static constexpr ulong roundError() noexcept   { return 0; }
+    NEX_NODISCARD static constexpr ulong denormMin() noexcept    { return 0; }
 
-    NEX_NODISCARD static constexpr ulong (infinity)() noexcept     { return 0; }
-    NEX_NODISCARD static constexpr ulong (quietNaN)() noexcept     { return 0; }
-    NEX_NODISCARD static constexpr ulong (signalingNaN)() noexcept { return 0; }
+    NEX_NODISCARD static constexpr ulong infinity() noexcept     { return 0; }
+    NEX_NODISCARD static constexpr ulong quietNaN() noexcept     { return 0; }
+    NEX_NODISCARD static constexpr ulong signalingNaN() noexcept { return 0; }
 
     NEX_NODISCARD static constexpr int32 exponentBias() noexcept { return 0; }
     NEX_NODISCARD static constexpr int32 minDecimalExponent() noexcept { return 0; }
@@ -1222,14 +1280,14 @@ public:
     NEX_NODISCARD static constexpr int64 (min)() noexcept { return NumericLimitConstants::i64min; }
     NEX_NODISCARD static constexpr int64 (max)() noexcept { return NumericLimitConstants::i64max; }
 
-    NEX_NODISCARD static constexpr int64 (lowest)() noexcept       { return (min)(); }
-    NEX_NODISCARD static constexpr int64 (epsilon)() noexcept      { return 0; }
-    NEX_NODISCARD static constexpr int64 (roundError)() noexcept   { return 0; }
-    NEX_NODISCARD static constexpr int64 (denormMin)() noexcept    { return 0; }
+    NEX_NODISCARD static constexpr int64 lowest() noexcept       { return (min)(); }
+    NEX_NODISCARD static constexpr int64 epsilon() noexcept      { return 0; }
+    NEX_NODISCARD static constexpr int64 roundError() noexcept   { return 0; }
+    NEX_NODISCARD static constexpr int64 denormMin() noexcept    { return 0; }
 
-    NEX_NODISCARD static constexpr int64 (infinity)() noexcept     { return 0; }
-    NEX_NODISCARD static constexpr int64 (quietNaN)() noexcept     { return 0; }
-    NEX_NODISCARD static constexpr int64 (signalingNaN)() noexcept { return 0; }
+    NEX_NODISCARD static constexpr int64 infinity() noexcept     { return 0; }
+    NEX_NODISCARD static constexpr int64 quietNaN() noexcept     { return 0; }
+    NEX_NODISCARD static constexpr int64 signalingNaN() noexcept { return 0; }
 
     NEX_NODISCARD static constexpr int32 exponentBias() noexcept { return 0; }
     NEX_NODISCARD static constexpr int32 minDecimalExponent() noexcept { return 0; }
@@ -1247,14 +1305,14 @@ public:
     NEX_NODISCARD static constexpr uint64 (min)() noexcept { return 0; }
     NEX_NODISCARD static constexpr uint64 (max)() noexcept { return NumericLimitConstants::u64max; }
 
-    NEX_NODISCARD static constexpr uint64 (lowest)() noexcept       { return (min)(); }
-    NEX_NODISCARD static constexpr uint64 (epsilon)() noexcept      { return 0; }
-    NEX_NODISCARD static constexpr uint64 (roundError)() noexcept   { return 0; }
-    NEX_NODISCARD static constexpr uint64 (denormMin)() noexcept    { return 0; }
+    NEX_NODISCARD static constexpr uint64 lowest() noexcept       { return (min)(); }
+    NEX_NODISCARD static constexpr uint64 epsilon() noexcept      { return 0; }
+    NEX_NODISCARD static constexpr uint64 roundError() noexcept   { return 0; }
+    NEX_NODISCARD static constexpr uint64 denormMin() noexcept    { return 0; }
 
-    NEX_NODISCARD static constexpr uint64 (infinity)() noexcept     { return 0; }
-    NEX_NODISCARD static constexpr uint64 (quietNaN)() noexcept     { return 0; }
-    NEX_NODISCARD static constexpr uint64 (signalingNaN)() noexcept { return 0; }
+    NEX_NODISCARD static constexpr uint64 infinity() noexcept     { return 0; }
+    NEX_NODISCARD static constexpr uint64 quietNaN() noexcept     { return 0; }
+    NEX_NODISCARD static constexpr uint64 signalingNaN() noexcept { return 0; }
 
     NEX_NODISCARD static constexpr int32 exponentBias() noexcept { return 0; }
     NEX_NODISCARD static constexpr int32 minDecimalExponent() noexcept { return 0; }
@@ -1273,14 +1331,14 @@ public:
         NEX_NODISCARD static constexpr int128 (min)() noexcept { return NumericLimitConstants::i128min; }
         NEX_NODISCARD static constexpr int128 (max)() noexcept { return NumericLimitConstants::i128max; }
 
-        NEX_NODISCARD static constexpr int128 (lowest)() noexcept       { return (min)(); }
-        NEX_NODISCARD static constexpr int128 (epsilon)() noexcept      { return 0; }
-        NEX_NODISCARD static constexpr int128 (roundError)() noexcept   { return 0; }
-        NEX_NODISCARD static constexpr int128 (denormMin)() noexcept    { return 0; }
+        NEX_NODISCARD static constexpr int128 lowest() noexcept       { return (min)(); }
+        NEX_NODISCARD static constexpr int128 epsilon() noexcept      { return 0; }
+        NEX_NODISCARD static constexpr int128 roundError() noexcept   { return 0; }
+        NEX_NODISCARD static constexpr int128 denormMin() noexcept    { return 0; }
 
-        NEX_NODISCARD static constexpr int128 (infinity)() noexcept     { return 0; }
-        NEX_NODISCARD static constexpr int128 (quietNaN)() noexcept     { return 0; }
-        NEX_NODISCARD static constexpr int128 (signalingNaN)() noexcept { return 0; }
+        NEX_NODISCARD static constexpr int128 infinity() noexcept     { return 0; }
+        NEX_NODISCARD static constexpr int128 quietNaN() noexcept     { return 0; }
+        NEX_NODISCARD static constexpr int128 signalingNaN() noexcept { return 0; }
 
         NEX_NODISCARD static constexpr int32 exponentBias() noexcept { return 0; }
         NEX_NODISCARD static constexpr int32 minDecimalExponent() noexcept { return 0; }
@@ -1298,14 +1356,14 @@ public:
         NEX_NODISCARD static constexpr uint128 (min)() noexcept { return 0; }
         NEX_NODISCARD static constexpr uint128 (max)() noexcept { return NumericLimitConstants::u128max; }
 
-        NEX_NODISCARD static constexpr uint128 (lowest)() noexcept       { return (min)(); }
-        NEX_NODISCARD static constexpr uint128 (epsilon)() noexcept      { return 0; }
-        NEX_NODISCARD static constexpr uint128 (roundError)() noexcept   { return 0; }
-        NEX_NODISCARD static constexpr uint128 (denormMin)() noexcept    { return 0; }
+        NEX_NODISCARD static constexpr uint128 lowest() noexcept       { return (min)(); }
+        NEX_NODISCARD static constexpr uint128 epsilon() noexcept      { return 0; }
+        NEX_NODISCARD static constexpr uint128 roundError() noexcept   { return 0; }
+        NEX_NODISCARD static constexpr uint128 denormMin() noexcept    { return 0; }
 
-        NEX_NODISCARD static constexpr uint128 (infinity)() noexcept     { return 0; }
-        NEX_NODISCARD static constexpr uint128 (quietNaN)() noexcept     { return 0; }
-        NEX_NODISCARD static constexpr uint128 (signalingNaN)() noexcept { return 0; }
+        NEX_NODISCARD static constexpr uint128 infinity() noexcept     { return 0; }
+        NEX_NODISCARD static constexpr uint128 quietNaN() noexcept     { return 0; }
+        NEX_NODISCARD static constexpr uint128 signalingNaN() noexcept { return 0; }
 
         NEX_NODISCARD static constexpr int32 exponentBias() noexcept { return 0; }
         NEX_NODISCARD static constexpr int32 minDecimalExponent() noexcept { return 0; }
@@ -1329,14 +1387,14 @@ public:
         NEX_NODISCARD static constexpr float16 (min)() noexcept { return NumericLimitConstants::f16min; }
         NEX_NODISCARD static constexpr float16 (max)() noexcept { return NumericLimitConstants::f16max; }
 
-        NEX_NODISCARD static constexpr float16 (lowest)() noexcept       { return NumericLimitConstants::f16lowest; }
-        NEX_NODISCARD static constexpr float16 (epsilon)() noexcept      { return NumericLimitConstants::f16epsilon; }
-        NEX_NODISCARD static constexpr float16 (roundError)() noexcept   { return NumericLimitConstants::f16roundError; }
-        NEX_NODISCARD static constexpr float16 (denormMin)() noexcept    { return NumericLimitConstants::f16denormMin; }
+        NEX_NODISCARD static constexpr float16 lowest() noexcept       { return NumericLimitConstants::f16lowest; }
+        NEX_NODISCARD static constexpr float16 epsilon() noexcept      { return NumericLimitConstants::f16epsilon; }
+        NEX_NODISCARD static constexpr float16 roundError() noexcept   { return NumericLimitConstants::f16roundError; }
+        NEX_NODISCARD static constexpr float16 denormMin() noexcept    { return NumericLimitConstants::f16denormMin; }
 
-        NEX_NODISCARD static constexpr float16 (infinity)() noexcept     { return NumericLimitConstants::f16infinity; }
-        NEX_NODISCARD static constexpr float16 (quietNaN)() noexcept     { return NumericLimitConstants::f16quietNaN; }
-        NEX_NODISCARD static constexpr float16 (signalingNaN)() noexcept { return NumericLimitConstants::f16signalingNaN; }
+        NEX_NODISCARD static constexpr float16 infinity() noexcept     { return NumericLimitConstants::f16infinity; }
+        NEX_NODISCARD static constexpr float16 quietNaN() noexcept     { return NumericLimitConstants::f16quietNaN; }
+        NEX_NODISCARD static constexpr float16 signalingNaN() noexcept { return NumericLimitConstants::f16signalingNaN; }
 
         NEX_NODISCARD static constexpr int32 exponentBias() noexcept { 
             return static_cast<int32>(NumericLimitConstants::f16exponentBias); 
@@ -1375,14 +1433,14 @@ public:
     NEX_NODISCARD static constexpr float32 (min)() noexcept { return NumericLimitConstants::f32min; }
     NEX_NODISCARD static constexpr float32 (max)() noexcept { return NumericLimitConstants::f32max; }
 
-    NEX_NODISCARD static constexpr float32 (lowest)() noexcept       { return NumericLimitConstants::f32lowest; }
-    NEX_NODISCARD static constexpr float32 (epsilon)() noexcept      { return NumericLimitConstants::f32epsilon; }
-    NEX_NODISCARD static constexpr float32 (roundError)() noexcept   { return NumericLimitConstants::f32roundError; }
-    NEX_NODISCARD static constexpr float32 (denormMin)() noexcept    { return NumericLimitConstants::f32denormMin; }
+    NEX_NODISCARD static constexpr float32 lowest() noexcept       { return NumericLimitConstants::f32lowest; }
+    NEX_NODISCARD static constexpr float32 epsilon() noexcept      { return NumericLimitConstants::f32epsilon; }
+    NEX_NODISCARD static constexpr float32 roundError() noexcept   { return NumericLimitConstants::f32roundError; }
+    NEX_NODISCARD static constexpr float32 denormMin() noexcept    { return NumericLimitConstants::f32denormMin; }
 
-    NEX_NODISCARD static constexpr float32 (infinity)() noexcept     { return NumericLimitConstants::f32infinity; }
-    NEX_NODISCARD static constexpr float32 (quietNaN)() noexcept     { return NumericLimitConstants::f32quietNaN; }
-    NEX_NODISCARD static constexpr float32 (signalingNaN)() noexcept { return NumericLimitConstants::f32signalingNaN; }
+    NEX_NODISCARD static constexpr float32 infinity() noexcept     { return NumericLimitConstants::f32infinity; }
+    NEX_NODISCARD static constexpr float32 quietNaN() noexcept     { return NumericLimitConstants::f32quietNaN; }
+    NEX_NODISCARD static constexpr float32 signalingNaN() noexcept { return NumericLimitConstants::f32signalingNaN; }
 
     NEX_NODISCARD static constexpr int32 exponentBias() noexcept { 
         return static_cast<int32>(NumericLimitConstants::f32exponentBias); 
@@ -1420,14 +1478,14 @@ public:
     NEX_NODISCARD static constexpr float64 (min)() noexcept { return NumericLimitConstants::f64min; }
     NEX_NODISCARD static constexpr float64 (max)() noexcept { return NumericLimitConstants::f64max; }
 
-    NEX_NODISCARD static constexpr float64 (lowest)() noexcept       { return NumericLimitConstants::f64lowest; }
-    NEX_NODISCARD static constexpr float64 (epsilon)() noexcept      { return NumericLimitConstants::f64epsilon; }
-    NEX_NODISCARD static constexpr float64 (roundError)() noexcept   { return NumericLimitConstants::f64roundError; }
-    NEX_NODISCARD static constexpr float64 (denormMin)() noexcept    { return NumericLimitConstants::f64denormMin; }
+    NEX_NODISCARD static constexpr float64 lowest() noexcept       { return NumericLimitConstants::f64lowest; }
+    NEX_NODISCARD static constexpr float64 epsilon() noexcept      { return NumericLimitConstants::f64epsilon; }
+    NEX_NODISCARD static constexpr float64 roundError() noexcept   { return NumericLimitConstants::f64roundError; }
+    NEX_NODISCARD static constexpr float64 denormMin() noexcept    { return NumericLimitConstants::f64denormMin; }
 
-    NEX_NODISCARD static constexpr float64 (infinity)() noexcept     { return NumericLimitConstants::f64infinity; }
-    NEX_NODISCARD static constexpr float64 (quietNaN)() noexcept     { return NumericLimitConstants::f64quietNaN; }
-    NEX_NODISCARD static constexpr float64 (signalingNaN)() noexcept { return NumericLimitConstants::f64signalingNaN; }
+    NEX_NODISCARD static constexpr float64 infinity() noexcept     { return NumericLimitConstants::f64infinity; }
+    NEX_NODISCARD static constexpr float64 quietNaN() noexcept     { return NumericLimitConstants::f64quietNaN; }
+    NEX_NODISCARD static constexpr float64 signalingNaN() noexcept { return NumericLimitConstants::f64signalingNaN; }
 
     NEX_NODISCARD static constexpr int32 exponentBias() noexcept { 
         return static_cast<int32>(NumericLimitConstants::f64exponentBias); 
@@ -1465,14 +1523,14 @@ public:
     NEX_NODISCARD static constexpr ldouble (min)() noexcept { return NumericLimitConstants::ldmin; }
     NEX_NODISCARD static constexpr ldouble (max)() noexcept { return NumericLimitConstants::ldmax; }
 
-    NEX_NODISCARD static constexpr ldouble (lowest)() noexcept       { return NumericLimitConstants::ldlowest; }
-    NEX_NODISCARD static constexpr ldouble (epsilon)() noexcept      { return NumericLimitConstants::ldepsilon; }
-    NEX_NODISCARD static constexpr ldouble (roundError)() noexcept   { return NumericLimitConstants::ldroundError; }
-    NEX_NODISCARD static constexpr ldouble (denormMin)() noexcept    { return NumericLimitConstants::lddenormMin; }
+    NEX_NODISCARD static constexpr ldouble lowest() noexcept       { return NumericLimitConstants::ldlowest; }
+    NEX_NODISCARD static constexpr ldouble epsilon() noexcept      { return NumericLimitConstants::ldepsilon; }
+    NEX_NODISCARD static constexpr ldouble roundError() noexcept   { return NumericLimitConstants::ldroundError; }
+    NEX_NODISCARD static constexpr ldouble denormMin() noexcept    { return NumericLimitConstants::lddenormMin; }
 
-    NEX_NODISCARD static constexpr ldouble (infinity)() noexcept     { return NumericLimitConstants::ldinfinity; }
-    NEX_NODISCARD static constexpr ldouble (quietNaN)() noexcept     { return NumericLimitConstants::ldquietNaN; }
-    NEX_NODISCARD static constexpr ldouble (signalingNaN)() noexcept { return NumericLimitConstants::ldsignalingNaN; }
+    NEX_NODISCARD static constexpr ldouble infinity() noexcept     { return NumericLimitConstants::ldinfinity; }
+    NEX_NODISCARD static constexpr ldouble quietNaN() noexcept     { return NumericLimitConstants::ldquietNaN; }
+    NEX_NODISCARD static constexpr ldouble signalingNaN() noexcept { return NumericLimitConstants::ldsignalingNaN; }
 
     NEX_NODISCARD static constexpr int32 exponentBias() noexcept { 
         return static_cast<int32>(NumericLimitConstants::ldexponentBias); 
@@ -1511,14 +1569,14 @@ public:
         NEX_NODISCARD static constexpr float128 (min)() noexcept { return NumericLimitConstants::f128min; }
         NEX_NODISCARD static constexpr float128 (max)() noexcept { return NumericLimitConstants::f128max; }
 
-        NEX_NODISCARD static constexpr float128 (lowest)() noexcept       { return NumericLimitConstants::f128lowest; }
-        NEX_NODISCARD static constexpr float128 (epsilon)() noexcept      { return NumericLimitConstants::f128epsilon; }
-        NEX_NODISCARD static constexpr float128 (roundError)() noexcept   { return NumericLimitConstants::f128roundError; }
-        NEX_NODISCARD static constexpr float128 (denormMin)() noexcept    { return NumericLimitConstants::f128denormMin; }
+        NEX_NODISCARD static constexpr float128 lowest() noexcept       { return NumericLimitConstants::f128lowest; }
+        NEX_NODISCARD static constexpr float128 epsilon() noexcept      { return NumericLimitConstants::f128epsilon; }
+        NEX_NODISCARD static constexpr float128 roundError() noexcept   { return NumericLimitConstants::f128roundError; }
+        NEX_NODISCARD static constexpr float128 denormMin() noexcept    { return NumericLimitConstants::f128denormMin; }
 
-        NEX_NODISCARD static constexpr float128 (infinity)() noexcept     { return NumericLimitConstants::f128infinity; }
-        NEX_NODISCARD static constexpr float128 (quietNaN)() noexcept     { return NumericLimitConstants::f128quietNaN; }
-        NEX_NODISCARD static constexpr float128 (signalingNaN)() noexcept { return NumericLimitConstants::f128signalingNaN; }
+        NEX_NODISCARD static constexpr float128 infinity() noexcept     { return NumericLimitConstants::f128infinity; }
+        NEX_NODISCARD static constexpr float128 quietNaN() noexcept     { return NumericLimitConstants::f128quietNaN; }
+        NEX_NODISCARD static constexpr float128 signalingNaN() noexcept { return NumericLimitConstants::f128signalingNaN; }
 
         NEX_NODISCARD static constexpr int32 exponentBias() noexcept { 
             return static_cast<int32>(NumericLimitConstants::f128exponentBias); 

@@ -7,11 +7,11 @@
 
 #include <algorithm>
 #include <iterator>
-#include <limits>
 #include <memory>
 
 #include "nex/base/macros.h"
 #include "nex/base/types.h"
+#include "nex/base/limits.h"
 #include "nex/base/traits.h"
 #include "nex/base/linear.h"
 #include "nex/base/wrappers.h"
@@ -392,7 +392,7 @@ public:
 
     // Get the maximum possible number of elements
     size_type maxSize() const noexcept {
-        return (NEX_STD numeric_limits<size_type>::max() / sizeof(value_type)) - 1;
+        return (NumericLimits<size_type>::max() / sizeof(value_type)) - 1;
     }
 
     // Check whether the container is currently using the inline buffer

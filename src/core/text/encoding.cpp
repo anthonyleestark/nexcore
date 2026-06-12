@@ -4,6 +4,7 @@
  */
 
 #include "nex/base/casts.h"
+#include "nex/base/limits.h"
 #include "nex/core/text/encoding.h"
 
 /**
@@ -443,7 +444,7 @@ Result<usize> encoding::countUtf32CodePoints(Utf32StringView input) noexcept {
 #if NEX_PLATFORM_IS_WINDOWS
     // Helper function to safely cast size_t to int32 for Windows API calls, with overflow check
     int32 safeStaticCastInt(usize size) {
-        if (size > static_cast<usize>((NEX_STD numeric_limits<int32>::max)())) return -1;
+        if (size > static_cast<usize>((NumericLimits<int32>::max)())) return -1;
         return static_cast<int32>(size);
     }
 #endif

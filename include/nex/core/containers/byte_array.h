@@ -6,12 +6,12 @@
 #pragma once
 
 #include <algorithm>
-#include <limits>
 #include <stdexcept>
 
 #include "nex/base/macros.h"
 #include "nex/base/types.h"
 #include "nex/base/casts.h"
+#include "nex/base/limits.h"
 #include "nex/base/linear.h"
 #include "nex/base/string.h"
 #include "nex/core/view/byte_span.h"
@@ -60,7 +60,7 @@ private:
 
 public:
     // Special value representing "not found" for search operations
-    static constexpr size_type npos = NEX_STD numeric_limits<size_type>::max();
+    static constexpr size_type npos = NumericLimits<size_type>::max();
 
 public:
     ////// Constructors and assignment operators -----------------------------

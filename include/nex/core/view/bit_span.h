@@ -6,10 +6,10 @@
 #pragma once
 
 #include <iterator>
-#include <limits>
 
 #include "nex/base/macros.h"
 #include "nex/base/types.h"
+#include "nex/base/limits.h"
 #include "nex/base/linear.h"
 
 NEX_NAMESPACE_BEGIN
@@ -72,7 +72,7 @@ private:
 
 public:
     // Special value representing "not found" for search operations
-    static constexpr size_type npos = NEX_STD numeric_limits<size_type>::max();
+    static constexpr size_type npos = NumericLimits<size_type>::max();
 
 public:
     ////// Bit manipulation helper functions -----------------------------
@@ -344,7 +344,7 @@ public:
 
     // Get the maximum representable size
     constexpr size_type maxSize() const noexcept {
-        return NEX_STD numeric_limits<size_type>::max() - 1;
+        return NumericLimits<size_type>::max() - 1;
     }
 
     ////// Conversion methods -----------------------------

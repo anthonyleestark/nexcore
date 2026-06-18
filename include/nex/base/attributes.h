@@ -475,6 +475,22 @@
 #endif  // NEX_NORETURN
 
 /**
+ * @def NEX_NODEBUG
+ * @brief Mark a function or class as not generating debug information
+ * 
+ * @details
+ * This macro can be used to indicate that a function or class should not generate debug information, which can 
+ * help reduce the size of debug builds and improve performance in certain cases. The macro expands to the 
+ * appropriate compiler-specific attribute based on the detected compiler. If the compiler does not support a 
+ * nodebug attribute, the macro expands to nothing, allowing the code to compile without errors.
+ */
+#if NEX_HAS_GCC_ATTRIBUTE(nodebug)
+    #define NEX_NODEBUG NEX_GCC_ATTRIBUTE(nodebug)
+#else  // Compiler does not support [[gnu::nodebug]]
+    #define NEX_NODEBUG
+#endif  // NEX_NODEBUG
+
+/**
  * @def NEX_DEPRECATED(msg)
  * @brief Mark a function or class as deprecated with a custom message
  * 

@@ -36,6 +36,7 @@ UpgradeLog*.htm
 
 # IDE
 .idea/
+.cursor/
 *.swp
 *.swo
 *~
@@ -70,13 +71,15 @@ Thumbs.db
 desktop.ini
 
 # Temporary files
+.backup/
+.temp/
 *.tmp
 *.temp
 *.bak
 *.swp
 
-# Reference code (preserved but not tracked in detail)
-# Note: reference/ directory is kept for Phase 1, but large binary files excluded
+# Reference code
+.reference/
 reference/**/*.exe
 reference/**/*.dll
 reference/**/*.obj

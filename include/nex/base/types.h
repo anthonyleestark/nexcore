@@ -894,7 +894,7 @@ struct in_place_index : in_place_tag {
 };
 
 // Represents an unexpected value or error state
-struct unexpected_type {};
-inline constexpr unexpected_type unexpect{};
+struct unexpect_type {};
+inline constexpr unexpect_type unexpect{};
 
 NEX_NAMESPACE_END

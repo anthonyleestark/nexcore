@@ -1112,6 +1112,16 @@ struct IsNothrowDestructible : BoolConstant<__is_nothrow_destructible(Type)> {};
 template <class Type>
 constexpr bool IsNothrowDestructibleV = IsNothrowDestructible<Type>::value;
 
+// Determine whether Type can be replaced with another type (i.e., whether it is trivially copyable)
+template <class Type, class = void>
+struct IsReplaceable : IsTriviallyCopyable<Type> {};
+
+template <class Type>
+struct IsReplaceable<Type, EnableIfT<IsSame<Type, typename Type::replaceable>::value>> : TrueType {};
+
+template <class Type>
+constexpr bool IsReplaceableV = IsReplaceable<Type>::value;
+
 // Transform a type into a form suitable for use in most contexts (e.g., as a function argument or return type)
 #if NEX_HAS_BUILTIN(__decay)
     template <class Type>

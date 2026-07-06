@@ -45,11 +45,17 @@ NEX_NAMESPACE_BEGIN
 template <typename ValueType, typename ErrorType>
 class Result;
 
+// Determine if a type is a Result, returns false if the type is not a Result.
 template <typename Type>
 struct IsResult : meta::FalseType {};
 
+// Determine if a type is a Result, returns true if the type is a Result
 template <typename ValueType, typename ErrorType>
 struct IsResult<Result<ValueType, ErrorType>> : meta::TrueType {};
+
+// Variable template for easier usage of IsResult trait
+template <typename Type>
+inline constexpr bool IsResultV = IsResult<Type>::value;
 
 /**
  * @brief Compile-time evaluator for Result value types.
@@ -162,12 +168,12 @@ class NEX_INTERNAL ResultBase {
     // of either the value type or the error type.
     static constexpr usize StorageAlignment = meta::MaxAlignOfV<ValueType, ErrorType>;
 
-    // The Storage union is used to hold either the value or the error, but not both at the same time.
-    union NEX_ALIGNAS(StorageAlignment) Storage {
+    // The ResultStorage union is used to hold either the value or the error, but not both at the same time.
+    union NEX_ALIGNAS(StorageAlignment) ResultStorage {
         // Conditional copy constructor that is only enabled if both ValueType and ErrorType 
         // are copy constructible and trivially copy constructible
-        NEX_HIDDEN_FROM_ABI constexpr Storage(const Storage&) = delete;
-        NEX_HIDDEN_FROM_ABI constexpr Storage(const Storage&)
+        NEX_HIDDEN_FROM_ABI constexpr ResultStorage(const ResultStorage&) = delete;
+        NEX_HIDDEN_FROM_ABI constexpr ResultStorage(const ResultStorage&)
             requires(
                 meta::IsCopyConstructibleV<ValueType> && meta::IsTriviallyCopyConstructibleV<ValueType> && 
                 meta::IsCopyConstructibleV<ErrorType> && meta::IsTriviallyCopyConstructibleV<ErrorType>
@@ -175,8 +181,8 @@ class NEX_INTERNAL ResultBase {
 
         // Conditional move constructor that is only enabled if both ValueType and ErrorType 
         // are move constructible and trivially move constructible
-        NEX_HIDDEN_FROM_ABI constexpr Storage(Storage&&) = delete;
-        NEX_HIDDEN_FROM_ABI constexpr Storage(Storage&&)
+        NEX_HIDDEN_FROM_ABI constexpr ResultStorage(ResultStorage&&) = delete;
+        NEX_HIDDEN_FROM_ABI constexpr ResultStorage(ResultStorage&&)
             requires(
                 meta::IsMoveConstructibleV<ValueType> && meta::IsTriviallyMoveConstructibleV<ValueType> && 
                 meta::IsMoveConstructibleV<ErrorType> && meta::IsTriviallyMoveConstructibleV<ErrorType>
@@ -184,44 +190,44 @@ class NEX_INTERNAL ResultBase {
 
         // Deleted assignment operators to prevent accidental copying/moving of the union, 
         // since the assignment should be managed by the Result class.
-        NEX_HIDDEN_FROM_ABI constexpr Storage& operator=(const Storage&) = delete;
-        NEX_HIDDEN_FROM_ABI constexpr Storage& operator=(Storage&&) = delete;
+        NEX_HIDDEN_FROM_ABI constexpr ResultStorage& operator=(const ResultStorage&) = delete;
+        NEX_HIDDEN_FROM_ABI constexpr ResultStorage& operator=(ResultStorage&&) = delete;
 
         // Constructor for expected value
         template <class... Args>
-        NEX_HIDDEN_FROM_ABI constexpr explicit Storage(in_place_tag, Args&&... args)
+        NEX_HIDDEN_FROM_ABI constexpr explicit ResultStorage(in_place_tag, Args&&... args)
             : value_(NEX_FORWARD<Args>(args)...) {}
 
         // Constructor for unexpected error
         template <class... Args>
-        NEX_HIDDEN_FROM_ABI constexpr explicit Storage(unexpect_type, Args&&... args)
+        NEX_HIDDEN_FROM_ABI constexpr explicit ResultStorage(unexpect_type, Args&&... args)
             : error_(NEX_FORWARD<Args>(args)...) {}
 
         // Constructor for in-place construction of value using a function and arguments
         template <class Func, class... Args>
         NEX_HIDDEN_FROM_ABI constexpr explicit 
-        Storage(ResultValueInPlaceConstructionTag, Func&& func, Args&&... args)
+        ResultStorage(ResultValueInPlaceConstructionTag, Func&& func, Args&&... args)
             : value_(NEX_STD invoke(NEX_FORWARD<Func>(func), NEX_FORWARD<Args>(args)...)) {}
 
         // Constructor for in-place construction of error using a function and arguments
         template <class Func, class... Args>
         NEX_HIDDEN_FROM_ABI constexpr explicit 
-        Storage(ResultErrorInPlaceConstructionTag, Func&& func, Args&&... args)
+        ResultStorage(ResultErrorInPlaceConstructionTag, Func&& func, Args&&... args)
             : error_(NEX_STD invoke(NEX_FORWARD<Func>(func), NEX_FORWARD<Args>(args)...)) {}
 
         // The destructor is trivial if both ValueType and ErrorType are trivially destructible
-        NEX_HIDDEN_FROM_ABI constexpr ~Storage()
+        NEX_HIDDEN_FROM_ABI constexpr ~ResultStorage()
             requires(meta::IsTriviallyDestructibleV<ValueType> && meta::IsTriviallyDestructibleV<ErrorType>) = default;
 
         // Non-trivial destructor if either ValueType or ErrorType is not trivially destructible. 
         // The Result class will manage the destruction of the active member.
-        NEX_HIDDEN_FROM_ABI constexpr ~Storage() {}
+        NEX_HIDDEN_FROM_ABI constexpr ~ResultStorage() {}
 
         NEX_NO_UNIQUE_ADDRESS ValueType value_;   // Success value
         NEX_NO_UNIQUE_ADDRESS ErrorType error_;   // Error value
     };
 
-    static constexpr bool PutFlagInTail = meta::_fitsInTailPadding<Storage, bool>;
+    static constexpr bool PutFlagInTail = meta::_fitsInTailPadding<ResultStorage, bool>;
     static constexpr bool AllowReusingResultTailPadding = !PutFlagInTail;
 
     struct Repr {
@@ -342,14 +348,14 @@ class NEX_INTERNAL ResultBase {
         Storage makeStorage(bool hasVal, OtherStorage&& other)
         requires(AllowReusingResultTailPadding) {
             if (hasVal) {
-                return Storage(in_place, NEX_FORWARD<OtherStorage>(other).value_);
+                return ResultStorage(in_place, NEX_FORWARD<OtherStorage>(other).value_);
             } else {
-                return Storage(unexpect, NEX_FORWARD<OtherStorage>(other).error_);
+                return ResultStorage(unexpect, NEX_FORWARD<OtherStorage>(other).error_);
             }
         }
 
         // The actual storage for the value or error, using conditional no unique address optimization if possible
-        NEX_NO_UNIQUE_ADDRESS ConditionalNoUniqueAddress<PutFlagInTail, Storage> storage_;
+        NEX_NO_UNIQUE_ADDRESS ConditionalNoUniqueAddress<PutFlagInTail, ResultStorage> storage_;
 
         // Flag to indicate whether the storage currently holds a value (true) or an error (false)
         bool hasValue_ = false;
@@ -425,8 +431,8 @@ protected:
     NEX_HIDDEN_FROM_ABI constexpr bool hasValueImpl() const { return repr_.value.hasValue_; }
 
     // Access the storage union from the representation
-    NEX_HIDDEN_FROM_ABI constexpr Storage& storageImpl() { return repr_.value.storage_.value; }
-    NEX_HIDDEN_FROM_ABI constexpr const Storage& storageImpl() const { return repr_.value.storage_.value; }
+    NEX_HIDDEN_FROM_ABI constexpr ResultStorage& storageImpl() { return repr_.value.storage_.value; }
+    NEX_HIDDEN_FROM_ABI constexpr const ResultStorage& storageImpl() const { return repr_.value.storage_.value; }
 
     // Access the value from the storage union
     NEX_HIDDEN_FROM_ABI constexpr ValueType& valueImpl() { return repr_.value.storage_.value.value_; }
@@ -477,33 +483,27 @@ private:
  */
 template<typename ValueType, typename ErrorType = Error>
 class NEX_API NEX_NODISCARD Result : private ResultBase<ValueType, ErrorType> {
-public:
+private:
+    // Allow private access between Result classes with different template parameters, 
+    // enabling conversions and assignments between them.
     template <class OtherValue, class OtherError>
     friend class Result;
 
-    using base NEX_NODEBUG = ResultBase<ValueType, ErrorType>;
-
-    template <class AnyValue>
-    struct Expected {
-        using type = AnyValue;
-        type value;
-    };
-
-    template <class AnyError>
-    struct Unexpected {
-        using type = AnyError;
-        type error;
-    };
-
+public:
     using value_type = ValueType;
     using error_type = ErrorType;
-    using expected_type = Expected<value_type>;
-    using unexpected_type = Unexpected<error_type>;
 
-    using TrivallyRelocatable NEX_NODEBUG = 
+    using trivally_relocatable NEX_NODEBUG = 
         meta::ConditionalT<
             meta::IsTriviallyCopyableV<ValueType> && meta::IsTriviallyCopyableV<ErrorType>,
             Result, void>;
+
+    using replaceable NEX_NODEBUG = 
+        meta::ConditionalT<
+            meta::IsReplaceableV<ValueType> && meta::IsReplaceableV<ErrorType>,
+            Result, void>;
+
+    using base NEX_NODEBUG = ResultBase<ValueType, ErrorType>;
 
     template <class OtherValue>
     using rebind = Result<OtherValue, error_type>;
@@ -532,13 +532,13 @@ public:
     static constexpr Result ok(AnyValue&& value) noexcept {
         static_assert(meta::IsSameV<AnyValue, value_type> || meta::IsConvertibleV<AnyValue, value_type>, 
             "Error: Provided value must be the same as or convertible to the Result's value type");
-        return Result(expected_type { NEX_MOVE(value) });
+        return Result(in_place, NEX_FORWARD<AnyValue>(value));
     }
 
     // Create a successful result with perfect forwarding of arguments to construct the value
     template<typename... Args>
     static constexpr Result ok(Args&&... args) noexcept {
-        return Result(expected_type { value_type(NEX_FORWARD<Args>(args)...) });
+        return Result(in_place, NEX_FORWARD<Args>(args)...);
     }
 
     // Create an error result with an unexpected error
@@ -546,13 +546,13 @@ public:
     static constexpr Result error(AnyError&& error) noexcept {
         static_assert(meta::IsSameV<AnyError, error_type> || meta::IsConvertibleV<AnyError, error_type>, 
             "Error: Provided error must be the same as or convertible to the Result's error type");
-        return Result(unexpected_type { NEX_MOVE(error) });
+        return Result(unexpect, NEX_FORWARD<AnyError>(error));
     }
 
     // Create an error result with perfect forwarding of arguments to construct the error
     template<typename... Args>
     static constexpr Result error(Args&&... args) noexcept {
-        return Result(unexpected_type { error_type(NEX_FORWARD<Args>(args)...) });
+        return Result(unexpect, NEX_FORWARD<Args>(args)...);
     }
 
     // Check if the result is successful
@@ -746,7 +746,7 @@ public:
         requires (meta::IsConstructibleV<ErrorType, ErrorType&>)
     constexpr auto andThen(Func&& func) & {
         using RetType = meta::RemoveCvrefT<NEX_STD invoke_result_t<Func, ValueType&>>;
-        static_assert(IsResult<RetType>::value, "The result of func(value()) must be a specialization of Result");
+        static_assert(IsResultV<RetType>, "The result of func(value()) must be a specialization of Result");
         static_assert(meta::IsSameV<typename RetType::error_type, ErrorType>,
                     "The result of func(value()) must have the same error_type as this Result");
         return hasValue() 
@@ -760,7 +760,7 @@ public:
         requires (meta::IsConstructibleV<ErrorType, const ErrorType&>)
     constexpr auto andThen(Func&& func) const& {
         using RetType = meta::RemoveCvrefT<NEX_STD invoke_result_t<Func, const ValueType&>>;
-        static_assert(IsResult<RetType>::value, "The result of func(value()) must be a specialization of Result");
+        static_assert(IsResultV<RetType>, "The result of func(value()) must be a specialization of Result");
         static_assert(meta::IsSameV<typename RetType::error_type, ErrorType>,
                     "The result of func(value()) must have the same error_type as this Result");
         return hasValue() 
@@ -774,8 +774,7 @@ public:
         requires (meta::IsConstructibleV<ErrorType, ErrorType&&>)
     constexpr auto andThen(Func&& func) && {
         using RetType = meta::RemoveCvrefT<NEX_STD invoke_result_t<Func, ValueType&&>>;
-        static_assert(IsResult<RetType>::value, 
-            "The result of func(NEX_MOVE(value())) must be a specialization of Result");
+        static_assert(IsResultV<RetType>, "The result of func(NEX_MOVE(value())) must be a specialization of Result");
         static_assert(meta::IsSameV<typename RetType::error_type, ErrorType>,
             "The result of func(NEX_MOVE(value())) must have the same error_type as this Result");
         return hasValue() 
@@ -789,8 +788,7 @@ public:
         requires (meta::IsConstructibleV<ErrorType, const ErrorType&&>)
     constexpr auto andThen(Func&& func) const&& {
         using RetType = meta::RemoveCvrefT<NEX_STD invoke_result_t<Func, const ValueType&&>>;
-        static_assert(IsResult<RetType>::value, 
-            "The result of func(NEX_MOVE(value())) must be a specialization of Result");
+        static_assert(IsResultV<RetType>, "The result of func(NEX_MOVE(value())) must be a specialization of Result");
         static_assert(meta::IsSameV<typename RetType::error_type, ErrorType>,
             "The result of func(NEX_MOVE(value())) must have the same error_type as this Result");
         return hasValue() 
@@ -804,8 +802,7 @@ public:
         requires (meta::IsConstructibleV<ValueType, ValueType&>)
     constexpr auto orElse(Func&& func) & {
         using RetType = meta::RemoveCvrefT<NEX_STD invoke_result_t<Func, ErrorType&>>;
-        static_assert(meta::IsResult<RetType>::value, 
-            "The result of func(error()) must be a specialization of Result");
+        static_assert(IsResultV<RetType>, "The result of func(error()) must be a specialization of Result");
         static_assert(meta::IsSameV<typename RetType::value_type, ValueType>,
             "The result of func(error()) must have the same value_type as this expected");
         return hasValue() 
@@ -819,8 +816,7 @@ public:
         requires (meta::IsConstructibleV<ValueType, const ValueType&>)
     constexpr auto orElse(Func&& func) const& {
         using RetType = meta::RemoveCvrefT<NEX_STD invoke_result_t<Func, const ErrorType&>>;
-        static_assert(meta::IsResult<RetType>::value, 
-            "The result of func(error()) must be a specialization of Result");
+        static_assert(IsResultV<RetType>, "The result of func(error()) must be a specialization of Result");
         static_assert(meta::IsSameV<typename RetType::value_type, ValueType>,
             "The result of func(error()) must have the same value_type as this expected");
         return hasValue() 
@@ -834,10 +830,9 @@ public:
         requires (meta::IsConstructibleV<ValueType, ValueType&&>)
     constexpr auto orElse(Func&& func) && {
         using RetType = meta::RemoveCvrefT<NEX_STD invoke_result_t<Func, ErrorType&&>>;
-        static_assert(meta::IsResult<RetType>::value, 
-            "The result of func(std::move(error())) must be a specialization of Result");
+        static_assert(IsResultV<RetType>, "The result of func(NEX_MOVE(error())) must be a specialization of Result");
         static_assert(meta::IsSameV<typename RetType::value_type, ValueType>,
-            "The result of func(std::move(error())) must have the same value_type as this Result");
+            "The result of func(NEX_MOVE(error())) must have the same value_type as this Result");
         return hasValue() 
             ? RetType(in_place, NEX_MOVE(this->valueImpl())) 
             : NEX_STD invoke(NEX_FORWARD<Func>(func), NEX_MOVE(error()));
@@ -849,10 +844,9 @@ public:
         requires (meta::IsConstructibleV<ValueType, const ValueType&&>)
     constexpr auto orElse(Func&& func) const&& {
         using RetType = meta::RemoveCvrefT<NEX_STD invoke_result_t<Func, const ErrorType&&>>;
-        static_assert(meta::IsResult<RetType>::value, 
-            "The result of func(std::move(error())) must be a specialization of Result");
+        static_assert(IsResultV<RetType>, "The result of func(NEX_MOVE(error())) must be a specialization of Result");
         static_assert(meta::IsSameV<typename RetType::value_type, ValueType>,
-            "The result of func(std::move(error())) must have the same value_type as this Result");
+            "The result of func(NEX_MOVE(error())) must have the same value_type as this Result");
         return hasValue() 
             ? RetType(in_place, NEX_MOVE(this->valueImpl())) 
             : NEX_STD invoke(NEX_FORWARD<Func>(func), NEX_MOVE(error()));
@@ -884,7 +878,7 @@ public:
     Result(const Result<OtherValue, OtherError>& other)
         noexcept(meta::IsNothrowConstructibleV<ValueType, const OtherValue&> && 
                  meta::IsNothrowConstructibleV<ErrorType, const OtherError&>)
-        : base(other.hasValue(), other.union()) {}
+        : base(other.hasValue(), other.storageImpl()) {}
 
     // Default move constructor if both ValueType and ErrorType are trivially move constructible
     constexpr Result(Result&&)
@@ -897,7 +891,7 @@ public:
         noexcept(meta::IsNothrowMoveConstructibleV<ValueType> && meta::IsNothrowMoveConstructibleV<ErrorType>)
         requires(meta::IsMoveConstructibleV<ValueType> && meta::IsMoveConstructibleV<ErrorType> &&
                 !(meta::IsTriviallyMoveConstructibleV<ValueType> && meta::IsTriviallyMoveConstructibleV<ErrorType>))
-        : base(other.hasValue(), NEX_MOVE(other.union())) {}
+        : base(other.hasValue(), NEX_MOVE(other.storageImpl())) {}
 
     // Allow move construction from another Result with different value and error types,
     // as long as the value and error types are move constructible and convertible to the current types
@@ -908,39 +902,14 @@ public:
     Result(Result<OtherValue, OtherError>&& other) 
         noexcept(meta::IsNothrowConstructibleV<ValueType, const OtherValue&> && 
                  meta::IsNothrowConstructibleV<ErrorType, const OtherError&>)
-        : base(other.hasValue(), NEX_MOVE(other.union())) {}
+        : base(other.hasValue(), NEX_MOVE(other.storageImpl())) {}
 
     // Default destructor
     constexpr ~Result() = default;
 
 private:
-    // Constructor for creating a successful Result with an expected value
-    template <class AnyValue = ValueType>
-        requires(!meta::IsSameV<meta::RemoveCvrefT<AnyValue>, in_place_tag> && 
-                 !meta::IsSameV<Result, meta::RemoveCvrefT<AnyValue>> &&
-                 meta::IsConstructibleV<ValueType, AnyValue>)
-    constexpr explicit(!meta::IsConvertibleV<AnyValue, ValueType>)
-    Result(AnyValue&& value) noexcept(meta::IsNothrowConstructibleV<ValueType, AnyValue>)
-        : base(in_place, NEX_FORWARD<AnyValue>(value)) {}
-
-    // Constructor for creating an error Result with an unexpected error
-    template <class OtherError>
-        requires meta::IsConstructibleV<ErrorType, const OtherError&>
-    constexpr explicit(!meta::IsConvertibleV<const OtherError&, ErrorType>) 
-    Result(const Unexpected<OtherError>& unexpected) 
-    noexcept(meta::IsNothrowConstructibleV<ErrorType, const OtherError&>)
-        : base(unexpect, unexpected.error()) {}
-
-    // Constructor for creating an error Result with an unexpected error (rvalue overload)
-    template <class OtherError>
-        requires meta::IsConstructibleV<ErrorType, OtherError>
-    constexpr explicit(!meta::IsConvertibleV<OtherError, ErrorType>)
-    Result(Unexpected<OtherError>&& unexpected) 
-        noexcept(meta::IsNothrowConstructibleV<ErrorType, OtherError>)
-        : base(unexpect, NEX_MOVE(unexpected.error())) {}
-
     // Constructor for creating a successful Result 
-    // with perfect forwarding of arguments to construct the value
+    // with perfect forwarding of arguments to construct the expected value
     template <class... Args>
         requires meta::IsConstructibleV<ValueType, Args...>
     constexpr explicit Result(in_place_tag, Args&&... args) 
@@ -948,15 +917,15 @@ private:
         : base(in_place, NEX_FORWARD<Args>(args)...) {}
 
     // Constructor for creating a successful Result with an initializer list 
-    // and perfect forwarding of additional arguments to construct the value
+    // and perfect forwarding of additional arguments to construct the expected value
     template <class OtherValue, class... Args>
-        requires meta::IsConstructibleV< ValueType, InitList<OtherValue>&, Args... >
-    NEX_HIDDEN_FROM_ABI constexpr explicit Result(in_place_tag, InitList<OtherValue> il, Args&&... args) 
+        requires meta::IsConstructibleV<ValueType, InitList<OtherValue>&, Args... >
+    NEX_HIDDEN_FROM_ABI constexpr explicit Result(in_place_tag, InitList<OtherValue> ilist, Args&&... args) 
         noexcept(meta::IsNothrowConstructibleV<ValueType, InitList<OtherValue>&, Args...>)
-        : base(in_place, il, NEX_FORWARD<Args>(args)...) {}
+        : base(in_place, ilist, NEX_FORWARD<Args>(args)...) {}
 
     // Constructor for creating an error Result 
-    // with perfect forwarding of arguments to construct the error
+    // with perfect forwarding of arguments to construct the unexpected error
     template <class... Args>
         requires meta::IsConstructibleV<ErrorType, Args...>
     constexpr explicit Result(unexpect_type, Args&&... args) 
@@ -964,12 +933,12 @@ private:
         : base(unexpect, NEX_FORWARD<Args>(args)...) {}
 
     // Constructor for creating an error Result with an initializer list
-    // and perfect forwarding of additional arguments to construct the error
+    // and perfect forwarding of additional arguments to construct the unexpected error
     template <class OtherError, class... Args>
         requires meta::IsConstructibleV< ErrorType, InitList<OtherError>&, Args... >
-    NEX_HIDDEN_FROM_ABI constexpr explicit Result(unexpect_type, InitList<OtherError> il, Args&&... args) noexcept(
+    NEX_HIDDEN_FROM_ABI constexpr explicit Result(unexpect_type, InitList<OtherError> ilist, Args&&... args) noexcept(
         meta::IsNothrowConstructibleV<ErrorType, InitList<OtherError>&, Args...>) // strengthened
-        : base(unexpect, il, NEX_FORWARD<Args>(args)...) {}
+        : base(unexpect, ilist, NEX_FORWARD<Args>(args)...) {}
 };
 
 /**

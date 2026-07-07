@@ -12,7 +12,7 @@
 #include "nex/base/casts.h"
 #include "nex/base/error.h"
 #include "nex/base/assert_crash.h"
-#include "nex/base/wrappers.h"
+#include "nex/base/init.h"
 
 NEX_NAMESPACE_BEGIN
 

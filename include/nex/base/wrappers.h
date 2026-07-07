@@ -8,12 +8,12 @@
 /**
  * @file  wrappers.h
  * @brief Defines common wrapper types used throughout the codebase, such as Optional, Smart Pointers, 
- *        Variant, InitList, Function, LockGuard and their associated type aliases.
+ *        Variant, Function, LockGuard and their associated type aliases.
  * 
  * @details
  * This header centralizes aliases for wrapper types used by Nex-ecosystem, including optional values, smart pointers,
- * variant types, initializer lists, type information, function wrappers, and mutex types. It establishes a uniform 
- * naming convention for wrapper-centric structures so interfaces can communicate behavior clearly and consistently.
+ * variant types, type information, function wrappers, and mutex types. It establishes a uniform naming convention 
+ * for wrapper-centric structures so interfaces can communicate behavior clearly and consistently.
  * Wrapper types are foundational in representing optional values, managing object lifetimes, encapsulating variant
  * types, managing type information, and synchronizing access to shared resources. Grouping these aliases in one 
  * place reduces repetitive template spelling and helps preserve readable API signatures across infrastructure, 
@@ -34,7 +34,6 @@
  * @see https://en.cppreference.com/w/cpp/utility/variant for more information on std::variant.
  * @see https://en.cppreference.com/w/cpp/utility/expected for more information on std::expected.
  * @see https://en.cppreference.com/w/cpp/utility/expected/unexpected for more information on std::unexpected.
- * @see https://en.cppreference.com/w/cpp/utility/initializer_list for more information on std::initializer_list.
  * @see https://en.cppreference.com/w/cpp/types/type_index for more information on std::type_index.
  * @see https://en.cppreference.com/w/cpp/types/type_info for more information on std::type_info.
  * @see https://en.cppreference.com/w/cpp/utility/functional for more information on std::function.
@@ -55,7 +54,6 @@
     #include <expected>
 #endif // NEX_HAS_CXX23
 
-#include <initializer_list>
 #include <typeinfo>
 #include <typeindex>
 #include <functional>
@@ -185,16 +183,6 @@ using Variant = NEX_STD variant<Args...>;
     template <typename ErrorType>
     using Unexpected = NEX_STD unexpected<ErrorType>;
 #endif // NEX_HAS_CXX23
-
-/**
- * @brief A wrapper for initializer lists, allowing for uniform handling of list initialization.
- * @details 
- * Provides a convenient way to pass a list of values to functions or constructors that accept 
- * initializer lists. This is particularly useful for APIs that want to support flexible argument 
- * counts without requiring variadic templates.
- */
-template <typename ElementType>
-using InitList = NEX_STD initializer_list<ElementType>;
 
 /**
  * @brief Metadata representing a type at runtime.

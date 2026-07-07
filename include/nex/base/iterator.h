@@ -10,6 +10,7 @@
 
 #include "nex/base/macros.h"
 #include "nex/base/types.h"
+#include "nex/base/init.h"
 #include "nex/base/concepts.h"
 #include "nex/base/traits.h"
 
@@ -325,7 +326,7 @@ NEX_NODISCARD constexpr bool empty(const Type (&array)[N]) noexcept {
 
 /// Checks whether an initializer list is empty, which means it contains no elements.
 template <typename Element>
-NEX_NODISCARD constexpr bool empty(NEX_STD initializer_list<Element> il) noexcept {
+NEX_NODISCARD constexpr bool empty(InitList<Element> il) noexcept {
     return il.size() == 0;
 }
 
@@ -353,7 +354,7 @@ NEX_NODISCARD constexpr Type* data(Type (&array)[N]) noexcept {
 /// Returns a pointer to the first element of an initializer list, 
 /// which can be used for direct access to the elements.
 template <typename Element>
-NEX_NODISCARD constexpr const Element* data(NEX_STD initializer_list<Element> il) noexcept {
+NEX_NODISCARD constexpr const Element* data(InitList<Element> il) noexcept {
     return il.begin();
 }
 

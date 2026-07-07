@@ -564,7 +564,7 @@ public:
     }
 
     // Check if the result is successful
-    constexpr bool isSuccess() const noexcept { return this->hasValueImpl(); }
+    constexpr bool isOk() const noexcept { return this->hasValueImpl(); }
 
     // Check if the result has a value (also means it is successful)
     template <typename Type = value_type> 
@@ -782,8 +782,8 @@ public:
         using RetType = meta::RemoveCvrefT<NEX_STD invoke_result_t<Func, ValueType&>>;
         static_assert(IsResultV<RetType>, "The result of func(value()) must be a specialization of Result");
         static_assert(meta::IsSameV<typename RetType::error_type, ErrorType>,
-                    "The result of func(value()) must have the same error_type as this Result");
-        if (isSuccess()) {
+            "The result of func(value()) must have the same error_type as this Result");
+        if (isOk()) {
             if constexpr (meta::IsVoidV<value_type>) {
                 return NEX_STD invoke(NEX_FORWARD<Func>(func));
             } else {
@@ -802,8 +802,8 @@ public:
         using RetType = meta::RemoveCvrefT<NEX_STD invoke_result_t<Func, const ValueType&>>;
         static_assert(IsResultV<RetType>, "The result of func(value()) must be a specialization of Result");
         static_assert(meta::IsSameV<typename RetType::error_type, ErrorType>,
-                    "The result of func(value()) must have the same error_type as this Result");
-        if (isSuccess()) {
+            "The result of func(value()) must have the same error_type as this Result");
+        if (isOk()) {
             if constexpr (meta::IsVoidV<value_type>) {
                 return NEX_STD invoke(NEX_FORWARD<Func>(func));
             } else {
@@ -823,7 +823,7 @@ public:
         static_assert(IsResultV<RetType>, "The result of func(NEX_MOVE(value())) must be a specialization of Result");
         static_assert(meta::IsSameV<typename RetType::error_type, ErrorType>,
             "The result of func(NEX_MOVE(value())) must have the same error_type as this Result");
-        if (isSuccess()) {
+        if (isOk()) {
             if constexpr (meta::IsVoidV<value_type>) {
                 return NEX_STD invoke(NEX_FORWARD<Func>(func));
             } else {
@@ -843,7 +843,7 @@ public:
         static_assert(IsResultV<RetType>, "The result of func(NEX_MOVE(value())) must be a specialization of Result");
         static_assert(meta::IsSameV<typename RetType::error_type, ErrorType>,
             "The result of func(NEX_MOVE(value())) must have the same error_type as this Result");
-        if (isSuccess()) {
+        if (isOk()) {
             if constexpr (meta::IsVoidV<value_type>) {
                 return NEX_STD invoke(NEX_FORWARD<Func>(func));
             } else {
@@ -863,7 +863,7 @@ public:
         static_assert(IsResultV<RetType>, "The result of func(error()) must be a specialization of Result");
         static_assert(meta::IsSameV<typename RetType::value_type, ValueType>,
             "The result of func(error()) must have the same value_type as this expected");
-        if (isSuccess()) {
+        if (isOk()) {
             if constexpr (meta::IsVoidV<value_type>) {
                 return RetType(in_place);
             } else {
@@ -883,7 +883,7 @@ public:
         static_assert(IsResultV<RetType>, "The result of func(error()) must be a specialization of Result");
         static_assert(meta::IsSameV<typename RetType::value_type, ValueType>,
             "The result of func(error()) must have the same value_type as this expected");
-        if (isSuccess()) {
+        if (isOk()) {
             if constexpr (meta::IsVoidV<value_type>) {
                 return RetType(in_place);
             } else {
@@ -903,7 +903,7 @@ public:
         static_assert(IsResultV<RetType>, "The result of func(NEX_MOVE(error())) must be a specialization of Result");
         static_assert(meta::IsSameV<typename RetType::value_type, ValueType>,
             "The result of func(NEX_MOVE(error())) must have the same value_type as this Result");
-        if (isSuccess()) {
+        if (isOk()) {
             if constexpr (meta::IsVoidV<value_type>) {
                 return RetType(in_place);
             } else {
@@ -923,7 +923,7 @@ public:
         static_assert(IsResultV<RetType>, "The result of func(NEX_MOVE(error())) must be a specialization of Result");
         static_assert(meta::IsSameV<typename RetType::value_type, ValueType>,
             "The result of func(NEX_MOVE(error())) must have the same value_type as this Result");
-        if (isSuccess()) {
+        if (isOk()) {
             if constexpr (meta::IsVoidV<value_type>) {
                 return RetType(in_place);
             } else {
@@ -1067,10 +1067,10 @@ public:
                 { lhs.error() == rhs.error() } -> meta::ConvertibleTo<bool>;
             }
     {
-        if (lhs.isSuccess() != rhs.isSuccess()) {
+        if (lhs.isOk() != rhs.isOk()) {
             return false;
         } else {
-            if (lhs.isSuccess()) {
+            if (lhs.isOk()) {
                 return false;
             } else {
                 return static_cast<bool>(lhs.error() == rhs.error());
@@ -1090,7 +1090,7 @@ public:
                 { lhs.error() == rhs } -> meta::ConvertibleTo<bool>;
             }
     {
-        return !lhs.isSuccess() && static_cast<bool>(lhs.error() == rhs);
+        return !lhs.isOk() && static_cast<bool>(lhs.error() == rhs);
     }
 };
 

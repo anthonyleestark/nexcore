@@ -37,7 +37,6 @@
  * @see https://en.cppreference.com/w/cpp/types/type_index for more information on std::type_index.
  * @see https://en.cppreference.com/w/cpp/types/type_info for more information on std::type_info.
  * @see https://en.cppreference.com/w/cpp/utility/functional for more information on std::function.
- * @see https://en.cppreference.com/w/cpp/utility/functional/reference_wrapper for more information on std::reference_wrapper.
  * @see https://en.cppreference.com/w/cpp/thread/lock_guard for more information on std::lock_guard.
  * @see https://en.cppreference.com/w/cpp/thread/unique_lock for more information on std::unique_lock.
  * @see https://en.cppreference.com/w/cpp/thread/shared_lock for more information on std::shared_lock.
@@ -208,24 +207,6 @@ using TypeIndex = NEX_STD type_index;
  */
 template <typename Signature>
 using Function = NEX_STD function<Signature>;
-
-/**
- * @brief A wrapper that makes references "assignable" and "copyable".
- * @details 
- * Enables storing references in standard containers (like Vec) which otherwise require elements 
- * to be erasable/assignable. It acts as a non-nullable pointer with reference semantics.
- */
-template <typename Type>
-using Reference = NEX_STD reference_wrapper<Type>;
-
-/**
- * @brief A wrapper for constant references, ensuring read-only access.
- * @details 
- * Similar to Reference, but holds a 'const T&'. 
- * Useful for storing collections of read-only observers without the overhead of pointers.
- */
-template <typename Type>
-using ConstReference = NEX_STD reference_wrapper<const Type>;
 
 /**
  * @brief Strict RAII wrapper for a single mutex.

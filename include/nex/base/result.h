@@ -164,6 +164,10 @@ class NEX_INTERNAL ResultBase {
     static_assert(ResultValueTypeEvaluator<ValueType>::value);
     static_assert(ResultErrorTypeEvaluator<ErrorType>::value);
 
+    // The StorageValue type is determined based on whether the ValueType is void or not.
+    // If ValueType is void, StorageValue is set to monostate, which works as a dummy placeholder type.
+    using StorageValue = meta::ConditionalT<meta::IsVoidV<ValueType>, monostate, ValueType>;
+
     // The alignment of the storage is determined by the maximum alignment requirement 
     // of either the value type or the error type.
     static constexpr usize StorageAlignment = meta::MaxAlignOfV<ValueType, ErrorType>;
@@ -223,8 +227,8 @@ class NEX_INTERNAL ResultBase {
         // The Result class will manage the destruction of the active member.
         NEX_HIDDEN_FROM_ABI constexpr ~ResultStorage() {}
 
-        NEX_NO_UNIQUE_ADDRESS ValueType value_;   // Success value
-        NEX_NO_UNIQUE_ADDRESS ErrorType error_;   // Error value
+        NEX_NO_UNIQUE_ADDRESS StorageValue  value_;   // Success value
+        NEX_NO_UNIQUE_ADDRESS ErrorType     error_;   // Error value
     };
 
     static constexpr bool PutFlagInTail = meta::_fitsInTailPadding<ResultStorage, bool>;
@@ -489,24 +493,28 @@ private:
     template <class OtherValue, class OtherError>
     friend class Result;
 
+    using base NEX_NODEBUG = ResultBase<ValueType, ErrorType>;
+
 public:
     using value_type = ValueType;
     using error_type = ErrorType;
 
-    using trivally_relocatable NEX_NODEBUG = 
+    template <class OtherValue>
+    using rebind = Result<OtherValue, error_type>;
+
+    // Type trait to determine if the Result is trivially relocatable,
+    // which would be true if both the value and error types are trivially copyable.
+    using TriviallyRelocatable NEX_NODEBUG = 
         meta::ConditionalT<
             meta::IsTriviallyCopyableV<ValueType> && meta::IsTriviallyCopyableV<ErrorType>,
             Result, void>;
 
-    using replaceable NEX_NODEBUG = 
+    // Type trait to determine if the Result is replaceable, 
+    // which would be true if both the value and error types are replaceable.
+    using Replaceable NEX_NODEBUG = 
         meta::ConditionalT<
             meta::IsReplaceableV<ValueType> && meta::IsReplaceableV<ErrorType>,
             Result, void>;
-
-    using base NEX_NODEBUG = ResultBase<ValueType, ErrorType>;
-
-    template <class OtherValue>
-    using rebind = Result<OtherValue, error_type>;
 
 private:
     // Default constructor creates a successful Result with a default-constructed value
@@ -559,13 +567,17 @@ public:
     constexpr bool isSuccess() const noexcept { return this->hasValueImpl(); }
 
     // Check if the result has a value (also means it is successful)
-    constexpr bool hasValue() const noexcept { return this->hasValueImpl(); }
+    template <typename Type = value_type> 
+    constexpr bool hasValue() const noexcept 
+    requires (!meta::IsVoidV<Type>) { return this->hasValueImpl(); }
 
     // Explicit conversion to bool to check if the result is successful
     constexpr explicit operator bool() const noexcept { return this->hasValueImpl(); }
 
     // Get the success value (crash if result is an error)
-    constexpr value_type& value() & noexcept {
+    template <typename Type = value_type> 
+    constexpr value_type& value() & noexcept
+        requires (!meta::IsVoidV<value_type>) {
         static_assert(meta::IsCopyConstructibleV<error_type>, "Error: Error type has to be copy constructible");
         if (!this->hasValueImpl()) {
             NEX_REPORT_RESULT_INVALID_ACCESS(
@@ -575,7 +587,9 @@ public:
     }
 
     // Get the success value (read-only; crash if result is an error)
-    constexpr const value_type& value() const& noexcept {
+    template <typename Type = value_type> 
+    constexpr const value_type& value() const& noexcept 
+        requires (!meta::IsVoidV<value_type>) {
         static_assert(meta::IsCopyConstructibleV<error_type>, "Error: Error type has to be copy constructible");
         if (!this->hasValueImpl()) {
             NEX_REPORT_RESULT_INVALID_ACCESS(
@@ -585,7 +599,9 @@ public:
     }
 
     // Get the success value (move; crash if result is an error)
-    constexpr value_type&& value() && noexcept {
+    template <typename Type = value_type> 
+    constexpr value_type&& value() && noexcept 
+        requires (!meta::IsVoidV<value_type>) {
         static_assert(meta::IsCopyConstructibleV<error_type> && 
             meta::IsConstructibleV<error_type, decltype(NEX_MOVE(error()))>,
             "Error: Error type has to be both copy constructible and constructible from decltype(NEX_MOVE(error()))");
@@ -597,7 +613,9 @@ public:
     }
 
     // Get the success value (move; read-only; crash if result is an error)
-    constexpr const value_type&& value() const&& noexcept {
+    template <typename Type = value_type> 
+    constexpr const value_type&& value() const&& noexcept 
+        requires (!meta::IsVoidV<value_type>) {
         static_assert(meta::IsCopyConstructibleV<error_type> && 
             meta::IsConstructibleV<error_type, decltype(NEX_MOVE(error()))>,
             "Error: Error type has to be both copy constructible and constructible from decltype(NEX_MOVE(error()))");
@@ -609,7 +627,9 @@ public:
     }
 
     // Access the success value through pointer semantics (read-only; crash if result is an error)
-    constexpr const value_type* operator->() const noexcept {
+    template <typename Type = value_type> 
+    constexpr const value_type* operator->() const noexcept 
+        requires (!meta::IsVoidV<value_type>) {
         if (!this->hasValueImpl()) {
             NEX_REPORT_RESULT_INVALID_ACCESS(
                 "Error: Attempted to access value of error Result");
@@ -618,7 +638,9 @@ public:
     }
 
     // Access the success value through pointer semantics (crash if result is an error)
-    constexpr value_type* operator->() noexcept {
+    template <typename Type = value_type> 
+    constexpr value_type* operator->() noexcept 
+        requires (!meta::IsVoidV<value_type>) {
         if (!this->hasValueImpl()) {
             NEX_REPORT_RESULT_INVALID_ACCESS(
                 "Error: Attempted to access value of error Result");
@@ -627,7 +649,9 @@ public:
     }
 
     // Get the success value through dereference semantics (read-only; crash if result is an error)
-    constexpr const value_type& operator*() const& noexcept {
+    template <typename Type = value_type> 
+    constexpr const value_type& operator*() const& noexcept 
+        requires (!meta::IsVoidV<value_type>) {
         if (!this->hasValueImpl()) {
             NEX_REPORT_RESULT_INVALID_ACCESS(
                 "Error: Attempted to access value of error Result");
@@ -636,7 +660,9 @@ public:
     }
 
     // Get the success value through dereference semantics (crash if result is an error)
-    constexpr value_type& operator*() & noexcept {
+    template <typename Type = value_type> 
+    constexpr value_type& operator*() & noexcept 
+        requires (!meta::IsVoidV<value_type>) {
         if (!this->hasValueImpl()) {
             NEX_REPORT_RESULT_INVALID_ACCESS(
                 "Error: Attempted to access value of error Result");
@@ -645,7 +671,9 @@ public:
     }
 
     // Get the success value through dereference semantics (move; read-only; crash if result is an error)
-    constexpr const value_type&& operator*() const&& noexcept {
+    template <typename Type = value_type> 
+    constexpr const value_type&& operator*() const&& noexcept 
+        requires (!meta::IsVoidV<value_type>) {
         if (!this->hasValueImpl()) {
             NEX_REPORT_RESULT_INVALID_ACCESS(
                 "Error: Attempted to access value of error Result");
@@ -654,7 +682,9 @@ public:
     }
 
     // Get the success value through dereference semantics (move; crash if result is an error)
-    constexpr value_type&& operator*() && noexcept {
+    template <typename Type = value_type> 
+    constexpr value_type&& operator*() && noexcept 
+        requires (!meta::IsVoidV<value_type>) {
         if (!this->hasValueImpl()) {
             NEX_REPORT_RESULT_INVALID_ACCESS(
                 "Error: Attempted to access value of error Result");
@@ -664,7 +694,8 @@ public:
 
     // Get the success value or return a default if the result is an error
     template <typename DefaultValueType>
-        requires(meta::IsSameV<DefaultValueType, value_type> || meta::IsConvertibleV<DefaultValueType, value_type>)
+        requires (!meta::IsVoidV<value_type>
+            && (meta::IsSameV<DefaultValueType, value_type> || meta::IsConvertibleV<DefaultValueType, value_type>))
     constexpr value_type valueOr(DefaultValueType&& defaultValue) const& noexcept {
         static_assert(meta::IsCopyConstructibleV<value_type>, "Error: Value type has to be copy constructible");
         return hasValue() ? value() : NEX_FORWARD<DefaultValueType>(defaultValue);
@@ -672,7 +703,8 @@ public:
 
     // Get the success value or return a default if the result is an error (move version)
     template <typename DefaultValueType>
-        requires(meta::IsSameV<DefaultValueType, value_type> || meta::IsConvertibleV<DefaultValueType, value_type>)
+        requires (!meta::IsVoidV<value_type>
+            && (meta::IsSameV<DefaultValueType, value_type> || meta::IsConvertibleV<DefaultValueType, value_type>))
     constexpr value_type valueOr(DefaultValueType&& defaultValue) && noexcept {
         static_assert(meta::IsMoveConstructibleV<value_type>, "Error: Value type has to be move constructible");
         return hasValue() ? NEX_MOVE(value()) : NEX_FORWARD<DefaultValueType>(defaultValue);
@@ -731,7 +763,9 @@ public:
     }
 
     // Try to get the success value pointer (returns a nullptr if result is an error)
-    constexpr const value_type* tryValue() const noexcept {
+    template <typename Type = value_type>
+    constexpr const value_type* tryValue() const noexcept 
+    requires (!meta::IsVoidV<Type>) {
         return this->hasValueImpl() ? NEX_ADDRESS_OF(this->valueImpl()) : nullptr;
     }
 
@@ -749,9 +783,15 @@ public:
         static_assert(IsResultV<RetType>, "The result of func(value()) must be a specialization of Result");
         static_assert(meta::IsSameV<typename RetType::error_type, ErrorType>,
                     "The result of func(value()) must have the same error_type as this Result");
-        return hasValue() 
-            ? NEX_STD invoke(NEX_FORWARD<Func>(func), this->valueImpl()) 
-            : RetType(unexpect, error());
+        if (isSuccess()) {
+            if constexpr (meta::IsVoidV<value_type>) {
+                return NEX_STD invoke(NEX_FORWARD<Func>(func));
+            } else {
+                return NEX_STD invoke(NEX_FORWARD<Func>(func), this->valueImpl());
+            }
+        } else {
+            return RetType(unexpect, error());
+        }
     }
 
     // Invoke a function with the success value if the result is successful, 
@@ -763,9 +803,15 @@ public:
         static_assert(IsResultV<RetType>, "The result of func(value()) must be a specialization of Result");
         static_assert(meta::IsSameV<typename RetType::error_type, ErrorType>,
                     "The result of func(value()) must have the same error_type as this Result");
-        return hasValue() 
-            ? NEX_STD invoke(NEX_FORWARD<Func>(func), this->valueImpl()) 
-            : RetType(unexpect, error());
+        if (isSuccess()) {
+            if constexpr (meta::IsVoidV<value_type>) {
+                return NEX_STD invoke(NEX_FORWARD<Func>(func));
+            } else {
+                return NEX_STD invoke(NEX_FORWARD<Func>(func), this->valueImpl());
+            }
+        } else {
+            return RetType(unexpect, error());
+        }
     }
 
     // Invoke a function with the success value if the result is successful, 
@@ -777,9 +823,15 @@ public:
         static_assert(IsResultV<RetType>, "The result of func(NEX_MOVE(value())) must be a specialization of Result");
         static_assert(meta::IsSameV<typename RetType::error_type, ErrorType>,
             "The result of func(NEX_MOVE(value())) must have the same error_type as this Result");
-        return hasValue() 
-            ? NEX_STD invoke(NEX_FORWARD<Func>(func), NEX_MOVE(this->valueImpl()))
-            : RetType(unexpect, NEX_MOVE(error()));
+        if (isSuccess()) {
+            if constexpr (meta::IsVoidV<value_type>) {
+                return NEX_STD invoke(NEX_FORWARD<Func>(func));
+            } else {
+                return NEX_STD invoke(NEX_FORWARD<Func>(func), NEX_MOVE(this->valueImpl()));
+            }
+        } else {
+            return RetType(unexpect, NEX_MOVE(error()));
+        }
     }
 
     // Invoke a function with the success value if the result is successful, 
@@ -791,9 +843,15 @@ public:
         static_assert(IsResultV<RetType>, "The result of func(NEX_MOVE(value())) must be a specialization of Result");
         static_assert(meta::IsSameV<typename RetType::error_type, ErrorType>,
             "The result of func(NEX_MOVE(value())) must have the same error_type as this Result");
-        return hasValue() 
-            ? NEX_STD invoke(NEX_FORWARD<Func>(func), NEX_MOVE(this->valueImpl()))
-            : RetType(unexpect, NEX_MOVE(error()));
+        if (isSuccess()) {
+            if constexpr (meta::IsVoidV<value_type>) {
+                return NEX_STD invoke(NEX_FORWARD<Func>(func));
+            } else {
+                return NEX_STD invoke(NEX_FORWARD<Func>(func), NEX_MOVE(this->valueImpl()));
+            }
+        } else {
+            return RetType(unexpect, NEX_MOVE(error()));
+        }
     }
 
     // Invoke a function with the error value if the result is an error, 
@@ -805,9 +863,15 @@ public:
         static_assert(IsResultV<RetType>, "The result of func(error()) must be a specialization of Result");
         static_assert(meta::IsSameV<typename RetType::value_type, ValueType>,
             "The result of func(error()) must have the same value_type as this expected");
-        return hasValue() 
-            ? RetType(in_place, this->valueImpl()) 
-            : NEX_STD invoke(NEX_FORWARD<Func>(func), error());
+        if (isSuccess()) {
+            if constexpr (meta::IsVoidV<value_type>) {
+                return RetType(in_place);
+            } else {
+                return RetType(in_place, this->valueImpl());
+            }
+        } else {
+            return NEX_STD invoke(NEX_FORWARD<Func>(func), error());
+        }
     }
 
     // Invoke a function with the error value if the result is an error, 
@@ -819,9 +883,15 @@ public:
         static_assert(IsResultV<RetType>, "The result of func(error()) must be a specialization of Result");
         static_assert(meta::IsSameV<typename RetType::value_type, ValueType>,
             "The result of func(error()) must have the same value_type as this expected");
-        return hasValue() 
-            ? RetType(in_place, this->valueImpl()) 
-            : NEX_STD invoke(NEX_FORWARD<Func>(func), error());
+        if (isSuccess()) {
+            if constexpr (meta::IsVoidV<value_type>) {
+                return RetType(in_place);
+            } else {
+                return RetType(in_place, this->valueImpl());
+            }
+        } else {
+            return NEX_STD invoke(NEX_FORWARD<Func>(func), error());
+        }
     }
 
     // Invoke a function with the error value if the result is an error, 
@@ -833,9 +903,15 @@ public:
         static_assert(IsResultV<RetType>, "The result of func(NEX_MOVE(error())) must be a specialization of Result");
         static_assert(meta::IsSameV<typename RetType::value_type, ValueType>,
             "The result of func(NEX_MOVE(error())) must have the same value_type as this Result");
-        return hasValue() 
-            ? RetType(in_place, NEX_MOVE(this->valueImpl())) 
-            : NEX_STD invoke(NEX_FORWARD<Func>(func), NEX_MOVE(error()));
+        if (isSuccess()) {
+            if constexpr (meta::IsVoidV<value_type>) {
+                return RetType(in_place);
+            } else {
+                return RetType(in_place, NEX_MOVE(this->valueImpl()));
+            }
+        } else {
+            return NEX_STD invoke(NEX_FORWARD<Func>(func), NEX_MOVE(error()));
+        }
     }
 
     // Invoke a function with the error value if the result is an error, 
@@ -847,9 +923,15 @@ public:
         static_assert(IsResultV<RetType>, "The result of func(NEX_MOVE(error())) must be a specialization of Result");
         static_assert(meta::IsSameV<typename RetType::value_type, ValueType>,
             "The result of func(NEX_MOVE(error())) must have the same value_type as this Result");
-        return hasValue() 
-            ? RetType(in_place, NEX_MOVE(this->valueImpl())) 
-            : NEX_STD invoke(NEX_FORWARD<Func>(func), NEX_MOVE(error()));
+        if (isSuccess()) {
+            if constexpr (meta::IsVoidV<value_type>) {
+                return RetType(in_place);
+            } else {
+                return RetType(in_place, NEX_MOVE(this->valueImpl()));
+            }
+        } else {
+            return NEX_STD invoke(NEX_FORWARD<Func>(func), NEX_MOVE(error()));
+        }
     }
 
 public:
@@ -939,175 +1021,77 @@ private:
     NEX_HIDDEN_FROM_ABI constexpr explicit Result(unexpect_type, InitList<OtherError> ilist, Args&&... args) noexcept(
         meta::IsNothrowConstructibleV<ErrorType, InitList<OtherError>&, Args...>) // strengthened
         : base(unexpect, ilist, NEX_FORWARD<Args>(args)...) {}
-};
-
-/**
- * @class Result<void, ErrorType>
- * @brief Specialization of Result for operations that do not return a value, only success/failure status and error.
- * 
- * @details
- * This specialization of Result is designed for functions that do not return a value on success, but still need to 
- * indicate success or failure and provide error information. It provides the same interface for checking success 
- * and accessing errors, but does not store a value on success. This is useful for operations that are primarily 
- * about side effects and do not produce a meaningful return value.
- * 
- * @tparam ErrorType The type of the error on failure
- * 
- * @note This class is similar in concept to std::expected<void, ErrorType> (C++23) or Result types in other languages.
- * 
- * Example usage:
- * ```
- * Result<void, ErrorCode> performOperation() {
- *    if (someConditionFails) {
- *       return Result<void, ErrorCode>::error(ErrorCode::OperationFailed);
- *   }
- *   return Result<void, ErrorCode>::ok();
- * }
- * ```
- */
-
-#if 0
- template<typename ErrorType>
-class NEX_API NEX_NODISCARD Result<void, ErrorType> {
-public:
-    // Create a successful result with no return value
-    static constexpr Result ok() noexcept {
-        return Result();
-    }
-    
-    // Create an error result with an unexpected error
-    static constexpr Result error(ErrorType error) noexcept {
-        return Result(Unexpected { NEX_MOVE(error) });
-    }
-
-    // Create an error result with perfect forwarding of arguments to construct the error
-    template<typename... Args>
-    static constexpr Result error(Args&&... args) noexcept {
-        return Result(Unexpected { ErrorType(NEX_FORWARD<Args>(args)...) });
-    }
-
-    // Check if result is successful
-    constexpr bool isSuccess() const noexcept { return hasValue_; }
-
-    // Check if result has a value (also means it is successful)
-    constexpr bool hasValue() const noexcept { return hasValue_; }
-
-    // Explicit conversion to bool to check if the result is successful
-    constexpr explicit operator bool() const noexcept { return hasValue_; }
-
-    // Get the error value (crash if result is successful)
-    constexpr ErrorType& error() noexcept {
-        if (hasValue_) {
-            NEX_REPORT_RESULT_INVALID_ACCESS(
-                "Error: Attempted to access error of success Result");
-        }
-        return storage_.error_;
-    }
-
-    // Get the error value (const, crash if result is successful)
-    constexpr const ErrorType& error() const noexcept {
-        if (hasValue_) {
-            NEX_REPORT_RESULT_INVALID_ACCESS(
-                "Error: Attempted to access error of success Result");
-        }
-        return storage_.error_;
-    }
-
-    // Try to get the error value pointer (returns a nullptr if result is successful)
-    constexpr const ErrorType* tryError() const noexcept {
-        return hasValue_ ? nullptr : &storage_.error_;
-    }
-
-private:
-    // Represents an unexpected error result
-    struct Unexpected {
-        ErrorType error;
-    };
-
-    // Storage for either a successful result (no value) or an error result (with error details)
-    union NEX_ALIGNAS(alignof(ErrorType)) {
-        nchar dummy_;       // Dummy member to allow default construction of the union; not used for actual storage
-        ErrorType error_;   // Error information for failure cases; valid only if hasValue_ is false
-    } storage_;
-
-    // Flag indicating whether the result is successful (true) or an error (false)
-    bool hasValue_ = false;
-
-    // Construct a successful Result with an expected value
-    constexpr Result() noexcept : hasValue_(true) {
-        NEX_STD construct_at(&storage_.dummy_, nchar{});
-    }
-
-    // Construct an error Result with an unexpected error
-    constexpr Result(Unexpected unexpected) noexcept : hasValue_(false) {
-        NEX_STD construct_at(&storage_.error_, NEX_MOVE(unexpected.error));
-    }
-
-    // Copy the contents of another Result object into this one
-    constexpr void copyResult(const Result& other) noexcept {
-        hasValue_ = other.hasValue_;
-        if (hasValue_) {
-            // Construct the dummy member for successful result
-            NEX_STD construct_at(&storage_.dummy_, nchar{});
-        } else {
-            // Copy the error information from the other Result object
-            NEX_STD construct_at(&storage_.error_, other.storage_.error_);
-        }
-    }
-
-    // Move the contents of another Result object into this one
-    constexpr void moveResult(Result&& other) noexcept {
-        hasValue_ = other.hasValue_;
-        if (hasValue_) {
-            // Construct the dummy member for successful result
-            NEX_STD construct_at(&storage_.dummy_, nchar{});
-        } else {
-            // Move the error information from the other Result object
-            NEX_STD construct_at(&storage_.error_, NEX_MOVE(other.storage_.error_));
-        }
-    }
-
-    // Destroy the existing error information if this Result holds an error
-    constexpr void destroy() noexcept {
-        if (!hasValue_) {
-            NEX_STD destroy_at(&storage_.error_);
-        }
-    }
 
 public:
-    // Copy constructor for copying a Result object
-    constexpr Result(const Result& other) noexcept {
-        copyResult(other);
-    }
-
-    // Copy assignment operator for copying a Result object
-    constexpr Result& operator=(const Result& other) noexcept {
-        if (this != &other) {
-            destroy();
-            copyResult(other);
+    // Equality comparison operator for Result objects with the compatible value and error types
+    template <class OtherValue, class OtherError>
+    NEX_HIDDEN_FROM_ABI friend constexpr 
+    bool operator==(const Result& lhs, const Result<OtherValue, OtherError>& rhs)
+        requires (!meta::IsVoidV<OtherValue>)
+            && requires {
+                { *lhs == *rhs } -> meta::ConvertibleTo<bool>;
+                { lhs.error() == rhs.error() } -> meta::ConvertibleTo<bool>;
+            } 
+    {
+        if (lhs.hasValue() != rhs.hasValue()) {
+            return false;
+        } else {
+            if (lhs.hasValue()) {
+                return lhs.value() == rhs.value();
+            } else {
+                return lhs.error() == rhs.error();
+            }
         }
-        return *this;
     }
 
-    // Constructor for moving a Result object
-    constexpr Result(Result&& other) noexcept {
-        moveResult(NEX_MOVE(other));
+    // Equality comparison operator for a Result object with another type,
+    // as long as the other type is not a Result and the value can be compared to the other type
+    template <class OtherType>
+    NEX_HIDDEN_FROM_ABI friend constexpr 
+    bool operator==(const Result& lhs, const OtherType& rhs)
+        requires (!IsResultV<OtherType>)
+            && requires {
+                { *lhs == rhs } -> meta::ConvertibleTo<bool>;
+            }
+    {
+        return lhs.hasValue() && static_cast<bool>(lhs.value() == rhs);
     }
 
-    // Move assignment operator for moving a Result object
-    constexpr Result& operator=(Result&& other) noexcept {
-        if (this != &other) {
-            destroy();
-            moveResult(NEX_MOVE(other));
+    // Equality comparison operator for void Result objects,
+    // which only checks if both are errors and compares their error values
+    template <class OtherValue, class OtherError>
+    NEX_HIDDEN_FROM_ABI friend constexpr 
+    bool operator==(const Result& lhs, const Result<OtherValue, OtherError>& rhs)
+        requires (meta::IsVoidV<value_type> && meta::IsVoidV<OtherValue>)
+            && requires {
+                { lhs.error() == rhs.error() } -> meta::ConvertibleTo<bool>;
+            }
+    {
+        if (lhs.isSuccess() != rhs.isSuccess()) {
+            return false;
+        } else {
+            if (lhs.isSuccess()) {
+                return false;
+            } else {
+                return static_cast<bool>(lhs.error() == rhs.error());
+            }
         }
-        return *this;
     }
 
-    // Destructor
-    constexpr ~Result() {
-        destroy();
+    // Equality comparison operator for a void Result object with another type, 
+    // as long as the other type is not a Result, and the error can be compared to the other type
+    template <class OtherType>
+    NEX_HIDDEN_FROM_ABI friend constexpr 
+    bool operator==(const Result& lhs, const OtherType& rhs)
+        requires (!IsResultV<OtherType> 
+            && (meta::IsVoidV<value_type> && !meta::IsVoidV<OtherType>)
+            && (meta::IsSameV<OtherType, ErrorType> || meta::IsConvertibleV<OtherType, ErrorType>))
+            && requires {
+                { lhs.error() == rhs } -> meta::ConvertibleTo<bool>;
+            }
+    {
+        return !lhs.isSuccess() && static_cast<bool>(lhs.error() == rhs);
     }
 };
-#endif
 
 NEX_NAMESPACE_END

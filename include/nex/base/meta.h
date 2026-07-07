@@ -1117,7 +1117,7 @@ template <class Type, class = void>
 struct IsReplaceable : IsTriviallyCopyable<Type> {};
 
 template <class Type>
-struct IsReplaceable<Type, EnableIfT<IsSame<Type, typename Type::replaceable>::value>> : TrueType {};
+struct IsReplaceable<Type, EnableIfT<IsSameV<Type, typename Type::Replaceable>>> : TrueType {};
 
 template <class Type>
 constexpr bool IsReplaceableV = IsReplaceable<Type>::value;

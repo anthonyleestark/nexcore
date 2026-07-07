@@ -1223,6 +1223,30 @@ template <class Type>
 using MakeUnsignedT = typename MakeUnsigned<Type>::type;
 
 // =================================================================================
+// Compiler intrinsic concepts implementation
+// =================================================================================
+
+// Checks whether two types are the same type.
+template <typename Type1, typename Type2>
+concept SameAs =
+    IsSameV<Type1, Type2> &&
+    IsSameV<Type2, Type1>;
+
+// Checks whether Derived publicly and unambiguously derives from Base.
+template <typename Derived, typename Base>
+concept DerivedFrom = 
+    IsBaseOfV<Base, Derived> && 
+    IsConvertibleV<const volatile Derived*, const volatile Base*>;
+
+// Checks whether From is implicitly convertible to To.
+template <typename From, typename To>
+concept ConvertibleTo = 
+    IsConvertibleV<From, To> &&
+    requires {
+        static_cast<To>(declval<From>());
+    };
+
+// =================================================================================
 // Internal utilities for compile-time logic processing to support metaprogramming
 // =================================================================================
 

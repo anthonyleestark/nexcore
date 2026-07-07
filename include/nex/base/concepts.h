@@ -55,23 +55,15 @@ concept Arithmetic = meta::IsArithmeticV<Type>;
 
 /// Checks whether two types are the same type.
 template <typename Type1, typename Type2>
-concept SameAs =
-    meta::IsSameV<Type1, Type2> &&
-    meta::IsSameV<Type2, Type1>;
+concept SameAs = meta::SameAs<Type1, Type2>;
 
 /// Checks whether Derived publicly and unambiguously derives from Base.
 template <typename Derived, typename Base>
-concept DerivedFrom = 
-    meta::IsBaseOfV<Base, Derived> && 
-    meta::IsConvertibleV<const volatile Derived*, const volatile Base*>;
+concept DerivedFrom = meta::DerivedFrom<Derived, Base>;
 
 /// Checks whether From is implicitly convertible to To.
 template <typename From, typename To>
-concept ConvertibleTo = 
-    meta::IsConvertibleV<From, To> &&
-    requires {
-        static_cast<To>(meta::declval<From>());
-    };
+concept ConvertibleTo = meta::ConvertibleTo<From, To>;
 
 /// Checks whether two types share a common reference type.
 template <typename Type1, typename Type2>
@@ -101,68 +93,6 @@ template <typename Type1, typename Type2>
 concept SwappableWith = NEX_STD swappable_with<Type1, Type2>;
 
 // ============================================================================
-// Concepts for object properties, lifetime, and operations
-// ============================================================================
-
-/// Checks whether Type can be destroyed.
-template <typename Type>
-concept Destructible = meta::IsNothrowDestructibleV<Type>;
-
-/// Checks whether Type can be constructed from Args.
-template <typename Type, typename... Args>
-concept ConstructibleFrom =
-    Destructible<Type> &&
-    meta::IsConstructibleV<Type, Args...>;
-
-/// Checks whether Type can be default-initialized.
-template <typename Type>
-concept DefaultInitializable = 
-    ConstructibleFrom<Type> &&
-    requires {
-        Type{};
-        ::new (static_cast<void_ptr>(nullptr)) Type;
-    };
-
-/// Checks whether Type can be move-constructed.
-template <typename Type>
-concept MoveConstructible = 
-    ConstructibleFrom<Type, Type> &&
-    ConvertibleTo<Type, Type>;
-
-/// Checks whether Type can be copy-constructed.
-template <typename Type>
-concept CopyConstructible = 
-    MoveConstructible<Type> && ConstructibleFrom<Type, Type&> && ConvertibleTo<Type&, Type> && 
-    ConstructibleFrom<Type, const Type&> && ConvertibleTo<const Type&, Type> && 
-    ConstructibleFrom<Type, const Type> && ConvertibleTo<const Type, Type>;
-
-/// Checks whether Type can be moved, assigned, and swapped.
-template <typename Type>
-concept Movable = NEX_STD movable<Type>;
-
-/// Checks whether Type is movable and copyable.
-template <typename Type>
-concept Copyable = NEX_STD copyable<Type>;
-
-/// Checks whether Type is copyable and default-initializable.
-template <typename Type>
-concept Semiregular = NEX_STD semiregular<Type>;
-
-/// Checks whether Type behaves like a regular value type.
-template <typename Type>
-concept Regular = NEX_STD regular<Type>;
-
-/// Checks whether the decayed type is copy constructible and move constructible.
-template <typename Type>
-concept DecayCopyable =
-    CopyConstructible<meta::DecayT<Type>> &&
-    MoveConstructible<meta::DecayT<Type>>;
-
-/// Alias kept for existing code that uses RegularValue.
-template <typename Type>
-concept RegularValue = Regular<Type>;
-
-// ============================================================================
 // Concepts for comparison and ordering
 // ============================================================================
 
@@ -181,6 +111,75 @@ concept TotallyOrdered = NEX_STD totally_ordered<Type>;
 /// Checks whether Type1 and Type2 are totally ordered with each other.
 template <typename Type1, typename Type2>
 concept TotallyOrderedWith = NEX_STD totally_ordered_with<Type1, Type2>;
+
+// ============================================================================
+// Concepts for object properties, lifetime, and operations
+// ============================================================================
+
+/// Checks whether Type can be destroyed.
+template <typename Type>
+concept Destructible = meta::IsNothrowDestructibleV<Type>;
+
+/// Checks whether Type can be constructed from Args.
+template <typename Type, typename... Args>
+concept ConstructibleFrom =
+    Destructible<Type> &&
+    meta::IsConstructibleV<Type, Args...>;
+
+/// Checks whether Type can be default-initialized.
+template <typename Type>
+concept DefaultInitializable =
+    ConstructibleFrom<Type> &&
+    requires {
+        Type{};
+        ::new (static_cast<void_ptr>(nullptr)) Type;
+    };
+
+/// Checks whether Type can be move-constructed.
+template <typename Type>
+concept MoveConstructible =
+    ConstructibleFrom<Type, Type> &&
+    ConvertibleTo<Type, Type>;
+
+/// Checks whether Type can be copy-constructed.
+template <typename Type>
+concept CopyConstructible = 
+    MoveConstructible<Type> && ConstructibleFrom<Type, Type&> && ConvertibleTo<Type&, Type> && 
+    ConstructibleFrom<Type, const Type&> && ConvertibleTo<const Type&, Type> && 
+    ConstructibleFrom<Type, const Type> && ConvertibleTo<const Type, Type>;
+
+/// Checks whether Type can be moved, assigned, and swapped.
+template <typename Type>
+concept Movable = meta::IsObjectV<Type> && MoveConstructible<Type> && AssignableFrom<Type&, Type> && Swappable<Type>;
+
+/// Checks whether Type is movable and copyable.
+template <typename Type>
+concept Copyable =
+    CopyConstructible<Type> &&
+    Movable<Type> &&
+    AssignableFrom<Type&, Type&> &&
+    AssignableFrom<Type&, const Type&> &&
+    AssignableFrom<Type&, const Type>;
+
+/// Checks whether Type is copyable and default-initializable.
+template <typename Type>
+concept Semiregular =
+    Copyable<Type> &&
+    DefaultInitializable<Type>;
+
+/// Checks whether Type behaves like a regular value type.
+template <typename Type>
+concept Regular = Semiregular<Type> && EqualityComparable<Type>;
+
+/// Checks whether the decayed type is copy constructible and move constructible.
+template <typename Type>
+concept DecayCopyable =
+    CopyConstructible<meta::DecayT<Type>> &&
+    MoveConstructible<meta::DecayT<Type>>;
+
+/// Alias kept for existing code that uses RegularValue.
+template <typename Type>
+concept RegularValue = Regular<Type>;
 
 // ============================================================================
 // Concepts for invocability and predicates

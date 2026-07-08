@@ -26,6 +26,7 @@
 #include "nex/base/meta.h"
 #include "nex/base/types.h"
 #include "nex/base/casts.h"
+#include "nex/base/invoke.h"
 
 NEX_NAMESPACE_BEGIN
 
@@ -197,13 +198,13 @@ concept RegularInvocable = NEX_STD regular_invocable<Fn, Args...>;
 template <typename Fn, typename Return, typename... Args>
 concept CallableReturns =
     Invocable<Fn, Args...> &&
-    SameAs<NEX_STD invoke_result_t<Fn, Args...>, Return>;
+    SameAs<InvokeResultT<Fn, Args...>, Return>;
 
 /// Checks whether Fn can be invoked with Args and returns a type convertible to Return.
 template <typename Fn, typename Return, typename... Args>
 concept CallableConvertibleTo =
     Invocable<Fn, Args...> &&
-    ConvertibleTo<NEX_STD invoke_result_t<Fn, Args...>, Return>;
+    ConvertibleTo<InvokeResultT<Fn, Args...>, Return>;
 
 /// Checks whether Fn can be used as a predicate for Args.
 template <typename Fn, typename... Args>

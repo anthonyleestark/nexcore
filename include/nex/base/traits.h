@@ -25,6 +25,7 @@
 #include "nex/base/macros.h"
 #include "nex/base/meta.h"
 #include "nex/base/casts.h"
+#include "nex/base/invoke.h"
 #include "nex/base/concepts.h"
 
 NEX_NAMESPACE_BEGIN
@@ -628,10 +629,6 @@ using RequiresEnum = EnableIf<Enum<Type>>;
 /// A type trait that enables a template only if the Type is a class type (i.e., a struct or class).
 template <typename Type>
 using RequiresClass = EnableIf<Class<Type>>;
-
-/// A type alias for the result type of invoking a callable with specific arguments.
-template<typename Fn, typename... Args>
-using InvokeResult = NEX_STD invoke_result_t<Fn, Args...>;
 
 /// A type alias for the underlying type of an enumeration type.
 template <typename Type>

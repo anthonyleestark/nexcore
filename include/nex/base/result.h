@@ -6,13 +6,13 @@
 #pragma once
 
 #include <memory>
-#include <functional>
 
 #include "nex/base/types.h"
 #include "nex/base/casts.h"
+#include "nex/base/init.h"
+#include "nex/base/invoke.h"
 #include "nex/base/error.h"
 #include "nex/base/assert_crash.h"
-#include "nex/base/init.h"
 
 NEX_NAMESPACE_BEGIN
 
@@ -132,7 +132,7 @@ struct NEX_INTERNAL ConditionalNoUniqueAddress<true, Type> {
     template <class Func, class... Args>
     NEX_HIDDEN_FROM_ABI constexpr explicit ConditionalNoUniqueAddress(
         ConditionalNoUniqueAddressInvokeTag, Func&& func, Args&&... args)
-        : value(NEX_STD invoke(NEX_FORWARD<Func>(func), NEX_FORWARD<Args>(args)...)) {}
+        : value(invoke(NEX_FORWARD<Func>(func), NEX_FORWARD<Args>(args)...)) {}
 
     NEX_NO_UNIQUE_ADDRESS Type value;
 };
@@ -146,7 +146,7 @@ struct NEX_INTERNAL ConditionalNoUniqueAddress<false, Type> {
     template <class Func, class... Args>
     NEX_HIDDEN_FROM_ABI constexpr explicit ConditionalNoUniqueAddress(
         ConditionalNoUniqueAddressInvokeTag, Func&& func, Args&&... args)
-        : value(NEX_STD invoke(NEX_FORWARD<Func>(func), NEX_FORWARD<Args>(args)...)) {}
+        : value(invoke(NEX_FORWARD<Func>(func), NEX_FORWARD<Args>(args)...)) {}
 
     Type value;
 };
@@ -211,13 +211,13 @@ class NEX_INTERNAL ResultBase {
         template <class Func, class... Args>
         NEX_HIDDEN_FROM_ABI constexpr explicit 
         ResultStorage(ResultValueInPlaceConstructionTag, Func&& func, Args&&... args)
-            : value_(NEX_STD invoke(NEX_FORWARD<Func>(func), NEX_FORWARD<Args>(args)...)) {}
+            : value_(invoke(NEX_FORWARD<Func>(func), NEX_FORWARD<Args>(args)...)) {}
 
         // Constructor for in-place construction of error using a function and arguments
         template <class Func, class... Args>
         NEX_HIDDEN_FROM_ABI constexpr explicit 
         ResultStorage(ResultErrorInPlaceConstructionTag, Func&& func, Args&&... args)
-            : error_(NEX_STD invoke(NEX_FORWARD<Func>(func), NEX_FORWARD<Args>(args)...)) {}
+            : error_(invoke(NEX_FORWARD<Func>(func), NEX_FORWARD<Args>(args)...)) {}
 
         // The destructor is trivial if both ValueType and ErrorType are trivially destructible
         NEX_HIDDEN_FROM_ABI constexpr ~ResultStorage()
@@ -779,15 +779,15 @@ public:
     template <class Func>
         requires (meta::IsConstructibleV<ErrorType, ErrorType&>)
     constexpr auto andThen(Func&& func) & {
-        using RetType = meta::RemoveCvrefT<NEX_STD invoke_result_t<Func, ValueType&>>;
+        using RetType = meta::RemoveCvrefT<InvokeResultT<Func, ValueType&>>;
         static_assert(IsResultV<RetType>, "The result of func(value()) must be a specialization of Result");
         static_assert(meta::IsSameV<typename RetType::error_type, ErrorType>,
             "The result of func(value()) must have the same error_type as this Result");
         if (isOk()) {
             if constexpr (meta::IsVoidV<value_type>) {
-                return NEX_STD invoke(NEX_FORWARD<Func>(func));
+                return invoke(NEX_FORWARD<Func>(func));
             } else {
-                return NEX_STD invoke(NEX_FORWARD<Func>(func), this->valueImpl());
+                return invoke(NEX_FORWARD<Func>(func), this->valueImpl());
             }
         } else {
             return RetType(unexpect, error());
@@ -799,15 +799,15 @@ public:
     template <class Func>
         requires (meta::IsConstructibleV<ErrorType, const ErrorType&>)
     constexpr auto andThen(Func&& func) const& {
-        using RetType = meta::RemoveCvrefT<NEX_STD invoke_result_t<Func, const ValueType&>>;
+        using RetType = meta::RemoveCvrefT<InvokeResultT<Func, const ValueType&>>;
         static_assert(IsResultV<RetType>, "The result of func(value()) must be a specialization of Result");
         static_assert(meta::IsSameV<typename RetType::error_type, ErrorType>,
             "The result of func(value()) must have the same error_type as this Result");
         if (isOk()) {
             if constexpr (meta::IsVoidV<value_type>) {
-                return NEX_STD invoke(NEX_FORWARD<Func>(func));
+                return invoke(NEX_FORWARD<Func>(func));
             } else {
-                return NEX_STD invoke(NEX_FORWARD<Func>(func), this->valueImpl());
+                return invoke(NEX_FORWARD<Func>(func), this->valueImpl());
             }
         } else {
             return RetType(unexpect, error());
@@ -819,15 +819,15 @@ public:
     template <class Func>
         requires (meta::IsConstructibleV<ErrorType, ErrorType&&>)
     constexpr auto andThen(Func&& func) && {
-        using RetType = meta::RemoveCvrefT<NEX_STD invoke_result_t<Func, ValueType&&>>;
+        using RetType = meta::RemoveCvrefT<InvokeResultT<Func, ValueType&&>>;
         static_assert(IsResultV<RetType>, "The result of func(NEX_MOVE(value())) must be a specialization of Result");
         static_assert(meta::IsSameV<typename RetType::error_type, ErrorType>,
             "The result of func(NEX_MOVE(value())) must have the same error_type as this Result");
         if (isOk()) {
             if constexpr (meta::IsVoidV<value_type>) {
-                return NEX_STD invoke(NEX_FORWARD<Func>(func));
+                return invoke(NEX_FORWARD<Func>(func));
             } else {
-                return NEX_STD invoke(NEX_FORWARD<Func>(func), NEX_MOVE(this->valueImpl()));
+                return invoke(NEX_FORWARD<Func>(func), NEX_MOVE(this->valueImpl()));
             }
         } else {
             return RetType(unexpect, NEX_MOVE(error()));
@@ -839,15 +839,15 @@ public:
     template <class Func>
         requires (meta::IsConstructibleV<ErrorType, const ErrorType&&>)
     constexpr auto andThen(Func&& func) const&& {
-        using RetType = meta::RemoveCvrefT<NEX_STD invoke_result_t<Func, const ValueType&&>>;
+        using RetType = meta::RemoveCvrefT<InvokeResultT<Func, const ValueType&&>>;
         static_assert(IsResultV<RetType>, "The result of func(NEX_MOVE(value())) must be a specialization of Result");
         static_assert(meta::IsSameV<typename RetType::error_type, ErrorType>,
             "The result of func(NEX_MOVE(value())) must have the same error_type as this Result");
         if (isOk()) {
             if constexpr (meta::IsVoidV<value_type>) {
-                return NEX_STD invoke(NEX_FORWARD<Func>(func));
+                return invoke(NEX_FORWARD<Func>(func));
             } else {
-                return NEX_STD invoke(NEX_FORWARD<Func>(func), NEX_MOVE(this->valueImpl()));
+                return invoke(NEX_FORWARD<Func>(func), NEX_MOVE(this->valueImpl()));
             }
         } else {
             return RetType(unexpect, NEX_MOVE(error()));
@@ -859,7 +859,7 @@ public:
     template <class Func>
         requires (meta::IsConstructibleV<ValueType, ValueType&>)
     constexpr auto orElse(Func&& func) & {
-        using RetType = meta::RemoveCvrefT<NEX_STD invoke_result_t<Func, ErrorType&>>;
+        using RetType = meta::RemoveCvrefT<InvokeResultT<Func, ErrorType&>>;
         static_assert(IsResultV<RetType>, "The result of func(error()) must be a specialization of Result");
         static_assert(meta::IsSameV<typename RetType::value_type, ValueType>,
             "The result of func(error()) must have the same value_type as this expected");
@@ -870,7 +870,7 @@ public:
                 return RetType(in_place, this->valueImpl());
             }
         } else {
-            return NEX_STD invoke(NEX_FORWARD<Func>(func), error());
+            return invoke(NEX_FORWARD<Func>(func), error());
         }
     }
 
@@ -879,7 +879,7 @@ public:
     template <class Func>
         requires (meta::IsConstructibleV<ValueType, const ValueType&>)
     constexpr auto orElse(Func&& func) const& {
-        using RetType = meta::RemoveCvrefT<NEX_STD invoke_result_t<Func, const ErrorType&>>;
+        using RetType = meta::RemoveCvrefT<InvokeResultT<Func, const ErrorType&>>;
         static_assert(IsResultV<RetType>, "The result of func(error()) must be a specialization of Result");
         static_assert(meta::IsSameV<typename RetType::value_type, ValueType>,
             "The result of func(error()) must have the same value_type as this expected");
@@ -890,7 +890,7 @@ public:
                 return RetType(in_place, this->valueImpl());
             }
         } else {
-            return NEX_STD invoke(NEX_FORWARD<Func>(func), error());
+            return invoke(NEX_FORWARD<Func>(func), error());
         }
     }
 
@@ -899,7 +899,7 @@ public:
     template <class Func>
         requires (meta::IsConstructibleV<ValueType, ValueType&&>)
     constexpr auto orElse(Func&& func) && {
-        using RetType = meta::RemoveCvrefT<NEX_STD invoke_result_t<Func, ErrorType&&>>;
+        using RetType = meta::RemoveCvrefT<InvokeResultT<Func, ErrorType&&>>;
         static_assert(IsResultV<RetType>, "The result of func(NEX_MOVE(error())) must be a specialization of Result");
         static_assert(meta::IsSameV<typename RetType::value_type, ValueType>,
             "The result of func(NEX_MOVE(error())) must have the same value_type as this Result");
@@ -910,7 +910,7 @@ public:
                 return RetType(in_place, NEX_MOVE(this->valueImpl()));
             }
         } else {
-            return NEX_STD invoke(NEX_FORWARD<Func>(func), NEX_MOVE(error()));
+            return invoke(NEX_FORWARD<Func>(func), NEX_MOVE(error()));
         }
     }
 
@@ -919,7 +919,7 @@ public:
     template <class Func>
         requires (meta::IsConstructibleV<ValueType, const ValueType&&>)
     constexpr auto orElse(Func&& func) const&& {
-        using RetType = meta::RemoveCvrefT<NEX_STD invoke_result_t<Func, const ErrorType&&>>;
+        using RetType = meta::RemoveCvrefT<InvokeResultT<Func, const ErrorType&&>>;
         static_assert(IsResultV<RetType>, "The result of func(NEX_MOVE(error())) must be a specialization of Result");
         static_assert(meta::IsSameV<typename RetType::value_type, ValueType>,
             "The result of func(NEX_MOVE(error())) must have the same value_type as this Result");
@@ -930,7 +930,7 @@ public:
                 return RetType(in_place, NEX_MOVE(this->valueImpl()));
             }
         } else {
-            return NEX_STD invoke(NEX_FORWARD<Func>(func), NEX_MOVE(error()));
+            return invoke(NEX_FORWARD<Func>(func), NEX_MOVE(error()));
         }
     }
 

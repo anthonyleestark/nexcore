@@ -12,6 +12,7 @@
 #include "nex/base/macros.h"
 #include "nex/base/types.h"
 #include "nex/base/casts.h"
+#include "nex/base/invoke.h"
 #include "nex/base/traits.h"
 #include "nex/base/primitives.h"
 #include "nex/base/wrappers.h"
@@ -310,10 +311,10 @@ public:
     void run() {
         try {
             // Invoke the function with the provided arguments and set the result in the Promise.
-            if constexpr (NEX_STD is_void_v<ReturnType>) {
+            if constexpr (meta::IsVoidV<ReturnType>) {
                 NEX_STD apply(
                     [this](auto&... args) {
-                        NEX_STD invoke(fn_, NEX_MOVE(args)...);
+                        invoke(fn_, NEX_MOVE(args)...);
                     },
                     args_
                 );
@@ -322,7 +323,7 @@ public:
                 promise_.setValue(
                     NEX_STD apply(
                         [this](auto&... args) -> ReturnType {
-                            return NEX_STD invoke(fn_, NEX_MOVE(args)...);
+                            return invoke(fn_, NEX_MOVE(args)...);
                         },
                         args_
                     )

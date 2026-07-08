@@ -6,12 +6,12 @@
 #pragma once
 
 #include <memory>
-#include <functional>
 
 #include "nex/base/macros.h"
 #include "nex/base/meta.h"
 #include "nex/base/types.h"
 #include "nex/base/casts.h"
+#include "nex/base/invoke.h"
 #include "nex/base/string.h"
 #include "nex/base/error.h"
 
@@ -103,72 +103,72 @@ public:
     // Execute a function if the status is successful, otherwise propagate the error
     template <typename Func>
     constexpr auto andThen(Func&& func) & noexcept {
-        using ReturnType = meta::RemoveCvrefT<NEX_STD invoke_result_t<Func>>;
+        using ReturnType = meta::RemoveCvrefT<InvokeResultT<Func>>;
         static_assert(IsStatusV<ReturnType>, "The result of the andThen callback must be a Status");
-        if (isOk()) return NEX_STD invoke(NEX_FORWARD<Func>(func));
+        if (isOk()) return invoke(NEX_FORWARD<Func>(func));
         return Status(unexpect, storage_.error_);
     }
 
     // Execute a function if the status is successful, otherwise propagate the error (const version)
     template <typename Func>
     constexpr auto andThen(Func&& func) const& noexcept {
-        using ReturnType = meta::RemoveCvrefT<NEX_STD invoke_result_t<Func>>;
+        using ReturnType = meta::RemoveCvrefT<InvokeResultT<Func>>;
         static_assert(IsStatusV<ReturnType>, "The result of the andThen callback must be a Status");
-        if (isOk()) return NEX_STD invoke(NEX_FORWARD<Func>(func));
+        if (isOk()) return invoke(NEX_FORWARD<Func>(func));
         return Status(unexpect, storage_.error_ );
     }
 
     // Execute a function if the status is successful, otherwise propagate the error (rvalue version)
     template <typename Func>
     constexpr auto andThen(Func&& func) && noexcept {
-        using ReturnType = meta::RemoveCvrefT<NEX_STD invoke_result_t<Func>>;
+        using ReturnType = meta::RemoveCvrefT<InvokeResultT<Func>>;
         static_assert(IsStatusV<ReturnType>, "The result of the andThen callback must be a Status");
-        if (isOk()) return NEX_STD invoke(NEX_FORWARD<Func>(func));
+        if (isOk()) return invoke(NEX_FORWARD<Func>(func));
         return Status(unexpect, NEX_MOVE(storage_.error_));
     }
 
     // Execute a function if the status is successful, otherwise propagate the error (const rvalue version)
     template <typename Func>
     constexpr auto andThen(Func&& func) const&& noexcept {
-        using ReturnType = meta::RemoveCvrefT<NEX_STD invoke_result_t<Func>>;
+        using ReturnType = meta::RemoveCvrefT<InvokeResultT<Func>>;
         static_assert(IsStatusV<ReturnType>, "The result of the andThen callback must be a Status");
-        if (isOk()) return NEX_STD invoke(NEX_FORWARD<Func>(func));
+        if (isOk()) return invoke(NEX_FORWARD<Func>(func));
         return Status(unexpect, NEX_MOVE(storage_.error_));
     }
 
     // Execute a function if the status is an error, otherwise propagate the success status
     template <typename Func>
     constexpr auto orElse(Func&& func) & noexcept {
-        using ReturnType = meta::RemoveCvrefT<NEX_STD invoke_result_t<Func, const Error&>>;
+        using ReturnType = meta::RemoveCvrefT<InvokeResultT<Func, const Error&>>;
         static_assert(IsStatusV<ReturnType>, "The result of the orElse callback must be a Status");
-        if (!isOk()) return NEX_STD invoke(NEX_FORWARD<Func>(func), storage_.error_);
+        if (!isOk()) return invoke(NEX_FORWARD<Func>(func), storage_.error_);
         return Status::ok();
     }
 
     // Execute a function if the status is an error, otherwise propagate the success status (const version)
     template <typename Func>
     constexpr auto orElse(Func&& func) const& noexcept {
-        using ReturnType = meta::RemoveCvrefT<NEX_STD invoke_result_t<Func, const Error&>>;
+        using ReturnType = meta::RemoveCvrefT<InvokeResultT<Func, const Error&>>;
         static_assert(IsStatusV<ReturnType>, "The result of the orElse callback must be a Status");
-        if (!isOk()) return NEX_STD invoke(NEX_FORWARD<Func>(func), storage_.error_);
+        if (!isOk()) return invoke(NEX_FORWARD<Func>(func), storage_.error_);
         return Status::ok();
     }
 
     // Execute a function if the status is an error, otherwise propagate the success status (rvalue version)
     template <typename Func>
     constexpr auto orElse(Func&& func) && noexcept {
-        using ReturnType = meta::RemoveCvrefT<NEX_STD invoke_result_t<Func, const Error&>>;
+        using ReturnType = meta::RemoveCvrefT<InvokeResultT<Func, const Error&>>;
         static_assert(IsStatusV<ReturnType>, "The result of the orElse callback must be a Status");
-        if (!isOk()) return NEX_STD invoke(NEX_FORWARD<Func>(func), NEX_MOVE(storage_.error_));
+        if (!isOk()) return invoke(NEX_FORWARD<Func>(func), NEX_MOVE(storage_.error_));
         return Status::ok();
     }
 
     // Execute a function if the status is an error, otherwise propagate the success status (const rvalue version)
     template <typename Func>
     constexpr auto orElse(Func&& func) const&& noexcept {
-        using ReturnType = meta::RemoveCvrefT<NEX_STD invoke_result_t<Func, const Error&>>;
+        using ReturnType = meta::RemoveCvrefT<InvokeResultT<Func, const Error&>>;
         static_assert(IsStatusV<ReturnType>, "The result of the orElse callback must be a Status");
-        if (!isOk()) return NEX_STD invoke(NEX_FORWARD<Func>(func), NEX_MOVE(storage_.error_));
+        if (!isOk()) return invoke(NEX_FORWARD<Func>(func), NEX_MOVE(storage_.error_));
         return Status::ok();
     }
 

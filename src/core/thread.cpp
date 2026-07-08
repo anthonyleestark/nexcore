@@ -4,6 +4,7 @@
  */
 
 #include "nex/core/thread.h"
+#include "nex/base/invoke.h"
 #include "nex/base/linear.h"
 #include "nex/base/adaptors.h"
 #include "nex/base/associative.h"
@@ -188,10 +189,10 @@ bool Thread::startWithTask(Fn&& callable, Args&&... args) {
 
             // Call the provided function with the stop token and arguments if it accepts a stop token, 
             // otherwise call it without the stop token
-            if constexpr (NEX_STD is_invocable_v<Fn, StopToken, Args...>) {
-                NEX_STD invoke(func, stopToken, NEX_MOVE(argList)...);
+            if constexpr (IsInvocableV<Fn, StopToken, Args...>) {
+                invoke(func, stopToken, NEX_MOVE(argList)...);
             } else {
-                NEX_STD invoke(func, NEX_MOVE(argList)...);
+                invoke(func, NEX_MOVE(argList)...);
             }
 
             // Mark the thread as not running when the function exits

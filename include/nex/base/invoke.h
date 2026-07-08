@@ -104,7 +104,7 @@ NEX_NAMESPACE_BEGIN
     inline NEX_HIDDEN_FROM_ABI const bool _IsNothrowInvocableRV =
         _IsNothrowInvocableRImpl<_IsNothrowInvocableV<Args...>, Ret, Args...>;
 
-#else
+#else  // ^^NEX_HAS_BUILTIN(__builtin_invoke)
 
 NEX_DETAIL_NAMESPACE_BEGIN
 
@@ -240,7 +240,7 @@ inline const bool _IsNothrowInvocableRImpl<true, Ret, Args...> =
 template <class Ret, class... Args>
 inline const bool _IsNothrowInvocableRV = _IsNothrowInvocableRImpl<_IsNothrowInvocableV<Args...>, Ret, Args...>;
 
-#endif // ^^NEX_HAS_BUILTIN(__builtin_invoke)
+#endif // ^^!NEX_HAS_BUILTIN(__builtin_invoke)
 
 // Wrapper to handle the return type of an invocation,
 // allowing for void return types to be handled correctly.

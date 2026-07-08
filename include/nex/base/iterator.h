@@ -148,79 +148,114 @@ using RangeConstRevIterOf = ReverseIterator<RangeConstIterOf<Range>>;
 // Iterator utilities
 // ===========================================================================
 
+/// Returns an iterator to the beginning of an array of a specified size.
+template <class Type, usize Capacity>
+NEX_NODISCARD constexpr Type* begin(Type (&array)[Capacity]) noexcept {
+    return array;
+}
+
+/// Returns an iterator to the end of an array of a specified size.
+template <class Type, usize Capacity>
+NEX_NODISCARD constexpr Type* end(Type (&array)[Capacity]) noexcept {
+    return array + Capacity;
+}
+
 /// Returns an iterator to the beginning of a container or range.
 template <typename Container>
 NEX_NODISCARD constexpr auto begin(Container& cont) -> decltype(cont.begin()) {
-    return NEX_STD begin(cont);
+    return cont.begin();
 }
 
 /// Returns a const iterator to the beginning of a container or range.
 template <typename Container>
 NEX_NODISCARD constexpr auto begin(const Container& cont) -> decltype(cont.begin()) {
-    return NEX_STD begin(cont);
+    return cont.begin();
 }
 
 /// Returns an iterator to the end of a container or range.
 template <typename Container>
 NEX_NODISCARD constexpr auto end(Container& cont) -> decltype(cont.end()) {
-    return NEX_STD end(cont);
+    return cont.end();
 }
 
 /// Returns a const iterator to the end of a container or range.
 template <typename Container>
 NEX_NODISCARD constexpr auto end(const Container& cont) -> decltype(cont.end()) {
-    return NEX_STD end(cont);
+    return cont.end();
 }
 
 /// Return a const iterator to the beginning of a container or range.
 template <typename Container>
-NEX_NODISCARD constexpr auto 
-cbegin(const Container& cont) noexcept(noexcept(NEX_STD begin(cont))) 
-    -> decltype(NEX_STD begin(cont)) {
-    return NEX_STD begin(cont);
+NEX_NODISCARD constexpr 
+auto cbegin(const Container& cont) noexcept(noexcept(begin(cont))) -> decltype(begin(cont)) {
+    return begin(cont);
 }
 
 /// Return a const iterator to the end of a container or range.
 template <typename Container>
-NEX_NODISCARD constexpr auto 
-cend(const Container& cont) noexcept(noexcept(NEX_STD end(cont))) -> decltype(NEX_STD end(cont)) {
-    return NEX_STD end(cont);
+NEX_NODISCARD constexpr 
+auto cend(const Container& cont) noexcept(noexcept(end(cont))) -> decltype(end(cont)) {
+    return end(cont);
+}
+
+/// Returns a reverse iterator to the beginning of an array of a specified size.
+template <class Type, usize Capacity>
+NEX_NODISCARD constexpr ReverseIterator<Type*> rbegin(Type (&array)[Capacity]) {
+    return ReverseIterator<Type*>(array + Capacity);
+}
+
+/// Returns a reverse iterator to the end of an array of a specified size.
+template <class Type, usize Capacity>
+NEX_NODISCARD constexpr ReverseIterator<Type*> rend(Type (&array)[Capacity]) {
+    return ReverseIterator<Type*>(array);
+}
+
+/// Returns a reverse iterator to the beginning of an initializer list.
+template <class ElementType>
+NEX_NODISCARD constexpr ReverseIterator<const ElementType*> rbegin(InitList<ElementType> ilist) {
+    return ReverseIterator<const ElementType*>(ilist.end());
+}
+
+/// Returns a reverse iterator to the end of an initializer list.
+template <class ElementType>
+NEX_NODISCARD constexpr ReverseIterator<const ElementType*> rend(InitList<ElementType> ilist) {
+    return ReverseIterator<const ElementType*>(ilist.begin());
 }
 
 /// Returns a reverse iterator to the beginning of a container or range.
 template <typename Container>
 NEX_NODISCARD constexpr auto rbegin(Container& cont) -> decltype(cont.rbegin()) {
-    return NEX_STD rbegin(cont);
+    return cont.rbegin();
 }
 
 /// Return a const reverse iterator to the beginning of a container or range.
 template <typename Container>
 NEX_NODISCARD constexpr auto rbegin(const Container& cont) -> decltype(cont.rbegin()) {
-    return NEX_STD rbegin(cont);
+    return cont.rbegin();
 }
 
 /// Returns a reverse iterator to the end of a container or range.
 template <typename Container>
 NEX_NODISCARD constexpr auto rend(Container& cont) -> decltype(cont.rend()) {
-    return NEX_STD rend(cont);
+    return cont.rend();
 }
 
 /// Return a const reverse iterator to the end of a container or range.
 template <typename Container>
 NEX_NODISCARD constexpr auto rend(const Container& cont) -> decltype(cont.rend()) {
-    return NEX_STD rend(cont);
+    return cont.rend();
 }
 
 /// Return a const reverse iterator to the beginning of a container or range.
 template <typename Container>
-NEX_NODISCARD constexpr auto crbegin(const Container& cont) -> decltype(NEX_STD crbegin(cont)) {
-    return NEX_STD crbegin(cont);
+NEX_NODISCARD constexpr auto crbegin(const Container& cont) -> decltype(rbegin(cont)) {
+    return rbegin(cont);
 }
 
 /// Return a const reverse iterator to the end of a container or range.
 template <typename Container>
-NEX_NODISCARD constexpr auto crend(const Container& cont) -> decltype(NEX_STD crend(cont)) {
-    return NEX_STD crend(cont);
+NEX_NODISCARD constexpr auto crend(const Container& cont) -> decltype(rend(cont)) {
+    return rend(cont);
 }
 
 /// Returns the distance between two iterators, which is the number of elements between them.
@@ -300,16 +335,16 @@ NEX_NODISCARD constexpr auto ssize(const Container& cont)
 }
 
 /// Returns the size of a built-in array, which is the number of elements it contains.
-template <class Type, usize N>
-NEX_NODISCARD constexpr usize size(const Type (&array)[N]) noexcept {
-    return N;
+template <class Type, usize Capacity>
+NEX_NODISCARD constexpr usize size(const Type (&array)[Capacity]) noexcept {
+    return Capacity;
 }
 
 /// Returns the signed size of a built-in array, which is the number of elements it contains, 
 /// represented as a signed integer type.
-template <class Type, isize N>
-NEX_NODISCARD constexpr isize ssize(const Type (&array)[N]) noexcept {
-    return static_cast<isize>(N);
+template <class Type, isize Capacity>
+NEX_NODISCARD constexpr isize ssize(const Type (&array)[Capacity]) noexcept {
+    return static_cast<isize>(Capacity);
 }
 
 /// Checks whether a container or range is empty, which means it contains no elements.
@@ -319,15 +354,15 @@ NEX_NODISCARD constexpr auto empty(const Container& cont) -> decltype(cont.empty
 }
 
 /// Checks whether a built-in array is empty, which means it contains no elements.
-template <typename Type, usize N>
-NEX_NODISCARD constexpr bool empty(const Type (&array)[N]) noexcept {
-    return N == 0;
+template <typename Type, usize Capacity>
+NEX_NODISCARD constexpr bool empty(const Type (&array)[Capacity]) noexcept {
+    return Capacity == 0;
 }
 
 /// Checks whether an initializer list is empty, which means it contains no elements.
-template <typename Element>
-NEX_NODISCARD constexpr bool empty(InitList<Element> il) noexcept {
-    return il.size() == 0;
+template <typename ElementType>
+NEX_NODISCARD constexpr bool empty(InitList<ElementType> ilist) noexcept {
+    return ilist.size() == 0;
 }
 
 /// Returns a pointer to the block of memory containing the elements of a container or range, 
@@ -346,16 +381,16 @@ NEX_NODISCARD constexpr auto data(const Container& cont) -> decltype(cont.data()
 
 /// Returns a pointer to the first element of a built-in array, 
 /// which can be used for direct access to the elements.
-template <typename Type, usize N>
-NEX_NODISCARD constexpr Type* data(Type (&array)[N]) noexcept {
+template <typename Type, usize Capacity>
+NEX_NODISCARD constexpr Type* data(Type (&array)[Capacity]) noexcept {
     return array;
 }
 
 /// Returns a pointer to the first element of an initializer list, 
 /// which can be used for direct access to the elements.
-template <typename Element>
-NEX_NODISCARD constexpr const Element* data(InitList<Element> il) noexcept {
-    return il.begin();
+template <typename ElementType>
+NEX_NODISCARD constexpr const ElementType* data(InitList<ElementType> ilist) noexcept {
+    return ilist.begin();
 }
 
 NEX_NAMESPACE_END

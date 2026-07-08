@@ -12,8 +12,8 @@
 #include "nex/base/types.h"
 #include "nex/base/casts.h"
 #include "nex/base/invoke.h"
-#include "nex/base/string.h"
 #include "nex/base/error.h"
+#include "nex/base/string.h"
 
 NEX_NAMESPACE_BEGIN
 
@@ -55,49 +55,51 @@ inline constexpr bool IsStatusV = IsStatus<Type>::value;
  */
 class NEX_API NEX_NODISCARD Status {
 public:
+    using value_type = void;
+    using error_type = Error;
+
     // Create a successful status
     static constexpr Status ok() noexcept {
         return Status(in_place);
     }
 
+    // Create an error status from an unexpected error
+    static constexpr Status error(const error_type& error) noexcept {
+        return Status(unexpect, error);
+    }
+
+    // Create an error status from an unexpected error
+    static constexpr Status error(error_type&& error) noexcept {
+        return Status(unexpect, NEX_MOVE(error));
+    }
+
     // Create an error status with a specific error code
     static constexpr Status error(ErrorCode code) noexcept {
-        return Status(unexpect, code, errorCodeToString(code));
+        return Status(unexpect, error_type(code));
     }
 
     // Create an error status with a specific error code and message
-    static constexpr Status error(ErrorCode code, StdString message) noexcept {
-        return Status(unexpect, code, message.c_str());
-    }
-
-    // Create an error status from an existing Error object
-    static constexpr Status error(const Error& error) noexcept {
-        return Status(unexpect, error.code, error.message);
-    }
-
-    // Create an error status from an existing Error object
-    static constexpr Status error(Error&& error) noexcept {
-        return Status(unexpect, NEX_MOVE(error.code), NEX_MOVE(error.message));
+    static constexpr Status error(ErrorCode code, StdStringView message) noexcept {
+        return Status(unexpect, error_type(code, message.data()));
     }
 
     // Check if the status is successful
     constexpr bool isOk() const noexcept { return isOk_; }
     constexpr explicit operator bool() const noexcept { return isOk_; }
 
+    // Get the error if the status is an error, otherwise returns a default "Ok" error
+    constexpr error_type error() const noexcept {
+        return isOk_ ? error_type(ErrorCode::Ok) : storage_.error_;
+    }
+
+    // Try to get the error value pointer (returns a nullptr if status is successful)
+    constexpr const error_type* tryError() const noexcept {
+        return isOk_ ? nullptr : &storage_.error_;
+    }
+
     // Get the error code (returns ErrorCode::Ok if status is successful)
     constexpr ErrorCode code() const noexcept {
         return isOk_ ? ErrorCode::Ok : storage_.error_.code;
-    }
-
-    // Get the error if the status is an error, otherwise returns a default "Ok" error
-    constexpr Error error() const noexcept {
-        if (isOk()) {
-            return {
-                .code = ErrorCode::Ok,    // No error code for successful status
-                .message = "Ok"           // Message indicating successful status
-            };
-        }
-        return storage_.error_;
     }
 
     // Execute a function if the status is successful, otherwise propagate the error
@@ -105,8 +107,7 @@ public:
     constexpr auto andThen(Func&& func) & noexcept {
         using ReturnType = meta::RemoveCvrefT<InvokeResultT<Func>>;
         static_assert(IsStatusV<ReturnType>, "The result of the andThen callback must be a Status");
-        if (isOk()) return invoke(NEX_FORWARD<Func>(func));
-        return Status(unexpect, storage_.error_);
+        return isOk() ? invoke(NEX_FORWARD<Func>(func)) : Status(unexpect, storage_.error_);
     }
 
     // Execute a function if the status is successful, otherwise propagate the error (const version)
@@ -114,8 +115,7 @@ public:
     constexpr auto andThen(Func&& func) const& noexcept {
         using ReturnType = meta::RemoveCvrefT<InvokeResultT<Func>>;
         static_assert(IsStatusV<ReturnType>, "The result of the andThen callback must be a Status");
-        if (isOk()) return invoke(NEX_FORWARD<Func>(func));
-        return Status(unexpect, storage_.error_ );
+        return isOk() ? invoke(NEX_FORWARD<Func>(func)) : Status(unexpect, storage_.error_ );
     }
 
     // Execute a function if the status is successful, otherwise propagate the error (rvalue version)
@@ -123,8 +123,7 @@ public:
     constexpr auto andThen(Func&& func) && noexcept {
         using ReturnType = meta::RemoveCvrefT<InvokeResultT<Func>>;
         static_assert(IsStatusV<ReturnType>, "The result of the andThen callback must be a Status");
-        if (isOk()) return invoke(NEX_FORWARD<Func>(func));
-        return Status(unexpect, NEX_MOVE(storage_.error_));
+        return isOk() ? invoke(NEX_FORWARD<Func>(func)) : Status(unexpect, NEX_MOVE(storage_.error_));
     }
 
     // Execute a function if the status is successful, otherwise propagate the error (const rvalue version)
@@ -132,78 +131,80 @@ public:
     constexpr auto andThen(Func&& func) const&& noexcept {
         using ReturnType = meta::RemoveCvrefT<InvokeResultT<Func>>;
         static_assert(IsStatusV<ReturnType>, "The result of the andThen callback must be a Status");
-        if (isOk()) return invoke(NEX_FORWARD<Func>(func));
-        return Status(unexpect, NEX_MOVE(storage_.error_));
+        return isOk() ? invoke(NEX_FORWARD<Func>(func)) : Status(unexpect, NEX_MOVE(storage_.error_));
     }
 
     // Execute a function if the status is an error, otherwise propagate the success status
     template <typename Func>
     constexpr auto orElse(Func&& func) & noexcept {
-        using ReturnType = meta::RemoveCvrefT<InvokeResultT<Func, const Error&>>;
+        using ReturnType = meta::RemoveCvrefT<InvokeResultT<Func, const error_type&>>;
         static_assert(IsStatusV<ReturnType>, "The result of the orElse callback must be a Status");
-        if (!isOk()) return invoke(NEX_FORWARD<Func>(func), storage_.error_);
-        return Status::ok();
+        return isOk() ? Status::ok() : invoke(NEX_FORWARD<Func>(func), storage_.error_);
     }
 
     // Execute a function if the status is an error, otherwise propagate the success status (const version)
     template <typename Func>
     constexpr auto orElse(Func&& func) const& noexcept {
-        using ReturnType = meta::RemoveCvrefT<InvokeResultT<Func, const Error&>>;
+        using ReturnType = meta::RemoveCvrefT<InvokeResultT<Func, const error_type&>>;
         static_assert(IsStatusV<ReturnType>, "The result of the orElse callback must be a Status");
-        if (!isOk()) return invoke(NEX_FORWARD<Func>(func), storage_.error_);
-        return Status::ok();
+        return isOk() ? Status::ok() : invoke(NEX_FORWARD<Func>(func), storage_.error_);
     }
 
     // Execute a function if the status is an error, otherwise propagate the success status (rvalue version)
     template <typename Func>
     constexpr auto orElse(Func&& func) && noexcept {
-        using ReturnType = meta::RemoveCvrefT<InvokeResultT<Func, const Error&>>;
+        using ReturnType = meta::RemoveCvrefT<InvokeResultT<Func, const error_type&>>;
         static_assert(IsStatusV<ReturnType>, "The result of the orElse callback must be a Status");
-        if (!isOk()) return invoke(NEX_FORWARD<Func>(func), NEX_MOVE(storage_.error_));
-        return Status::ok();
+        return isOk() ? Status::ok() : invoke(NEX_FORWARD<Func>(func), NEX_MOVE(storage_.error_));
     }
 
     // Execute a function if the status is an error, otherwise propagate the success status (const rvalue version)
     template <typename Func>
     constexpr auto orElse(Func&& func) const&& noexcept {
-        using ReturnType = meta::RemoveCvrefT<InvokeResultT<Func, const Error&>>;
+        using ReturnType = meta::RemoveCvrefT<InvokeResultT<Func, const error_type&>>;
         static_assert(IsStatusV<ReturnType>, "The result of the orElse callback must be a Status");
-        if (!isOk()) return invoke(NEX_FORWARD<Func>(func), NEX_MOVE(storage_.error_));
-        return Status::ok();
+        return isOk() ? Status::ok() : invoke(NEX_FORWARD<Func>(func), NEX_MOVE(storage_.error_));
     }
 
 private:
+    // Internal storage types for the Status class
+    using StoredSuccessType = monostate;
+    using StoredErrorType   = error_type;
+
     // Storage for either a successful status (no error) or an error status (with error details)
-    union NEX_ALIGNAS(alignof(Error)) {
-        monostate success_;     // Represents a successful status
-        Error error_;           // Error information for failure cases
+    // The storage alignment is set to alignment of StoredErrorType by default, since the StoredSuccessType 
+    // is only a dummy placeholder and does not require any specific alignment.
+    union NEX_ALIGNAS(alignof(StoredErrorType)) {
+        StoredSuccessType  success_;       // Dummy placeholder represents a successful status
+        StoredErrorType    error_;         // Error information for failure cases
     } storage_;
 
     // Flag indicating whether the status is successful (true) or an error (false)
     bool isOk_ = true;
 
     // Deleted default implicit constructor to prevent uninitialized Status objects
-    constexpr Status() = delete;
+    NEX_HIDDEN_FROM_ABI constexpr Status() = delete;
 
     // Constructs a successful status
-    constexpr explicit Status(in_place_tag tag) noexcept : isOk_(true) {
-        NEX_UNUSED_PARAM(tag);
-        NEX_STD construct_at(NEX_ADDRESS_OF(storage_.success_), monostate{});
+    NEX_HIDDEN_FROM_ABI constexpr explicit 
+    Status(in_place_tag) noexcept : isOk_(true) {
+        NEX_STD construct_at(NEX_ADDRESS_OF(storage_.success_), StoredSuccessType{});
     }
 
     // Constructs a Status object with an unexpected error
     template <class... Args>
-    constexpr Status(unexpect_type tag, Args&&... args) noexcept : isOk_(false) {
-        NEX_UNUSED_PARAM(tag);
+    NEX_HIDDEN_FROM_ABI constexpr explicit 
+    Status(unexpect_type, Args&&... args) noexcept : isOk_(false) {
         NEX_STD construct_at(NEX_ADDRESS_OF(storage_.error_), NEX_FORWARD<Args>(args)...);
     }
 
     // Copy the contents of another Status object into this one
-    constexpr void copyStatus(const Status& other) noexcept {
+    NEX_HIDDEN_FROM_ABI constexpr 
+    void copyStatus(const Status& other) noexcept {
         isOk_ = other.isOk_;
         if (isOk_) {
             // Construct the dummy member for successful status
-            NEX_STD construct_at(NEX_ADDRESS_OF(storage_.success_), monostate{});
+            NEX_STD construct_at(NEX_ADDRESS_OF(storage_.success_), StoredSuccessType{});
         } else {
             // Copy the error information from the other Status object
             NEX_STD construct_at(NEX_ADDRESS_OF(storage_.error_), other.storage_.error_);
@@ -211,11 +212,12 @@ private:
     }
 
     // Move the contents of another Status object into this one
-    constexpr void moveStatus(Status&& other) noexcept {
+    NEX_HIDDEN_FROM_ABI constexpr 
+    void moveStatus(Status&& other) noexcept {
         isOk_ = other.isOk_;
         if (isOk_) {
             // Construct the dummy member for successful status
-            NEX_STD construct_at(NEX_ADDRESS_OF(storage_.success_), monostate{});
+            NEX_STD construct_at(NEX_ADDRESS_OF(storage_.success_), StoredSuccessType{});
         } else {
             // Move the error information from the other Status object
             NEX_STD construct_at(NEX_ADDRESS_OF(storage_.error_), NEX_MOVE(other.storage_.error_));
@@ -223,7 +225,8 @@ private:
     }
 
     // Destroy the existing error information if this Status holds an error
-    constexpr void destroyExistingError() noexcept {
+    NEX_HIDDEN_FROM_ABI constexpr 
+    void destroyExistingError() noexcept {
         if (!isOk_) {
             NEX_STD destroy_at(NEX_ADDRESS_OF(storage_.error_));
         }

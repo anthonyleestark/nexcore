@@ -21,11 +21,6 @@
 #include "nex/base/types.h"
 #include "nex/base/casts.h"
 #include "nex/base/traits.h"
-#include "nex/base/location.h"
-
-#if NEX_USE_STD_SOURCE_LOCATION
-    #include <source_location>
-#endif
 
 NEX_NAMESPACE_BEGIN
 
@@ -567,53 +562,6 @@ NEX_NODISCARD auto makeScopeGuard(FuncType&& f) {
 #define NEX_SCOPE_FAILURE(...) \
     auto ANONYMOUS_SCOPE_FAILURE_##__LINE__ = \
         NEX_PREPEND_NAMESPACE(utility::OnScopeFailure)([&]() { __VA_ARGS__; })
-
-/**
- * @struct SourceLocation
- * @brief A struct representing a source code location (file, line, function)
- * 
- * This struct is used to capture and represent a specific location in the source code, including 
- * the file name, line number, and function name. It can be used for logging, error reporting, 
- * debugging, and other purposes where information about the source location is valuable.
- */
-struct SourceLocation {
-    cstring file;           // The source file name where the SourceLocation was created
-    int32 line;             // The line number in the source file where the SourceLocation was created
-    cstring function;       // The function name where the SourceLocation was created
-
-    // Default constructor: initializes members to default values
-    constexpr SourceLocation() noexcept
-        : file(""), line(0), function("") {}
-
-    // Constructs a SourceLocation with the given file path, line number, and function name
-    constexpr SourceLocation(cstring filePath, int32 lineNumber, cstring functionName) noexcept
-        : file(filePath), line(lineNumber), function(functionName) {}
-
-#if NEX_USE_STD_SOURCE_LOCATION
-    // Create a SourceLocation object representing the current source location using compiler built-ins
-    static consteval SourceLocation current(NEX_STD source_location loc = NEX_STD source_location::current()) {
-        return { 
-            stripFilePath(loc.file_name()), 
-            static_cast<int32>(loc.line()), 
-            loc.function_name() 
-        };
-    }
-#else
-    // Create a SourceLocation object representing the current source location using compiler built-ins
-    static consteval SourceLocation current() {
-        return { 
-            stripFilePath(NEX_SOURCE_FILE_PATH), 
-            static_cast<int32>(NEX_SOURCE_LINE_NUMBER), 
-            NEX_SOURCE_FUNCTION_NAME 
-        };
-    }
-#endif
-};
-
-// Define macro for capturing the current source location, which can be used for logging, error reporting, 
-// debugging, and other purposes where information about the source location is valuable.
-#define NEX_SOURCE_LOCATION \
-    NEX_PREPEND_NAMESPACE(utility::SourceLocation::current())
 
 /**
  * @class Comparable

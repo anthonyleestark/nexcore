@@ -167,7 +167,6 @@ NEX_NORETURN inline void unreachable() {
 
 /**
  * @brief Assert handler function pointer type
- * 
  * @details
  * Called when an assertion fails. 
  * The handler receives:
@@ -187,16 +186,13 @@ using AssertHandler = void(*)(
 
 /**
  * @brief Set the global assert handler
- * 
  * @param handler Function pointer to handle assertion failures. If nullptr, uses default handler.
- * 
  * @note The default handler logs the assertion.
  */
 void setAssertHandler(AssertHandler handler);
 
 /**
  * @brief Get the current assert handler
- * 
  * @return Current assert handler function pointer. Returns default handler if no custom handler is set.
  */
 AssertHandler getAssertHandler();

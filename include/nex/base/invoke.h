@@ -202,7 +202,7 @@ template <class... Args>
 inline const bool _IsInvocableVImpl = _IsInvocableImpl<void, Args...>;
 
 // Internal implementation of IsInvocableR using the fallback mechanism.
-template <class Ret, bool IsInvocable, class... Args>
+template <class Ret, bool _IsInvocable, class... Args>
 inline const bool _IsInvocableRImpl = false;
 
 // Specialization of _IsInvocableRImpl for the case where the invocation is valid and the return type is convertible.
@@ -215,7 +215,7 @@ template <class Ret, class... Args>
 inline const bool _IsInvocableRV = _IsInvocableRImpl<Ret, _IsInvocableVImpl<Args...>, Args...>;
 
 // Internal implementation of IsNothrowInvocable using the fallback mechanism.
-template <bool IsInvocable, class... Args>
+template <bool _IsInvocable, class... Args>
 inline const bool _IsNothrowInvocableImpl = false;
 
 // Specialization of _IsNothrowInvocableImpl for the case where the invocation is valid.
@@ -227,7 +227,7 @@ template <class... Args>
 inline const bool _IsNothrowInvocableV = _IsNothrowInvocableImpl<_IsInvocableVImpl<Args...>, Args...>;
 
 // Internal implementation of IsNothrowInvocableR using the fallback mechanism.
-template <bool IsInvocable, class Ret, class... Args>
+template <bool _IsInvocable, class Ret, class... Args>
 inline const bool _IsNothrowInvocableRImpl = false;
 
 // Specialization of _IsNothrowInvocableRImpl for the case 
@@ -308,8 +308,7 @@ inline constexpr bool IsNothrowInvocableV = _IsNothrowInvocableV<Func, Args...>;
 
 // Determine whether a callable can be invoked with the given arguments and return type without throwing exceptions.
 template <class Ret, class Func, class... Args>
-inline constexpr bool IsNothrowInvocableRV =
-    _IsNothrowInvocableRV<Ret, Func, Args...>;
+inline constexpr bool IsNothrowInvocableRV = _IsNothrowInvocableRV<Ret, Func, Args...>;
 
 // =================================================================================
 // Public traits for obtaining the result type of an invocation (InvokeResult)

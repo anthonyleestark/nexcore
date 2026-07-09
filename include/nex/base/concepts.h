@@ -187,12 +187,14 @@ concept RegularValue = Regular<Type>;
 // ============================================================================
 
 /// Checks whether Fn can be invoked with Args.
-template <typename Fn, typename... Args>
-concept Invocable = NEX_STD invocable<Fn, Args...>;
+template <class Fn, class... Args>
+concept Invocable = requires(Fn&& fn, Args&&... args) {
+    invoke(NEX_FORWARD<Fn>(fn), NEX_FORWARD<Args>(args)...); // not required to be equality preserving
+};
 
 /// Checks whether Fn can be invoked with Args without modifying observable state.
-template <typename Fn, typename... Args>
-concept RegularInvocable = NEX_STD regular_invocable<Fn, Args...>;
+template <class Fn, class... Args>
+concept RegularInvocable = Invocable<Fn, Args...>;
 
 /// Checks whether Fn can be invoked with Args and returns exactly Return.
 template <typename Fn, typename Return, typename... Args>

@@ -636,30 +636,6 @@ using UnderlyingType = meta::UnderlyingType<Type>;
 template <typename Type>
 using UnderlyingTypeT = typename UnderlyingType<Type>::type;
 
-/// Checks whether Fn can be invoked with Args.
-template <typename Fn, typename... Args>
-using IsInvocable = BoolConstant<Invocable<Fn, Args...>>;
-template <typename Fn, typename... Args>
-inline constexpr bool IsInvocableV = IsInvocable<Fn, Args...>::value;
-
-/// Checks whether Fn can be invoked with Args and returns a type convertible to Return.
-template <typename Return, typename Fn, typename... Args>
-using IsInvocableR = NEX_STD is_invocable_r<Return, Fn, Args...>;
-template <typename Return, typename Fn, typename... Args>
-inline constexpr bool IsInvocableRV = IsInvocableR<Return, Fn, Args...>::value;
-
-/// Checks whether Fn can be invoked with Args without throwing.
-template <typename Fn, typename... Args>
-using IsNothrowInvocable = NEX_STD is_nothrow_invocable<Fn, Args...>;
-template <typename Fn, typename... Args>
-inline constexpr bool IsNothrowInvocableV = IsNothrowInvocable<Fn, Args...>::value;
-
-/// Checks whether Fn can be invoked with Args and returns a type convertible to Return without throwing.
-template <typename Return, typename Fn, typename... Args>
-using IsNothrowInvocableR = NEX_STD is_nothrow_invocable_r<Return, Fn, Args...>;
-template <typename Return, typename Fn, typename... Args>
-inline constexpr bool IsNothrowInvocableRV = IsNothrowInvocableR<Return, Fn, Args...>::value;
-
 /// A type alias for the resolved return type of invoking a callable with specific arguments.
 template <typename Fn, typename... Args>
 using ResolvedReturnType = DecayT<InvokeResult<Fn, Args...>>;

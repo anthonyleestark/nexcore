@@ -172,50 +172,107 @@
 #endif
 
 // ================================================================================
-// Compiler-specific attribute and feature detection macros
+// Compiler-specific preprocessor macros for feature detection
 // ================================================================================
+
+/**
+ * @def NEX_HAS_INCLUDE(x)
+ * @brief Check if a header file is available for inclusion
+ * 
+ * @details
+ * A standard C++17 preprocessor operator used to detect whether a specified header file 
+ * or source file exists and can be included (e.g., <optional>, "config.h"). 
+ * Evaluates to 1 if the header is available, or 0 if it cannot be found. 
+ * Universally supported by all modern compilers (MSVC, GCC, Clang).
+ */
+
+// Define as 0 if the compiler does not support __has_include.
+#if !defined(__has_include)
+    #define __has_include(x) 0
+#endif  // !defined(__has_include)
+
+#if !defined(NEX_HAS_INCLUDE)
+    #define NEX_HAS_INCLUDE(x) __has_include(x)
+#endif  // !defined(NEX_HAS_INCLUDE)
 
 /**
  * @def NEX_HAS_CPP_ATTRIBUTE(x)
  * @brief Check if a C++ attribute is supported by the compiler
  * 
  * @details
- * This is a wrapper around `__has_cpp_attribute`, which can be used to test for the presence of an attribute. 
- * In case the compiler does not support this macro it will simply evaluate to 0.
+ * A standard C++ feature-test operator used to detect whether the compiler supports 
+ * a specific C++ attribute (e.g., [[nodiscard]], [[fallthrough]]). Returns a non-zero 
+ * integer representing the version/year the attribute was introduced if supported, 
+ * or 0 if unsupported. Supported across all major modern compilers (MSVC, GCC, Clang).
  * 
  * @see https://wg21.link/sd6#testing-for-the-presence-of-an-attribute-__has_cpp_attribute
  * @see https://wg21.link/cpp.cond#:__has_cpp_attribute
  */
-#if defined(__has_cpp_attribute)
+
+// Define as 0 if the compiler does not support __has_cpp_attribute.
+#if !defined(__has_cpp_attribute)
+    #define __has_cpp_attribute(x) 0
+#endif  // !defined(__has_cpp_attribute)
+
+#if !defined(NEX_HAS_CPP_ATTRIBUTE)
     #define NEX_HAS_CPP_ATTRIBUTE(x) __has_cpp_attribute(x)
-#else  // Compiler does not support __has_cpp_attribute
-    #define NEX_HAS_CPP_ATTRIBUTE(x) 0
-#endif  // defined(__has_cpp_attribute)
+#endif  // !defined(NEX_HAS_CPP_ATTRIBUTE)
 
 /**
  * @def NEX_HAS_BUILTIN(x)
  * @brief Check if a compiler builtin is available
  * 
  * @details
- * This is a wrapper around `__has_builtin`, similar to NEX_HAS_CPP_ATTRIBUTE.
- * If the compiler does not support `__has_builtin`, this macro evaluates to 0.
+ * A compiler-specific feature-test operator primarily used in Clang and GCC to determine 
+ * if a specific compiler builtin function (e.g., __builtin_trap, __builtin_popcount) is available. 
+ * Evaluates to 1 if supported, or 0 if unsupported. 
+ * 
+ * @note Not natively supported by MSVC.
  */
-#if defined(__has_builtin)
+
+// Define as 0 if the compiler does not support __has_builtin.
+#if !defined(__has_builtin)
+    #define __has_builtin(x) 0
+#endif  // !defined(__has_builtin)
+
+#if !defined(NEX_HAS_BUILTIN)
     #define NEX_HAS_BUILTIN(x) __has_builtin(x)
-#else  // Compiler does not support __has_builtin
-    #define NEX_HAS_BUILTIN(x) 0
-#endif  // defined(__has_builtin)
+#endif  // !defined(NEX_HAS_BUILTIN)
+
+/**
+ * @def NEX_HAS_ATTRIBUTE(x)
+ * @brief Check if a compiler attribute is supported by the compiler
+ * 
+ * @details
+ * A GNU/Clang extension operator used to check for the availability of compiler-specific 
+ * attributes applied via the `__attribute__((...))` syntax (e.g., `__attribute__((always_inline))`). 
+ * Evaluates to 1 if the attribute is supported, or 0 otherwise. 
+ * 
+ * @note Not natively supported by MSVC.
+ */
+
+// Define as 0 if the compiler does not support __has_attribute.
+#if !defined(__has_attribute)
+    #define __has_attribute(x) 0
+#endif  // !defined(__has_attribute)
+
+#if !defined(NEX_HAS_ATTRIBUTE)
+    #define NEX_HAS_ATTRIBUTE(x) __has_attribute(x)
+#endif  // !defined(NEX_HAS_ATTRIBUTE)
 
 /**
  * @def NEX_HAS_FEATURE(x)
  * @brief Check if a compiler feature is available
  * 
  * @details
- * This is a wrapper around `__has_feature`, similar to NEX_HAS_CPP_ATTRIBUTE.
- * If the compiler does not support `__has_feature`, this macro evaluates to 0.
+ * A proprietary Clang feature-test operator (also supported by GCC) used to check if a specific 
+ * language feature (e.g., cxx_rvalue_references, address_sanitizer) is strictly enabled under 
+ * the current language standard and compilation flags. Evaluates to 1 if enabled, or 0 otherwise. 
+ * 
+ * @note Not supported by MSVC.
  */
 
-// __has_feature is not available in MSVC.
+// Define as 0 if the compiler does not support __has_feature.
 #if !defined(__has_feature)
     #define __has_feature(x) 0
 #endif  // !defined(__has_feature)
@@ -225,22 +282,26 @@
 #endif  // !defined(NEX_HAS_FEATURE)
 
 /**
- * @def NEX_HAS_ATTRIBUTE(x)
- * @brief Check if a compiler attribute is supported by the compiler
+ * @def NEX_HAS_EXTENSION(x)
+ * @brief Check if a compiler extension is available
  * 
  * @details
- * This is a wrapper around `__has_attribute`, similar to NEX_HAS_CPP_ATTRIBUTE.
- * If the compiler does not support `__has_attribute`, this macro evaluates to 0.
+ * A proprietary Clang/GCC feature-test operator used to check if a language feature 
+ * is supported by the compiler, either as part of the active language standard 
+ * or as a backwards-compatible compiler extension. 
+ * Evaluates to 1 if available, or 0 otherwise. 
+ * 
+ * @note Not natively supported by MSVC.
  */
 
-// __has_attribute is not available in MSVC.
-#if !defined(__has_attribute)
-    #define __has_attribute(x) 0
-#endif  // !defined(__has_attribute)
+// Define as 0 if the compiler does not support __has_extension.
+#if !defined(__has_extension)
+    #define __has_extension(x) 0
+#endif  // !defined(__has_extension)
 
-#if !defined(NEX_HAS_ATTRIBUTE)
-    #define NEX_HAS_ATTRIBUTE(x) __has_attribute(x)
-#endif  // !defined(NEX_HAS_ATTRIBUTE)
+#if !defined(NEX_HAS_EXTENSION)
+    #define NEX_HAS_EXTENSION(x) __has_extension(x)
+#endif  // !defined(NEX_HAS_EXTENSION)
 
 // =================================================================================
 // Language/compiler-specific type definitions and feature detection

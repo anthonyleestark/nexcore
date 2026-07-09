@@ -539,30 +539,31 @@ private:
         : base(tag, NEX_FORWARD<Func>(func), NEX_FORWARD<Args>(args)...) {}
 
 public:
+    // Create a successful result (void specialization) with no value
+    static constexpr Result ok() noexcept requires meta::IsVoidV<value_type> {
+        return Result(in_place);
+    }
+
     // Create a successful result with an expected value
-    template <typename AnyValue>
-    static constexpr Result ok(AnyValue&& value) noexcept {
-        static_assert(meta::IsSameV<AnyValue, value_type> || meta::IsConvertibleV<AnyValue, value_type>, 
-            "Error: Provided value must be the same as or convertible to the Result's value type");
-        return Result(in_place, NEX_FORWARD<AnyValue>(value));
+    static constexpr Result ok(value_type value) noexcept requires (!meta::IsVoidV<value_type>) {
+        return Result(in_place, NEX_MOVE(value));
     }
 
     // Create a successful result with perfect forwarding of arguments to construct the value
     template<typename... Args>
+        requires (!meta::IsVoidV<value_type> && meta::IsConstructibleV<value_type, Args...>)
     static constexpr Result ok(Args&&... args) noexcept {
         return Result(in_place, NEX_FORWARD<Args>(args)...);
     }
 
     // Create an error result with an unexpected error
-    template <typename AnyError>
-    static constexpr Result error(AnyError&& error) noexcept {
-        static_assert(meta::IsSameV<AnyError, error_type> || meta::IsConvertibleV<AnyError, error_type>, 
-            "Error: Provided error must be the same as or convertible to the Result's error type");
-        return Result(unexpect, NEX_FORWARD<AnyError>(error));
+    static constexpr Result error(error_type error) noexcept {
+        return Result(unexpect, NEX_MOVE(error));
     }
 
     // Create an error result with perfect forwarding of arguments to construct the error
     template<typename... Args>
+        requires meta::IsConstructibleV<error_type, Args...>
     static constexpr Result error(Args&&... args) noexcept {
         return Result(unexpect, NEX_FORWARD<Args>(args)...);
     }
@@ -953,7 +954,7 @@ public:
         noexcept(meta::IsNothrowCopyConstructibleV<value_type> && meta::IsNothrowCopyConstructibleV<error_type>)
         requires(meta::IsCopyConstructibleV<value_type> && meta::IsCopyConstructibleV<error_type> &&
                 !(meta::IsTriviallyCopyConstructibleV<value_type> && meta::IsTriviallyCopyConstructibleV<error_type>))
-        : base(other.hasValue(), other.union()) {}
+        : base(other.hasValue(), other.storageImpl()) {}
 
     // Allow copy construction from another Result with different value and error types,
     // as long as the value and error types are copy constructible and convertible to the current types

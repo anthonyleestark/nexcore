@@ -157,6 +157,36 @@ Dest bitCast(Source source) noexcept {
 }
 
 /**
+ * @brief Casts a void pointer to a typed pointer.
+ * @note This is a simple reinterpret_cast that allows for converting a void pointer to a specific type pointer.
+ *       It is the caller's responsibility to ensure that the void pointer actually points to an object of 
+ *       the specified type.
+ * @tparam Type The target type to cast to.
+ * @param memory The void pointer to cast.
+ * @return A pointer of the specified type.
+ */
+template <typename Type>
+NEX_NODISCARD NEX_MSVC_INTRINSIC NEX_ALWAYS_INLINE constexpr
+Type* memoryCast(void* memory) noexcept {
+    return reinterpret_cast<Type*>(memory);
+}
+
+/**
+ * @brief Casts a const void pointer to a typed const pointer.
+ * @note This is a simple reinterpret_cast that allows for converting a const void pointer to a specific type const pointer.
+ *       It is the caller's responsibility to ensure that the const void pointer actually points to an object of 
+ *       the specified type.
+ * @tparam Type The target type to cast to.
+ * @param memory The const void pointer to cast.
+ * @return A const pointer of the specified type.
+ */
+template <typename Type>
+NEX_NODISCARD NEX_MSVC_INTRINSIC NEX_ALWAYS_INLINE constexpr
+const Type* memoryCast(const void* memory) noexcept {
+    return reinterpret_cast<const Type*>(memory);
+}
+
+/**
  * @brief Performs a safe, implicit upcast or const-cast that is checked by the compiler.
  * @note Ensures that the conversion could happen implicitly without a forceful static_cast.
  * @tparam Dest The target type (must be implicitly convertible from Source).
@@ -304,6 +334,10 @@ Derived* safeDowncast(Base* base) noexcept {
 // with safety checks for trivial copyability and size
 #define NEX_BIT_CAST \
     NEX_PREPEND_NAMESPACE(bitCast)
+
+// Casts a void pointer to a typed pointer
+#define NEX_MEMORY_CAST \
+    NEX_PREPEND_NAMESPACE(memoryCast)
 
 // Performs a safe, implicit upcast or const-cast that is checked by the compiler
 #define NEX_IMPLICIT_CAST \

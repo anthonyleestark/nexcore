@@ -9,6 +9,7 @@
 #include "nex/base/meta.h"
 #include "nex/base/types.h"
 #include "nex/base/range.h"
+#include "nex/base/assert_crash.h"
 
 NEX_NAMESPACE_BEGIN
 
@@ -53,9 +54,14 @@ public:
     constexpr MemoryBlock(pointer_type data, size_type size) noexcept
         : data_(data), size_(size) {}
 
-    // Determine if the memory block is empty (data is null or size is zero)
+    // Determine if the memory block is empty (size is zero)
     NEX_NODISCARD constexpr bool empty() const noexcept {
-        return data_ == nullptr || size_ == 0;
+        return size_ == 0;
+    }
+
+    // Determine if the memory block is valid (data is not null and size is greater than zero)
+    NEX_NODISCARD constexpr bool valid() const noexcept {
+        return data_ != nullptr && size_ > 0;
     }
 
     // Get the size of the memory block, which is the number of bytes it contains
@@ -90,6 +96,22 @@ public:
                 : range.length();
 
         return { bytes() + range.start(), actualLength };
+    }
+
+    // Casts the memory block to a typed pointer of the specified TargetType
+    template <typename TargetType>
+    constexpr TargetType* as() noexcept {
+        NEX_ASSERT_MSG(size() >= sizeof(TargetType), "Error: MemoryBlock size is smaller than the size of TargetType");
+        NEX_ASSERT(reinterpret_cast<uintptr>(data()) % alignof(TargetType) == 0);
+        return NEX_MEMORY_CAST<TargetType>(data_);
+    }
+
+    // Casts the memory block to a typed const pointer of the specified TargetType
+    template <typename TargetType>
+    constexpr const TargetType* as() const noexcept {
+        NEX_ASSERT_MSG(size() >= sizeof(TargetType), "Error: MemoryBlock size is smaller than the size of TargetType");
+        NEX_ASSERT(reinterpret_cast<uintptr>(data()) % alignof(TargetType) == 0);
+        return NEX_MEMORY_CAST<TargetType>(data_);
     }
 
     // Equality operator for comparing two MemoryBlock instances
@@ -137,9 +159,14 @@ public:
     constexpr ConstMemoryBlock(MemoryBlock block) noexcept
         : data_(block.data_), size_(block.size_) {}
 
-    // Determine if the memory block is empty (data is null or size is zero)
+    // Determine if the memory block is empty (size is zero)
     NEX_NODISCARD constexpr bool empty() const noexcept {
-        return data_ == nullptr || size_ == 0;
+        return size_ == 0;
+    }
+
+    // Determine if the memory block is valid (data is not null and size is greater than zero)
+    NEX_NODISCARD constexpr bool valid() const noexcept {
+        return data_ != nullptr && size_ > 0;
     }
 
     // Get the size of the memory block, which is the number of bytes it contains
@@ -174,6 +201,14 @@ public:
                 : range.length();
 
         return { bytes() + range.start(), actualLength };
+    }
+
+    // Casts the const memory block to a typed const pointer of the specified TargetType
+    template <typename TargetType>
+    constexpr const TargetType* as() const noexcept {
+        NEX_ASSERT_MSG(size() >= sizeof(TargetType), "Error: MemoryBlock size is smaller than the size of TargetType");
+        NEX_ASSERT(reinterpret_cast<uintptr>(data()) % alignof(TargetType) == 0);
+        return NEX_MEMORY_CAST<TargetType>(data_);
     }
 
     // Equality operator for comparing two ConstMemoryBlock instances

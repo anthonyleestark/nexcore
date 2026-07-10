@@ -5,14 +5,13 @@
 
 #pragma once
 
-#include <memory>
-
 #include "nex/base/types.h"
 #include "nex/base/casts.h"
 #include "nex/base/init.h"
 #include "nex/base/invoke.h"
 #include "nex/base/error.h"
 #include "nex/base/assert_crash.h"
+#include "nex/base/memory.h"
 
 NEX_NAMESPACE_BEGIN
 
@@ -304,7 +303,7 @@ class NEX_INTERNAL ResultBase {
                 (meta::IsTriviallyDestructibleV<StoredValueType> && meta::IsTriviallyDestructibleV<ErrorType>)) {
             // Note: Since the destructor of the union is trivial, this does nothing
             // except to end the lifetime of the union.
-            NEX_STD destroy_at(&storage_.value);
+            NEX_DESTROY_AT(&storage_.value);
         }
 
         // Destroys the storage and ends the lifetime of the union
@@ -312,7 +311,7 @@ class NEX_INTERNAL ResultBase {
         requires(AllowReusingResultTailPadding &&
                 (!meta::IsTriviallyDestructibleV<StoredValueType> || !meta::IsTriviallyDestructibleV<ErrorType>)) {
             destroyStorageMember();
-            NEX_STD destroy_at(&storage_.value);
+            NEX_DESTROY_AT(&storage_.value);
         }
 
         // Constructs the value in the storage using perfect forwarding of arguments
@@ -320,7 +319,7 @@ class NEX_INTERNAL ResultBase {
         NEX_HIDDEN_FROM_ABI constexpr 
         void constructStorage(in_place_tag, Args&&... args)
         requires(AllowReusingResultTailPadding) {
-            NEX_STD construct_at(&storage_.value, in_place, NEX_FORWARD<Args>(args)...);
+            NEX_CONSTRUCT_AT(&storage_.value, in_place, NEX_FORWARD<Args>(args)...);
             hasValue_ = true;
         }
 
@@ -329,7 +328,7 @@ class NEX_INTERNAL ResultBase {
         NEX_HIDDEN_FROM_ABI constexpr 
         void constructStorage(unexpect_type, Args&&... args)
         requires(AllowReusingResultTailPadding) {
-            NEX_STD construct_at(&storage_.value, unexpect, NEX_FORWARD<Args>(args)...);
+            NEX_CONSTRUCT_AT(&storage_.value, unexpect, NEX_FORWARD<Args>(args)...);
             hasValue_ = false;
         }
 
@@ -343,9 +342,9 @@ class NEX_INTERNAL ResultBase {
         void destroyStorageMember()
         requires(!meta::IsTriviallyDestructibleV<StoredValueType> || !meta::IsTriviallyDestructibleV<ErrorType>) {
             if (hasValue_) {
-                NEX_STD destroy_at(NEX_ADDRESS_OF(storage_.value.value_));
+                NEX_DESTROY_AT(NEX_ADDRESS_OF(storage_.value.value_));
             } else {
-                NEX_STD destroy_at(NEX_ADDRESS_OF(storage_.value.error_));
+                NEX_DESTROY_AT(NEX_ADDRESS_OF(storage_.value.error_));
             }
         }
 
@@ -392,7 +391,7 @@ protected:
      * @note
      * In case we copy/move construct from another `Result` we need to create our `Result` so that 
      * it either has a value or not, depending on the "hasValue_" flag of the other `Result`. 
-     * To do this without falling back on `std::construct_at` we rely on guaranteed copy elision 
+     * To do this without falling back on `construct_at` we rely on guaranteed copy elision 
      * using two helper functions `makeRepresentation` and `makeStorage`. There have to be two since
      * there are two data layouts with different members being `[[no_unique_address]]`. 
      * Compiler such as GCC (as of version 13) does not do guaranteed copy elision when initializing 
@@ -419,7 +418,7 @@ protected:
     // Destroy the representation
     NEX_HIDDEN_FROM_ABI constexpr void destroyImpl() {
         if constexpr (PutFlagInTail) {
-            NEX_STD destroy_at(&repr_.value);
+            NEX_DESTROY_AT(&repr_.value);
         } else {
             repr_.value.destroyStorage();
         }
@@ -429,7 +428,7 @@ protected:
     template <class Tag, class... Args>
     NEX_HIDDEN_FROM_ABI constexpr void constructImpl(Tag tag, Args&&... args) {
         if constexpr (PutFlagInTail) {
-            NEX_STD construct_at(&repr_.value, tag, NEX_FORWARD<Args>(args)...);
+            NEX_CONSTRUCT_AT(&repr_.value, tag, NEX_FORWARD<Args>(args)...);
         } else {
             repr_.value.constructStorage(tag, NEX_FORWARD<Args>(args)...);
         }

@@ -117,6 +117,21 @@ moveIfNoexcept(Type& arg) noexcept {
 }
 
 /**
+ * @brief Swaps the values of two objects using move semantics, with noexcept guarantees if the type supports it.
+ * @tparam Type The type of the objects being swapped.
+ * @param a The first object.
+ * @param b The second object.
+ */
+template <class Type>
+NEX_NODISCARD NEX_MSVC_INTRINSIC NEX_ALWAYS_INLINE constexpr
+void swap(Type& a, Type& b) 
+noexcept(meta::IsNothrowMoveConstructibleV<Type> && meta::IsNothrowMoveAssignableV<Type>) {
+    Type temp = moveCast(a);
+    a = moveCast(b);
+    b = moveCast(temp);
+}
+
+/**
  * @brief Obtains the actual address of an object, safely bypassing any overloaded operator&.
  * @note Utilizes a compiler built-in to guarantee the extraction of the real memory address, 
  *       even if the type has a custom or malicious address-of operator.
@@ -325,6 +340,10 @@ Derived* safeDowncast(Base* base) noexcept {
 // otherwise falls back to a const lvalue reference
 #define NEX_MOVE_IF_NOEXCEPT \
     NEX_PREPEND_NAMESPACE(moveIfNoexcept)
+
+// Swaps two objects using move semantics, with noexcept guarantees if the type supports it
+#define NEX_SWAP \
+    NEX_PREPEND_NAMESPACE(swap)
 
 // Obtains the actual address of an object
 #define NEX_ADDRESS_OF \

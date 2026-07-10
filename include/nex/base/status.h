@@ -5,14 +5,13 @@
 
 #pragma once
 
-#include <memory>
-
 #include "nex/base/macros.h"
 #include "nex/base/meta.h"
 #include "nex/base/types.h"
 #include "nex/base/casts.h"
 #include "nex/base/invoke.h"
 #include "nex/base/error.h"
+#include "nex/base/memory.h"
 #include "nex/base/string.h"
 
 NEX_NAMESPACE_BEGIN
@@ -188,14 +187,14 @@ private:
     // Constructs a successful status
     NEX_HIDDEN_FROM_ABI constexpr explicit 
     Status(in_place_tag) noexcept : isOk_(true) {
-        NEX_STD construct_at(NEX_ADDRESS_OF(storage_.success_), StoredSuccessType{});
+        NEX_CONSTRUCT_AT(NEX_ADDRESS_OF(storage_.success_), StoredSuccessType{});
     }
 
     // Constructs a Status object with an unexpected error
     template <class... Args>
     NEX_HIDDEN_FROM_ABI constexpr explicit 
     Status(unexpect_type, Args&&... args) noexcept : isOk_(false) {
-        NEX_STD construct_at(NEX_ADDRESS_OF(storage_.error_), NEX_FORWARD<Args>(args)...);
+        NEX_CONSTRUCT_AT(NEX_ADDRESS_OF(storage_.error_), NEX_FORWARD<Args>(args)...);
     }
 
     // Copy the contents of another Status object into this one
@@ -204,10 +203,10 @@ private:
         isOk_ = other.isOk_;
         if (isOk_) {
             // Construct the dummy member for successful status
-            NEX_STD construct_at(NEX_ADDRESS_OF(storage_.success_), StoredSuccessType{});
+            NEX_CONSTRUCT_AT(NEX_ADDRESS_OF(storage_.success_), StoredSuccessType{});
         } else {
             // Copy the error information from the other Status object
-            NEX_STD construct_at(NEX_ADDRESS_OF(storage_.error_), other.storage_.error_);
+            NEX_CONSTRUCT_AT(NEX_ADDRESS_OF(storage_.error_), other.storage_.error_);
         }
     }
 
@@ -217,10 +216,10 @@ private:
         isOk_ = other.isOk_;
         if (isOk_) {
             // Construct the dummy member for successful status
-            NEX_STD construct_at(NEX_ADDRESS_OF(storage_.success_), StoredSuccessType{});
+            NEX_CONSTRUCT_AT(NEX_ADDRESS_OF(storage_.success_), StoredSuccessType{});
         } else {
             // Move the error information from the other Status object
-            NEX_STD construct_at(NEX_ADDRESS_OF(storage_.error_), NEX_MOVE(other.storage_.error_));
+            NEX_CONSTRUCT_AT(NEX_ADDRESS_OF(storage_.error_), NEX_MOVE(other.storage_.error_));
         }
     }
 
@@ -228,7 +227,7 @@ private:
     NEX_HIDDEN_FROM_ABI constexpr 
     void destroyExistingError() noexcept {
         if (!isOk_) {
-            NEX_STD destroy_at(NEX_ADDRESS_OF(storage_.error_));
+            NEX_DESTROY_AT(NEX_ADDRESS_OF(storage_.error_));
         }
     }
 

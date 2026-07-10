@@ -24,14 +24,14 @@ NEX_NAMESPACE_BEGIN
  * @brief An optimized dynamic array with inline (stack-allocated) small-buffer storage.
  *
  * @details
- * SmallVec<T, N> behaves like a Vec<T> (std::vector<T>) but avoids heap allocation for up to
- * N elements by keeping them directly inside the object (the "inline buffer"). When the number
- * of elements exceeds N the container transparently switches to heap storage and grows with the
- * same amortized O(1) pushBack strategy as Vec.
+ * SmallVec<ElementType, InlineCapacity> behaves like a Vec<ElementType> (std::vector<ElementType>) but 
+ * avoids heap allocation for up to InlineCapacity elements by keeping them directly inside the object 
+ * (the "inline buffer"). When the number of elements exceeds InlineCapacity the container transparently 
+ * switches to heap storage and grows with the same amortized O(1) pushBack strategy as Vec.
  *
  * Optimisation characteristics:
- * - **Zero heap allocation** for ≤ N elements — creation, destruction, and copy/move are all
- *   stack operations.
+ * - **Zero heap allocation** for ≤ InlineCapacity elements — creation, destruction, and copy/move 
+ *   are all stack operations.
  * - **Single allocation** once the inline buffer is exhausted; subsequent growth re-allocates
  *   at double capacity (matching Vec growth policy).
  * - **Contiguous storage** in both modes — data() always returns a pointer to a contiguous
@@ -39,8 +39,8 @@ NEX_NAMESPACE_BEGIN
  * - **Standard iterator interface** — random-access iterators, range-for, and all algorithms
  *   that accept begin()/end() pairs work without modification.
  *
- * @tparam T The element type. Must be movable.
- * @tparam N The inline buffer capacity (must be > 0). Default is 8.
+ * @tparam ElementType The element type. Must be movable.
+ * @tparam InlineCapacity The inline buffer capacity (must be > 0). Default is 8.
  *
  * @note SmallVec is not allocator-aware. Heap storage uses the global operator new/delete.
  *
@@ -51,12 +51,12 @@ NEX_NAMESPACE_BEGIN
  * @see Vec for a pure heap-based dynamic array.
  * @see Array for a fixed-size stack array.
  */
-template <typename T, usize N = 8>
-requires (N > 0)
+template <typename ElementType, usize InlineCapacity = 8>
+    requires (InlineCapacity > 0)
 class NEX_API SmallVec {
 public:
     // Type aliases for compatibility with standard container conventions
-    using value_type = T;
+    using value_type = ElementType;
     using size_type = usize;
     using difference_type = isize;
     using reference = value_type&;
@@ -70,23 +70,23 @@ public:
 
 public:
     // Inline buffer capacity constant
-    static constexpr size_type inlineCapacity = N;
+    static constexpr size_type inlineCapacity = InlineCapacity;
 
 private:
     ////// Inline buffer -------------------------------------------------
 
-    // Raw aligned storage that can hold N objects of type T without constructing them.
-    NEX_ALIGNAS(value_type) NEX_STD byte inlineBuffer_[sizeof(value_type) * N];
+    // Raw aligned storage that can hold InlineCapacity objects of type ElementType without constructing them.
+    NEX_ALIGNAS(value_type) byte inlineBuffer_[sizeof(value_type) * InlineCapacity];
 
     ////// Heap storage --------------------------------------------------
 
-    // Used when size_ > N.  Null when in inline mode.
+    // Used when size_ > InlineCapacity. Null when in inline mode.
     pointer heapData_ = nullptr;
     size_type heapCapacity_ = 0;
 
     ////// Common state --------------------------------------------------
 
-    // Current number of elements in the container (<= N if heapData_ == nullptr)
+    // Current number of elements in the container (<= InlineCapacity if heapData_ == nullptr)
     size_type size_ = 0;
 
     ////// Private helpers -----------------------------------------------
@@ -149,7 +149,7 @@ private:
 
     // Grow capacity to at least requiredCapacity, migrating all live elements
     void growTo(size_type requiredCapacity) {
-        size_type newCap = heapCapacity_ == 0 ? (NEX_STD max)(N * 2, requiredCapacity)
+        size_type newCap = heapCapacity_ == 0 ? (NEX_STD max)(InlineCapacity * 2, requiredCapacity)
                                                : (NEX_STD max)(heapCapacity_ * 2, requiredCapacity);
         pointer newData = allocateHeap(newCap);
         try {
@@ -387,7 +387,7 @@ public:
 
     // Get the current storage capacity
     size_type capacity() const noexcept {
-        return heapData_ ? heapCapacity_ : N;
+        return heapData_ ? heapCapacity_ : InlineCapacity;
     }
 
     // Get the maximum possible number of elements
@@ -413,7 +413,7 @@ public:
             heapCapacity_ = 0;
             return;
         }
-        if (size_ <= N) {
+        if (size_ <= InlineCapacity) {
             // Move elements back to inline buffer
             pointer inl = reinterpret_cast<pointer>(inlineBuffer_);
             moveRangeUninit(inl, heapData_, heapData_ + size_);
@@ -604,12 +604,12 @@ public:
 
     ////// Conversion ----------------------------------
 
-    // Convert to a heap-owning dynamic array (Vec<T>)
+    // Convert to a heap-owning dynamic array (Vec<ElementType>)
     Vec<value_type> toVec() const {
         return Vec<value_type>(begin(), end());
     }
 
-    // Construct a SmallVec from a heap-owning dynamic array (Vec<T>)
+    // Construct a SmallVec from a heap-owning dynamic array (Vec<ElementType>)
     static SmallVec fromVec(const Vec<value_type>& vec) {
         SmallVec result;
         result.reserve(vec.size());

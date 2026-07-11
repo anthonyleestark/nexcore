@@ -123,12 +123,12 @@ moveIfNoexcept(Type& arg) noexcept {
  * @param b The second object.
  */
 template <class Type>
-NEX_NODISCARD NEX_MSVC_INTRINSIC NEX_ALWAYS_INLINE constexpr
-void swap(Type& a, Type& b) 
+NEX_MSVC_INTRINSIC NEX_ALWAYS_INLINE constexpr
+void swap(Type& left, Type& right) 
 noexcept(meta::IsNothrowMoveConstructibleV<Type> && meta::IsNothrowMoveAssignableV<Type>) {
-    Type temp = moveCast(a);
-    a = moveCast(b);
-    b = moveCast(temp);
+    Type temp = moveCast(left);
+    left = moveCast(right);
+    right = moveCast(temp);
 }
 
 /**

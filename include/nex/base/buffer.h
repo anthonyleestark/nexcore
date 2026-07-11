@@ -166,8 +166,7 @@ private:
 
     // Copy the entire buffer from another SmallBuffer
     // used in copy constructor, when the current buffer is uninitialized
-    NEX_HIDDEN_FROM_ABI constexpr void copyFrom(const SmallBuffer& other)
-        noexcept(meta::IsNothrowCopyConstructibleV<value_type>) {
+    NEX_HIDDEN_FROM_ABI constexpr void copyFrom(const SmallBuffer& other) {
         reserve(other.size_);
         copyRange(data_, other.data_, other.data_ + other.size_);
         size_ = other.size_;
@@ -175,8 +174,7 @@ private:
 
     // Copy the entire buffer from another SmallBuffer
     // used in copy assignment operator, when the current buffer is already initialized
-    NEX_HIDDEN_FROM_ABI constexpr void copyAssignFrom(const SmallBuffer& other)
-        noexcept(meta::IsNothrowCopyConstructibleV<value_type> && meta::IsNothrowDestructibleV<value_type>) {
+    NEX_HIDDEN_FROM_ABI constexpr void copyAssignFrom(const SmallBuffer& other) {
         if (other.size_ > capacity_) {
             // Not enough capacity, need to allocate new storage
             reset();
@@ -212,6 +210,7 @@ private:
             other.size_ = 0;
             other.capacity_ = inlineCapacity;
         }
+        NEX_ASSERT(other.isInline());
     }
 
     // Allocate a raw, uninitialized heap buffer for exactly cap elements
@@ -228,9 +227,14 @@ private:
     // Calculate the next capacity based on the growth policy
     static NEX_HIDDEN_FROM_ABI constexpr 
     size_type nextCapacity(size_type current, size_type required) {
+        NEX_ASSERT(current > 0 && required > current && required <= maxSize());
         if constexpr (Policy == GrowthPolicy::Double) {
             size_type newCapacity = current > 0 ? current : 1;
             while (newCapacity < required) {
+                if (newCapacity > maxSize() / 2) {
+                    newCapacity = maxSize();
+                    break;
+                }
                 newCapacity *= 2;
             }
             return newCapacity;
@@ -242,7 +246,7 @@ private:
     // Grow capacity to at least requiredCapacity, migrating all live elements
     NEX_HIDDEN_FROM_ABI void grow(size_type requiredCapacity) {
         size_type newCapacity = nextCapacity(capacity_, requiredCapacity);
-        NEX_ASSERT(newCapacity >= requiredCapacity);
+        NEX_ASSERT(newCapacity >= requiredCapacity && newCapacity <= maxSize());
         pointer_type newData = allocate(newCapacity);
         if (size_ > 0) {
             try {
@@ -269,7 +273,9 @@ public:
     }
 
     // Constructs a SmallBuffer with a given count, copy-constructing elements from value
-    NEX_HIDDEN_FROM_ABI constexpr SmallBuffer(size_type count, const_reference_type value) {
+    template <typename OtherValue>
+    NEX_HIDDEN_FROM_ABI constexpr SmallBuffer(size_type count, const OtherValue& value)
+        requires(meta::IsConvertibleV<OtherValue, value_type>) {
         resize(count, value);
     }
 
@@ -339,7 +345,9 @@ public:
     }
 
     // Resize to count elements, filling new slots with value
-    NEX_HIDDEN_FROM_ABI constexpr void resize(size_type count, const_reference_type value) {
+    template <typename OtherValue>
+    NEX_HIDDEN_FROM_ABI constexpr void resize(size_type count, const OtherValue& value)
+        requires(meta::IsConvertibleV<OtherValue, value_type>) {
         if (count < size_) {
             destroyRange(data_ + count, data_ + size_);
         } else if (count > size_) {
@@ -402,6 +410,27 @@ public:
             data_ = inlineData();
             capacity_ = inlineCapacity;
         }
+    }
+
+    // Append elements from a given range which is specified by a pointer to its first element
+    // and a size to the end of the buffer, growing if necessary
+    template <typename OtherValue>
+    NEX_HIDDEN_FROM_ABI constexpr void append(const OtherValue* src, size_type count)
+        requires(meta::IsConvertibleV<OtherValue, value_type>) {
+        NEX_ASSERT(src != nullptr || count == 0);
+        if (src == nullptr || count == 0) return;
+        reserve(size_ + count);
+        copyRange(data_ + size_, src, src + count);
+        size_ += count;
+    }
+
+    // Append elements from a given range which is specified by a pointer to its first element
+    // and a pointer to its last element (exclusive) to the end of the buffer, growing if necessary
+    template <typename OtherValue>
+    NEX_HIDDEN_FROM_ABI constexpr void append(const OtherValue* first, const OtherValue* last)
+        requires(meta::IsConvertibleV<OtherValue, value_type>) {
+        NEX_ASSERT(first != nullptr && last != nullptr && first <= last);
+        append(first, static_cast<size_type>(last - first));
     }
 
     // Swap contents with another SmallBuffer (no exceptions thrown)

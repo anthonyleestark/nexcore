@@ -5,9 +5,6 @@
 
 #pragma once
 
-#include <string>
-#include <string_view>
-
 #include "nex/base/macros.h"
 #include "nex/base/types.h"
 #include "nex/base/casts.h"

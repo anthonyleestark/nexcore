@@ -6,8 +6,8 @@
 #include <algorithm>
 #include <cctype>
 #include <charconv>
-#include <string>
 
+#include "nex/base/string.h"
 #include "nex/core/input/key_combination.h"
 #include "nex/core/text/string.h"
 

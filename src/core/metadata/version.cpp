@@ -3,12 +3,12 @@
  * Copyright (c) 2026 Anthony Lee Stark. All rights reserved.
  */
 
+#include "nex/base/encoding.h"
 #include "nex/base/linear.h"
 #include "nex/core/text/string.h"
 #include "nex/core/text/string_view.h"
-#include "nex/core/text/encoding.h"
 #include "nex/core/text/format.h"
-#include "nex/core/text/text.h"
+#include "nex/core/text/algorithms.h"
 #include "nex/core/metadata/version.h"
 
 NEX_NAMESPACE_BEGIN

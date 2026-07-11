@@ -6,9 +6,9 @@
 #include <charconv>
 #include <algorithm>
 
+#include "nex/base/encoding.h"
 #include "nex/core/text/string.h"
 #include "nex/core/text/string_view.h"
-#include "nex/core/text/encoding.h"
 
 NEX_NAMESPACE_BEGIN
 

@@ -3,8 +3,8 @@
  * Copyright (c) 2026 Anthony Lee Stark. All rights reserved.
  */
 
-#include "nex/core/text/text.h"
-#include "nex/core/text/encoding.h"
+#include "nex/base/encoding.h"
+#include "nex/core/text/algorithms.h"
 
 NEX_NAMESPACE_BEGIN
 

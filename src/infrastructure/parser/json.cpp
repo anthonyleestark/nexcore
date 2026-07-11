@@ -8,7 +8,7 @@
 #include <algorithm>
 
 #include "nex/base/casts.h"
-#include "nex/core/text/encoding.h"
+#include "nex/base/encoding.h"
 #include "nex/infrastructure/parser/json.h"
 
 // Include nlohmann/json

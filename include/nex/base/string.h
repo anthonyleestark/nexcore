@@ -19,18 +19,18 @@
 NEX_NAMESPACE_BEGIN
 
 /**
- * @brief Standard string types.
+ * @brief Standard narrow string types.
  * @details
  * The std::string is an alias for std::basic_string<char>, acting as a container for 8-bit narrow characters. 
  * In modern development, it is the industry standard for UTF-8 storage; however, it is "encoding-agnostic," meaning 
  * it treats data as raw bytes and does not inherently understand multi-byte character boundaries.
  */
 
-using StdString = NEX_STD string;
-using StdStringView = NEX_STD string_view;
+using NString = NEX_STD string;
+using NStringView = NEX_STD string_view;
 
 /**
- * @brief Wide string types.
+ * @brief Standard wide string types.
  * @details
  * The std::wstring is an alias for std::basic_string<wchar_t>, designed to hold wide characters. The size of 
  * wchar_t is platform-dependent (2 bytes on Windows, 4 bytes on Unix-like systems), which can lead to portability 
@@ -38,8 +38,8 @@ using StdStringView = NEX_STD string_view;
  * be suitable for cross-platform applications.
  */
 
-using StdWString = NEX_STD wstring;
-using StdWStringView = NEX_STD wstring_view;
+using WString = NEX_STD wstring;
+using WStringView = NEX_STD wstring_view;
 
 /**
  * @brief UTF-8 encoded string types.

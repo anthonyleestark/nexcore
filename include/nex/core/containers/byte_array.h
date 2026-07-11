@@ -87,8 +87,8 @@ public:
     explicit ByteArray(const Vec<value_type>& data) 
         : buffer_(data) {}
 
-    // Construct from StdString (treat as binary data)
-    explicit ByteArray(const StdString& str);
+    // Construct from NString (treat as binary data)
+    explicit ByteArray(const NString& str);
 
     // Construct from C-string (treat as binary data)
     explicit ByteArray(cstring str, size_type len);
@@ -127,10 +127,10 @@ public:
     static ByteArray fromRawData(const_void_ptr data, size_type size);
 
     // Create from HEX string
-    static ByteArray fromHex(const StdString& hexString);
+    static ByteArray fromHex(const NString& hexString);
 
     // Create from Base64 string
-    static ByteArray fromBase64(const StdString& base64String);
+    static ByteArray fromBase64(const NString& base64String);
 
     // Create from a dynamic array of bytes (Vec<uint8>)
     static ByteArray fromVec(const Vec<value_type>& vec);
@@ -163,14 +163,14 @@ public:
     // Convert to dynamic array of bytes (Vec<uint8>)
     Vec<value_type> toVec() const noexcept { return buffer_; }
 
-    // Convert to StdString (treat as binary data)
-    StdString toStdString() const;
+    // Convert to NString (treat as binary data)
+    NString toNString() const;
 
     // Convert to HEX string
-    StdString toHex() const;
+    NString toHex() const;
 
     // Convert to Base64 string
-    StdString toBase64() const;
+    NString toBase64() const;
 
     ////// Iterator support -----------------------------
 

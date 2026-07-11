@@ -78,7 +78,7 @@ public:
     }
 
     // Create an error status with a specific error code and message
-    static constexpr Status error(ErrorCode code, StdStringView message) noexcept {
+    static constexpr Status error(ErrorCode code, NStringView message) noexcept {
         return Status(unexpect, error_type(code, message.data()));
     }
 

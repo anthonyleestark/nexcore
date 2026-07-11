@@ -31,11 +31,11 @@ NEX_NAMESPACE_BEGIN
 class NEX_API Exception {
 private:
     // The message of the exception
-    StdString message_;
+    NString message_;
 
 public:
     // Constructor with a message
-    Exception(const StdStringView& message) noexcept 
+    Exception(const NStringView& message) noexcept 
         : message_(message) {}
 
     // Default copy and move semantics
@@ -60,7 +60,7 @@ public:
     }
 
     // Get the message as a string view
-    virtual const StdStringView& message() const noexcept { return what(); }
+    virtual const NStringView& message() const noexcept { return what(); }
 };
 
 /**
@@ -99,7 +99,7 @@ public:
 class NEX_API InvalidArgument : public Exception {
 public:
     // Constructor with a message
-    InvalidArgument(const StdStringView& message) noexcept
+    InvalidArgument(const NStringView& message) noexcept
         : Exception(message) {}
 
     // Destructor
@@ -120,7 +120,7 @@ public:
 class NEX_API RuntimeError : public Exception {
 public:
     // Constructor with a message
-    RuntimeError(const StdStringView& message) noexcept 
+    RuntimeError(const NStringView& message) noexcept 
         : Exception(message) {}
 
     // Destructor
@@ -139,7 +139,7 @@ public:
 class NEX_API LogicError : public Exception {
 public:
     // Constructor with a message
-    LogicError(const StdStringView& message) noexcept 
+    LogicError(const NStringView& message) noexcept 
         : Exception(message) {}
 
     // Destructor
@@ -159,7 +159,7 @@ public:
 class NEX_API OutOfRange : public Exception {
 public:
     // Constructor with a message
-    OutOfRange(const StdStringView& message) noexcept 
+    OutOfRange(const NStringView& message) noexcept 
         : Exception(message) {}
 
     // Destructor
@@ -179,7 +179,7 @@ public:
 class NEX_API DivisionByZero : public InvalidArgument {
 public:
     // Constructor with a message
-    DivisionByZero(const StdStringView& context = "Division by zero") noexcept
+    DivisionByZero(const NStringView& context = "Division by zero") noexcept
         : InvalidArgument(context) {}
 
     // Destructor
@@ -199,7 +199,7 @@ public:
 class NEX_API NullPointer : public InvalidArgument {
 public:
     // Constructor with a message
-    NullPointer(const StdStringView& context = "Null pointer") noexcept
+    NullPointer(const NStringView& context = "Null pointer") noexcept
         : InvalidArgument(context) {}
 
     // Destructor
@@ -219,7 +219,7 @@ public:
 class NEX_API Overflow : public RuntimeError {
 public:
     // Constructor with a message
-    Overflow(const StdStringView& message = "Overflow error") noexcept
+    Overflow(const NStringView& message = "Overflow error") noexcept
         : RuntimeError(message) {}
 
     // Destructor
@@ -239,7 +239,7 @@ public:
 class NEX_API Underflow : public RuntimeError {
 public:
     // Constructor with a message
-    Underflow(const StdStringView& message = "Underflow error") noexcept
+    Underflow(const NStringView& message = "Underflow error") noexcept
         : RuntimeError(message) {}
 
     // Destructor
@@ -258,7 +258,7 @@ public:
 class NEX_API NotImplemented : public LogicError {
 public:
     // Constructor with a message
-    NotImplemented(const StdStringView& feature = "Feature not implemented") noexcept
+    NotImplemented(const NStringView& feature = "Feature not implemented") noexcept
         : LogicError(feature) {}
 
     // Destructor
@@ -277,7 +277,7 @@ public:
 class NEX_API NotSupported : public LogicError {
 public:
     // Constructor with a message
-    NotSupported(const StdStringView& operation = "Operation not supported") noexcept
+    NotSupported(const NStringView& operation = "Operation not supported") noexcept
         : LogicError(operation) {}
 
     // Destructor
@@ -296,7 +296,7 @@ public:
 class NEX_API InvalidState : public LogicError {
 public:
     // Constructor with a message
-    InvalidState(const StdStringView& message = "Invalid state") noexcept
+    InvalidState(const NStringView& message = "Invalid state") noexcept
         : LogicError(message) {}
 
     // Destructor
@@ -315,7 +315,7 @@ public:
 class NEX_API FormatError : public InvalidArgument {
 public:
     // Constructor with a message
-    FormatError(const StdStringView& message = "Format error") noexcept
+    FormatError(const NStringView& message = "Format error") noexcept
         : InvalidArgument(message) {}
 
     // Destructor

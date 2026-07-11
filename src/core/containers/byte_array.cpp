@@ -61,8 +61,8 @@ ByteArray::ByteArray(const_pointer data, size_type size) {
     }
 }
 
-// Construct from StdString (treat as binary data)
-ByteArray::ByteArray(const StdString& str) {
+// Construct from NString (treat as binary data)
+ByteArray::ByteArray(const NString& str) {
     buffer_.assign(reinterpret_cast<const_byte_ptr>(str.data()),
                     reinterpret_cast<const_byte_ptr>(str.data() + str.size()));
 }
@@ -94,7 +94,7 @@ ByteArray ByteArray::fromRawData(const_void_ptr data, size_type size) {
 }
 
 // Create from HEX string
-ByteArray ByteArray::fromHex(const StdString& hexString) {
+ByteArray ByteArray::fromHex(const NString& hexString) {
     if (hexString.empty()) return ByteArray();
 
     ByteArray result;
@@ -131,7 +131,7 @@ ByteArray ByteArray::fromHex(const StdString& hexString) {
 }
 
 // Create from Base64 string
-ByteArray ByteArray::fromBase64(const StdString& base64String) {
+ByteArray ByteArray::fromBase64(const NString& base64String) {
     if (base64String.empty()) return ByteArray();
 
     ByteArray result;
@@ -207,14 +207,14 @@ ByteSpan ByteArray::view() const noexcept {
     return ByteSpan(buffer_.data(), buffer_.size());
 }
 
-// Convert to StdString (treat as binary data)
-StdString ByteArray::toStdString() const {
-    return StdString(reinterpret_cast<cstring>(buffer_.data()), buffer_.size());
+// Convert to NString (treat as binary data)
+NString ByteArray::toNString() const {
+    return NString(reinterpret_cast<cstring>(buffer_.data()), buffer_.size());
 }
 
 // Convert to hex string
-StdString ByteArray::toHex() const {
-    if (buffer_.empty()) return StdString();
+NString ByteArray::toHex() const {
+    if (buffer_.empty()) return NString();
 
     NEX_STD ostringstream oss;
     oss << NEX_STD hex << NEX_STD uppercase << NEX_STD setfill('0');
@@ -227,10 +227,10 @@ StdString ByteArray::toHex() const {
 }
 
 // Convert to base64 string
-StdString ByteArray::toBase64() const {
-    if (buffer_.empty()) return StdString();
+NString ByteArray::toBase64() const {
+    if (buffer_.empty()) return NString();
 
-    StdString result;
+    NString result;
     usize len = buffer_.size();
 
     // Process in groups of 3 bytes

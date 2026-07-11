@@ -64,7 +64,7 @@ NEX_ANONYMOUS_NAMESPACE_END
 String TimeSpan::toString(wcstring format) const {
     String result;
     if (!format) format = L"default";
-    StdWString fmt(format);
+    WString fmt(format);
     
     if (fmt == L"compact") {
         // Format: HH:MM:SS
@@ -170,7 +170,7 @@ TimeSpan TimeSpan::fromString(const String& str) {
     auto utf16Res = trimmed.toUtf16();
     if (!utf16Res.isOk()) return TimeSpan();
     const Utf16String& u16str = utf16Res.value();
-    StdWString wstr(u16str.begin(), u16str.end());
+    WString wstr(u16str.begin(), u16str.end());
     
     // Try ISO 8601 format: PTnHnMnS
     if (wstr.length() >= 2 && (wstr[0] == L'P' || wstr[0] == L'p') && 
@@ -254,7 +254,7 @@ TimeSpan TimeSpan::fromString(const String& str) {
 String ClockTime::toString(wcstring format) const {
     String result;
     if (!format) format = L"default";
-    StdWString fmt(format);
+    WString fmt(format);
     int32 h = hour();
     int32 m = minute();
     int32 s = second();
@@ -343,7 +343,7 @@ ClockTime ClockTime::fromString(const String& str) {
     auto utf16Res = trimmed.toUtf16();
     if (!utf16Res.isOk()) return ClockTime(0, 0, 0);
     const Utf16String& u16str = utf16Res.value();
-    StdWString wstr(u16str.begin(), u16str.end());
+    WString wstr(u16str.begin(), u16str.end());
     
     // Try compact format: HHMM
     if (wstr.length() == 4 && NEX_STD all_of(wstr.begin(), wstr.end(), ::iswdigit)) {
@@ -372,7 +372,7 @@ ClockTime ClockTime::fromString(const String& str) {
             if (match[4].matched && match[4].str().length() == 1) millisec *= 100;
             else if (match[4].matched && match[4].str().length() == 2) millisec *= 10;
             
-            StdWString ampm = match[5].str();
+            WString ampm = match[5].str();
             NEX_STD transform(ampm.begin(), ampm.end(), ampm.begin(), ::towlower);
             if (ampm == L"pm" && hour != 12) hour += 12;
             else if (ampm == L"am" && hour == 12) hour = 0;
@@ -431,7 +431,7 @@ ClockTime ClockTime::fromString(const String& str) {
 String DateTime::toString(wcstring format) const {
     String result;
     if (!format) format = L"default";
-    StdWString fmt(format);
+    WString fmt(format);
     
     int32 y = year();
     uint32 m = month();
@@ -588,7 +588,7 @@ DateTime DateTime::fromString(const String& str) {
     auto utf16Res = trimmed.toUtf16();
     if (!utf16Res.isOk()) return DateTime();
     const Utf16String& u16str = utf16Res.value();
-    StdWString wstr(u16str.begin(), u16str.end());
+    WString wstr(u16str.begin(), u16str.end());
     
     // Try US format with 12-hour: MM/DD/YYYY HH:MM:SS AM/PM
     NEX_STD wregex regexUS12h(LR"((\d{1,2})/(\d{1,2})/(\d{4})\s+(\d{1,2}):(\d{1,2}):(\d{1,2})(?:\.(\d{1,3}))?\s+(AM|PM))", NEX_STD regex::icase);
@@ -606,7 +606,7 @@ DateTime DateTime::fromString(const String& str) {
             if (match[7].matched && match[7].str().length() == 1) millisec *= 100;
             else if (match[7].matched && match[7].str().length() == 2) millisec *= 10;
             
-            StdWString ampm = match[8].str();
+            WString ampm = match[8].str();
             NEX_STD transform(ampm.begin(), ampm.end(), ampm.begin(), ::towlower);
             if (ampm == L"pm" && hour != 12) hour += 12;
             else if (ampm == L"am" && hour == 12) hour = 0;

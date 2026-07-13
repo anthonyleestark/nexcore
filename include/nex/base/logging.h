@@ -7,9 +7,13 @@
 
 #include "nex/base/macros.h"
 #include "nex/base/types.h"
+#include "nex/base/location.h"
+#include "nex/base/buffer.h"
 #include "nex/base/string.h"
 
 NEX_NAMESPACE_BEGIN
+
+NEX_SUBNAMESPACE_BEGIN(logging)
 
 /**
  * @enum LogLevel
@@ -49,20 +53,16 @@ using LogString     = Utf8String;
 using LogStringView = Utf8StringView;
 
 /**
- * @struct  LogRecord
- * @brief   Represents a basic log record containing the log level, category, and message.
+ * @struct  LogMetadata
+ * @brief   Represents metadata associated with a log record.
  * 
  * @details
- * The LogRecord structure encapsulates the essential information for a log entry, including its
- * severity level, the category of the log message, and the actual message content.
- * This structure is used internally by the logging system to represent log entries before
- * they are processed and output by log sinks.
- * 
- * @note
- * The LogRecord structure is designed to be lightweight and efficient, allowing for quick creation
- * and processing of log entries.
+ * The LogMetadata structure encapsulates the essential information for a log entry, including its
+ * severity level, the category of the log message, and the source location where the log entry was generated.
+ * This structure is used internally by the logging system to represent log entries before they are processed 
+ * and output by the higher-level logger.
  */
-struct LogRecord {
+struct LogMetadata {
     /**
      * @brief Log level of the record
      * @details
@@ -86,170 +86,81 @@ struct LogRecord {
     LogStringView category;
 
     /**
-     * @brief Log message content
+     * @brief Location information for the log record
      * @details
-     * The actual content of the log record, which can contain any information relevant to
-     * the log entry, such as error details, diagnostic information, or general informational
-     * messages about the application's operation.
-     * The message is represented as a string view for efficient access without copying, allowing
-     * for quick logging of messages without unnecessary overhead.
+     * The source location of the log record, which can be used to identify where in the code
+     * the log entry was generated. This can be useful for debugging and tracing issues in the
+     * application, as it provides context about the origin of the log message.
+     * The location information includes the file name, line number, and function name where
+     * the log record was created.
      */
-    LogStringView message;
+    SourceLocation location;
 };
 
 /**
- * @interface  LogSink
- * @brief      Interface for log sinks that handle log message output.
+ * @brief Log buffer used for constructing log message by LogBuilder
+ * @details
+ * The LogBuffer is a small, inline-optimized dynamic buffer that is used by the LogBuilder class
+ * to construct log messages. It is designed to hold log messages efficiently, using inline storage
+ * for small messages and dynamically allocating memory for larger messages.
+ * @note
+ * The default buffer size is set to 512 bytes, which is typically sufficient for most log messages.
+ * This size indicates the maximum inline storage capacity for log messages before dynamic allocation is required.
+ * If a log message exceeds this size, dynamic memory allocation will be used to accommodate the message.
+ */
+
+inline constexpr usize DefaultLogBufferSize = 512;
+using LogBuffer = SmallBuffer<nchar, DefaultLogBufferSize>;
+
+/**
+ * @class LogBuilder
+ * @brief Helper class for building log messages with a stream-like interface.
  * 
  * @details
- * Log sinks are responsible for writing log messages to their respective destinations,
- * such as files, consoles, or remote servers. Custom log sinks can be implemented
- * by inheriting from this interface and overriding the `log` method.
- * 
- * @note 
- * The Logger class may utilize multiple log sinks to output log messages to different destinations
- * simultaneously. For example, a logger could be configured to write to both a file and the console
- * by using multiple log sinks. Implementations of LogSink should ensure thread safety if they are
- * intended to be used in a multi-threaded environment.
+ * The LogBuilder class provides a convenient way to construct log messages using a stream-like syntax.
+ * It allows for appending multiple pieces of information to a log message before dispatching it to the logger.
+ * The LogBuilder is typically used in conjunction with the Logger class, allowing for easy logging of messages
+ * with various severity levels and categories.
  */
-class NEX_HIDDEN_FROM_ABI LogSink {
+class NEX_API LogBuilder {
 public:
     /**
-     * @brief Virtual destructor to allow proper cleanup of derived classes
+     * @brief Construct a LogBuilder instance with specified metadata
+     * @param level The log level of the message
+     * @param location The source location of the log message
+     * @param category An optional category for the log message
      */
-    virtual ~LogSink() = default;
+    LogBuilder(LogLevel level,
+               SourceLocation location,
+               LogStringView category = {}) noexcept;
 
     /**
-     * @brief Write a log record to the sink
-     * @details
-     * This method is called by the Logger when a log message needs to be output.
-     * The implementation of this method should handle the actual output of the log record 
-     * to the sink's destination (e.g., writing to a file, outputting to the console,
-     * sending to a remote server, etc.) based on the information/metadata contained
-     * in the LogRecord parameter.
+     * @brief Append a log string view to the log message
+     * @param message The log message to append
+     * @return A reference to the LogBuilder for chaining
      */
-    virtual void log(const LogRecord&) = 0;
+    LogBuilder& operator<<(const LogString& message) noexcept;
 
     /**
-     * @brief Flush the sink's output (if applicable)
+     * @brief Finalize the log message and dispatch it to the logger
      * @details
-     * This method can be called to ensure that any buffered log messages are flushed
-     * to the sink's destination.
-     * This is particularly important for sinks that buffer output (e.g., file sinks) to ensure
-     * that log messages are not lost in the event of a crash or unexpected termination.
-     * It can also be used to ensure that log messages are output in a timely manner, especially
-     * in scenarios where the application may be idle for extended periods.
+     * The destructor of the LogBuilder finalizes the log message and dispatches it to the logger.
+     * This ensures that the log message is sent to the logger when the LogBuilder goes out of scope, 
+     * allowing for convenient logging syntax using the stream operator.
      */
-    virtual void flush() {}
+    ~LogBuilder() noexcept;
+
+private:
+    // Disable copy and move semantics
+    NEX_DISALLOW_COPY_AND_MOVE(LogBuilder);
+
+    // Metadata associated with the log record
+    LogMetadata metadata_;
+
+    // Internal buffer to hold the log message before dispatching
+    LogBuffer buffer_;
 };
 
-/**
- * @interface  Logger
- * @brief      Interface for a logger that manages log sinks and handles log message dispatching.
- */
-class NEX_HIDDEN_FROM_ABI Logger {
-public:
-    /**
-     * @brief Virtual destructor to allow proper cleanup of derived classes
-     */
-    virtual ~Logger() = default;
-
-    /**
-     * @brief Output a log record
-     * @details
-     * This method is used to log a record with a specific severity level.
-     * The log record will be processed by the logger's configured sinks, which will determine
-     * how to output the record based on its level and other metadata.
-     */
-    virtual void log(const LogRecord&) = 0;
-
-    /**
-     * @brief Flush all log sinks to ensure that all buffered log records are output
-     * @details
-     * This method can be called to ensure that any buffered log records are flushed to their
-     * respective sinks.
-     * This is particularly important for sinks that buffer output (e.g., file sinks) to ensure
-     * that log records are not lost in the event of a crash or unexpected termination.
-     * It can also be used to ensure that log records are output in a timely manner, especially
-     * in scenarios where the application may be idle for extended periods.
-     */
-    virtual void flush() = 0;
-
-    /**
-     * @brief Get the current logging level of the logger
-     * @details
-     * This method returns the current logging level of the logger, which determines the minimum
-     * severity level of log messages that will be processed and output by the logger.
-     */
-    virtual LogLevel level() const noexcept = 0;
-
-    /**
-     * @brief Set the logging level of the logger
-     * @details
-     * This method sets the logging level of the logger, which determines the minimum severity level
-     * of log messages that will be processed and output by the logger. Log messages with a severity
-     * level below the set level will be ignored.
-     */
-    virtual void setLevel(LogLevel) noexcept = 0;
-};
-
-/**
- * @brief Get the default logger instance
- * @details
- * This function returns a pointer to the default logger instance, which can be used for logging
- * throughout the application. The default logger is typically configured with a set of log sinks
- * and a logging level, allowing for consistent logging behavior.
- */
-Logger* defaultLogger();
-
-/**
- * @brief Set the default logger instance
- * @details
- * This function sets the default logger instance, allowing for customization of the logging behavior
- * throughout the application. The provided logger will be used as the default logger for all logging
- * operations.
- */
-void setDefaultLogger(Logger*);
-
-/**
- * @interface  LogDispatcher
- * @brief      Interface for log dispatchers that manages log sinks and dispatches log records to them.
- * 
- * @details
- * The LogDispatcher class is responsible for managing a collection of log sinks and dispatching
- * log records to them. It provides methods for adding and removing log sinks, as well as for
- * dispatching log records to all registered sinks. The dispatcher ensures that log records are
- * sent to all sinks in a thread-safe manner, allowing for concurrent logging from multiple threads.
- */
-class NEX_HIDDEN_FROM_ABI LogDispatcher {
-public:
-    /**
-     * @brief Virtual destructor to allow proper cleanup of derived classes
-     */
-    virtual ~LogDispatcher() = default;
-
-    /**
-     * @brief Dispatch a log record to all registered sinks
-     * @details
-     * This method is used to dispatch a log record to all registered sinks, allowing them to process
-     * the log record. The dispatcher is responsible for ensuring that log records are sent to
-     * all sinks in a thread-safe manner, and that any necessary formatting or filtering is applied
-     * based on the log level and other metadata.
-     */
-    virtual void dispatch(const LogRecord&) = 0;
-
-    /**
-     * @brief Flush all log sinks to ensure that all buffered log records are output
-     * @details
-     * This method can be called to ensure that any buffered log records are flushed to their
-     * respective sinks. This is particularly important for sinks that buffer output (e.g., file sinks)
-     * to ensure that log records are not lost in the event of a crash or unexpected termination.
-     * It can also be used to ensure that log records are output in a timely manner, especially in
-     * scenarios where the application may be idle for extended periods.
-     */
-    virtual void flush() = 0;
-};
+NEX_SUBNAMESPACE_END(logging)
 
 NEX_NAMESPACE_END
-
-

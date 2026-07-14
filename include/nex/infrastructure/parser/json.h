@@ -13,7 +13,7 @@
 #include "nex/base/result.h"
 #include "nex/base/error.h"
 
-NEX_INFRA_NAMESPACE_BEGIN
+NEX_LAYER_NAMESPACE_BEGIN(parser)
 
 /**
  * @class   Json
@@ -137,4 +137,4 @@ private:
     const NodeHandle* navigatePath(StringView path) const;
 };
 
-NEX_INFRA_NAMESPACE_END
+NEX_LAYER_NAMESPACE_END(parser)

@@ -9,7 +9,7 @@
 
 #include <pugixml.hpp>
 
-NEX_INFRA_NAMESPACE_BEGIN
+NEX_LAYER_NAMESPACE_BEGIN(parser)
 
 // =================================================================================
 // Helper utilities for XML parser implementation
@@ -305,4 +305,4 @@ bool XmlDocument::isValid() const noexcept {
     return impl_ && impl_->loaded;
 }
 
-NEX_INFRA_NAMESPACE_END
+NEX_LAYER_NAMESPACE_END(parser)

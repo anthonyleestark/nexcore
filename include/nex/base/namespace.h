@@ -295,20 +295,3 @@
 #define NEX_ALIAS_FUNCTION_AS_FROM_PROJECT_LAYER(alias, project, layer, func)     \
     using alias = NEX_PREPEND_PROJECT_LAYER_NAMESPACE(project, layer, func);
 
-/**
- * @section NexCore module/layer namespace macros
- * @brief   Define macros for the NexCore module/layer namespace and helper macros for namespace usage
- */
-
-/**
- * @brief  NexCore's infrastructure module/layer namespace macros
- */
-
-#define NEX_INFRA_NAMESPACE_BEGIN                                                  \
-    NEX_LAYER_NAMESPACE_BEGIN(infra)
-#define NEX_INFRA_NAMESPACE_END                                                    \
-    NEX_LAYER_NAMESPACE_END(infra)
-#define NEX_USING_INFRA_NAMESPACE                                                  \
-    NEX_USING_LAYER_NAMESPACE(infra)
-#define NEX_PREPEND_INFRA_NAMESPACE(name)                                          \
-    NEX_PREPEND_LAYER_NAMESPACE(infra, name)

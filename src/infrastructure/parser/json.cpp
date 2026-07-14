@@ -14,7 +14,7 @@
 // Include nlohmann/json
 #include <nlohmann/json.hpp>
 
-NEX_INFRA_NAMESPACE_BEGIN
+NEX_LAYER_NAMESPACE_BEGIN(parser)
 
 // =================================================================================
 // Internal definitions for Json class
@@ -539,4 +539,4 @@ String Json::toString(bool pretty /* = false */) const {
     return fromUtf8String(impl_->json.dump());
 }
 
-NEX_INFRA_NAMESPACE_END
+NEX_LAYER_NAMESPACE_END(parser)

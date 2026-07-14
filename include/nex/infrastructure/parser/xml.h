@@ -14,7 +14,7 @@
 #include "nex/base/result.h"
 #include "nex/base/error.h"
 
-NEX_INFRA_NAMESPACE_BEGIN
+NEX_LAYER_NAMESPACE_BEGIN(parser)
 
 // Forward declarations
 class XmlAttribute;
@@ -266,4 +266,4 @@ private:
     UniquePtr<Impl> impl_;
 };
 
-NEX_INFRA_NAMESPACE_END
+NEX_LAYER_NAMESPACE_END(parser)

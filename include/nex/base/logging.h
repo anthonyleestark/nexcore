@@ -163,4 +163,39 @@ private:
 
 NEX_SUBNAMESPACE_END(logging)
 
+// ===========================================================================
+// Nex-ecosystem logging system public macros
+// ===========================================================================
+
+/**
+ * @brief Macro for logging messages with a specified log level
+ * @param level The log level of the message (e.g., Trace, Debug, Info, Warn, Error, Critical)
+ * @details
+ * This macro creates a LogBuilder instance with the specified log level and source location.
+ * It allows for convenient logging syntax using the stream operator to append messages.
+ * Example usage:
+ *     NEX_LOG(Info) << "This is an informational message.";
+ */
+#define NEX_LOG(level) \
+    NEX_PREPEND_LAYER_NAMESPACE(logging, LogBuilder)( \
+        NEX_PREPEND_LAYER_NAMESPACE(logging, LogLevel)::level, \
+        NEX_SOURCE_LOCATION, \
+        NEX_PREPEND_LAYER_NAMESPACE(logging, LogStringView)())
+
+/**
+ * @brief Macro for logging messages with a specified log level and category
+ * @param level The log level of the message (e.g., Trace, Debug, Info, Warn, Error, Critical)
+ * @param category The category of the log message (e.g., "Network", "FileIO")
+ * @details
+ * This macro creates a LogBuilder instance with the specified log level, source location, and category.
+ * It allows for convenient logging syntax using the stream operator to append messages.
+ * Example usage:
+ *     NEX_LOG_CATEGORY(Info, "Network") << "This is a network-related informational message.";
+ */
+#define NEX_LOG_CATEGORY(level, category) \
+    NEX_PREPEND_LAYER_NAMESPACE(logging, LogBuilder)( \
+        NEX_PREPEND_LAYER_NAMESPACE(logging, LogLevel)::level, \
+        NEX_SOURCE_LOCATION, \
+        NEX_PREPEND_LAYER_NAMESPACE(logging, LogStringView)(category))
+
 NEX_NAMESPACE_END

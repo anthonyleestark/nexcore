@@ -18,8 +18,101 @@ NEX_NAMESPACE_BEGIN
 
 NEX_SUBNAMESPACE_BEGIN(logging)
 
+#if NEX_PLATFORM_FAMILY_IS_POSIX
+// Referred from Chromium Embedded Framework (CEF) implementation
+
+    #if NEX_LIBC_IS_GLIBC || defined(NEX_PLATFORM_NACL)
+        #define NEX_USE_HISTORICAL_STRERRO_R 1
+    #else
+        #define NEX_USE_HISTORICAL_STRERRO_R 0
+    #endif
+
+    #if NEX_USE_HISTORICAL_STRERRO_R
+        // glibc has two strerror_r functions: a historical GNU-specific one that
+        // returns type char *, and a POSIX.1-2001 compliant one available since 2.3.4
+        // that returns int. This wraps the GNU-specific one.
+        static void NEX_MAYBE_UNUSED
+        wrap_posix_strerror_r(char* (*strerror_r_ptr)(int, char*, size_t),
+                              int err, char* buf, size_t len) {
+            // GNU version.
+            char* rc = (*strerror_r_ptr)(err, buf, len);
+            if (rc != buf) {
+                // glibc did not use buf and returned a static string instead. Copy it
+                // into buf.
+                buf[0] = '\0';
+                strncat(buf, rc, len - 1);
+            }
+            // The GNU version never fails. Unknown errors get an "unknown error" message.
+            // The result is always null terminated.
+        }
+    #endif  // ^^NEX_USE_HISTORICAL_STRERRO_R
+
+    // Wrapper for strerror_r functions that implement the POSIX interface. POSIX
+    // does not define the behaviour for some of the edge cases, so we wrap it to
+    // guarantee that they are handled. This is compiled on all POSIX platforms, but
+    // it will only be used on Linux if the POSIX strerror_r implementation is
+    // being used (see below).
+    static void NEX_MAYBE_UNUSED
+    wrap_posix_strerror_r(int (*strerror_r_ptr)(int, char*, size_t),
+                          int err, char* buf, size_t len) {
+        int old_errno = errno;
+        // Have to cast since otherwise we get an error if this is the GNU version
+        // (but in such a scenario this function is never called). Sadly we can't use
+        // C++-style casts because the appropriate one is reinterpret_cast but it's
+        // considered illegal to reinterpret_cast a type to itself, so we get an
+        // error in the opposite case.
+        int result = (*strerror_r_ptr)(err, buf, len);
+        if (result == 0) {
+            // POSIX is vague about whether the string will be terminated, although
+            // it indirectly implies that typically ERANGE will be returned, instead
+            // of truncating the string. We play it safe by always terminating the
+            // string explicitly.
+            buf[len - 1] = '\0';
+        } else {
+            // Error. POSIX is vague about whether the return value is itself a system
+            // error code or something else. On Linux currently it is -1 and errno is
+            // set. On BSD-derived systems it is a system error and errno is unchanged.
+            // We try and detect which case it is so as to put as much useful info as
+            // we can into our message.
+            int strerror_error;  // The error encountered in strerror
+            int new_errno = errno;
+            if (new_errno != old_errno) {
+                // errno was changed, so probably the return value is just -1 or something
+                // else that doesn't provide any info, and errno is the error.
+                strerror_error = new_errno;
+            } else {
+                // Either the error from strerror_r was the same as the previous value, or
+                // errno wasn't used. Assume the latter.
+                strerror_error = result;
+            }
+            // snprintf truncates and always null-terminates.
+            snprintf(buf, len, "Error %d while retrieving error %d", strerror_error, err);
+        }
+        errno = old_errno;
+    }
+
+    void safe_strerror_r(int err, char* buf, size_t len) {
+        if (buf == NULL || len <= 0) {
+            return;
+        }
+        // If using glibc (i.e., Linux), the compiler will automatically select the
+        // appropriate overloaded function based on the function type of strerror_r.
+        // The other one will be elided from the translation unit since both are
+        // static.
+        wrap_posix_strerror_r(&strerror_r, err, buf, len);
+    }
+
+    NString safe_strerror(int err) {
+        const int buffer_size = 256;
+        char buf[buffer_size];
+        safe_strerror_r(err, buf, sizeof(buf));
+        return NString(buf);
+    }
+
+#endif
+
 // Get the last system error code from the operating system
-static SystemErrorCode getLastSystemErrorCode() noexcept {
+SystemErrorCode getLastSystemErrorCode() noexcept {
 #if NEX_PLATFORM_IS_WINDOWS
     return ::GetLastError();
 #elif NEX_PLATFORM_FAMILY_IS_POSIX
@@ -30,7 +123,7 @@ static SystemErrorCode getLastSystemErrorCode() noexcept {
 }
 
 // Get the last system error message from the operating system
-static LogString getLastSystemErrorMessage(SystemErrorCode errorCode) noexcept {
+LogString getLastSystemErrorMessage(SystemErrorCode errorCode) noexcept {
 #if NEX_PLATFORM_IS_WINDOWS
     LPSTR messageBuffer = nullptr;
     DWORD flags = FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS;
@@ -48,28 +141,43 @@ static LogString getLastSystemErrorMessage(SystemErrorCode errorCode) noexcept {
     LocalFree(messageBuffer);
     return message;
 #elif NEX_PLATFORM_FAMILY_IS_POSIX
-    return LogString(::strerror(errorCode));
+    // TODO: May need to convert narrow string to UTF-8 string
+    return LogString(safe_strerror(errorCode));
 #else
     #error Unsupported platform for retrieving system error message.
 #endif
 }
 
-// Static instance to hold the last system error information at the time of log creation
-static LastSystemError lastSysError;
+// Restore the last system error code in the operating system
+void restoreLastSystemError(SystemErrorCode errorCode) noexcept {
+#if NEX_PLATFORM_IS_WINDOWS
+    ::SetLastError(errorCode);
+#elif NEX_PLATFORM_FAMILY_IS_POSIX
+    errno = errorCode;
+#else
+    #error Unsupported platform for restoring system error code.
+#endif
+}
 
 // Construct a LogBuilder instance with specified metadata
 LogBuilder::LogBuilder(LogLevel level, SourceLocation location, LogStringView category) noexcept
     : metadata_{level, category, location}, buffer_{} {
     // Preserve the last system error code and message at the time of LogBuilder construction
-    lastSysError.lastErrorCode_ = getLastSystemErrorCode();
-    lastSysError.lastErrorMessage_ = getLastSystemErrorMessage(lastSysError.lastErrorCode_);
+    lastSysErrorCode_ = static_cast<uint64>(getLastSystemErrorCode());
 }
 
 // Finalize the log message and dispatch it to the logger
 LogBuilder::~LogBuilder() noexcept {
-    // Finalize the log package and submit it to the logging system
-    PendingLog pendingLog{NEX_MOVE(metadata_), NEX_MOVE(buffer_), NEX_MOVE(lastSysError)};
+    // Finalize the log package
+    SystemErrorCode lastErrorCode = static_cast<SystemErrorCode>(lastSysErrorCode_);
+    PendingLog pendingLog{NEX_MOVE(metadata_), NEX_MOVE(buffer_), lastErrorCode};
+
+    // Submit it to the logging system
     submit(NEX_MOVE(pendingLog));
+
+    // Restore the last system error code to ensure
+    // that logging does not interfere with the application's error state
+    restoreLastSystemError(lastErrorCode);
 }
 
 NEX_SUBNAMESPACE_END(logging)

@@ -19,41 +19,23 @@ NEX_LAYER_NAMESPACE_BEGIN(logging)
 #endif
 
 /**
- * @class LastSystemError
- * @brief Represents the last system error code and message.
- * 
- * @details
- * The LastSystemError class encapsulates the last system error code and its corresponding message.
- * It provides static methods to retrieve the last error code and message, which can be useful for
- * logging and debugging purposes. The class is designed to be used internally by the logging system
- * and is not intended for direct instantiation.
- * The error code and message are typically obtained from the underlying operating system's error
- * reporting mechanisms.
- * The class is designed to be used in conjunction with the LogBuilder class, allowing for easy logging
- * of system errors in a structured manner.
+ * @brief Get the last system error code from the operating system
+ * @return The last system error code as a SystemErrorCode type
  */
-class NEX_INTERNAL LastSystemError {
-public:
-    // Default constructor
-    LastSystemError() noexcept = default;
+NEX_INTERNAL SystemErrorCode getLastSystemErrorCode() noexcept;
 
-    // Get the last system error code
-    NEX_INTERNAL SystemErrorCode getLastErrorCode() noexcept {
-        return lastErrorCode_;
-    }
+/**
+ * @brief Get the last system error message from the operating system
+ * @param errorCode The system error code for which to retrieve the message
+ * @return A LogString containing the last system error message
+ */
+NEX_INTERNAL LogString getLastSystemErrorMessage(SystemErrorCode errorCode) noexcept;
 
-    // Get the last system error message as a string
-    NEX_INTERNAL LogString getLastErrorMessage() noexcept {
-        return lastErrorMessage_;
-    }
-
-private:
-    // Only the LogBuilder class can modify LastSystemError
-    friend class LogBuilder;
-
-    SystemErrorCode lastErrorCode_ = 0;     // Store the last error code
-    LogString lastErrorMessage_ = {};       // Store the last error message
-};
+/**
+ * @brief Restore the last system error code in the operating system
+ * @param errorCode The system error code to restore
+ */
+NEX_INTERNAL void restoreLastSystemError(SystemErrorCode errorCode) noexcept;
 
 /**
  * @struct PendingLog
@@ -69,7 +51,7 @@ private:
 struct NEX_INTERNAL PendingLog {
     LogMetadata         metadata;           // Metadata associated with the log record
     LogBuffer           buffer;             // Buffer containing the log message
-    LastSystemError     lastSysError;       // Last system error code and message at the time of log creation
+    SystemErrorCode     lastSysErrorCode;   // Last system error code at the time of log creation
 };
 
 /**

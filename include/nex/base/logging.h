@@ -159,6 +159,10 @@ private:
 
     // Internal buffer to hold the log message before dispatching
     LogBuffer buffer_;
+
+    // Last system error code at the time of log creation,
+    // using a type large enough to hold platform-specific error codes
+    uint64 lastSysErrorCode_;
 };
 
 NEX_SUBNAMESPACE_END(logging)

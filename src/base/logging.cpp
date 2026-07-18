@@ -4,19 +4,24 @@
  */
 
 #include "nex/base/casts.h"
+#include "src/base/charconv.h"
 #include "src/base/logging_internal.h"
 
 #if NEX_PLATFORM_IS_WINDOWS
     #include <windows.h>
     #include <winerror.h>
 #else
-    #include <cerrno>
-    #include <string.h>   // For strerror() without using namespace std
+    #include <errno.h>
+    #include <string.h>
 #endif
 
 NEX_NAMESPACE_BEGIN
 
 NEX_SUBNAMESPACE_BEGIN(logging)
+
+// =================================================================================
+// Nex-ecosystem logging system internal implementation
+// =================================================================================
 
 #if NEX_PLATFORM_FAMILY_IS_POSIX
 // Referred from Chromium Embedded Framework (CEF) implementation
@@ -141,7 +146,7 @@ LogString getLastSystemErrorMessage(SystemErrorCode errorCode) noexcept {
     LocalFree(messageBuffer);
     return message;
 #elif NEX_PLATFORM_FAMILY_IS_POSIX
-    // TODO: May need to convert narrow string to UTF-8 string
+    // TODO: May need to convert from narrow string to UTF-8 string
     return LogString(safe_strerror(errorCode));
 #else
     #error Unsupported platform for retrieving system error message.
@@ -159,18 +164,160 @@ void restoreLastSystemError(SystemErrorCode errorCode) noexcept {
 #endif
 }
 
+// =================================================================================
+// LogStream class implementation
+// =================================================================================
+
+// Append an integer value to the stream
+LogStream& LogStream::operator<<(int64 value) noexcept {
+    nchar buffer[32];
+    usize length = charconv::formatInteger(buffer, sizeof(buffer), value);
+    if (length > 0) {
+        append(buffer, length);
+    }
+    return *this;
+}
+
+// Append an unsigned integer value to the stream
+LogStream& LogStream::operator<<(uint64 value) noexcept {
+    nchar buffer[32];
+    usize length = charconv::formatUnsigned(buffer, sizeof(buffer), value);
+    if (length > 0) {
+        append(buffer, length);
+    }
+    return *this;
+}
+
+#if NEX_HAS_BUILTIN_INT128
+// Append a 128-bit signed integer value to the stream
+LogStream& LogStream::operator<<(int128 value) noexcept {
+    nchar buffer[64];
+    usize length = charconv::formatInteger(buffer, sizeof(buffer), value);
+    if (length > 0) {
+        append(buffer, length);
+    }
+    return *this;
+}
+
+// Append a 128-bit unsigned integer value to the stream
+LogStream& LogStream::operator<<(uint128 value) noexcept {
+    nchar buffer[64];
+    usize length = charconv::formatUnsigned(buffer, sizeof(buffer), value);
+    if (length > 0) {
+        append(buffer, length);
+    }
+    return *this;
+}
+#endif
+
+#if NEX_HAS_BUILTIN_FLOAT16
+// Append a 16-bit floating-point value to the stream
+LogStream& LogStream::operator<<(float16 value) noexcept {
+    nchar buffer[32];
+    usize length = charconv::formatFloating(buffer, sizeof(buffer), value);
+    if (length > 0) {
+        append(buffer, length);
+    }
+    return *this;
+}
+#endif
+
+// Append a floating-point value to the stream
+LogStream& LogStream::operator<<(float64 value) noexcept {
+    nchar buffer[64];
+    usize length = charconv::formatFloating(buffer, sizeof(buffer), value);
+    if (length > 0) {
+        append(buffer, length);
+    }
+    return *this;
+}
+
+// Append a 128-bit floating-point value to the stream
+#if NEX_HAS_BUILTIN_FLOAT128
+LogStream& LogStream::operator<<(float128 value) noexcept {
+    nchar buffer[128];
+    usize length = charconv::formatFloating(buffer, sizeof(buffer), value);
+    if (length > 0) {
+        append(buffer, length);
+    }
+    return *this;
+}
+#endif
+
+// Append a boolean value to the stream
+LogStream& LogStream::operator<<(bool value) noexcept {
+    nchar buffer[6];
+    usize length = charconv::formatBoolean(buffer, sizeof(buffer), value);
+    if (length > 0) {
+        append(buffer, length);
+    }
+    return *this;
+}
+
+// Append a character value to the stream
+LogStream& LogStream::operator<<(nchar value) noexcept {
+    append(&value, 1);
+    return *this;
+}
+
+// Append a C-style string to the stream
+LogStream& LogStream::operator<<(cstring str) noexcept {
+    append(str, strlen(str));
+    return *this;
+}
+
+// Append a string view to the stream
+LogStream& LogStream::operator<<(NStringView view) noexcept {
+    append(view.data(), view.length());
+    return *this;
+}
+
+// Append a string data with specified pointer and length to the stream buffer
+usize LogStream::append(cstring data, usize length) noexcept {
+    if (!data) {
+        // Use a placeholder to avoid undefined behavior
+        data = "<null>";
+        length = strlen(data);
+    }
+    auto nul = memchr(data, '\0', length);
+    if (nul) {
+        // Adjust the length to exclude the null terminator
+        length = static_cast<cstring>(nul) - data;
+    }
+    if (length == 0) {
+        return 0;
+    }
+    buffer_.append(data, length);
+    return length;
+}
+
+// =================================================================================
+// LogBuilder class implementation
+// =================================================================================
+
 // Construct a LogBuilder instance with specified metadata
 LogBuilder::LogBuilder(LogLevel level, SourceLocation location, LogStringView category) noexcept
-    : metadata_{level, category, location}, buffer_{} {
-    // Preserve the last system error code and message at the time of LogBuilder construction
+    : metadata_{level, category, location}, stream_{} {
+    // Preserve the last system error code at the time of LogBuilder construction
     lastSysErrorCode_ = static_cast<uint64>(getLastSystemErrorCode());
+    enabled_ = isEnabled(level, category);
 }
 
 // Finalize the log message and dispatch it to the logger
 LogBuilder::~LogBuilder() noexcept {
+    if (!enabled_) {
+        // If logging is not enabled for this log builder, do nothing
+        return;
+    }
+
+    if (stream_.empty()) {
+        // If the log stream has no contents, skip submitting it to the logger
+        return;
+    }
+
     // Finalize the log package
     SystemErrorCode lastErrorCode = static_cast<SystemErrorCode>(lastSysErrorCode_);
-    PendingLog pendingLog{NEX_MOVE(metadata_), NEX_MOVE(buffer_), lastErrorCode};
+    PendingLog pendingLog{NEX_MOVE(metadata_), NEX_MOVE(stream_.moveBuffer()), lastErrorCode};
 
     // Submit it to the logging system
     submit(NEX_MOVE(pendingLog));

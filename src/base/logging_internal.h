@@ -38,6 +38,16 @@ NEX_INTERNAL LogString getLastSystemErrorMessage(SystemErrorCode errorCode) noex
 NEX_INTERNAL void restoreLastSystemError(SystemErrorCode errorCode) noexcept;
 
 /**
+ * @brief Check if logging is enabled for a specific log level and category
+ * @param level The log level to check (e.g., Trace, Debug, Info, Warn, Error, Critical)
+ * @param category The log category to check (optional)
+ * @return true if logging is enabled for the specified level and category, false otherwise
+ * @note The detailed implementation of this function will be provided by the higher-level
+ * logging system.
+ */
+NEX_INTERNAL bool isEnabled(LogLevel level, LogStringView category = {}) noexcept;
+
+/**
  * @struct PendingLog
  * @brief Represents a pending log record to be submitted to the logging system.
  * 

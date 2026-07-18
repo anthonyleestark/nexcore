@@ -112,6 +112,167 @@ struct LogMetadata {
 inline constexpr usize DefaultLogBufferSize = 512;
 using LogBuffer = SmallBuffer<nchar, DefaultLogBufferSize>;
 
+// Forward declaration of LogBuilder class
+class LogBuilder;
+
+/**
+ * @class LogStream
+ * @brief Log stream used for constructing log message by LogBuilder
+ * @details
+ * The LogStream is a lightweight stream-like class that provides an interface for constructing
+ * log messages in a convenient manner. It allows for appending various types of data to the log message
+ * using the stream operator (<<), similar to standard C++ streams.
+ * The LogStream internally uses a LogBuffer to store the constructed log message, and it provides
+ * access to the underlying buffer for further processing or submission to the logging system.
+ */
+class NEX_API LogStream {
+public:
+    /**
+     * @brief Append a signed integer value to the stream
+     * @param value The signed integer value to append
+     * @return A reference to the LogStream instance for chaining
+     */
+    LogStream& operator<<(int64 value) noexcept;
+
+    /**
+     * @brief Append an unsigned integer value to the stream
+     * @param value The unsigned integer value to append
+     * @return A reference to the LogStream instance for chaining
+     */
+    LogStream& operator<<(uint64 value) noexcept;
+
+#if NEX_HAS_BUILTIN_INT128
+    /**
+     * @brief Append a 128-bit signed integer value to the stream
+     * @param value The 128-bit signed integer value to append
+     * @return A reference to the LogStream instance for chaining
+     */
+    LogStream& operator<<(int128 value) noexcept;
+
+    /**
+     * @brief Append a 128-bit unsigned integer value to the stream
+     * @param value The 128-bit unsigned integer value to append
+     * @return A reference to the LogStream instance for chaining
+     */
+    LogStream& operator<<(uint128 value) noexcept;
+#endif
+
+#if NEX_HAS_BUILTIN_FLOAT16
+    /**
+     * @brief Append a 16-bit floating-point value to the stream
+     * @param value The 16-bit floating-point value to append
+     * @return A reference to the LogStream instance for chaining
+     */
+    LogStream& operator<<(float16 value) noexcept;
+#endif
+
+    /**
+     * @brief Append a floating-point value to the stream
+     * @param value The floating-point value to append
+     * @return A reference to the LogStream instance for chaining
+     */
+    LogStream& operator<<(float64 value) noexcept;
+
+#if NEX_HAS_BUILTIN_FLOAT128
+    /**
+     * @brief Append a 128-bit floating-point value to the stream
+     * @param value The 128-bit floating-point value to append
+     * @return A reference to the LogStream instance for chaining
+     */
+    LogStream& operator<<(float128 value) noexcept;
+#endif
+
+    /**
+     * @brief Append a boolean value to the stream
+     * @param value The boolean value to append
+     * @return A reference to the LogStream instance for chaining
+     */
+    LogStream& operator<<(bool value) noexcept;
+
+    /**
+     * @brief Append a character value to the stream
+     * @param value The character value to append
+     * @return A reference to the LogStream instance for chaining
+     */
+    LogStream& operator<<(nchar value) noexcept;
+
+    /**
+     * @brief Append a C-style string to the stream
+     * @param str The C-style string to append
+     * @return A reference to the LogStream instance for chaining
+     */
+    LogStream& operator<<(cstring str) noexcept;
+
+    /**
+     * @brief Append a string view to the stream
+     * @param view The string view to append
+     * @return A reference to the LogStream instance for chaining
+     */
+    LogStream& operator<<(NStringView view) noexcept;
+
+    /**
+     * @brief Get the underlying log buffer
+     * @return A reference to the underlying LogBuffer instance
+     */
+    LogBuffer& buffer() noexcept { return buffer_; }
+
+    /**
+     * @brief Get the underlying log buffer (const version)
+     * @return A const reference to the underlying LogBuffer instance
+     */
+    const LogBuffer& buffer() const noexcept { return buffer_; }
+
+    /**
+     * @brief Get the underlying log buffer as an r-value reference (for moving)
+     * @return An r-value reference to the underlying LogBuffer instance
+     */
+    LogBuffer&& moveBuffer() noexcept { return NEX_MOVE(buffer_); }
+
+    /**
+     * @brief Get the underlying log buffer as an r-value reference (const version, for moving)
+     * @return A const r-value reference to the underlying LogBuffer instance
+     */
+    const LogBuffer&& moveBuffer() const noexcept { return NEX_MOVE(buffer_); }
+
+    /**
+     * @brief Get the size of the underlying log buffer
+     * @return The size of the underlying log buffer
+     */
+    constexpr usize size() const noexcept { return buffer_.size(); }
+
+    /**
+     * @brief Check if the underlying log buffer is empty
+     * @return True if the underlying log buffer is empty, false otherwise
+     */
+    constexpr bool empty() const noexcept { return buffer_.empty(); }
+
+private:
+    // Private constructor to prevent direct instantiation
+    LogStream() = default;
+
+    // Only the LogBuilder class can create instances of LogStream
+    friend class LogBuilder;
+
+    // Internal buffer to hold the log stream data
+    LogBuffer buffer_ = {};
+
+public:
+    // Disallow copy semantics
+    NEX_DISALLOW_COPY(LogStream);
+
+    // Default move semantics are allowed for LogStream
+    NEX_DEFAULT_MOVE(LogStream);
+
+private:
+    /**
+     * @brief Append a string data with specified pointer and length to the stream buffer
+     * @param data Pointer to the string data
+     * @param length Length of the string data
+     * @return The number of characters (or bytes) appended to the stream buffer
+     */
+    usize append(cstring data, usize length) noexcept;
+};
+
 /**
  * @class LogBuilder
  * @brief Helper class for building log messages with a stream-like interface.
@@ -135,11 +296,18 @@ public:
                LogStringView category = {}) noexcept;
 
     /**
-     * @brief Append a log string view to the log message
-     * @param message The log message to append
-     * @return A reference to the LogBuilder for chaining
+     * @brief Append a value to the log message using stream-like syntax
+     * @tparam Type The type of the value to append
+     * @param value The value to append to the log message
+     * @return A reference to the LogBuilder instance for chaining
      */
-    LogBuilder& operator<<(const LogString& message) noexcept;
+    template <typename Type>
+    LogBuilder& operator<<(const Type& value) noexcept {
+        if (enabled_) {
+            stream_ << value;
+        }
+        return *this;
+    }
 
     /**
      * @brief Finalize the log message and dispatch it to the logger
@@ -157,8 +325,11 @@ private:
     // Metadata associated with the log record
     LogMetadata metadata_;
 
-    // Internal buffer to hold the log message before dispatching
-    LogBuffer buffer_;
+    // Stream for constructing the log message buffer
+    LogStream stream_;
+
+    // Flag indicating whether logging is enabled for this log builder
+    bool enabled_;
 
     // Last system error code at the time of log creation,
     // using a type large enough to hold platform-specific error codes

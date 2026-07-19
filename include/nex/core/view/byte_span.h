@@ -11,7 +11,6 @@
 #include "nex/base/macros.h"
 #include "nex/base/types.h"
 #include "nex/base/limits.h"
-#include "nex/base/linear.h"
 
 NEX_NAMESPACE_BEGIN
 
@@ -76,10 +75,6 @@ public:
     // Construct from void pointer and length
     constexpr ByteSpan(const_void_ptr data, size_type size) noexcept
         : data_(static_cast<const_pointer>(data)), size_(size) {}
-
-    // Construct from a dynamic array of bytes (Vec<uint8>)
-    constexpr ByteSpan(const Vec<value_type>& vec) noexcept
-        : data_(vec.data()), size_(vec.size()) {}
 
     // Copy constructor
     constexpr ByteSpan(const ByteSpan& other) noexcept = default;
@@ -173,11 +168,6 @@ public:
     constexpr size_type maxSize() const noexcept {
         return (NumericLimits<size_type>::max() / sizeof(value_type)) - 1;
     }
-
-    ////// Conversion methods -----------------------------
-
-    // Convert to dynamic array of bytes (Vec<uint8>)
-    Vec<value_type> toVec() const;
 
     ////// Modifiers -----------------------------
 

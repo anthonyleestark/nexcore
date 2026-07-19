@@ -7,11 +7,11 @@
 
 #include "nex/base/macros.h"
 #include "nex/base/types.h"
-#include "nex/base/linear.h"
 #include "nex/core/text/string.h"
 #include "nex/core/text/string_view.h"
 #include "nex/base/result.h"
 #include "nex/base/error.h"
+#include "nex/core/containers/vector.h"
 #include "nex/core/text/regex.h"
 
 NEX_NAMESPACE_BEGIN

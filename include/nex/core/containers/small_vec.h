@@ -14,7 +14,6 @@
 #include "nex/base/limits.h"
 #include "nex/base/init.h"
 #include "nex/base/traits.h"
-#include "nex/base/linear.h"
 #include "nex/base/assert_crash.h"
 
 NEX_NAMESPACE_BEGIN

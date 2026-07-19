@@ -3,8 +3,8 @@
  * Copyright (c) 2026 Anthony Lee Stark. All rights reserved.
  */
 
+#include "nex/core/containers/array.h"
 #include "nex/core/math/geometry.h"
-#include "nex/base/linear.h"
 
 NEX_NAMESPACE_BEGIN
 

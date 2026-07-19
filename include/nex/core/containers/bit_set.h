@@ -9,8 +9,8 @@
 #include "nex/base/types.h"
 #include "nex/base/init.h"
 #include "nex/base/traits.h"
-#include "nex/base/linear.h"
 #include "nex/base/assert_crash.h"
+#include "nex/core/containers/array.h"
 
 NEX_NAMESPACE_BEGIN
 

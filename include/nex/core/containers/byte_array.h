@@ -12,8 +12,8 @@
 #include "nex/base/types.h"
 #include "nex/base/casts.h"
 #include "nex/base/limits.h"
-#include "nex/base/linear.h"
 #include "nex/base/string.h"
+#include "nex/core/containers/vector.h"
 #include "nex/core/view/byte_span.h"
 
 NEX_NAMESPACE_BEGIN

@@ -5,9 +5,9 @@
 
 #include "nex/core/executor.h"
 #include "nex/base/primitives.h"
-#include "nex/base/adaptors.h"
-#include "nex/base/linear.h"
 #include "nex/base/casts.h"
+#include "nex/core/containers/vector.h"
+#include "nex/core/adapters/queue.h"
 
 NEX_NAMESPACE_BEGIN
 

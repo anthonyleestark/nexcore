@@ -12,7 +12,7 @@
 #include "nex/base/types.h"
 #include "nex/base/wrappers.h"
 #include "nex/core/text/string.h"
-#include "nex/core/chrono/time.h"
+#include "nex/core/chrono/date.h"
 
 NEX_NAMESPACE_BEGIN
 
@@ -146,7 +146,7 @@ public:
     bool hasEndDate() const { return endDate_.has_value(); }
 
     // Get the end date (returns nullopt if no end date is set)
-    const Optional<DateTime::Date>& endDate() const { return endDate_; }
+    const Optional<chrono::Date>& endDate() const { return endDate_; }
 
     // Get repeat count (0 = forever)
     int32 count() const { return count_; }
@@ -185,7 +185,7 @@ public:
     }
 
     // Set end date for the repeat pattern
-    RepeatPattern withEndDate(const DateTime::Date& endDate) const {
+    RepeatPattern withEndDate(const chrono::Date& endDate) const {
         RepeatPattern pattern = *this;
         if (endDate.ok()) {
             pattern.endDate_ = endDate;
@@ -253,7 +253,7 @@ private:
     RepeatFrequency frequency_ = RepeatFrequency::None;
 
     // Optional end date for the repeat pattern
-    Optional<DateTime::Date> endDate_ = NEX_STD nullopt;
+    Optional<chrono::Date> endDate_ = NEX_STD nullopt;
 
     // Repeat count, e.g. 5 = repeat 5 times (0 = forever)
     int32 count_ = kForeverCount;

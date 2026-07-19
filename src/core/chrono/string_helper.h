@@ -42,6 +42,26 @@ String toLower(const String& str) {
     return String(u16str);
 }
 
+// Pad a numeric value with leading zeros to a specified width, returning as a String.
+String padded(uint32 value, uint32 width) {
+    String result;
+    String valueString = String::fromUInt(value);
+    for (uint32 length = static_cast<uint32>(valueString.size()); length < width; ++length) {
+        result.append(u"0");
+    }
+    return result.append(valueString);
+}
+
+// Pad a year value with leading zeros to ensure it is at least 4 digits, returning as a String.
+String paddedYear(int32 value) {
+    String result;
+    if (value < 0) {
+        result.append(u"-");
+        value = -value;
+    }
+    return result.append(padded(static_cast<uint32>(value), 4));
+}
+
 NEX_SUBNAMESPACE_END(string_helper)
 
 NEX_LAYER_NAMESPACE_END(chrono)

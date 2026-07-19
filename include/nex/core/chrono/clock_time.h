@@ -90,15 +90,17 @@ public:
     }
 
     ////// Accessors and utility methods ------------------------
-    
+
     // Get the underlying duration since midnight
     Duration getDuration(void) const noexcept {
         return sinceMidnight_;
     }
+
     // Get the corresponding time point (using epoch as reference)
     TimePoint getTimePoint(void) const noexcept {
         return TimePoint{ sinceMidnight_ };
     }
+
     // Check if the ClockTime is empty (00:00:00.000)
     constexpr bool isEmpty() const noexcept {
         return sinceMidnight_ == Duration{};
@@ -111,30 +113,37 @@ private:
     constexpr Hours getHours() const noexcept {
         return NEX_STD chrono::duration_cast<Hours>(sinceMidnight_ % Days(1));
     }
+
     // Get the number of minutes (0-59)
     constexpr Minutes getMinutes() const noexcept {
         return NEX_STD chrono::duration_cast<Minutes>(sinceMidnight_ % Hours(1));
     }
+
     // Get the number of seconds (0-59)
     constexpr Seconds getSeconds() const noexcept {
         return NEX_STD chrono::duration_cast<Seconds>(sinceMidnight_ % Minutes(1));
     }
+
     // Get the number of milliseconds (0-999)
     constexpr Milliseconds getMillisecs() const noexcept {
         return NEX_STD chrono::duration_cast<Milliseconds>(sinceMidnight_ % Seconds(1));
     }
+
     // Convert the entire time to hours
     constexpr Hours toHours() const noexcept {
         return NEX_STD chrono::duration_cast<Hours>(sinceMidnight_);
     }
+
     // Convert the entire time to minutes
     constexpr Minutes toMinutes() const noexcept {
         return NEX_STD chrono::duration_cast<Minutes>(sinceMidnight_);
     }
+
     // Convert the entire time to seconds
     constexpr Seconds toSeconds() const noexcept {
         return NEX_STD chrono::duration_cast<Seconds>(sinceMidnight_);
     }
+
     // Convert the entire time to milliseconds
     constexpr Milliseconds toMillisecs() const noexcept {
         return NEX_STD chrono::duration_cast<Milliseconds>(sinceMidnight_);
@@ -155,20 +164,24 @@ public:
         wrapAround();
         return *this;
     }
+
     // Addition with TimeSpan
     TimeSpan operator+(const TimeSpan& timeSpan) const noexcept {
         return TimeSpan(sinceMidnight_ + timeSpan.getDuration());
     }
+
     // Compound assignment for addition with TimeSpan
     ClockTime& operator+=(const TimeSpan& timeSpan) {
         sinceMidnight_ += timeSpan.getDuration();
         wrapAround();
         return *this;
     }
+
     // Addition with integer seconds
     TimeSpan operator+(int32 seconds) const noexcept {
         return TimeSpan(sinceMidnight_ + Seconds{ seconds });
     }
+
     // Compound assignment for addition with integer seconds
     ClockTime& operator+=(int32 seconds) {
         sinceMidnight_ += Seconds{ seconds };
@@ -180,26 +193,31 @@ public:
     TimeSpan operator-(const ClockTime& other) const noexcept {
         return TimeSpan(sinceMidnight_ - other.sinceMidnight_);
     }
+
     // Compound assignment for subtraction
     ClockTime& operator-=(const ClockTime& other) {
         if (this != &other) sinceMidnight_ -= other.sinceMidnight_;
         wrapAround();
         return *this;
     }
+
     // Subtraction with TimeSpan
     TimeSpan operator-(const TimeSpan& timeSpan) const noexcept {
         return TimeSpan(sinceMidnight_ - timeSpan.getDuration());
     }
+
     // Compound assignment for subtraction with TimeSpan
     ClockTime& operator-=(const TimeSpan& timeSpan) {
         sinceMidnight_ -= timeSpan.getDuration();
         wrapAround();
         return *this;
     }
+
     // Subtraction with integer seconds
     TimeSpan operator-(int32 seconds) const noexcept {
         return TimeSpan(sinceMidnight_ - Seconds{ seconds });
     }
+
     // Compound assignment for subtraction with integer seconds
     ClockTime& operator-=(int32 seconds) {
         sinceMidnight_ -= Seconds{ seconds };
@@ -213,6 +231,7 @@ public:
     constexpr bool operator==(const ClockTime& other) const noexcept {
         return sinceMidnight_ == other.sinceMidnight_;
     }
+
     // Inequality operator
     constexpr bool operator!=(const ClockTime& other) const noexcept {
         return sinceMidnight_ != other.sinceMidnight_;
@@ -222,14 +241,17 @@ public:
     constexpr bool operator<(const ClockTime& other) const noexcept {
         return sinceMidnight_ < other.sinceMidnight_;
     }
+
     // Greater than operator
     constexpr bool operator>(const ClockTime& other) const noexcept {
         return sinceMidnight_ > other.sinceMidnight_;
     }
+
     // Less than or equal to operator
     constexpr bool operator<=(const ClockTime& other) const noexcept {
         return sinceMidnight_ <= other.sinceMidnight_;
     }
+
     // Greater than or equal to operator
     constexpr bool operator>=(const ClockTime& other) const noexcept {
         return sinceMidnight_ >= other.sinceMidnight_;
@@ -273,18 +295,22 @@ public:
     static constexpr bool isValidHour(int32 hour) noexcept {
         return chrono::isValidHour(hour);
     }
+
     // Validate the minute value (0-59)
     static constexpr bool isValidMinute(int32 minute) noexcept {
         return chrono::isValidMinute(minute);
     }
+
     // Validate the second value (0-59)
     static constexpr bool isValidSecond(int32 second) noexcept {
         return chrono::isValidSecond(second);
     }
+
     // Validate the millisecond value (0-999)
     static constexpr bool isValidMillisecs(int32 millisecs) noexcept {
         return chrono::isValidMillisecs(millisecs);
     }
+
     // Validate a complete time (hour, minute, second, millisecond)
     static constexpr bool isValidTime(int32 hour, int32 minute, int32 second, int32 millisecs = 0) noexcept {
         return (chrono::isValidHour(hour) && chrono::isValidMinute(minute)
@@ -297,14 +323,17 @@ public:
     constexpr int32 hour(void) const noexcept {
         return getHours().count();
     }
+
     // Get the minute value (0-59)
     constexpr int32 minute(void) const noexcept {
         return getMinutes().count();
     }
+
     // Get the second value (0-59)
     constexpr int32 second(void) const noexcept {
         return static_cast<int32>(getSeconds().count());
     }
+
     // Get the millisecond value (0-999)
     constexpr int32 millisecond(void) const noexcept {
         return static_cast<int32>(getMillisecs().count());
@@ -320,6 +349,7 @@ public:
                         + original.getSeconds() + original.getMillisecs();
         wrapAround();
     }
+
     // Set the minute value (0-59)
     void setMinute(int32 minute) noexcept {
         NEX_ASSERT(isValidMinute(minute));
@@ -328,6 +358,7 @@ public:
                         + original.getSeconds() + original.getMillisecs();
         wrapAround();
     }
+
     // Set the second value (0-59)
     void setSecond(int32 second) noexcept {
         NEX_ASSERT(isValidSecond(second));
@@ -336,6 +367,7 @@ public:
                         + Seconds(second) + original.getMillisecs();
         wrapAround();
     }
+
     // Set the millisecond value (0-999)
     void setMillisecs(int32 millisecs) noexcept {
         NEX_ASSERT(isValidMillisecs(millisecs));
@@ -353,42 +385,49 @@ public:
         wrapAround();
         return *this;
     }
+
     // Decrease hours by a specified amount
     ClockTime& decreaseHours(int32 hours) noexcept {
         sinceMidnight_ -= Hours{ hours };
         wrapAround();
         return *this;
     }
+
     // Increase minutes by a specified amount
     ClockTime& increaseMinutes(int32 mins) noexcept {
         sinceMidnight_ += Minutes{ mins };
         wrapAround();
         return *this;
     }
+
     // Decrease minutes by a specified amount
     ClockTime& decreaseMinutes(int32 mins) noexcept {
         sinceMidnight_ -= Minutes{ mins };
         wrapAround();
         return *this;
     }
+
     // Increase seconds by a specified amount
     ClockTime& increaseSeconds(int32 secs) noexcept {
         sinceMidnight_ += Seconds{ secs };
         wrapAround();
         return *this;
     }
+
     // Decrease seconds by a specified amount
     ClockTime& decreaseSeconds(int32 secs) noexcept {
         sinceMidnight_ -= Seconds{ secs };
         wrapAround();
         return *this;
     }
+
     // Increase milliseconds by a specified amount
     ClockTime& increaseMillisecs(int32 millisecs) noexcept {
         sinceMidnight_ += Milliseconds{ millisecs };
         wrapAround();
         return *this;
     }
+
     // Decrease milliseconds by a specified amount
     ClockTime& decreaseMillisecs(int32 millisecs) noexcept {
         sinceMidnight_ -= Milliseconds{ millisecs };
@@ -402,14 +441,17 @@ public:
     int32 compareToHours(const ClockTime& other) const noexcept {
         return static_cast<int32>((toHours() - other.toHours()).count());
     }
+
     // Compare this ClockTime to another and return the difference in minutes
     int32 compareToMinutes(const ClockTime& other) const noexcept {
         return static_cast<int32>((toMinutes() - other.toMinutes()).count());
     }
+
     // Compare this ClockTime to another and return the difference in seconds
     int32 compareToSeconds(const ClockTime& other) const noexcept {
         return static_cast<int32>((toSeconds() - other.toSeconds()).count());
     }
+
     // Compare this ClockTime to another and return the difference in milliseconds
     int32 compareToMillisecs(const ClockTime& other) const noexcept {
         return static_cast<int32>((toMillisecs() - other.toMillisecs()).count());
@@ -418,23 +460,23 @@ public:
     ////// String conversion ------------------------
 
     /**
-     * @brief   Convert ClockTime to string representation
-     * @param   format  Format string. Supported formats:
-     *                  - "default" or empty: "HH:MM:SS"
-     *                  - "with_ms": "HH:MM:SS.mmm" (with milliseconds)
-     *                  - "12h": "HH:MM:SS AM/PM" (12-hour format)
-     *                  - "12h_ms": "HH:MM:SS.mmm AM/PM" (12-hour with milliseconds)
-     * @return  Formatted string representation
+     * @brief  Convert ClockTime to string representation
+     * @param  format  Format string. Supported formats:
+     *                 - "default" or empty: "HH:MM:SS"
+     *                 - "with_ms": "HH:MM:SS.mmm" (with milliseconds)
+     *                 - "12h": "HH:MM:SS AM/PM" (12-hour format)
+     *                 - "12h_ms": "HH:MM:SS.mmm AM/PM" (12-hour with milliseconds)
+     * @return Formatted string representation
      */
     String toString(wcstring format = L"default") const;
 
     /**
-     * @brief   Create ClockTime from string representation
-     * @param   str     String to parse. Supports formats:
-     *                  - "HH:MM:SS" or "HH:MM:SS.mmm"
-     *                  - "HH:MM:SS AM/PM" or "HH:MM:SS.mmm AM/PM" (12-hour format)
-     *                  - "HHMM" (compact format, assumes 00 seconds)
-     * @return  Parsed ClockTime, or empty ClockTime (00:00:00) on failure
+     * @brief  Create ClockTime from string representation
+     * @param  str     String to parse. Supports formats:
+     *                 - "HH:MM:SS" or "HH:MM:SS.mmm"
+     *                 - "HH:MM:SS AM/PM" or "HH:MM:SS.mmm AM/PM" (12-hour format)
+     *                 - "HHMM" (compact format, assumes 00 seconds)
+     * @return Parsed ClockTime, or empty ClockTime (00:00:00) on failure
      */
     static ClockTime fromString(const String& str);
 };

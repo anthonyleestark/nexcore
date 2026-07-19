@@ -18,7 +18,7 @@ NEX_LAYER_NAMESPACE_BEGIN(chrono)
 
 using TimePoint     = NEX_STD chrono::system_clock::time_point;
 using Duration      = NEX_STD chrono::system_clock::duration;
-using Date          = NEX_STD chrono::year_month_day;
+using CalendarDate  = NEX_STD chrono::year_month_day;
 using Year          = NEX_STD chrono::year;
 using Years         = NEX_STD chrono::years;
 using Month         = NEX_STD chrono::month;

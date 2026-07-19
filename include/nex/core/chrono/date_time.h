@@ -86,7 +86,7 @@ public:
     DateTime(int32 year, uint32 month, uint32 day, int32 hour, int32 min, int32 sec, int32 millisec = 0) noexcept {
         NEX_ASSERT(isValidDate(year, month, day));
         NEX_ASSERT(isValidTime(hour, min, sec, millisec));
-        auto dateVal = Date{ Year{ year }, Month{ month }, Day{ day } };
+        auto dateVal = CalendarDate{ Year{ year }, Month{ month }, Day{ day } };
         auto timeVal = Hours(hour) + Minutes(min) + Seconds(sec) + Milliseconds(millisec);
         timePoint_ = SysDays{ dateVal } + timeVal;
     }
@@ -97,9 +97,15 @@ public:
     TimePoint getTimePoint(void) const noexcept {
         return timePoint_;
     }
+
     // Get clock-time data
     ClockTime getClockTime(void) const noexcept {
         return ClockTime(hour(), minute(), second(), millisecond());
+    }
+
+    // Get the date portion without its time-of-day component.
+    constexpr Date getDate(void) const noexcept {
+        return Date{ NEX_STD chrono::floor<Days>(timePoint_) };
     }
 
     // Check if the DateTime is empty (default constructed)
@@ -108,20 +114,23 @@ public:
     }
 
     ////// Arithmetic operators ------------------------
-    
+
     // Addition operator with TimeSpan
     TimeSpan operator+(const TimeSpan& timeSpan) const noexcept {
         return TimeSpan(timePoint_.time_since_epoch() + timeSpan.getDuration());
     }
+
     // Compound assignment for addition with TimeSpan
     DateTime& operator+=(const TimeSpan& timeSpan) {
         timePoint_ += timeSpan.getDuration();
         return *this;
     }
+
     // Addition with integer seconds
     TimeSpan operator+(int32 seconds) const noexcept {
         return TimeSpan(timePoint_.time_since_epoch() + Seconds{ seconds });
     }
+
     // Compound assignment for addition with integer seconds
     DateTime& operator+=(int32 seconds) {
         timePoint_ += Seconds{ seconds };
@@ -132,16 +141,20 @@ public:
     TimeSpan operator-(const DateTime& other) const noexcept {
         return TimeSpan(timePoint_ - other.timePoint_);
     }
+
     TimeSpan operator-(const TimeSpan& timeSpan) const noexcept {
         return TimeSpan(timePoint_.time_since_epoch() - timeSpan.getDuration());
     }
+
     DateTime& operator-=(const TimeSpan& timeSpan) {
         timePoint_ -= timeSpan.getDuration();
         return *this;
     }
+
     TimeSpan operator-(int32 seconds) const noexcept {
         return TimeSpan(timePoint_.time_since_epoch() - Seconds{ seconds });
     }
+
     DateTime& operator-=(int32 seconds) {
         timePoint_ -= Seconds{ seconds };
         return *this;
@@ -153,6 +166,7 @@ public:
     constexpr bool operator==(const DateTime& other) const noexcept {
         return timePoint_ == other.timePoint_;
     }
+
     // Inequality operator
     constexpr bool operator!=(const DateTime& other) const noexcept {
         return timePoint_ != other.timePoint_;
@@ -162,14 +176,17 @@ public:
     constexpr bool operator<(const DateTime& other) const noexcept {
         return timePoint_ < other.timePoint_;
     }
+
     // Greater than operator
     constexpr bool operator>(const DateTime& other) const noexcept {
         return timePoint_ > other.timePoint_;
     }
+
     // Less than or equal to operator
     constexpr bool operator<=(const DateTime& other) const noexcept {
         return timePoint_ <= other.timePoint_;
     }
+
     // Greater than or equal to operator
     constexpr bool operator>=(const DateTime& other) const noexcept {
         return timePoint_ >= other.timePoint_;
@@ -206,41 +223,49 @@ public:
 private:
     ////// Internal getters ------------------------
 
-    // Get the date portion as a Date object
-    constexpr Date dateVal() const noexcept {
-        return Date{ NEX_STD chrono::floor<Days>(timePoint_) };
+    // Get the date portion in the internal calendar representation.
+    constexpr CalendarDate dateVal() const noexcept {
+        return CalendarDate{ NEX_STD chrono::floor<Days>(timePoint_) };
     }
+
     // Get the month value (1-12)
     constexpr Month monthVal() const noexcept {
-        return Date{ NEX_STD chrono::floor<Days>(timePoint_) }.month();
+        return CalendarDate{ NEX_STD chrono::floor<Days>(timePoint_) }.month();
     }
+
     // Get the day value (1-31)
     constexpr Day dayVal() const noexcept {
-        return Date{ NEX_STD chrono::floor<Days>(timePoint_) }.day();
+        return CalendarDate{ NEX_STD chrono::floor<Days>(timePoint_) }.day();
     }
+
     // Get the year value
     constexpr Year yearVal() const noexcept {
-        return Date{ NEX_STD chrono::floor<Days>(timePoint_) }.year();
+        return CalendarDate{ NEX_STD chrono::floor<Days>(timePoint_) }.year();
     }
+
     // Get the weekday value (0-6, Sunday=0)
     constexpr Weekday weekdayVal() const noexcept {
         return Weekday{ NEX_STD chrono::floor<Days>(timePoint_) };
     }
+
     // Get the time portion as a ClockTime object
     constexpr Hours getHours() const noexcept {
         return NEX_STD chrono::duration_cast<Hours>(
                                     timePoint_.time_since_epoch() % Days(1));
     }
+
     // Get the minute portion (0-59)
     constexpr Minutes getMinutes() const noexcept {
         return NEX_STD chrono::duration_cast<Minutes>(
                                     timePoint_.time_since_epoch() % Hours(1));
     }
+
     // Get the second portion (0-59)
     constexpr Seconds getSeconds() const noexcept {
         return NEX_STD chrono::duration_cast<Seconds>(
                                     timePoint_.time_since_epoch() % Minutes(1));
     }
+
     // Get the millisecond portion (0-999)
     constexpr Milliseconds getMillisecs() const noexcept {
         return NEX_STD chrono::duration_cast<Milliseconds>(
@@ -254,14 +279,17 @@ public:
     static constexpr bool isValidHour(int32 hour) noexcept {
         return chrono::isValidHour(hour);
     }
+
     // Validate the minute value (0-59)
     static constexpr bool isValidMinute(int32 minute) noexcept {
         return chrono::isValidMinute(minute);
     }
+
     // Validate the second value (0-59)
     static constexpr bool isValidSecond(int32 second) noexcept {
         return chrono::isValidSecond(second);
     }
+
     // Validate the millisecond value (0-999)
     static constexpr bool isValidMillisecs(int32 millisecs) noexcept {
         return chrono::isValidMillisecs(millisecs);
@@ -273,30 +301,37 @@ public:
     constexpr int32 year(void) const noexcept {
         return static_cast<int32>(yearVal());
     }
+
     // Get the month value (1-12)
     constexpr uint32 month(void) const noexcept {
         return static_cast<uint32>(monthVal());
     }
+
     // Get the day value (1-31)
     constexpr uint32 day(void) const noexcept {
         return static_cast<uint32>(dayVal());
     }
+
     // Get the hour value (0-23)
     constexpr int32 hour(void) const noexcept {
         return getHours().count();
     }
+
     // Get the minute value (0-59)
     constexpr int32 minute(void) const noexcept {
         return getMinutes().count();
     }
+
     // Get the second value (0-59)
     constexpr int32 second(void) const noexcept {
         return static_cast<int32>(getSeconds().count());
     }
+
     // Get the millisecond value (0-999)
     constexpr int32 millisecond(void) const noexcept {
         return static_cast<int32>(getMillisecs().count());
     }
+
     // Get the day of week value (0-6, Sunday=0)
     constexpr uint8 dayOfWeek(void) const noexcept {
         return static_cast<uint8>(weekdayVal().c_encoding());
@@ -308,9 +343,10 @@ public:
     void setDate(int32 year, uint32 month, uint32 day) noexcept {
         NEX_ASSERT(isValidDate(year, month, day));
         DateTime original = *this;
-        auto newDateVal = Date{ Year(year), Month(month), Day(day) };
+        auto newDateVal = CalendarDate{ Year(year), Month(month), Day(day) };
         timePoint_ = SysDays{ newDateVal } + (original.timePoint_ - SysDays{ original.dateVal() });
     }
+
     // Set the entire time (hour, minute, second, millisecond)
     void setClockTime(int32 hour, int32 minute, int32 second, int32 millisecs = 0) noexcept {
         NEX_ASSERT(isValidTime(hour, minute, second, millisecs));
@@ -318,39 +354,44 @@ public:
         auto newTimeVal = Hours(hour) + Minutes(minute) + Seconds(second) + Milliseconds(millisecs);
         timePoint_ = SysDays{ original.dateVal() } + newTimeVal;
     }
+
     // Set the time from ClockTime value
     void setClockTime(const ClockTime& clockTime) noexcept {
         DateTime original = *this;
         auto newTimeVal = clockTime.getDuration();
         timePoint_ = SysDays{ original.dateVal() } + newTimeVal;
     }
+
     // Set the year value
     void setYear(int32 year) noexcept {
         DateTime original = *this;
         NEX_ASSERT(isValidDate(year, 
                                static_cast<uint32>(original.monthVal()), 
                                static_cast<uint32>(original.dayVal())));
-        auto newDateVal = Date{ Year(year), original.monthVal(), original.dayVal() };
+        auto newDateVal = CalendarDate{ Year(year), original.monthVal(), original.dayVal() };
         timePoint_ = SysDays{ newDateVal } 
                         + (original.timePoint_ - SysDays{ original.dateVal() });
     }
+
     // Set the month value
     void setMonth(int32 month) noexcept {
         DateTime original = *this;
         NEX_ASSERT(isValidDate(static_cast<int32>(original.yearVal()), 
                                static_cast<uint32>(month), 
                                static_cast<uint32>(original.dayVal())));
-        auto newDateVal = Date{ original.yearVal(), Month(month), original.dayVal() };
+        auto newDateVal = CalendarDate{ original.yearVal(), Month(month), original.dayVal() };
         timePoint_ = SysDays{ newDateVal } + (original.timePoint_ - SysDays{ original.dateVal() });
     }
+
     // Set the day value
     void setDay(int32 day) noexcept {
         DateTime original = *this;
         NEX_ASSERT(isValidDate(static_cast<int32>(original.yearVal()), 
                                static_cast<uint32>(original.monthVal()), 
                                static_cast<uint32>(day)));
-        auto newDateVal = Date{ original.yearVal(), original.monthVal(), Day(day) };
+        auto newDateVal = CalendarDate{ original.yearVal(), original.monthVal(), Day(day) };
         timePoint_ = SysDays{ newDateVal } + (original.timePoint_ - SysDays{ original.dateVal() });
+
     }
     // Set the hour value
     void setHour(int32 hour) noexcept {
@@ -360,6 +401,7 @@ public:
                             + original.getSeconds() + original.getMillisecs();
         timePoint_ = SysDays{ original.dateVal() } + newTimeVal;
     }
+
     // Set the minute value
     void setMinute(int32 minute) noexcept {
         NEX_ASSERT(isValidMinute(minute));
@@ -368,6 +410,7 @@ public:
                             + original.getSeconds() + original.getMillisecs();
         timePoint_ = SysDays{ original.dateVal() } + newTimeVal;
     }
+
     // Set the second value
     void setSecond(int32 second) noexcept {
         NEX_ASSERT(isValidSecond(second));
@@ -376,6 +419,7 @@ public:
                             + Seconds(second) + original.getMillisecs();
         timePoint_ = SysDays{ original.dateVal() } + newTimeVal;
     }
+
     // Set the millisecond value
     void setMillisecs(int32 millisecs) noexcept {
         NEX_ASSERT(isValidMillisecs(millisecs));
@@ -391,23 +435,28 @@ public:
     constexpr bool isLeapYear(void) const noexcept {
         return yearVal().is_leap();
     }
+
     // Validate a complete date (year, month, day)
     static constexpr bool isValidDate(int32 year, uint32 month, uint32 day) noexcept {
-        return Date{ Year(year), Month(month), Day(day) }.ok();
+        return CalendarDate{ Year(year), Month(month), Day(day) }.ok();
     }
+
     // Validate a complete time (hour, minute, second, millisecond)
     static constexpr bool isValidTime(int32 hour, int32 minute, int32 second, int32 millisecs = 0) noexcept {
         return (chrono::isValidHour(hour) && chrono::isValidMinute(minute)
                 && chrono::isValidSecond(second) && chrono::isValidMillisecs(millisecs));
     }
+
     // Check if the DateTime represents today's date
     constexpr bool isToday(void) const noexcept {
         return dateVal() == DateTime(NEX_STD chrono::system_clock::now()).dateVal();
     }
+
     // Check if the DateTime is in the future
     constexpr bool isInTheFuture(void) const noexcept {
         return timePoint_ > NEX_STD chrono::system_clock::now();
     }
+
     // Check if the DateTime is in the past
     constexpr bool isInThePast(void) const noexcept {
         return timePoint_ < NEX_STD chrono::system_clock::now();
@@ -420,46 +469,55 @@ public:
         timePoint_ += Days{ days };
         return *this;
     }
+
     // Decrease the date by a specified number of days
     DateTime& decreaseDays(int32 days) noexcept {
         timePoint_ -= Days{ days };
         return *this;
     }
+
     // Increase the time by a specified number of hours
     DateTime& increaseHours(int32 hours) noexcept {
         timePoint_ += Hours{ hours };
         return *this;
     }
+
     // Decrease the time by a specified number of hours
     DateTime& decreaseHours(int32 hours) noexcept {
         timePoint_ -= Hours{ hours };
         return *this;
     }
+
     // Increase the time by a specified number of minutes
     DateTime& increaseMinutes(int32 mins) noexcept {
         timePoint_ += Minutes{ mins };
         return *this;
     }
+
     // Decrease the time by a specified number of minutes
     DateTime& decreaseMinutes(int32 mins) noexcept {
         timePoint_ -= Minutes{ mins };
         return *this;
     }
+
     // Increase the time by a specified number of seconds
     DateTime& increaseSeconds(int32 secs) noexcept {
         timePoint_ += Seconds{ secs };
         return *this;
     }
+
     // Decrease the time by a specified number of seconds
     DateTime& decreaseSeconds(int32 secs) noexcept {
         timePoint_ -= Seconds{ secs };
         return *this;
     }
+
     // Increase the time by a specified number of milliseconds
     DateTime& increaseMillisecs(int32 millisecs) noexcept {
         timePoint_ += Milliseconds{ millisecs };
         return *this;
     }
+
     // Decrease the time by a specified number of milliseconds
     DateTime& decreaseMillisecs(int32 millisecs) noexcept {
         timePoint_ -= Milliseconds{ millisecs };
@@ -469,26 +527,26 @@ public:
     ////// String conversion ------------------------
     
     /**
-     * @brief   Convert DateTime to string representation
-     * @param   format  Format string. Supported formats:
-     *                  - "default" or empty: "YYYY-MM-DD HH:MM:SS"
-     *                  - "with_ms": "YYYY-MM-DD HH:MM:SS.mmm" (with milliseconds)
-     *                  - "iso": "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
-     *                  - "iso_ms": "YYYY-MM-DDTHH:MM:SS.mmm" (ISO 8601 with milliseconds)
-     *                  - "us": "MM/DD/YYYY HH:MM:SS" (US date format)
-     *                  - "us_12h": "MM/DD/YYYY HH:MM:SS AM/PM" (US format with 12-hour time)
-     * @return  Formatted string representation
+     * @brief  Convert DateTime to string representation
+     * @param  format  Format string. Supported formats:
+     *                 - "default" or empty: "YYYY-MM-DD HH:MM:SS"
+     *                 - "with_ms": "YYYY-MM-DD HH:MM:SS.mmm" (with milliseconds)
+     *                 - "iso": "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
+     *                 - "iso_ms": "YYYY-MM-DDTHH:MM:SS.mmm" (ISO 8601 with milliseconds)
+     *                 - "us": "MM/DD/YYYY HH:MM:SS" (US date format)
+     *                 - "us_12h": "MM/DD/YYYY HH:MM:SS AM/PM" (US format with 12-hour time)
+     * @return Formatted string representation
      */
     String toString(wcstring format = L"default") const;
 
     /**
-     * @brief   Create DateTime from string representation
-     * @param   str     String to parse. Supports formats:
-     *                  - "YYYY-MM-DD HH:MM:SS" or "YYYY-MM-DD HH:MM:SS.mmm"
-     *                  - "YYYY-MM-DDTHH:MM:SS" or "YYYY-MM-DDTHH:MM:SS.mmm" (ISO 8601)
-     *                  - "MM/DD/YYYY HH:MM:SS" or "MM/DD/YYYY HH:MM:SS.mmm" (US format)
-     *                  - "MM/DD/YYYY HH:MM:SS AM/PM" (US format with 12-hour time)
-     * @return  Parsed DateTime, or empty DateTime on failure
+     * @brief  Create DateTime from string representation
+     * @param  str     String to parse. Supports formats:
+     *                 - "YYYY-MM-DD HH:MM:SS" or "YYYY-MM-DD HH:MM:SS.mmm"
+     *                 - "YYYY-MM-DDTHH:MM:SS" or "YYYY-MM-DDTHH:MM:SS.mmm" (ISO 8601)
+     *                 - "MM/DD/YYYY HH:MM:SS" or "MM/DD/YYYY HH:MM:SS.mmm" (US format)
+     *                 - "MM/DD/YYYY HH:MM:SS AM/PM" (US format with 12-hour time)
+     * @return Parsed DateTime, or empty DateTime on failure
      */
     static DateTime fromString(const String& str);
 };

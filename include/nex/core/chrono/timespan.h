@@ -75,26 +75,30 @@ public:
     Duration getDuration(void) const noexcept {
         return duration_;
     }
+
     // Check if the TimeSpan is empty (zero duration)
     constexpr bool isEmpty() const noexcept {
         return duration_ == Duration{};
     }
 
     ////// Arithmetic operators ------------------------
-    
+
     // Addition operator
     TimeSpan operator+(const TimeSpan& other) const noexcept {
         return TimeSpan(duration_ + other.duration_);
     }
+
     // Compound assignment for addition
     TimeSpan& operator+=(const TimeSpan& other) {
         if (this != &other) duration_ += other.duration_;
         return *this;
     }
+
     // Addition with integer seconds
     TimeSpan operator+(int32 seconds) const noexcept {
         return TimeSpan(duration_ + Seconds{ seconds });
     }
+
     // Compound assignment for addition with integer seconds
     TimeSpan& operator+=(int32 seconds) {
         duration_ += Seconds{ seconds };
@@ -105,15 +109,18 @@ public:
     TimeSpan operator-(const TimeSpan& other) const noexcept {
         return TimeSpan(duration_ - other.duration_);
     }
+
     // Compound assignment for subtraction
     TimeSpan& operator-=(const TimeSpan& other) {
         if (this != &other) duration_ -= other.duration_;
         return *this;
     }
+
     // Subtraction with integer seconds
     TimeSpan operator-(int32 seconds) const noexcept {
         return TimeSpan(duration_ - Seconds{ seconds });
     }
+
     // Compound assignment for subtraction with integer seconds
     TimeSpan& operator-=(int32 seconds) {
         duration_ -= Seconds{ seconds };
@@ -126,6 +133,7 @@ public:
     constexpr bool operator==(const TimeSpan& other) const noexcept {
         return duration_ == other.duration_;
     }
+
     // Equality with integer seconds
     constexpr bool operator==(int64 seconds) const noexcept {
         return totalSeconds() == seconds;
@@ -135,6 +143,7 @@ public:
     constexpr bool operator!=(const TimeSpan& other) const noexcept {
         return duration_ != other.duration_;
     }
+
     // Inequality with integer seconds
     constexpr bool operator!=(int64 seconds) const noexcept {
         return totalSeconds() != seconds;
@@ -144,30 +153,37 @@ public:
     constexpr bool operator<(const TimeSpan& other) const noexcept {
         return duration_ < other.duration_;
     }
+
     // Comparison with integer seconds
     constexpr bool operator<(int64 seconds) const noexcept {
         return totalSeconds() < seconds;
     }
+
     // Greater than operator
     constexpr bool operator>(const TimeSpan& other) const noexcept {
         return duration_ > other.duration_;
     }
+
     // Greater than with integer seconds
     constexpr bool operator>(int64 seconds) const noexcept {
         return totalSeconds() > seconds;
     }
+
     // Less than or equal to operator
     constexpr bool operator<=(const TimeSpan& other) const noexcept {
         return duration_ <= other.duration_;
     }
+
     // Less than or equal to with integer seconds
     constexpr bool operator<=(int64 seconds) const noexcept {
         return totalSeconds() <= seconds;
     }
+
     // Greater than or equal to operator
     constexpr bool operator>=(const TimeSpan& other) const noexcept {
         return duration_ >= other.duration_;
     }
+
     // Greater than or equal to with integer seconds
     constexpr bool operator>=(int64 seconds) const noexcept {
         return totalSeconds() >= seconds;
@@ -207,89 +223,105 @@ public:
     constexpr int64 totalHours() const noexcept {
         return NEX_STD chrono::duration_cast<Hours>(duration_).count();
     }
+
     // Get total minutes
     constexpr int64 totalMinutes() const noexcept {
         return NEX_STD chrono::duration_cast<Minutes>(duration_).count();
     }
+
     // Get total seconds
     constexpr int64 totalSeconds() const noexcept {
         return NEX_STD chrono::duration_cast<Seconds>(duration_).count();
     }
+
     // Get total milliseconds
     constexpr int64 totalMilliseconds() const noexcept {
         return NEX_STD chrono::duration_cast<Milliseconds>(duration_).count();
     }
 
     ////// Individual component accessors ------------------------
-    
+
     // Get the number of days
     constexpr int32 days() const noexcept {
         return static_cast<int32>(NEX_STD chrono::duration_cast<Days>(duration_).count());
     }
+
     // Get hours (0-23)
     constexpr int32 hours() const noexcept {
         return static_cast<int32>(totalHours() % 24);
     }
+
     // Get minutes (0-59)
     constexpr int32 minutes() const noexcept {
         return static_cast<int32>(totalMinutes() % 60);
     }
+
     // Get seconds (0-59)
     constexpr int32 seconds() const noexcept {
         return static_cast<int32>(totalSeconds() % 60);
     }
+
     // Get milliseconds (0-999)
     constexpr int32 milliseconds() const noexcept {
         return static_cast<int32>(totalMilliseconds() % 1000);
     }
 
     ////// Component modification methods ------------------------
-    
+
     // Increase the number of days
     TimeSpan& increaseDays(int32 days) noexcept {
         duration_ += Days{ days };
         return *this;
     }
+
     // Decrease the number of days
     TimeSpan& decreaseDays(int32 days) noexcept {
         duration_ -= Days{ days };
         return *this;
     }
+
     // Increase the number of hours
     TimeSpan& increaseHours(int32 hours) noexcept {
         duration_ += Hours{ hours };
         return *this;
     }
+
     // Decrease the number of hours
     TimeSpan& decreaseHours(int32 hours) noexcept {
         duration_ -= Hours{ hours };
         return *this;
     }
+
     // Increase the number of minutes
     TimeSpan& increaseMinutes(int32 mins) noexcept {
         duration_ += Minutes{ mins };
         return *this;
     }
+
     // Decrease the number of minutes
     TimeSpan& decreaseMinutes(int32 mins) noexcept {
         duration_ -= Minutes{ mins };
         return *this;
     }
+
     // Increase the number of seconds
     TimeSpan& increaseSeconds(int32 secs) noexcept {
         duration_ += Seconds{ secs };
         return *this;
     }
+
     // Decrease the number of seconds
     TimeSpan& decreaseSeconds(int32 secs) noexcept {
         duration_ -= Seconds{ secs };
         return *this;
     }
+
     // Increase the number of milliseconds
     TimeSpan& increaseMillisecs(int32 millisecs) noexcept {
         duration_ += Milliseconds{ millisecs };
         return *this;
     }
+
     // Decrease the number of milliseconds
     TimeSpan& decreaseMillisecs(int32 millisecs) noexcept {
         duration_ -= Milliseconds{ millisecs };
@@ -299,24 +331,24 @@ public:
     ////// String conversion ------------------------
 
     /**
-     * @brief   Convert TimeSpan to string representation
-     * @param   format  Format string. Supported formats:
-     *                  - "default" or empty: "D days, H hours, M minutes, S seconds"
-     *                  - "compact": "HH:MM:SS" (hours can exceed 24)
-     *                  - "compact_ms": "HH:MM:SS.mmm" (with milliseconds)
-     *                  - "iso": "PTnHnMnS" (ISO 8601 duration format)
-     * @return  Formatted string representation
+     * @brief Convert TimeSpan to string representation
+     * @param format  Format string. Supported formats:
+     *                - "default" or empty: "D days, H hours, M minutes, S seconds"
+     *                - "compact": "HH:MM:SS" (hours can exceed 24)
+     *                - "compact_ms": "HH:MM:SS.mmm" (with milliseconds)
+     *                - "iso": "PTnHnMnS" (ISO 8601 duration format)
+     * @return Formatted string representation
      */
     String toString(wcstring format = L"default") const;
 
     /**
-     * @brief   Create TimeSpan from string representation
-     * @param   str     String to parse. Supports formats:
-     *                  - "D days, H hours, M minutes, S seconds"
-     *                  - "HH:MM:SS" or "HH:MM:SS.mmm"
-     *                  - "PTnHnMnS" (ISO 8601 duration)
-     *                  - Integer seconds (e.g., "3600")
-     * @return  Parsed TimeSpan, or empty TimeSpan on failure
+     * @brief Create TimeSpan from string representation
+     * @param str     String to parse. Supports formats:
+     *                - "D days, H hours, M minutes, S seconds"
+     *                - "HH:MM:SS" or "HH:MM:SS.mmm"
+     *                - "PTnHnMnS" (ISO 8601 duration)
+     *                - Integer seconds (e.g., "3600")
+     * @return Parsed TimeSpan, or empty TimeSpan on failure
      */
     static TimeSpan fromString(const String& str);
 };

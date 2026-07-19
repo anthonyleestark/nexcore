@@ -11,52 +11,55 @@
 NEX_LAYER_NAMESPACE_BEGIN(logging)
 
 #if NEX_PLATFORM_IS_WINDOWS
-    // Windows error codes are typically represented as unsigned long integers
+    // Windows error codes are natively represented as unsigned long integers (DWORD)
     using SystemErrorCode = ulong;
 #else
-    // On Unix-like systems, error codes are typically represented as integers
+    // Unix-like systems natively represent error codes via integer types (errno)
     using SystemErrorCode = int32;
 #endif
 
 /**
- * @brief Get the last system error code from the operating system
- * @return The last system error code as a SystemErrorCode type
+ * @brief Retrieves the current thread's last recorded operating system error code.
+ * @return The active system error code.
  */
 NEX_INTERNAL SystemErrorCode getLastSystemErrorCode() noexcept;
 
 /**
- * @brief Get the last system error message from the operating system
- * @param errorCode The system error code for which to retrieve the message
- * @return A LogString containing the last system error message
+ * @brief Translates a given system error code into a human-readable string.
+ * @param errorCode The operating system error code to resolve.
+ * @return A `LogString` containing the localized system error message description.
  */
 NEX_INTERNAL LogString getLastSystemErrorMessage(SystemErrorCode errorCode) noexcept;
 
 /**
- * @brief Restore the last system error code in the operating system
- * @param errorCode The system error code to restore
+ * @brief Restores a previously captured error code into the operating system's active error state.
+ * @param errorCode The system error code to re-apply to the current thread context.
  */
 NEX_INTERNAL void restoreLastSystemError(SystemErrorCode errorCode) noexcept;
 
 /**
- * @brief Check if logging is enabled for a specific log level and category
- * @param level The log level to check (e.g., Trace, Debug, Info, Warn, Error, Critical)
- * @param category The log category to check (optional)
- * @return true if logging is enabled for the specified level and category, false otherwise
- * @note The detailed implementation of this function will be provided by the higher-level
- * logging system.
+ * @brief Evaluates whether a log entry should be processed based on its level and category
+ * @param level The severity priority of the log message (e.g., Trace, Debug, Info, Warn, Error, Critical)
+ * @param category Optional subsystem functional group identifier (e.g., "Network", "Storage")
+ * @return true if the message meets active runtime thresholds, false if it should be discarded
+ * @note The detailed implementation of this function will be provided by the higher-level logging system.
  */
 NEX_INTERNAL bool isEnabled(LogLevel level, LogStringView category = {}) noexcept;
 
 /**
  * @struct PendingLog
- * @brief Represents a pending log record to be submitted to the logging system.
+ * @brief Intermediate data package representing an unformatted log entry awaiting dispatch.
  * 
  * @details
- * The PendingLog structure encapsulates the metadata, message buffer, and last system error information
- * associated with a log record that is ready to be submitted to the logging system.
- * It is used internally by the LogBuilder class to package log data before dispatching it to the logger.
- * The structure is designed to be efficient and lightweight, allowing for quick construction and submission
- * of log records without unnecessary overhead.
+ * Bundles the transient execution state—metadata, raw message segments, and system error diagnostics
+ * into a single container. This allows `LogBuilder` to capture site-specific context rapidly[cite: 2] 
+ * and hand it off to the engine without executing immediate formatting overhead.
+ * 
+ * @details
+ * Encapsulates the metadata, message buffer, and last system error information associated with a log record
+ * that is ready to be submitted to the logging system.
+ * This allows `LogBuilder` to capture site-specific context rapidly and hand it off to the engine without
+ * executing immediate formatting overhead.
  */
 struct NEX_INTERNAL PendingLog {
     LogMetadata         metadata;           // Metadata associated with the log record
@@ -65,17 +68,14 @@ struct NEX_INTERNAL PendingLog {
 };
 
 /**
- * @brief Submit a log data package to the logging system
- * @param log The pending log data package created by LogBuilder
+ * @brief Submits an accumulated log package to the core logging system.
+ * @param log An rvalue reference to the pending log package instance, transferring buffer ownership.
  * @note 
- * This function is intended for internal use by the logging system and should not be called
- * directly by application code.
- * It is responsible for dispatching the log message to the appropriate log sinks based on
- * the provided metadata and message content.
- * The function takes ownership of the log data package, allowing for efficient transfer 
- * of log message data without unnecessary copying.
- * The logging system may perform additional processing, formatting, or filtering of the log message 
- * before it is output to the configured sinks.
+ * Restricted to internal framework orchestration; this should not be called directly by application code.
+ * The function takes ownership of the log package, allowing for efficient transfer of log message data
+ * without unnecessary copying.
+ * The central logging system consumes the package, performs additional processing, formatting, or filtering
+ * before routing the structured record to configured / active log sinks.
  * The detailed implementation of this function will be provided by the higher-level logging system.
  */
 NEX_INTERNAL void submit(PendingLog&& log) noexcept;

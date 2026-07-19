@@ -116,7 +116,7 @@ NEX_SUBNAMESPACE_BEGIN(logging)
 
 #endif
 
-// Get the last system error code from the operating system
+// Retrieves the current thread's last recorded operating system error code.
 SystemErrorCode getLastSystemErrorCode() noexcept {
 #if NEX_PLATFORM_IS_WINDOWS
     return ::GetLastError();
@@ -127,7 +127,7 @@ SystemErrorCode getLastSystemErrorCode() noexcept {
 #endif
 }
 
-// Get the last system error message from the operating system
+// Translates a given system error code into a human-readable string.
 LogString getLastSystemErrorMessage(SystemErrorCode errorCode) noexcept {
 #if NEX_PLATFORM_IS_WINDOWS
     LPSTR messageBuffer = nullptr;
@@ -153,7 +153,7 @@ LogString getLastSystemErrorMessage(SystemErrorCode errorCode) noexcept {
 #endif
 }
 
-// Restore the last system error code in the operating system
+// Restores a previously captured error code into the operating system's active error state.
 void restoreLastSystemError(SystemErrorCode errorCode) noexcept {
 #if NEX_PLATFORM_IS_WINDOWS
     ::SetLastError(errorCode);
@@ -168,7 +168,7 @@ void restoreLastSystemError(SystemErrorCode errorCode) noexcept {
 // LogStream class implementation
 // =================================================================================
 
-// Append an integer value to the stream
+// Appends a signed 64-bit integer value to the stream buffer.
 LogStream& LogStream::operator<<(int64 value) noexcept {
     nchar buffer[32];
     usize length = charconv::formatInteger(buffer, sizeof(buffer), value);
@@ -178,7 +178,7 @@ LogStream& LogStream::operator<<(int64 value) noexcept {
     return *this;
 }
 
-// Append an unsigned integer value to the stream
+// Appends an unsigned 64-bit integer value to the stream buffer.
 LogStream& LogStream::operator<<(uint64 value) noexcept {
     nchar buffer[32];
     usize length = charconv::formatUnsigned(buffer, sizeof(buffer), value);
@@ -189,7 +189,7 @@ LogStream& LogStream::operator<<(uint64 value) noexcept {
 }
 
 #if NEX_HAS_BUILTIN_INT128
-// Append a 128-bit signed integer value to the stream
+// Appends a signed 128-bit integer value to the stream buffer.
 LogStream& LogStream::operator<<(int128 value) noexcept {
     nchar buffer[64];
     usize length = charconv::formatInteger(buffer, sizeof(buffer), value);
@@ -199,7 +199,7 @@ LogStream& LogStream::operator<<(int128 value) noexcept {
     return *this;
 }
 
-// Append a 128-bit unsigned integer value to the stream
+// Appends an unsigned 128-bit integer value to the stream buffer.
 LogStream& LogStream::operator<<(uint128 value) noexcept {
     nchar buffer[64];
     usize length = charconv::formatUnsigned(buffer, sizeof(buffer), value);
@@ -211,7 +211,7 @@ LogStream& LogStream::operator<<(uint128 value) noexcept {
 #endif
 
 #if NEX_HAS_BUILTIN_FLOAT16
-// Append a 16-bit floating-point value to the stream
+// Appends a 16-bit floating-point value to the stream buffer.
 LogStream& LogStream::operator<<(float16 value) noexcept {
     nchar buffer[32];
     usize length = charconv::formatFloating(buffer, sizeof(buffer), value);
@@ -222,7 +222,7 @@ LogStream& LogStream::operator<<(float16 value) noexcept {
 }
 #endif
 
-// Append a floating-point value to the stream
+// Appends a 64-bit floating-point value to the stream buffer.
 LogStream& LogStream::operator<<(float64 value) noexcept {
     nchar buffer[64];
     usize length = charconv::formatFloating(buffer, sizeof(buffer), value);
@@ -232,7 +232,7 @@ LogStream& LogStream::operator<<(float64 value) noexcept {
     return *this;
 }
 
-// Append a 128-bit floating-point value to the stream
+// Appends a 128-bit floating-point value to the stream buffer.
 #if NEX_HAS_BUILTIN_FLOAT128
 LogStream& LogStream::operator<<(float128 value) noexcept {
     nchar buffer[128];
@@ -244,7 +244,7 @@ LogStream& LogStream::operator<<(float128 value) noexcept {
 }
 #endif
 
-// Append a boolean value to the stream
+// Appends a boolean value ("true"/"false") to the stream buffer.
 LogStream& LogStream::operator<<(bool value) noexcept {
     nchar buffer[6];
     usize length = charconv::formatBoolean(buffer, sizeof(buffer), value);
@@ -254,25 +254,25 @@ LogStream& LogStream::operator<<(bool value) noexcept {
     return *this;
 }
 
-// Append a character value to the stream
+// Appends a single native character value to the stream buffer.
 LogStream& LogStream::operator<<(nchar value) noexcept {
     append(&value, 1);
     return *this;
 }
 
-// Append a C-style string to the stream
+// Appends a null-terminated C-style string to the stream buffer.
 LogStream& LogStream::operator<<(cstring str) noexcept {
     append(str, strlen(str));
     return *this;
 }
 
-// Append a string view to the stream
+// Appends a non-owning string view string to the stream buffer.
 LogStream& LogStream::operator<<(NStringView view) noexcept {
     append(view.data(), view.length());
     return *this;
 }
 
-// Append a string data with specified pointer and length to the stream buffer
+// Appends raw string data with a specified pointer and length to the stream buffer.
 usize LogStream::append(cstring data, usize length) noexcept {
     if (!data) {
         // Use a placeholder to avoid undefined behavior
@@ -295,7 +295,7 @@ usize LogStream::append(cstring data, usize length) noexcept {
 // LogBuilder class implementation
 // =================================================================================
 
-// Construct a LogBuilder instance with specified metadata
+// Constructs a LogBuilder instance with specified metadata.
 LogBuilder::LogBuilder(LogLevel level, SourceLocation location, LogStringView category) noexcept
     : metadata_{level, category, location}, stream_{} {
     // Preserve the last system error code at the time of LogBuilder construction
@@ -303,7 +303,7 @@ LogBuilder::LogBuilder(LogLevel level, SourceLocation location, LogStringView ca
     enabled_ = isEnabled(level, category);
 }
 
-// Finalize the log message and dispatch it to the logger
+// Destructor finalizes the log package and forwards it to the central logging engine.
 LogBuilder::~LogBuilder() noexcept {
     if (!enabled_) {
         // If logging is not enabled for this log builder, do nothing
@@ -323,7 +323,7 @@ LogBuilder::~LogBuilder() noexcept {
     submit(NEX_MOVE(pendingLog));
 
     // Restore the last system error code to ensure
-    // that logging does not interfere with the application's error state
+    // that logging does not interfere with the system's error state
     restoreLastSystemError(lastErrorCode);
 }
 

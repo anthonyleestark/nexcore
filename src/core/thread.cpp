@@ -145,7 +145,7 @@ void Thread::Impl::applyThreadPriority() {
 Thread::Thread() noexcept 
     : impl_(NEX_STD make_unique<Impl>()) {
     // Generate a unique runtime ID for this thread instance
-    impl_->runtimeId = RuntimeId::generate();
+    impl_->runtimeId = RuntimeId::next();
 }
 
 // Destructor

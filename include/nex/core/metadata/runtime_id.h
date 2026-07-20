@@ -8,9 +8,11 @@
 #include <functional>
 
 #include "nex/base/macros.h"
+#include "nex/base/meta.h"
 #include "nex/base/types.h"
+#include "nex/base/limits.h"
 #include "nex/base/primitives.h"
-#include "nex/core/text/string.h"
+#include "nex/base/string.h"
 
 NEX_NAMESPACE_BEGIN
 
@@ -45,81 +47,120 @@ NEX_NAMESPACE_BEGIN
  */
 class NEX_API RuntimeId {
 public:
-    // Constants
-    static constexpr uint64 kInvalidId = 0;
-    static constexpr uint64 kMaxId = UINT64_MAX;
+    // Underlying type for the RuntimeId
+    using value_type = uint64;
 
-    ////// Construction -----------------------
+    // Special constant values for RuntimeId
+    static constexpr value_type invalidId = 0;
+    static constexpr value_type maxId = NumericLimits<value_type>::max();
 
-    // Default constructor (creates an invalid ID)
-    constexpr RuntimeId() noexcept : value_(kInvalidId) {}
+    /**
+     * @brief Default constructor creates an invalid RuntimeId (value 0).
+     * @note This constructor only allows for the default instantiation of objects with RuntimeId members
+     * which will be invalid until explicitly set or generated, it should not be called directly in source code.
+     */
+    constexpr RuntimeId() noexcept = default;
 
-    // Explicit constructor from an uint64 value (use with caution)
-    explicit constexpr RuntimeId(uint64 value) noexcept : value_(value) {}
+    /**
+     * @brief Explicit constructor from an unsigned integer value.
+     * @note Use with caution, as the RuntimeId value may not be unique.
+     */
+    template<typename Type>
+        requires (meta::IsIntegralV<Type> && meta::IsUnsignedIntegralV<Type>)
+    explicit constexpr RuntimeId(Type value) noexcept : value_(static_cast<value_type>(value)) {}
 
-    ////// Factory method for generating new RuntimeIds -----------------------
-    
-    // Generate a new runtime-unique Id (monotonic, process-local)
-    static RuntimeId generate() {
-        // Start from 1 because 0 is invalid
-        static AtomicUInt64 counter{1};
+    /**
+     * @brief Generates the next runtime-unique identifier.
+     * @return A new RuntimeId instance with a unique value.
+     * @note The generated RuntimeId is guaranteed to be unique within the process and monotonically increasing.
+     */
+    static RuntimeId next() {
+        // Starts from 1 because 0 is invalid
+        static Atomic<value_type> counter{1};
         return RuntimeId(counter.fetch_add(1, NEX_STD memory_order_relaxed));
     }
 
-    // Get an invalid RuntimeId
+    /**
+     * @brief Gets an invalid RuntimeId.
+     * @return A RuntimeId instance representing an invalid ID (value 0).
+     */
     static RuntimeId invalid() noexcept {
-        return RuntimeId{/*kInvalidId*/};
+        return RuntimeId{/*invalidId*/};
     }
 
-    // Create a RuntimeId from a uint64 value (use with caution, as it may not be unique)
-    static RuntimeId fromUInt64(uint64 value) noexcept {
+    /**
+     * @brief Creates a RuntimeId from a specific unsigned integer value.
+     * @param value The unsigned integer value to create the RuntimeId from.
+     * @return A RuntimeId instance with the specified value.
+     * @note Use with caution, as the RuntimeId value may not be unique or valid.
+     */
+    template<typename Type>
+        requires (meta::IsIntegralV<Type> && meta::IsUnsignedIntegralV<Type>)
+    static RuntimeId fromNumber(Type value) noexcept {
         return RuntimeId(value);
     }
 
-    ////// Accessors and validation -----------------------
-    
-    // Get the underlying value of the RuntimeId
-    constexpr uint64 get() const noexcept { return value_; }
+    /**
+     * @brief Gets the underlying value of the RuntimeId.
+     * @return The unsigned integer value representing the RuntimeId.
+     */
+    constexpr value_type value() const noexcept { return value_; }
 
-    // Explicit conversion to uint64 (returns the underlying value of the RuntimeId)
-    constexpr explicit operator uint64() const noexcept { return value_; }
+    /**
+     * @brief Converts the RuntimeId to the underlying value type.
+     * @return The unsigned integer value representing the RuntimeId.
+     */
+    constexpr explicit operator value_type() const noexcept { return value_; }
 
-    // Check if a RuntimeId is valid
-    constexpr bool isValid() const noexcept { return value_ != kInvalidId; }
-    
-    // Check if a RuntimeId is invalid (equals to zero)
-    constexpr bool isInvalid() const noexcept { return value_ == kInvalidId; }
+    /**
+     * @brief Checks if the RuntimeId is valid.
+     * @return true if the RuntimeId is valid, false if it is invalid.
+     */
+    constexpr bool valid() const noexcept { return value_ != invalidId; }
 
-    // Explicit conversion to bool (true if valid, false if invalid)
-    constexpr explicit operator bool() const noexcept { return isValid(); }
+    /**
+     * @brief Explicit conversion to bool.
+     * @return true if the RuntimeId is valid, false if it is invalid.
+     */
+    constexpr explicit operator bool() const noexcept { return valid(); }
 
-    ////// Conversion -----------------------
-    
-    // Convert to string
-    String toString() const {
-        return String::fromUInt(value_);
-    }
+    /**
+     * @brief Converts the RuntimeId to a string representation.
+     * @return A String representing the RuntimeId value.
+     * @note The string representation is in decimal format.
+     */
+    String toString() const;
 
-    ////// Comparison operators -----------------------
-
-    // Equality operators
+    /**
+     * @brief Equality operator for comparing two RuntimeId instances.
+     * @param other The other RuntimeId to compare with.
+     * @return true if both RuntimeId instances have the same value, false otherwise.
+     */
     constexpr bool operator==(const RuntimeId& other) const noexcept {
         return value_ == other.value_;
     }
 
-    // Inequality operator
+    /**
+     * @brief Inequality operator for comparing two RuntimeId instances.
+     * @param other The other RuntimeId to compare with.
+     * @return true if both RuntimeId instances have different values, false otherwise.
+     */
     constexpr bool operator!=(const RuntimeId& other) const noexcept {
         return value_ != other.value_;
     }
-    
-    // Strong ordering comparison operator (enables use in ordered containers and comparisons)
+
+    /**
+     * @brief Strong ordering comparison operator for RuntimeId instances.
+     * @param other The other RuntimeId to compare with.
+     * @return A strong_ordering value indicating the relative order of the two RuntimeId instances.
+     */
     constexpr NEX_STD strong_ordering operator<=>(const RuntimeId& other) const noexcept {
         return value_ <=> other.value_;
     }
-    
+
 private:
     // Internal value representing the ID (0 is invalid)
-    uint64 value_;
+    value_type value_ = invalidId;
 };
 
 NEX_NAMESPACE_END
@@ -132,7 +173,7 @@ NEX_STD_BEGIN
 template<>
 struct hash<NEX_PREPEND_NAMESPACE(RuntimeId)> {
     constexpr size_t operator()(const NEX_PREPEND_NAMESPACE(RuntimeId)& id) const noexcept {
-        return NEX_STD hash<NEX_PREPEND_NAMESPACE(uint64)>{}(id.get());
+        return NEX_STD hash<NEX_PREPEND_NAMESPACE(RuntimeId::value_type)>{}(id.value());
     }
 };
 

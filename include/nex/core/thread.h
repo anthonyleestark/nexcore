@@ -183,7 +183,7 @@ public:
 
     /**
      * @brief Starts the thread with a generic callable and arguments.
-     * @tparam Fn The type of the callable (function, lambda, etc.).
+     * @tparam Callable The type of the callable (function, lambda, etc.).
      * @tparam Args The types of the arguments to pass to the callable.
      * @param callable The function or callable object to execute in the thread.
      * @param args The arguments to pass to the callable when executed.
@@ -191,9 +191,9 @@ public:
      * 
      * @note If the thread is already running, this function will return false and do nothing.
      */
-    template<typename Fn, typename... Args>
-    bool start(Fn&& callable, Args&&... args) {
-        return startWithTask(NEX_FORWARD<Fn>(callable), NEX_FORWARD<Args>(args)...);
+    template<typename Callable, typename... Args>
+    bool start(Callable&& callable, Args&&... args) {
+        return startWithTask(NEX_FORWARD<Callable>(callable), NEX_FORWARD<Args>(args)...);
     }
 
     ////// Thread Control ---------------------------------------------------------------

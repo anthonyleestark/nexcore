@@ -12,6 +12,7 @@
 #include "nex/base/limits.h"
 #include "nex/base/block.h"
 #include "nex/base/memory.h"
+#include "nex/base/algorithm.h"
 
 NEX_NAMESPACE_BEGIN
 
@@ -87,88 +88,11 @@ private:
         return data_ == inlineData();
     }
 
-    // Assign elements from [first, last) to initialized storage at dest
-    // by directly copying the whole memory range, used when the value type is trivially copy assignable
-    static NEX_HIDDEN_FROM_ABI constexpr
-    void assignRange(pointer_type dest, const_pointer_type first, const_pointer_type last) noexcept
-        requires(meta::IsTriviallyCopyAssignableV<value_type>) {
-        NEX_MEMCPY(dest, first, (last - first) * sizeof(value_type));
-    }
-
-    // Assign elements from [first, last) to initialized storage at dest
-    // used when the value type is not trivially copy assignable
-    static NEX_HIDDEN_FROM_ABI constexpr 
-    void assignRange(pointer_type dest, const_pointer_type first, const_pointer_type last)
-        noexcept(meta::IsNothrowCopyAssignableV<value_type>) {
-        pointer_type current = dest;
-        for (; first != last; ++first, ++current) {
-            *current = *first;
-        }
-    }
-
-    // Copy elements [first, last) to uninitialized storage at dest,
-    // by directly copying the whole memory range, used when the value type is trivially copy constructible
-    static NEX_HIDDEN_FROM_ABI constexpr
-    void copyRange(pointer_type dest, const_pointer_type first, const_pointer_type last) noexcept
-        requires(meta::IsTriviallyCopyConstructibleV<value_type>) {
-        NEX_MEMCPY(dest, first, (last - first) * sizeof(value_type));
-    }
-
-    // Copy elements [first, last) to uninitialized storage at dest
-    // used when the value type is not trivially copy constructible
-    static NEX_HIDDEN_FROM_ABI constexpr
-    void copyRange(pointer_type dest, const_pointer_type first, const_pointer_type last) 
-        noexcept(meta::IsNothrowCopyConstructibleV<value_type>) {
-        pointer_type current = dest;
-        for (; first != last; ++first, ++current) {
-            NEX_CONSTRUCT_AT(current, *first);
-        }
-    }
-
-    // Relocate elements [first, last) to uninitialized storage at dest,
-    // by directly moving the whole memory range, used when the value type is trivially move constructible
-    static NEX_HIDDEN_FROM_ABI constexpr
-    void relocateRange(pointer_type dest, pointer_type first, pointer_type last) noexcept
-        requires(meta::IsTriviallyMoveConstructibleV<value_type>) {
-        NEX_MEMMOVE(dest, first, (last - first) * sizeof(value_type));
-    }
-
-    // Relocate elements [first, last) to uninitialized storage at dest,
-    // used when the value type is not trivially move constructible
-    static NEX_HIDDEN_FROM_ABI constexpr
-    void relocateRange(pointer_type dest, pointer_type first, pointer_type last) 
-        noexcept(meta::IsNothrowMoveConstructibleV<value_type> && meta::IsNothrowDestructibleV<value_type>) {
-        pointer_type current = dest;
-        pointer_type begin = first;
-        for (; first != last; ++first, ++current) {
-            NEX_CONSTRUCT_AT(current, NEX_MOVE(*first));
-        }
-        destroyRange(begin, last);
-    }
-
-    // Destroy elements in range [first, last),
-    // used when the value type is trivially destructible
-    static NEX_HIDDEN_FROM_ABI constexpr 
-    void destroyRange(pointer_type first, pointer_type last) noexcept
-        requires(meta::IsTriviallyDestructibleV<value_type>) {
-        // No-op for trivially destructible types
-    }
-
-    // Destroy elements in range [first, last)
-    static NEX_HIDDEN_FROM_ABI constexpr 
-    void destroyRange(pointer_type first, pointer_type last)
-        noexcept(meta::IsNothrowDestructibleV<value_type>)
-        requires(!meta::IsTriviallyDestructibleV<value_type>) {
-        for (; first != last; ++first) {
-            first->~value_type();
-        }
-    }
-
     // Copy the entire buffer from another SmallBuffer
     // used in copy constructor, when the current buffer is uninitialized
     NEX_HIDDEN_FROM_ABI constexpr void copyFrom(const SmallBuffer& other) {
         reserve(other.size_);
-        copyRange(data_, other.data_, other.data_ + other.size_);
+        NEX_COPY_RANGE(data_, other.data_, other.data_ + other.size_);
         size_ = other.size_;
     }
 
@@ -179,16 +103,16 @@ private:
             // Not enough capacity, need to allocate new storage
             reset();
             reserve(other.size_);
-            copyRange(data_, other.data_, other.data_ + other.size_);
+            NEX_COPY_RANGE(data_, other.data_, other.data_ + other.size_);
         } else if (other.size_ <= size_) {
             // Copy common elements and destroy remaining part
-            assignRange(data_, other.data_, other.data_ + other.size_);
-            destroyRange(data_ + other.size_, data_ + size_);
+            NEX_ASSIGN_RANGE(data_, other.data_, other.data_ + other.size_);
+            NEX_DESTROY_RANGE(data_ + other.size_, data_ + size_);
         } else {
             // Copy common elements and construct new elements
             pointer_type commonEnd = other.data_ + size_;
-            assignRange(data_, other.data_, commonEnd);
-            copyRange(data_ + size_, commonEnd, other.data_ + other.size_);
+            NEX_ASSIGN_RANGE(data_, other.data_, commonEnd);
+            NEX_COPY_RANGE(data_ + size_, commonEnd, other.data_ + other.size_);
         }
         size_ = other.size_;
     }
@@ -198,7 +122,7 @@ private:
         noexcept(meta::IsNothrowMoveConstructibleV<value_type> && meta::IsNothrowDestructibleV<value_type>) {
         if (other.isInline()) {
             // Cannot steal the inline buffer -> move elements individually
-            relocateRange(data_, other.data_, other.data_ + other.size_);
+            NEX_RELOCATE_RANGE(data_, other.data_, other.data_ + other.size_);
             size_ = other.size_;
             other.size_ = 0;
         } else {
@@ -250,7 +174,7 @@ private:
         pointer_type newData = allocate(newCapacity);
         if (size_ > 0) {
             try {
-                relocateRange(newData, data_, data_ + size_);
+                NEX_RELOCATE_RANGE(newData, data_, data_ + size_);
             } catch (...) {
                 deallocate(newData);
                 throw;
@@ -311,7 +235,7 @@ public:
     // Destructor
     NEX_HIDDEN_FROM_ABI constexpr ~SmallBuffer() 
         noexcept(meta::IsNothrowDestructibleV<value_type>) {
-        destroyRange(data_, data_ + size_);
+        NEX_DESTROY_RANGE(data_, data_ + size_);
         if (!isInline()) deallocate(data_);
     }
 
@@ -334,7 +258,7 @@ public:
     // Resize to count elements (new elements are default-constructed)
     NEX_HIDDEN_FROM_ABI constexpr void resize(size_type count) {
         if (count < size_) {
-            destroyRange(data_ + count, data_ + size_);
+            NEX_DESTROY_RANGE(data_ + count, data_ + size_);
         } else if (count > size_) {
             reserve(count);
             for (size_type i = size_; i < count; ++i) {
@@ -349,7 +273,7 @@ public:
     NEX_HIDDEN_FROM_ABI constexpr void resize(size_type count, const OtherValue& value)
         requires(meta::IsConvertibleV<OtherValue, value_type>) {
         if (count < size_) {
-            destroyRange(data_ + count, data_ + size_);
+            NEX_DESTROY_RANGE(data_ + count, data_ + size_);
         } else if (count > size_) {
             reserve(count);
             for (size_type i = size_; i < count; ++i) {
@@ -372,9 +296,9 @@ public:
             // Move elements back to inline buffer
             pointer_type inl = inlineData();
             try {
-                relocateRange(inl, data_, data_ + size_);
+                NEX_RELOCATE_RANGE(inl, data_, data_ + size_);
             } catch (...) {
-                destroyRange(inl, inl + size_);
+                NEX_DESTROY_RANGE(inl, inl + size_);
                 throw;
             }
             deallocate(data());
@@ -385,7 +309,7 @@ public:
         if (size_ < capacity_) {
             pointer_type newData = allocate(size_);
             try {
-                relocateRange(newData, data_, data_ + size_);
+                NEX_RELOCATE_RANGE(newData, data_, data_ + size_);
             } catch (...) {
                 deallocate(newData);
                 throw;
@@ -398,7 +322,7 @@ public:
 
     // Remove all elements (does not release memory)
     NEX_HIDDEN_FROM_ABI constexpr void clear() noexcept {
-        destroyRange(data_, data_ + size_);
+        NEX_DESTROY_RANGE(data_, data_ + size_);
         size_ = 0;
     }
 
@@ -420,7 +344,7 @@ public:
         NEX_ASSERT(src != nullptr || count == 0);
         if (src == nullptr || count == 0) return;
         reserve(size_ + count);
-        copyRange(data_ + size_, src, src + count);
+        NEX_COPY_RANGE(data_ + size_, src, src + count);
         size_ += count;
     }
 

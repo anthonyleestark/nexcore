@@ -68,11 +68,11 @@ concept ConvertibleTo = meta::ConvertibleTo<From, To>;
 
 /// Checks whether two types share a common reference type.
 template <typename Type1, typename Type2>
-concept CommonReferenceWith = NEX_STD common_reference_with<Type1, Type2>;
+concept CommonReferenceWith = meta::CommonReferenceWith<Type1, Type2>;
 
 /// Checks whether two types share a common value type and compatible references.
 template <typename Type1, typename Type2>
-concept CommonWith = NEX_STD common_with<Type1, Type2>;
+concept CommonWith = meta::CommonWith<Type1, Type2>;
 
 /// Checks whether an lvalue of To can be assigned from From.
 template <typename To, typename From>

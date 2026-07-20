@@ -10,7 +10,7 @@
 #include "nex/base/init.h"
 #include "nex/base/traits.h"
 #include "nex/base/assert_crash.h"
-#include "nex/core/containers/array.h"
+#include "nex/core/containers/vector.h"
 
 NEX_NAMESPACE_BEGIN
 
@@ -20,7 +20,7 @@ NEX_NAMESPACE_BEGIN
  *        for manipulation and querying.
  * 
  * @details
- * The BitSet is a fixed-size, contiguous sequence of N bits. Unlike its dynamic sibling, BitBuffer, the size of 
+ * The BitSet is a fixed-size, contiguous sequence of Capacity bits. Unlike its dynamic sibling, BitBuffer, the size of 
  * a BitSet is determined at compile-time via template parameters.
  * It is designed to be a high-performance alternative to arrays of booleans or manual bitmasking with integers. 
  * By packing bits into internal storage "words," it provides a memory-efficient way to handle sets of flags, 
@@ -29,30 +29,31 @@ NEX_NAMESPACE_BEGIN
  * Key Characteristics:
  * - Zero Heap Allocation: Data is stored directly within the object (usually on the stack). This makes creation 
  *   and destruction nearly instantaneous.
- * - Compile-Time Safety: Uses C++ constraints (like requires (N > 0)) and static_assert to catch sizing errors 
+ * - Compile-Time Safety: Uses C++ constraints (like requires (Capacity > 0)) and static_assert to catch sizing errors 
  *   before the program even runs.
  * - Adaptive Storage: Internally selects the most efficient word size (e.g., uint8, uint16, uint32, or uint64) 
- *   based on the value of N to minimize memory padding.
+ *   based on the value of Capacity to minimize memory padding.
  * - Cache Friendly: Because it is stored contiguously and often fits entirely within a single CPU cache line, 
  *   it offers superior performance for linear scans and bitwise logic.
  * 
- * @tparam N The number of bits in the BitSet (must be greater than 0).
+ * @tparam Capacity The number of bits in the BitSet (must be greater than 0).
  * 
  * @see BitBuffer for a dynamic alternative, and Vec<bool> for a more flexible but less memory-efficient option.
  */
-template <usize N> requires (N > 0)
+template <usize Capacity> requires (Capacity > 0)
 class NEX_API BitSet {
 public:
-    // Choose the smallest native word size that fits N, up to 64-bit.
-    using Word = Conditional<N <= 8,  uint8,
-                 Conditional<N <= 16, uint16,
-                 Conditional<N <= 32, uint32, 
-                                      uint64>>>;
+    // Choose the smallest native word size that fits Capacity, up to 64-bit.
+    using Word = ConditionalT<Capacity <= 8,  uint8,
+                 ConditionalT<Capacity <= 16, uint16,
+                 ConditionalT<Capacity <= 32, uint32, 
+                                              uint64>>>;
 
     // Constants
-    static constexpr usize BitsPerWord = sizeof(Word) * 8;
-    static constexpr usize WordCount = (N + BitsPerWord - 1) / BitsPerWord;
-    static constexpr usize TotalBits = WordCount * BitsPerWord;     // Total bits in the buffer (may be >= N)
+    static constexpr usize BitsPerByte = 8;
+    static constexpr usize BitsPerWord = sizeof(Word) * BitsPerByte;
+    static constexpr usize WordCount = (Capacity + BitsPerWord - 1) / BitsPerWord;
+    static constexpr usize TotalBits = WordCount * BitsPerWord;     // Total bits in the buffer (may be >= Capacity)
     static constexpr usize npos = static_cast<usize>(-1);           // Special value for "not found"
 
 private:
@@ -61,7 +62,7 @@ private:
 
 public:
     // Get the number of bits per byte
-    static constexpr usize bitsPerByte() noexcept { return 8; }
+    static constexpr usize bitsPerByte() noexcept { return BitsPerByte; }
 
     // Get the number of bits per word
     static constexpr usize bitsPerWord() noexcept { return BitsPerWord; }
@@ -93,10 +94,10 @@ public:
 
     // Clear unused bits in the last byte
     void clearUnusedBits() noexcept {
-        // Since N is already ensured to be > 0, 
+        // Since Capacity is already ensured to be > 0, 
         // we can safely calculate the last byte index and bit offset without additional checks.
-        usize lastByteIndex = byteIndex(N - 1);
-        usize lastBitOffset = bitOffset(N - 1);
+        usize lastByteIndex = byteIndex(Capacity - 1);
+        usize lastBitOffset = bitOffset(Capacity - 1);
         if (lastBitOffset < bitsPerByte() - 1) {
             // Clear bits beyond the last valid bit
             uint8 mask = static_cast<uint8>((1U << (lastBitOffset + 1)) - 1);
@@ -111,7 +112,7 @@ public:
 
     // Construct from initializer list of booleans
     constexpr BitSet(InitList<bool> init) {
-        static_assert(init.size() <= N, 
+        static_assert(init.size() <= Capacity, 
                 "Initializer list size cannot exceed the size of the BitSet"); // compile-time check
         usize i = 0;
         for (bool value : init) {
@@ -123,7 +124,7 @@ public:
 
     // Construct from count and fill value (fill first 'count' bits with 'value', rest are false)
     constexpr explicit BitSet(usize count, bool value) noexcept {
-        NEX_ASSERT_MSG(count <= N, "Count cannot exceed the size of the BitSet"); // debug runtime-check only
+        NEX_ASSERT_MSG(count <= Capacity, "Count cannot exceed the size of the BitSet"); // debug runtime-check only
         clear(); // Ensure all bits are cleared first
         if (value) {
             for (usize i = 0; i < count; ++i) {
@@ -145,12 +146,12 @@ public:
     ////// Capacity and size management ------------------------------
 
     // Get size of the BitSet (number of bits)
-    constexpr usize size() const noexcept { return N; }
+    constexpr usize size() const noexcept { return Capacity; }
 
     // Get length of the BitSet (same as size)
-    constexpr usize length() const noexcept { return N; }
+    constexpr usize length() const noexcept { return Capacity; }
 
-    // Check if the BitSet is empty (always false since N > 0)
+    // Check if the BitSet is empty (always false since Capacity > 0)
     constexpr bool empty() const noexcept { return false; }
 
     // Check if all bits are set to false
@@ -163,10 +164,10 @@ public:
 
     ////// Conversion -------------------------------
 
-    // Create a BitSet from a dynamic array of booleans (truncates if vector is larger than N)
+    // Create a BitSet from a dynamic array of booleans (truncates if vector is larger than Capacity)
     static BitSet fromVec(const Vec<bool>& vec) noexcept {
         BitSet result;
-        usize count = vec.size() < N ? vec.size() : N;
+        usize count = vec.size() < Capacity ? vec.size() : Capacity;
         for (usize i = 0; i < count; ++i) {
             result.setBit(i, vec[i]);
         }
@@ -177,8 +178,8 @@ public:
     // Convert BitSet to dynamic array of booleans
     Vec<bool> toVec() const noexcept {
         Vec<bool> vec;
-        vec.reserve(N);
-        for (usize i = 0; i < N; ++i) {
+        vec.reserve(Capacity);
+        for (usize i = 0; i < Capacity; ++i) {
             vec.push_back(testBit(i));
         }
         return vec;
@@ -188,19 +189,19 @@ public:
 
     // Test bit at index (returns true if set, false if clear)
     constexpr bool testBit(usize index) const noexcept {
-        if (index >= N) return false;
+        if (index >= Capacity) return false;
         return (buffer_[wordIndex(index)] & bitMask(index)) != 0;
     }
 
     // Set bit at index to true
     constexpr void setBit(usize index) noexcept {
-        if (index >= N) return;
+        if (index >= Capacity) return;
         buffer_[wordIndex(index)] |= bitMask(index);
     }
 
     // Set bit at index to false
     constexpr void clearBit(usize index) noexcept {
-        if (index >= N) return;
+        if (index >= Capacity) return;
         buffer_[wordIndex(index)] &= ~bitMask(index);
     }
 
@@ -222,14 +223,14 @@ public:
 
     // Flip bit at index (toggle its value)
     constexpr void toggleBit(usize index) noexcept {
-        if (index >= N) return;
+        if (index >= Capacity) return;
         buffer_[wordIndex(index)] ^= bitMask(index);
     }
 
     // Access bit at index for reading (with bounds checking)
     constexpr bool at(usize index) const noexcept {
-        NEX_ASSERT_MSG(index < N, "Index out of bounds"); // debug runtime-check only
-        if (index >= N) return false;
+        NEX_ASSERT_MSG(index < Capacity, "Index out of bounds"); // debug runtime-check only
+        if (index >= Capacity) return false;
         return testBit(index);
     }
 
@@ -331,8 +332,8 @@ public:
 
     // Fill bits in range with specified value
     BitSet& fill(bool value, usize start, usize count) noexcept {
-        if (start >= N || count == 0) return *this;     // No bits to fill
-        if (start + count > N) count = N - start;       // Adjust count to fit within bounds
+        if (start >= Capacity || count == 0) return *this;     // No bits to fill
+        if (start + count > Capacity) count = Capacity - start;       // Adjust count to fit within bounds
         for (usize i = start; i < start + count; ++i) {
             setBit(i, value);
         }
@@ -361,8 +362,8 @@ public:
 
     // Flip bits in range (invert their values)
     BitSet& flip(bool value, usize start, usize count) noexcept {
-        if (start >= N || count == 0) return *this;     // No bits to flip
-        if (start + count > N) count = N - start;       // Adjust count to fit within bounds
+        if (start >= Capacity || count == 0) return *this;             // No bits to flip
+        if (start + count > Capacity) count = Capacity - start;       // Adjust count to fit within bounds
         for (usize i = start; i < start + count; ++i) {
             if (value) {
                 setBit(i, !testBit(i)); // Flip the bit
@@ -451,7 +452,7 @@ public:
 
     // Get left part of the BitSet
     BitSet left(usize count) const noexcept {
-        if (count >= N) return *this;
+        if (count >= Capacity) return *this;
         BitSet result;
         for (usize i = 0; i < count; ++i) {
             result.setBit(i, testBit(i));
@@ -461,9 +462,9 @@ public:
 
     // Get right part of the BitSet
     BitSet right(usize count) const noexcept {
-        if (count >= N) return *this;
+        if (count >= Capacity) return *this;
         BitSet result;
-        usize start = N - count;
+        usize start = Capacity - count;
         for (usize i = 0; i < count; ++i) {
             result.setBit(i, testBit(start + i));
         }
@@ -472,8 +473,8 @@ public:
 
     // Get middle part of the BitSet
     BitSet mid(usize start, usize count) const noexcept {
-        if (start >= N || count == 0) return BitSet();
-        if (start + count > N) count = N - start;
+        if (start >= Capacity || count == 0) return BitSet();
+        if (start + count > Capacity) count = Capacity - start;
         BitSet result;
         for (usize i = 0; i < count; ++i) {
             result.setBit(i, testBit(start + i));
@@ -483,9 +484,9 @@ public:
 
     ////// Search operations ------------------------------
 
-    // Find the first set bit (returns index or N if not found)
+    // Find the first set bit (returns index or Capacity if not found)
     usize findFirst(bool value = true) const noexcept {
-        for (usize i = 0; i < N; ++i) {
+        for (usize i = 0; i < Capacity; ++i) {
             if (testBit(i) == value) {
                 return i;
             }
@@ -509,7 +510,7 @@ public:
 
     // Count number of bits set to false
     usize countFalse() const noexcept {
-        return N - countTrue();
+        return Capacity - countTrue();
     }
 
     // Check if any bit is set to true

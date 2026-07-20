@@ -17,7 +17,6 @@
  * instantiations based on type properties.
  */
 
-#include <type_traits>
 #include <iterator>
 #include <tuple>
 #include <utility>
@@ -144,19 +143,19 @@ inline constexpr bool IsFunctionV = IsFunction<Type>::value;
 
 /// Checks whether Type is a pointer to a member of a class or struct.
 template <typename Type>
-using IsMemberPointer = NEX_STD is_member_pointer<Type>;
+using IsMemberPointer = meta::IsMemberPointer<Type>;
 template <typename Type>
 inline constexpr bool IsMemberPointerV = IsMemberPointer<Type>::value;
 
 /// Checks whether Type is a pointer to a non-function member of a class or struct.
 template <typename Type>
-using IsMemberObjectPointer = NEX_STD is_member_object_pointer<Type>;
+using IsMemberObjectPointer = meta::IsMemberObjectPointer<Type>;
 template <typename Type>
 inline constexpr bool IsMemberObjectPointerV = IsMemberObjectPointer<Type>::value;
 
 /// Checks whether Type is a pointer to a member function of a class or struct.
 template <typename Type>
-using IsMemberFunctionPointer = NEX_STD is_member_function_pointer<Type>;
+using IsMemberFunctionPointer = meta::IsMemberFunctionPointer<Type>;
 template <typename Type>
 inline constexpr bool IsMemberFunctionPointerV = IsMemberFunctionPointer<Type>::value;
 
@@ -193,7 +192,7 @@ inline constexpr bool IsObjectV = IsObject<Type>::value;
 /// Checks whether Type is a scalar type (i.e., an arithmetic type, enumeration type, pointer type, 
 /// or pointer to member type).
 template <typename Type>
-using IsScalar = NEX_STD is_scalar<Type>;
+using IsScalar = meta::IsScalar<Type>;
 template <typename Type>
 inline constexpr bool IsScalarV = IsScalar<Type>::value;
 
@@ -447,7 +446,7 @@ inline constexpr bool IsFinalV = IsFinal<Type>::value;
 
 /// Checks whether Type is an aggregate type (i.e., a type that can be initialized with aggregate initialization).
 template <typename Type>
-using IsAggregate = NEX_STD is_aggregate<Type>;
+using IsAggregate = meta::IsAggregate<Type>;
 template <typename Type>
 inline constexpr bool IsAggregateV = IsAggregate<Type>::value;
 
@@ -568,18 +567,24 @@ using VoidT = meta::VoidT<Types...>;
 /// Represents the common type among a list of types. 
 /// The common type is the type that all types in the list can be implicitly converted to.
 template <typename... Types>
-using CommonType = NEX_STD common_type_t<Types...>;
+using CommonType = meta::CommonType<Types...>;
+template <typename... Types>
+using CommonTypeT = typename CommonType<Types...>::type;
 
 /// Represents the common reference type among a list of types. 
 /// The common reference type is the type that all types in the list can be implicitly converted to 
 /// when treated as references.
 template <typename... Types>
-using CommonReference = NEX_STD common_reference_t<Types...>;
+using CommonReference = meta::CommonReference<Types...>;
+template <typename... Types>
+using CommonReferenceT = typename CommonReference<Types...>::type;
 
 /// Represents one of two types (TrueType or FalseType) based on a boolean condition. 
 /// If Condition is true, Conditional evaluates to TrueType; otherwise, it evaluates to FalseType.
 template <bool Condition, typename TrueType, typename FalseType>
-using Conditional = meta::ConditionalT<Condition, TrueType, FalseType>;
+using Conditional = meta::Conditional<Condition, TrueType, FalseType>;
+template <bool Condition, typename TrueType, typename FalseType>
+using ConditionalT = typename Conditional<Condition, TrueType, FalseType>::type;
 
 /// Represents the logical conjunction (AND) of a list of type traits Traits. 
 /// Conjunction evaluates to true if all traits in the list are true; otherwise, it evaluates to false.
@@ -770,55 +775,31 @@ inline constexpr usize FunctionArgCount = FunctionTraits<Fn>::argCount;
 /// difference type, and iterator category.
 template <typename Ip>
 struct IteratorTraits {
-    using ValueType = typename NEX_STD iterator_traits<Ip>::value_type;
-    using Reference = typename NEX_STD iterator_traits<Ip>::reference;
-    using Pointer = typename NEX_STD iterator_traits<Ip>::pointer;
-    using DifferenceType = typename NEX_STD iterator_traits<Ip>::difference_type;
-    using IteratorCategory = typename NEX_STD iterator_traits<Ip>::iterator_category;
+    using value_type = typename NEX_STD iterator_traits<Ip>::value_type;
+    using reference = typename NEX_STD iterator_traits<Ip>::reference;
+    using pointer = typename NEX_STD iterator_traits<Ip>::pointer;
+    using difference_type = typename NEX_STD iterator_traits<Ip>::difference_type;
+    using iterator_category = typename NEX_STD iterator_traits<Ip>::iterator_category;
 };
 
 /// Represents the value type of an iterator Ip.
 template <typename Ip>
-using IteratorValueType = typename IteratorTraits<Ip>::ValueType;
+using IteratorValueType = typename IteratorTraits<Ip>::value_type;
 
 /// Represents the reference type of an iterator Ip.
 template <typename Ip>
-using IteratorReference = typename IteratorTraits<Ip>::Reference;
+using IteratorReference = typename IteratorTraits<Ip>::reference;
 
 /// Represents the pointer type of an iterator Ip.
 template <typename Ip>
-using IteratorPointer = typename IteratorTraits<Ip>::Pointer;
+using IteratorPointer = typename IteratorTraits<Ip>::pointer;
 
 /// Represents the difference type of an iterator Ip.
 template <typename Ip>
-using IteratorDifferenceType = typename IteratorTraits<Ip>::DifferenceType;
+using IteratorDifferenceType = typename IteratorTraits<Ip>::difference_type;
 
 /// Represents the iterator category of an iterator Ip.
 template <typename Ip>
-using IteratorCategory = typename IteratorTraits<Ip>::IteratorCategory;
-
-/// Represents the standard iterator traits (STL) for an iterator type Ip.
-template <typename Ip>
-using StdIteratorTraits = NEX_STD iterator_traits<Ip>;
-
-/// Represents the value type of an iterator Ip.
-template <typename Ip>
-using StdIteratorValueType = typename StdIteratorTraits<Ip>::value_type;
-
-/// Represents the reference type of an iterator Ip.
-template <typename Ip>
-using StdIteratorReference = typename StdIteratorTraits<Ip>::reference;
-
-/// Represents the pointer type of an iterator Ip.
-template <typename Ip>
-using StdIteratorPointer = typename StdIteratorTraits<Ip>::pointer;
-
-/// Represents the difference type of an iterator Ip.
-template <typename Ip>
-using StdIteratorDifferenceType = typename StdIteratorTraits<Ip>::difference_type;
-
-/// Represents the iterator category of an iterator Ip.
-template <typename Ip>
-using StdIteratorCategory = typename StdIteratorTraits<Ip>::iterator_category;
+using IteratorCategory = typename IteratorTraits<Ip>::iterator_category;
 
 NEX_NAMESPACE_END

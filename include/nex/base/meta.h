@@ -68,6 +68,19 @@ struct EnableIf<true, Type> {   // type is Type for BoolCond
 template <bool BoolCond, class Type = void>
 using EnableIfT = typename EnableIf<BoolCond, Type>::type;
 
+template<bool BoolCond, typename Type = void>
+struct DisableIf {};
+
+// DisableIf is the opposite of EnableIf, 
+// providing a way to disable a template specialization when a condition is true.
+template <typename Type>
+struct DisableIf<false, Type> {
+    using type = Type;
+};
+
+template <bool BoolCond, class Type = void>
+using DisableIfT = typename DisableIf<BoolCond, Type>::type;
+
 // Conditional implementation to select one of two types based on a boolean condition
 template <bool Test, class Type1, class Type2>
 struct Conditional {
@@ -501,6 +514,19 @@ struct IsFinal : BoolConstant<__is_final(RemoveCvT<Type>)> {};
 template <class Type>
 constexpr bool IsFinalV = IsFinal<Type>::value;
 
+// Determine whether a type is an aggregate type
+// (i.e., a type that can be initialized with aggregate initialization)
+#if NEX_HAS_BUILTIN(__is_aggregate)
+    template <class Type>
+    struct IsAggregate : BoolConstant<__is_aggregate(Type)> {};
+#else  // No compiler built-in support, so we always return false
+    template <typename Type>
+    struct IsAggregate : public FalseType {};
+#endif
+
+template <class Type>
+constexpr bool IsAggregateV = IsAggregate<Type>::value;
+
 // Determine whether Type is a standard-layout type
 template <class Type>
 struct IsStandardLayout : BoolConstant<__is_standard_layout(RemoveCvT<Type>)> {};
@@ -839,6 +865,28 @@ constexpr bool IsObjectV = IsConstV<const Type> && !IsVoidV<Type>;
 template <class Type>
 struct IsObject : BoolConstant<IsObjectV<Type>> {};
 
+// Determine whether Type is a pointer to a member function of a class or struct
+
+#if NEX_HAS_BUILTIN(__is_member_pointer)
+    template <class Type>
+    constexpr bool IsMemberPointerV = __is_member_pointer(Type);
+
+    template <class Type>
+    struct IsMemberPointer : BoolConstant<IsMemberPointerV<Type>> {};
+#else  // No builtin support
+    template <typename Type>
+    struct NEX_HIDDEN_FROM_ABI IsMemberPointerImpl : public FalseType {};
+
+    template <typename Type1, typename Type2>
+    struct NEX_HIDDEN_FROM_ABI IsMemberPointerImpl<Type2 Type1::*> : public TrueType {};
+
+    template<typename Type>
+    struct IsMemberPointer : public IsMemberPointerImpl<RemoveCvT<Type>> {};
+
+    template<typename Type>
+    constexpr bool IsMemberPointerV = IsMemberPointer<Type>::value;
+#endif
+
 // Determine whether Type is a pointer to a member object of a class or struct
 template <class>
 struct NEX_HIDDEN_FROM_ABI IsMemberObjectPointerImpl {
@@ -861,6 +909,53 @@ struct NEX_HIDDEN_FROM_ABI IsMemberObjectPointerImpl<Type1 Type2::*> {
 
 template <class Type>
 struct IsMemberObjectPointer : BoolConstant<IsMemberObjectPointerV<Type>> {};
+
+// Determine whether Type is a pointer to a member function of a class or struct
+#if NEX_HAS_BUILTIN(__is_member_function_pointer)
+    template <class Type>
+    constexpr bool IsMemberFunctionPointerV = __is_member_function_pointer(Type);
+
+    template <class Type>
+    struct IsMemberFunctionPointer : BoolConstant<IsMemberFunctionPointerV<Type>> {};
+#else  // No builtin support
+    template<typename Type>
+    struct NEX_HIDDEN_FROM_ABI IsMemberFunctionPointerImpl : FalseType {};
+
+    template<typename Type1, typename Type2>
+    struct NEX_HIDDEN_FROM_ABI IsMemberFunctionPointerImpl<Type1 Type2::*> : IsFunction<Type1> {};
+
+    template<typename Type>
+    struct IsMemberFunctionPointer : IsMemberFunctionPointerImpl<RemoveCvT<Type>> {};
+
+    template<typename Type>
+    constexpr bool IsMemberFunctionPointerV = IsMemberFunctionPointer<Type>::value;
+#endif
+
+// Determine whether Type is a scalar type
+// (i.e., an arithmetic type, enumeration type, pointer type, member pointer type, or nullptr)
+#if NEX_HAS_BUILTIN(__is_scalar)
+    template <typename Type>
+    constexpr bool IsScalarV = __is_scalar(Type);
+
+    template <typename Type>
+    struct IsScalar : BoolConstant<IsScalarV<Type>> {};
+#else  // No builtin support
+    template <typename Type>
+    struct IsScalar
+        : public IntegralConstant<
+                    bool,
+                    IsArithmeticV<Type> || IsEnumV<Type> || IsPointerV<Type> ||
+                    IsMemberPointerV<Type> || IsNullPointerV<Type>
+                > {};
+
+    template <typename Type> struct IsScalar<Type*>                : public TrueType {};
+    template <typename Type> struct IsScalar<Type* const>          : public TrueType {};
+    template <typename Type> struct IsScalar<Type* volatile>       : public TrueType {};
+    template <typename Type> struct IsScalar<Type* const volatile> : public TrueType {};
+
+    template<typename Type>
+    constexpr bool IsScalarV = IsScalar<Type>::value;
+#endif
 
 // Determine whether Type is a trivial type
 template <class Type>
@@ -1137,6 +1232,38 @@ constexpr bool IsReplaceableV = IsReplaceable<Type>::value;
 template <class Type>
 using DecayT = typename Decay<Type>::type;
 
+// Determine the common type of a set of types
+template<typename... Types>
+struct CommonType;
+
+// Determine the common type of a single type (i.e., the type itself)
+template<typename Type>
+struct CommonType<Type> {
+    /**
+     * @note
+     * Question: Should we use Type or decay_t<Type> here?
+     * The C++11 Standard specifically (20.9.7.6,p3) specifies that it be without decay,
+     * but libc++ uses decay.
+     */
+    using type = DecayT<Type>;
+};
+
+// Determine the common type of two types
+template<typename Type1, typename Type2>
+struct CommonType<Type1, Type2> {
+    // The type of a tertiary expression is set by the compiler to be the common type of the two result types.
+    using type = DecayT<decltype(true ? declval<Type1>() : declval<Type2>())>;
+};
+
+// Determine the common type of three or more types
+template<typename Type1, typename Type2, typename... Types>
+struct CommonType<Type1, Type2, Types...> { 
+    using type = typename CommonType<typename CommonType<Type1, Type2>::type, Types...>::type;
+};
+
+template <typename... T>
+using CommonTypeT = typename CommonType<T...>::type;
+
 // Represents a list of types as a single type
 template <class... Types>
 struct NEX_HIDDEN_FROM_ABI TypeList {};
@@ -1223,6 +1350,169 @@ template <class Type>
 using MakeUnsignedT = typename MakeUnsigned<Type>::type;
 
 // =================================================================================
+// C++20 CommonReference implementation (ISO Standard Compliant)
+// =================================================================================
+
+// Let COND_RES(X, Y) be:
+template <class X, class Y>
+using CondResT NEX_NODEBUG = decltype(false ? declval<X (&)()>()() : declval<Y (&)()>()());
+
+// Let `XREF(A)` denote a unary alias template `T` such that `T<U>` denotes the same type as `U`
+// with the addition of `A`'s cv and reference qualifiers, for a non-reference cv-unqualified type `U`.
+// [Note: `XREF(A)` is `Xref<A>::template Apply`]
+template <class Type>
+struct Xref {
+    template <class Up>
+    using Apply NEX_NODEBUG = CopyCvrefT<Type, Up>;
+};
+
+// Given types A and B, let X be RemoveReferenceT<A>, let Y be RemoveReferenceT<B>,
+// and let COMMON-REF(A, B) be:
+template <class A, class B, class X = RemoveReferenceT<A>, class Y = RemoveReferenceT<B>>
+struct CommonRef;
+
+template <class X, class Y>
+using CommonRefT NEX_NODEBUG = typename CommonRef<X, Y>::type;
+
+template <class X, class Y>
+using CvCondResT NEX_NODEBUG = CondResT<CopyCvT<X, Y>&, CopyCvT<Y, X>&>;
+
+// If A and B are both lvalue reference types, COMMON-REF(A, B) is
+// COND-RES(COPYCV(X, Y)&, COPYCV(Y, X)&) if that type exists and is a reference type.
+template <class A, class B, class X, class Y>
+    requires requires { typename CvCondResT<X, Y>; } && IsReferenceV<CvCondResT<X, Y>>
+struct CommonRef<A&, B&, X, Y> {
+    using type NEX_NODEBUG = CvCondResT<X, Y>;
+};
+
+// Otherwise, let C be RemoveReferenceT<COMMON-REF(X&, Y&)>&&. ...
+template <class X, class Y>
+using CommonRefCT NEX_NODEBUG = RemoveReferenceT<CommonRefT<X&, Y&>>&&;
+
+// .... If A and B are both rvalue reference types, C is well-formed, and
+// IsConvertibleV<A, C> && IsConvertibleV<B, C> is true, then COMMON-REF(A, B) is C.
+template <class A, class B, class X, class Y>
+    requires
+        requires { typename CommonRefCT<X, Y>; } &&
+             IsConvertibleV<A&&, CommonRefCT<X, Y>> &&
+             IsConvertibleV<B&&, CommonRefCT<X, Y>>
+struct CommonRef<A&&, B&&, X, Y> {
+    using type NEX_NODEBUG = CommonRefCT<X, Y>;
+};
+
+// Otherwise, let D be COMMON-REF(const X&, Y&). ...
+template <class T, class U>
+using CommonRefDT NEX_NODEBUG = CommonRefT<const T&, U&>;
+
+// ... If A is an rvalue reference and B is an lvalue reference and D is well-formed and
+// IsConvertibleV<A, D> is true, then COMMON-REF(A, B) is D.
+template <class A, class B, class X, class Y>
+    requires
+        requires { typename CommonRefDT<X, Y>; } && 
+            IsConvertibleV<A&&, CommonRefDT<X, Y>>
+struct CommonRef<A&&, B&, X, Y> {
+    using type NEX_NODEBUG = CommonRefDT<X, Y>;
+};
+
+// Otherwise, if A is an lvalue reference and B is an rvalue reference, then
+// COMMON-REF(A, B) is COMMON-REF(B, A).
+template <class A, class B, class X, class Y>
+struct CommonRef<A&, B&&, X, Y> : CommonRef<B&&, A&> {};
+
+// Otherwise, COMMON-REF(A, B) is ill-formed.
+template <class A, class B, class X, class Y>
+struct CommonRef {};
+
+// Note C: For the common_reference trait applied to a parameter pack [...]
+
+template <class, class, template <class> class, template <class> class>
+struct BasicCommonReference {};
+
+template <class...>
+struct CommonReference;
+
+template <class... Types>
+using CommonReferenceT = typename CommonReference<Types...>::type;
+
+// Bullet 1: sizeof...(T) == 0
+template <>
+struct CommonReference<> {};
+
+// Bullet 2: sizeof...(T) == 1
+template <class Type>
+struct CommonReference<Type> {
+    using type NEX_NODEBUG = Type;
+};
+
+// Bullet 3: sizeof...(T) == 2
+
+// Sub-bullet 1:
+// Let R be COMMON-REF(T1, T2). If T1 and T2 are reference types, R is well-formed, and
+// IsConvertibleV<AddPointerT<T1>, AddPointerT<R>> && IsConvertibleV<AddPointerT<T2>, AddPointerT<R>>
+// is true, then the member typedef type denotes R.
+//
+// Sub-bullet 2:
+// Otherwise, if BasicCommonReference<RemoveCvrefT<T1>, RemoveCvrefT<T2>, XREF(T1), XREF(T2)>::type
+// is well-formed, then the member typedef `type` denotes that type.
+//
+// Sub-bullet 3:
+// Otherwise, if COND-RES(T1, T2) is well-formed, then the member typedef `type` denotes that type.
+//
+// Sub-bullet 4 & 5:
+// Otherwise, if common_type_t<T1, T2> is well-formed, then the member typedef `type` denotes that type.
+// - Otherwise, there shall be no member `type`.
+
+template <class T1, class T2>
+struct CommonReferenceSub3 : CommonType<T1, T2> {}; // Sub-bullet 4 & 5
+
+template <class T1, class T2>
+    requires requires { typename CondResT<T1, T2>; }
+struct CommonReferenceSub3<T1, T2> {
+    using type NEX_NODEBUG = CondResT<T1, T2>; // Sub-bullet 3
+};
+
+template <class T1, class T2>
+using BasicCommonRefImplT = typename BasicCommonReference<
+    RemoveCvrefT<T1>, RemoveCvrefT<T2>, 
+    Xref<T1>::template Apply, Xref<T2>::template Apply
+>::type;
+
+template <class T1, class T2>
+struct CommonReferenceSub2 : CommonReferenceSub3<T1, T2> {};
+
+template <class T1, class T2>
+    requires requires { typename BasicCommonRefImplT<T1, T2>; }
+struct CommonReferenceSub2<T1, T2> {
+    using type NEX_NODEBUG = BasicCommonRefImplT<T1, T2>; // Sub-bullet 2
+};
+
+template <class T1, class T2>
+struct CommonReferenceSub1 : CommonReferenceSub2<T1, T2> {};
+
+template <class T1, class T2>
+    requires IsReferenceV<T1> && IsReferenceV<T2> && 
+        requires { typename CommonRefT<T1, T2>; } &&
+             IsConvertibleV<AddPointerT<T1>, AddPointerT<CommonRefT<T1, T2>>> &&
+             IsConvertibleV<AddPointerT<T2>, AddPointerT<CommonRefT<T1, T2>>>
+struct CommonReferenceSub1<T1, T2> {
+    using type NEX_NODEBUG = CommonRefT<T1, T2>; // Sub-bullet 1
+};
+
+template <class T1, class T2>
+struct CommonReference<T1, T2> : CommonReferenceSub1<T1, T2> {};
+
+// Bullet 4:
+// If there is such a type `C`, the member typedef type shall denote the same type,
+// if any, as `common_reference_t<C, Rest...>`.
+template <class T1, class T2, class V, class... Rest>
+    requires requires { typename CommonReferenceT<T1, T2>; }
+struct CommonReference<T1, T2, V, Rest...> : CommonReference<CommonReferenceT<T1, T2>, V, Rest...> {};
+
+// Bullet 5: Otherwise, there shall be no member `type`.
+template <class...>
+struct CommonReference {};
+
+// =================================================================================
 // Compiler intrinsic concepts implementation
 // =================================================================================
 
@@ -1245,6 +1535,31 @@ concept ConvertibleTo =
     requires {
         static_cast<To>(declval<From>());
     };
+
+// Checks whether Tp and Up have a common reference type that is the same in both directions,
+// and that both Tp and Up are convertible to that common reference type.
+template <class Tp, class Up>
+concept CommonReferenceWith =
+    SameAs<CommonReferenceT<Tp, Up>, CommonReferenceT<Up, Tp>> &&
+    ConvertibleTo<Tp, CommonReferenceT<Tp, Up>> && ConvertibleTo<Up, CommonReferenceT<Tp, Up>>;
+
+// Checks whether Tp and Up have a common type that is the same in both directions,
+// and that both Tp and Up are convertible to that common type.
+template <class Tp, class Up>
+concept CommonWith =
+    SameAs<CommonTypeT<Tp, Up>, CommonTypeT<Up, Tp>> &&
+    requires {
+        static_cast<CommonTypeT<Tp, Up>>(declval<Tp>());
+        static_cast<CommonTypeT<Tp, Up>>(declval<Up>());
+    } &&
+    CommonReferenceWith<
+        AddLvalueReferenceT<const Tp>,
+        AddLvalueReferenceT<const Up>> &&
+    CommonReferenceWith<
+        AddLvalueReferenceT<CommonTypeT<Tp, Up>>,
+        CommonReferenceT<
+            AddLvalueReferenceT<const Tp>,
+            AddLvalueReferenceT<const Up>>>;
 
 // =================================================================================
 // Internal utilities for compile-time logic processing to support metaprogramming

@@ -43,7 +43,7 @@ constexpr PropertyPolicy WithValidatorAndCallback = { .hasValidator = true, .has
  * The policy determines whether the property includes a validator function (to validate new values before setting them) 
  * and/or a callback function (to be called after the property value changes). 
  * 
- * @tparam T The type of the property value
+ * @tparam ValueType The type of the property value
  * @tparam Policy The policy that defines the behavior of the property
  * 
  * @par Example Usage:
@@ -67,61 +67,69 @@ constexpr PropertyPolicy WithValidatorAndCallback = { .hasValidator = true, .has
  * - The class uses C++20 features such as concepts and conditional types to enable or disable functionality 
  *   based on the specified policy.
  */
-template <typename T, PropertyPolicy Policy = Default>
+template <typename ValueType, PropertyPolicy Policy = Default>
 class NEX_API Property {
 public:
-    // Type aliases for the property functions based on the policy
-    using NullFunction = NEX_STD monostate;
-    using ValidatorFuncType = Function<bool(const T&)>;
-    using CallbackFuncType = Function<void(const T&)>;
+    // Type aliases for the property value and its reference types
+    using value_type = ValueType;
+    using pointer = value_type*;
+    using const_pointer = const value_type*;
+    using reference = value_type&;
+    using const_reference = const value_type&;
 
-    // Type aliases for the property's attributes
-    using ValueType = T;
-    using Validator = Conditional<Policy.hasValidator, ValidatorFuncType, NullFunction>;
-    using Callback = Conditional<Policy.hasCallback, CallbackFuncType, NullFunction>;
+    // Type aliases for the property functions based on the policy
+    using null_function = monostate;
+    using validator_function = Function<bool(const_reference)>;
+    using callback_function = Function<void(const_reference)>;
 
 private:
-    // Internal attributes of the property
-    ValueType value_{};
+    // The actual value of the property
+    value_type value_{};
+
+    // Type aliases for the property's function types based on the policy
+    using Validator = ConditionalT<Policy.hasValidator, validator_function, null_function>;
+    using Callback = ConditionalT<Policy.hasCallback, callback_function, null_function>;
+
+    // The validator and callback functions for the property, if defined by the policy
     NEX_NO_UNIQUE_ADDRESS Validator validator_;
     NEX_NO_UNIQUE_ADDRESS Callback callback_;
 
 public:
     // Default constructor
-    constexpr Property() noexcept(IsNothrowCopyConstructibleV<ValueType>) = default;
+    constexpr Property() noexcept(IsNothrowCopyConstructibleV<value_type>) = default;
 
     // Constructors for initializing the property value
-    constexpr explicit Property(const ValueType& v) : value_(v) {}
-    constexpr explicit Property(ValueType&& v) noexcept(IsNothrowMoveConstructibleV<ValueType>)
-        : value_(NEX_MOVE(v)) {}
+    constexpr explicit Property(const value_type& value) : value_(value) {}
+    constexpr explicit Property(value_type&& value) noexcept(IsNothrowMoveConstructibleV<value_type>)
+        : value_(NEX_MOVE(value)) {}
 
     ////// Getters for the property value --------------------------------------------------
 
     // Returns a const reference to the property value
-    NEX_NODISCARD const ValueType& get() const noexcept { return value_; }
+    NEX_NODISCARD const_reference get() const noexcept { return value_; }
 
     // Implicit conversion operator and dereference operator for convenient access to the property value
-    NEX_NODISCARD operator const ValueType&() const noexcept { return value_; }
+    NEX_NODISCARD operator const_reference() const noexcept { return value_; }
 
     // Returns a const reference to the property value (dereference operator)
-    NEX_NODISCARD const ValueType& operator*() const noexcept { return value_; }
+    NEX_NODISCARD const_reference operator*() const noexcept { return value_; }
 
     // Returns a pointer to the property value (arrow operator)
-    NEX_NODISCARD const ValueType* operator->() const noexcept 
-    requires IsPointerV<ValueType> { 
-        return value_; 
+    NEX_NODISCARD const_pointer operator->() const noexcept 
+        requires IsPointerV<value_type> { 
+        return &value_;
     }
 
     ////// Setters for the property value --------------------------------------------------
 
     // Sets the property value with validation and callback support based on the policy
-    void set(const ValueType& newVal) {
+    void set(const value_type& newVal) {
         if constexpr (Policy.hasValidator) {
             if (validator_ && !validator_(newVal)) return;
         }
 
         // Store the old value before updating the property value
-        ValueType oldVal = value_;
+        value_type oldVal = value_;
         value_ = newVal;
 
         if constexpr (Policy.hasCallback) {
@@ -130,7 +138,7 @@ public:
     }
 
     // Sets the property value with move semantics, validation, and callback support based on the policy
-    void set(ValueType&& newVal) {
+    void set(value_type&& newVal) {
         if constexpr (Policy.hasValidator) {
             if (validator_ && !validator_(newVal)) return;
         }
@@ -144,24 +152,24 @@ public:
     }
 
     // Assignment operator for setting the property value
-    Property& operator=(const ValueType& v) { set(v); return *this; }
+    Property& operator=(const value_type& v) { set(v); return *this; }
 
     // Assignment operator for setting the property value with move semantics
-    Property& operator=(ValueType&& v) { set(NEX_MOVE(v)); return *this; }
+    Property& operator=(value_type&& v) { set(NEX_MOVE(v)); return *this; }
 
     ////// Configuration methods ---------------------------------------------------------------
 
     // Sets the validator function for the property (only if the policy includes a validator)
     template <typename ValidatorFunc>
     void setValidator(ValidatorFunc&& func)
-    requires Policy.hasValidator && IsInvocableRV<bool, ValidatorFunc, const ValueType&> {
+        requires Policy.hasValidator && IsInvocableRV<bool, ValidatorFunc, const value_type&> {
         validator_ = NEX_FORWARD<ValidatorFunc>(func);
     }
 
     // Sets the callback function for the property (only if the policy includes a callback)
     template <typename CallbackFunc>
     void setCallback(CallbackFunc&& func)
-    requires Policy.hasCallback && IsInvocableRV<void, CallbackFunc, const ValueType&> {
+        requires Policy.hasCallback && IsInvocableRV<void, CallbackFunc, const value_type&> {
         callback_ = NEX_FORWARD<CallbackFunc>(func);
     }
 };

@@ -5,7 +5,6 @@
 
 #pragma once
 
-#include <iterator>
 #include <algorithm>
 
 #include "nex/base/macros.h"

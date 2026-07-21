@@ -208,21 +208,35 @@ concept CallableConvertibleTo =
     Invocable<Fn, Args...> &&
     ConvertibleTo<InvokeResultT<Fn, Args...>, Return>;
 
+/// Helper concept to determine if a type is boolean testable (i.e., can be used in a boolean context).
+template <class Type>
+concept BooleanTestableImpl = ConvertibleTo<Type, bool>;
+
+/// Helper concept to determine if a type is boolean testable (i.e., can be used in a boolean context).
+template <class Type>
+concept BooleanTestable = BooleanTestableImpl<Type> && requires(Type&& t) {
+    { !NEX_FORWARD<Type>(t) } -> BooleanTestableImpl;
+};
+
 /// Checks whether Fn can be used as a predicate for Args.
 template <typename Fn, typename... Args>
-concept Predicate = NEX_STD predicate<Fn, Args...>;
+concept Predicate =
+    RegularInvocable<Fn, Args...> &&
+    BooleanTestable<InvokeResultT<Fn, Args...>>;
 
 /// Checks whether Fn is a binary relation over the supplied argument types.
 template <typename Fn, typename Type1, typename Type2>
-concept Relation = NEX_STD relation<Fn, Type1, Type2>;
+concept Relation =
+    Predicate<Fn, Type1, Type1> && Predicate<Fn, Type2, Type2> &&
+    Predicate<Fn, Type1, Type2> && Predicate<Fn, Type2, Type1>;
 
 /// Checks whether Fn is an equivalence relation over the supplied argument types.
 template <typename Fn, typename Type1, typename Type2>
-concept EquivalenceRelation = NEX_STD equivalence_relation<Fn, Type1, Type2>;
+concept EquivalenceRelation = Relation<Fn, Type1, Type2>;
 
 /// Checks whether Fn imposes a strict weak ordering over the supplied argument types.
 template <typename Fn, typename Type1, typename Type2>
-concept StrictWeakOrder = NEX_STD strict_weak_order<Fn, Type1, Type2>;
+concept StrictWeakOrder = Relation<Fn, Type1, Type2>;
 
 // ============================================================================
 // Concepts for iterators, ranges, and containers

@@ -11,25 +11,11 @@
 #include "nex/base/casts.h"
 #include "nex/base/limits.h"
 #include "nex/base/block.h"
+#include "nex/base/growth.h"
 #include "nex/base/memory.h"
 #include "nex/base/algorithm.h"
 
 NEX_NAMESPACE_BEGIN
-
-/**
- * @enum GrowthPolicy
- * @brief Defines the growth policy for dynamic buffer resizing.
- * 
- * @details
- * The GrowthPolicy enumeration specifies how a dynamic buffer should grow when its capacity is exceeded.
- * - `Double`: The buffer's capacity is doubled when it needs to grow. 
- *             This is a common strategy that provides amortized constant time complexity for insertions.
- * - `Linear`: The buffer's capacity is increased by a fixed amount (typically 1) when it needs to grow.
- */
-enum class GrowthPolicy {
-    Double,     // Double the capacity when growing
-    Linear      // Increase capacity by a fixed amount when growing
-};
 
 /**
  * @class SmallBuffer
@@ -43,12 +29,12 @@ enum class GrowthPolicy {
  * 
  * @tparam Type The type of elements stored in the buffer.
  * @tparam InlineCapacity The number of elements that can be stored inline without heap allocation (must be > 0).
- * @tparam Policy The growth policy to use when resizing the buffer. Default is GrowthPolicy::Double.
+ * @tparam Growth The growth policy to use when resizing the buffer. Default is DoubleGrowth.
  */
 template <
     typename Type, 
     usize InlineCapacity = 16,
-    GrowthPolicy Policy = GrowthPolicy::Double
+    GrowthPolicy Growth = DoubleGrowth
 > requires (InlineCapacity > 0)
 class NEX_HIDDEN_FROM_ABI SmallBuffer {
 public:
@@ -148,28 +134,9 @@ private:
         ::operator delete(static_cast<void*>(ptr));
     }
 
-    // Calculates the next capacity based on the growth policy
-    static NEX_HIDDEN_FROM_ABI constexpr 
-    size_type nextCapacity(size_type current, size_type required) {
-        NEX_ASSERT(current > 0 && required > current && required <= maxSize());
-        if constexpr (Policy == GrowthPolicy::Double) {
-            size_type newCapacity = current > 0 ? current : 1;
-            while (newCapacity < required) {
-                if (newCapacity > maxSize() / 2) {
-                    newCapacity = maxSize();
-                    break;
-                }
-                newCapacity *= 2;
-            }
-            return newCapacity;
-        } else { // Linear growth
-            return required;
-        }
-    }
-
     // Grows capacity to at least requiredCapacity, migrating all live elements
     NEX_HIDDEN_FROM_ABI void grow(size_type requiredCapacity) {
-        size_type newCapacity = nextCapacity(capacity_, requiredCapacity);
+        size_type newCapacity = Growth::grow(capacity_, requiredCapacity, maxSize());
         NEX_ASSERT(newCapacity >= requiredCapacity && newCapacity <= maxSize());
         pointer_type newData = allocate(newCapacity);
         if (size_ > 0) {

@@ -10,6 +10,7 @@
 #include "nex/base/init.h"
 #include "nex/base/traits.h"
 #include "nex/base/assert_crash.h"
+#include "nex/base/bit.h"
 #include "nex/core/containers/vector.h"
 
 NEX_NAMESPACE_BEGIN
@@ -503,7 +504,7 @@ public:
     usize countTrue() const noexcept {
         usize count = 0;
         for (usize i = 0; i < WordCount; ++i) {
-            count += NEX_STD popcount(buffer_[i]);
+            count += popcount(buffer_[i]);
         }
         return count;
     }

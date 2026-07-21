@@ -36,23 +36,23 @@ NEX_NAMESPACE_BEGIN
 
 /// Checks whether Type is an integral type.
 template <typename Type>
-concept Integral = meta::IsIntegralV<Type>;
+concept Integral = meta::Integral<Type>;
 
 /// Checks whether Type is a signed integral type.
 template <typename Type>
-concept SignedIntegral = meta::IsSignedIntegralV<Type>;
+concept SignedIntegral = meta::SignedIntegral<Type>;
 
 /// Checks whether Type is an unsigned integral type.
 template <typename Type>
-concept UnsignedIntegral = meta::IsUnsignedIntegralV<Type>;
+concept UnsignedIntegral = meta::UnsignedIntegral<Type>;
 
 /// Checks whether Type is a floating-point type.
 template <typename Type>
-concept FloatingPoint = meta::IsFloatingPointV<Type>;
+concept FloatingPoint = meta::FloatingPoint<Type>;
 
 /// Checks whether Type is either integral or floating-point.
 template <typename Type>
-concept Arithmetic = meta::IsArithmeticV<Type>;
+concept Arithmetic = meta::Arithmetic<Type>;
 
 /// Checks whether two types are the same type.
 template <typename Type1, typename Type2>

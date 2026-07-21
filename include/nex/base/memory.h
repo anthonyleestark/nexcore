@@ -36,22 +36,22 @@ NEX_HIDDEN_FROM_ABI constexpr Type* constructAt(Type* location, Args&&... args) 
 /**
  * @note
  * The internal functions are available regardless of the language version
- * (with the exception of the `destroyAtInternal` taking an array).
+ * (with the exception of the `_destroyAt_Internal` taking an array).
  */
 
 // Internal destroyAt function for non-array types.
 template <class Type, meta::EnableIfT<!meta::IsArrayV<Type>, int32> = 0>
-NEX_HIDDEN_FROM_ABI constexpr void destroyAtInternal(Type* location) {
+NEX_HIDDEN_FROM_ABI constexpr void _destroyAt_Internal(Type* location) {
     NEX_MEMORY_ASSERT_NON_NULL(location != nullptr, "Error: null pointer given to destroyAt");
     location->~Type();
 }
 
 // Internal destroyAt function for array types.
 template <class Type, meta::EnableIfT<meta::IsArrayV<Type>, int32> = 0>
-NEX_HIDDEN_FROM_ABI constexpr void destroyAtInternal(Type* location) {
+NEX_HIDDEN_FROM_ABI constexpr void _destroyAt_Internal(Type* location) {
     NEX_MEMORY_ASSERT_NON_NULL(location != nullptr, "Error: null pointer given to destroyAt");
     for (auto&& val : *location) {
-        destroyAtInternal(NEX_ADDRESS_OF(val));
+        _destroyAt_Internal(NEX_ADDRESS_OF(val));
     }
 }
 
@@ -63,7 +63,7 @@ NEX_HIDDEN_FROM_ABI constexpr void destroyAtInternal(Type* location) {
  */
 template <class Type, meta::EnableIfT<!meta::IsArrayV<Type>, int32> = 0>
 NEX_HIDDEN_FROM_ABI constexpr void destroyAt(Type* location) {
-    destroyAtInternal(location);
+    _destroyAt_Internal(location);
 }
 
 /**
@@ -74,7 +74,7 @@ NEX_HIDDEN_FROM_ABI constexpr void destroyAt(Type* location) {
  */
 template <class Type, meta::EnableIfT<meta::IsArrayV<Type>, int32> = 0>
 NEX_HIDDEN_FROM_ABI constexpr void destroyAt(Type* location) {
-    destroyAtInternal(location);
+    _destroyAt_Internal(location);
 }
 
 // Undefine macros for low-level memory manipulation functions

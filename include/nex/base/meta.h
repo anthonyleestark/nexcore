@@ -1516,6 +1516,26 @@ struct CommonReference {};
 // Compiler intrinsic concepts implementation
 // =================================================================================
 
+// Checks whether Type is an integral type.
+template <typename Type>
+concept Integral = IsIntegralV<Type>;
+
+// Checks whether Type is a signed integral type.
+template <typename Type>
+concept SignedIntegral = IsSignedIntegralV<Type>;
+
+// Checks whether Type is an unsigned integral type.
+template <typename Type>
+concept UnsignedIntegral = IsUnsignedIntegralV<Type>;
+
+// Checks whether Type is a floating-point type.
+template <typename Type>
+concept FloatingPoint = IsFloatingPointV<Type>;
+
+// Checks whether Type is either integral or floating-point.
+template <typename Type>
+concept Arithmetic = IsArithmeticV<Type>;
+
 // Checks whether two types are the same type.
 template <typename Type1, typename Type2>
 concept SameAs =

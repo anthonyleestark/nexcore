@@ -9,6 +9,7 @@
 #include "nex/base/meta.h"
 #include "nex/base/types.h"
 #include "nex/base/assert_crash.h"
+#include "nex/base/bit.h"
 
 NEX_NAMESPACE_BEGIN
 
@@ -133,15 +134,7 @@ struct PowerOfTwoGrowth {
     NEX_HIDDEN_FROM_ABI static constexpr
     usize grow(usize current, usize required, usize maximum) noexcept {
         NEX_ASSERT(current > 0 && required > current && required <= maximum);
-        usize newCapacity = current;
-        do {
-            newCapacity <<= 1; // Multiply by 2
-            if (newCapacity > maximum / 2) {
-                newCapacity = maximum;
-                break;
-            }
-        } while (newCapacity < required);
-        return newCapacity;
+        return meta::_minOf(bitCeil(required), maximum);
     }
 };
 

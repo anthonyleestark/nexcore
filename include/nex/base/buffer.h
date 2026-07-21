@@ -78,7 +78,7 @@ private:
     // which equals InlineCapacity if data_ == inlineBuffer_, otherwise equals the size of the heap allocation
     size_type capacity_ = inlineCapacity;
 
-    // Get a pointer to the inline buffer
+    // Gets a pointer to the inline buffer
     NEX_HIDDEN_FROM_ABI constexpr pointer_type inlineData() noexcept {
         return NEX_MEMORY_CAST<value_type>(inlineBuffer_);
     }
@@ -88,16 +88,16 @@ private:
         return data_ == inlineData();
     }
 
-    // Copy the entire buffer from another SmallBuffer
-    // used in copy constructor, when the current buffer is uninitialized
+    // Copies the entire buffer from another SmallBuffer
+    // Used in the copy constructor, when the current buffer is uninitialized
     NEX_HIDDEN_FROM_ABI constexpr void copyFrom(const SmallBuffer& other) {
         reserve(other.size_);
         NEX_COPY_RANGE(data_, other.data_, other.data_ + other.size_);
         size_ = other.size_;
     }
 
-    // Copy the entire buffer from another SmallBuffer
-    // used in copy assignment operator, when the current buffer is already initialized
+    // Copies the entire buffer from another SmallBuffer
+    // Used in the copy assignment operator, when the current buffer is already initialized
     NEX_HIDDEN_FROM_ABI constexpr void copyAssignFrom(const SmallBuffer& other) {
         if (other.size_ > capacity_) {
             // Not enough capacity, need to allocate new storage
@@ -117,7 +117,7 @@ private:
         size_ = other.size_;
     }
 
-    // Move the entire buffer from another SmallBuffer (used in move constructor and move assignment)
+    // Moves the entire buffer from another SmallBuffer (used in move constructor and move assignment)
     NEX_HIDDEN_FROM_ABI constexpr void moveFrom(SmallBuffer&& other)
         noexcept(meta::IsNothrowMoveConstructibleV<value_type> && meta::IsNothrowDestructibleV<value_type>) {
         if (other.isInline()) {
@@ -137,18 +137,18 @@ private:
         NEX_ASSERT(other.isInline());
     }
 
-    // Allocate a raw, uninitialized heap buffer for exactly cap elements
+    // Allocates a raw, uninitialized heap buffer for exactly cap elements
     static NEX_HIDDEN_FROM_ABI pointer_type allocate(size_type cap) noexcept(false) {
         return static_cast<pointer_type>(::operator new(cap * sizeof(value_type)));
     }
 
-    // Free a heap buffer (does NOT destroy elements — caller must do that first)
+    // Frees a heap buffer (does NOT destroy elements — caller must do that first)
     static NEX_HIDDEN_FROM_ABI void deallocate(pointer_type ptr)
         noexcept(meta::IsNothrowDestructibleV<value_type>) {
         ::operator delete(static_cast<void*>(ptr));
     }
 
-    // Calculate the next capacity based on the growth policy
+    // Calculates the next capacity based on the growth policy
     static NEX_HIDDEN_FROM_ABI constexpr 
     size_type nextCapacity(size_type current, size_type required) {
         NEX_ASSERT(current > 0 && required > current && required <= maxSize());
@@ -167,7 +167,7 @@ private:
         }
     }
 
-    // Grow capacity to at least requiredCapacity, migrating all live elements
+    // Grows capacity to at least requiredCapacity, migrating all live elements
     NEX_HIDDEN_FROM_ABI void grow(size_type requiredCapacity) {
         size_type newCapacity = nextCapacity(capacity_, requiredCapacity);
         NEX_ASSERT(newCapacity >= requiredCapacity && newCapacity <= maxSize());
@@ -188,27 +188,27 @@ private:
     }
 
 public:
-    // Default constructor
+    // Default constructor initializes an empty SmallBuffer with inline storage.
     NEX_HIDDEN_FROM_ABI constexpr SmallBuffer() noexcept = default;
 
-    // Constructs a SmallBuffer with a given count, default-constructing elements
+    // Constructs a SmallBuffer with a given count, default-constructing elements.
     NEX_HIDDEN_FROM_ABI constexpr explicit SmallBuffer(size_type count) {
         resize(count);
     }
 
-    // Constructs a SmallBuffer with a given count, copy-constructing elements from value
+    // Constructs a SmallBuffer with a given count, copy-constructing elements from value.
     template <typename OtherValue>
     NEX_HIDDEN_FROM_ABI constexpr SmallBuffer(size_type count, const OtherValue& value)
         requires(meta::IsConvertibleV<OtherValue, value_type>) {
         resize(count, value);
     }
 
-    // Copy constructor
+    // Copy constructor.
     NEX_HIDDEN_FROM_ABI constexpr SmallBuffer(const SmallBuffer& other) {
         copyFrom(other);
     }
 
-    // Copy assignment operator
+    // Copy assignment operator.
     NEX_HIDDEN_FROM_ABI constexpr SmallBuffer& operator=(const SmallBuffer& other) {
         if (this != &other) {
             copyAssignFrom(other);
@@ -216,13 +216,13 @@ public:
         return *this;
     }
 
-    // Move constructor
+    // Move constructor.
     NEX_HIDDEN_FROM_ABI constexpr SmallBuffer(SmallBuffer&& other)
         noexcept(meta::IsNothrowMoveConstructibleV<value_type>) {
         moveFrom(NEX_MOVE(other));
     }
 
-    // Move assignment operator
+    // Move assignment operator.
     NEX_HIDDEN_FROM_ABI constexpr SmallBuffer& operator=(SmallBuffer&& other)
         noexcept(meta::IsNothrowMoveConstructibleV<value_type>) {
         if (this != &other) {
@@ -232,30 +232,30 @@ public:
         return *this;
     }
 
-    // Destructor
+    // Destructor.
     NEX_HIDDEN_FROM_ABI constexpr ~SmallBuffer() 
         noexcept(meta::IsNothrowDestructibleV<value_type>) {
         NEX_DESTROY_RANGE(data_, data_ + size_);
         if (!isInline()) deallocate(data_);
     }
 
-    // Get the number of elements
+    // Gets the number of elements.
     NEX_HIDDEN_FROM_ABI constexpr size_type size() const noexcept { return size_; }
 
-    // Check if the container is empty
+    // Checks if the container is empty.
     NEX_HIDDEN_FROM_ABI constexpr bool empty() const noexcept { return size_ == 0; }
 
-    // Get the current storage capacity
+    // Gets the current storage capacity.
     NEX_HIDDEN_FROM_ABI constexpr size_type capacity() const noexcept { return capacity_; }
 
-    // Reserve storage for at least newCapacity elements (no-op if already sufficient)
+    // Reserves storage for at least newCapacity elements (no-op if already sufficient).
     NEX_HIDDEN_FROM_ABI constexpr void reserve(size_type newCapacity) {
         if (newCapacity > capacity()) {
             grow(newCapacity);
         }
     }
 
-    // Resize to count elements (new elements are default-constructed)
+    // Resizes to count elements (new elements are default-constructed).
     NEX_HIDDEN_FROM_ABI constexpr void resize(size_type count) {
         if (count < size_) {
             NEX_DESTROY_RANGE(data_ + count, data_ + size_);
@@ -268,7 +268,7 @@ public:
         size_ = count;
     }
 
-    // Resize to count elements, filling new slots with value
+    // Resizes to count elements, filling new slots with value.
     template <typename OtherValue>
     NEX_HIDDEN_FROM_ABI constexpr void resize(size_type count, const OtherValue& value)
         requires(meta::IsConvertibleV<OtherValue, value_type>) {
@@ -283,7 +283,7 @@ public:
         size_ = count;
     }
 
-    // Reduce the heap allocation to fit the current size (no effect in inline mode)
+    // Reduces the heap allocation to fit the current size (no effect in inline mode).
     NEX_HIDDEN_FROM_ABI constexpr void shrinkToFit() {
         if (isInline()) return;
         if (size_ == 0) {
@@ -320,13 +320,13 @@ public:
         }
     }
 
-    // Remove all elements (does not release memory)
+    // Removes all elements (does not release memory).
     NEX_HIDDEN_FROM_ABI constexpr void clear() noexcept {
         NEX_DESTROY_RANGE(data_, data_ + size_);
         size_ = 0;
     }
 
-    // Reset the buffer to the default state (using inline storage), releasing heap memory if used
+    // Resets the buffer to the default state (using inline storage), releasing heap memory if used.
     NEX_HIDDEN_FROM_ABI constexpr void reset() noexcept {
         clear();
         if (!isInline()) {
@@ -336,8 +336,8 @@ public:
         }
     }
 
-    // Append elements from a given range which is specified by a pointer to its first element
-    // and a size to the end of the buffer, growing if necessary
+    // Appends elements from a given range which is specified by a pointer to its first element
+    // and a size to the end of the buffer, growing if necessary.
     template <typename OtherValue>
     NEX_HIDDEN_FROM_ABI constexpr void append(const OtherValue* src, size_type count)
         requires(meta::IsConvertibleV<OtherValue, value_type>) {
@@ -348,8 +348,8 @@ public:
         size_ += count;
     }
 
-    // Append elements from a given range which is specified by a pointer to its first element
-    // and a pointer to its last element (exclusive) to the end of the buffer, growing if necessary
+    // Appends elements from a given range which is specified by a pointer to its first element
+    // and a pointer to its last element (exclusive) to the end of the buffer, growing if necessary.
     template <typename OtherValue>
     NEX_HIDDEN_FROM_ABI constexpr void append(const OtherValue* first, const OtherValue* last)
         requires(meta::IsConvertibleV<OtherValue, value_type>) {
@@ -357,7 +357,42 @@ public:
         append(first, static_cast<size_type>(last - first));
     }
 
-    // Swap contents with another SmallBuffer (no exceptions thrown)
+    // Appends elements from a given range which is specified by a pointer to its first element
+    // and a size to the end of the buffer, growing if necessary. This overload is for rvalue references.
+    template <typename OtherValue>
+    NEX_HIDDEN_FROM_ABI constexpr void appendMove(OtherValue* src, size_type count)
+        requires(meta::IsConvertibleV<OtherValue, value_type>) {
+        NEX_ASSERT(src != nullptr || count == 0);
+        if (src == nullptr || count == 0) return;
+        reserve(size_ + count);
+        for (size_type i = 0; i < count; ++i) {
+            NEX_CONSTRUCT_AT(data_ + size_ + i, NEX_MOVE(src[i]));
+        }
+        size_ += count;
+    }
+
+    // Appends an element constructed in place at the end of the buffer with perfect forwarding
+    // of constructor arguments, growing if necessary.
+    template <typename... Args>
+        requires (meta::IsConstructibleV<value_type, Args...>)
+    NEX_HIDDEN_FROM_ABI constexpr void appendConstruct(Args&&... args) {
+        reserve(size_ + 1);
+        NEX_CONSTRUCT_AT(data_ + size_, NEX_FORWARD<Args>(args)...);
+        ++size_;
+    }
+
+    // Removes elements from the buffer starting at index and spanning count elements,
+    // shifting subsequent elements down.
+    NEX_HIDDEN_FROM_ABI constexpr void remove(size_type index, size_type count = 1) {
+        NEX_ASSERT(index < size_ && count > 0 && index + count <= size_);
+        pointer_type start = data_ + index;
+        pointer_type end = start + count;
+        NEX_DESTROY_RANGE(start, end);
+        NEX_MOVE_RANGE(start, end, start);
+        size_ -= count;
+    }
+
+    // Swaps contents with another SmallBuffer (no exceptions thrown).
     NEX_HIDDEN_FROM_ABI constexpr void swap(SmallBuffer& other) noexcept(
         meta::IsNothrowMoveConstructibleV<value_type> && meta::IsNothrowDestructibleV<value_type>) {
         if (this == &other) return;
@@ -375,56 +410,56 @@ public:
         }
     }
 
-    // Get the maximum possible number of elements
+    // Gets the maximum possible number of elements.
     static NEX_HIDDEN_FROM_ABI constexpr size_type maxSize() noexcept {
         return NumericLimits<size_type>::max() / sizeof(value_type);
     }
 
-    // Check whether the container is currently using the inline buffer
+    // Checks whether the container is currently using the inline buffer.
     NEX_HIDDEN_FROM_ABI constexpr bool usingInlineStorage() const noexcept { return isInline(); }
 
-    // Get pointer to the underlying contiguous storage
+    // Gets pointer to the underlying contiguous storage.
     NEX_HIDDEN_FROM_ABI constexpr pointer_type data() noexcept { return data_; }
 
-    // Get pointer to the underlying contiguous storage (read-only)
+    // Gets pointer to the underlying contiguous storage (read-only).
     NEX_HIDDEN_FROM_ABI constexpr const_pointer_type data() const noexcept { return data_; }
 
-    // Get the memory block representing the buffer's data
+    // Gets the memory block representing the buffer's data.
     NEX_HIDDEN_FROM_ABI constexpr MemoryBlock block() noexcept {
         return MemoryBlock(data(), size_ * sizeof(value_type));
     }
 
-    // Get the memory block representing the buffer's data (read-only)
+    // Gets the memory block representing the buffer's data (read-only).
     NEX_HIDDEN_FROM_ABI constexpr ConstMemoryBlock cblock() const noexcept {
         return ConstMemoryBlock(data(), size_ * sizeof(value_type));
     }
 
-    // Access element at index (no bounds checking)
+    // Accesses element at index (no bounds checking).
     NEX_HIDDEN_FROM_ABI constexpr reference_type operator[](size_type pos) noexcept {
         return data_[pos];
     }
 
-    // Access element at index (no bounds checking, read-only)
+    // Accesses element at index (no bounds checking, read-only).
     NEX_HIDDEN_FROM_ABI constexpr const_reference_type operator[](size_type pos) const noexcept {
         return data_[pos];
     }
 
-    // Access the first element
+    // Accesses the first element.
     NEX_HIDDEN_FROM_ABI constexpr reference_type front() noexcept {
         return data_[0];
     }
 
-    // Access the first element (read-only)
+    // Accesses the first element (read-only).
     NEX_HIDDEN_FROM_ABI constexpr const_reference_type front() const noexcept {
         return data_[0];
     }
 
-    // Access the last element
+    // Accesses the last element.
     NEX_HIDDEN_FROM_ABI constexpr reference_type back() noexcept {
         return data_[size_ - 1];
     }
 
-    // Access the last element (read-only)
+    // Accesses the last element (read-only).
     NEX_HIDDEN_FROM_ABI constexpr const_reference_type back() const noexcept {
         return data_[size_ - 1];
     }

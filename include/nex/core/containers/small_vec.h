@@ -6,55 +6,35 @@
 #pragma once
 
 #include <algorithm>
-#include <iterator>
-#include <memory>
 
-#include "nex/base/macros.h"
+#include "nex/base/namespace.h"
 #include "nex/base/types.h"
 #include "nex/base/limits.h"
+#include "nex/base/assert_crash.h"
+#include "nex/base/buffer.h"
 #include "nex/base/init.h"
 #include "nex/base/traits.h"
-#include "nex/base/assert_crash.h"
+#include "nex/base/iterator.h"
+#include "nex/core/containers/vector.h"
 
 NEX_NAMESPACE_BEGIN
 
 /**
  * @class SmallVec
- * @brief An optimized dynamic array with inline (stack-allocated) small-buffer storage.
+ * @brief A vector-like container backed by a SmallBuffer.
  *
  * @details
- * SmallVec<ElementType, InlineCapacity> behaves like a Vec<ElementType> (std::vector<ElementType>) but 
- * avoids heap allocation for up to InlineCapacity elements by keeping them directly inside the object 
- * (the "inline buffer"). When the number of elements exceeds InlineCapacity the container transparently 
- * switches to heap storage and grows with the same amortized O(1) pushBack strategy as Vec.
+ * SmallVec provides the familiar vector interface while delegating inline storage,
+ * heap growth, and element lifetime management to SmallBuffer. It stores up to
+ * InlineCapacity elements inline and uses GrowthPolicy::Double after that.
  *
- * Optimisation characteristics:
- * - **Zero heap allocation** for ≤ InlineCapacity elements — creation, destruction, and copy/move 
- *   are all stack operations.
- * - **Single allocation** once the inline buffer is exhausted; subsequent growth re-allocates
- *   at double capacity (matching Vec growth policy).
- * - **Contiguous storage** in both modes — data() always returns a pointer to a contiguous
- *   sequence, enabling the same memcpy / SIMD tricks as Vec.
- * - **Standard iterator interface** — random-access iterators, range-for, and all algorithms
- *   that accept begin()/end() pairs work without modification.
- *
- * @tparam ElementType The element type. Must be movable.
- * @tparam InlineCapacity The inline buffer capacity (must be > 0). Default is 8.
- *
- * @note SmallVec is not allocator-aware. Heap storage uses the global operator new/delete.
- *
- * @note Iterators and pointers into a SmallVec are invalidated by any operation that changes the
- *       size or reallocates the buffer (pushBack when size == capacity, insert, resize, reserve).
- *       This matches the std::vector contract.
- *
- * @see Vec for a pure heap-based dynamic array.
- * @see Array for a fixed-size stack array.
+ * @tparam ElementType The element type.
+ * @tparam InlineCapacity The number of elements stored inline. Must be greater than zero.
  */
 template <typename ElementType, usize InlineCapacity = 8>
     requires (InlineCapacity > 0)
 class NEX_API SmallVec {
 public:
-    // Type aliases for compatibility with standard container conventions
     using value_type = ElementType;
     using size_type = usize;
     using difference_type = isize;
@@ -64,594 +44,333 @@ public:
     using const_pointer = const value_type*;
     using iterator = pointer;
     using const_iterator = const_pointer;
-    using reverse_iterator = NEX_STD reverse_iterator<iterator>;
-    using const_reverse_iterator = NEX_STD reverse_iterator<const_iterator>;
+    using reverse_iterator = ReverseIterator<iterator>;
+    using const_reverse_iterator = ReverseIterator<const_iterator>;
+    using buffer_type = SmallBuffer<value_type, InlineCapacity>;
 
-public:
     // Inline buffer capacity constant
     static constexpr size_type inlineCapacity = InlineCapacity;
 
 private:
-    ////// Inline buffer -------------------------------------------------
+    // The underlying buffer that manages storage and element lifetime.
+    buffer_type buffer_;
 
-    // Raw aligned storage that can hold InlineCapacity objects of type ElementType without constructing them.
-    NEX_ALIGNAS(value_type) byte inlineBuffer_[sizeof(value_type) * InlineCapacity];
-
-    ////// Heap storage --------------------------------------------------
-
-    // Used when size_ > InlineCapacity. Null when in inline mode.
-    pointer heapData_ = nullptr;
-    size_type heapCapacity_ = 0;
-
-    ////// Common state --------------------------------------------------
-
-    // Current number of elements in the container (<= InlineCapacity if heapData_ == nullptr)
-    size_type size_ = 0;
-
-    ////// Private helpers -----------------------------------------------
-
-    // Returns true when we are using the inline buffer
-    bool isInline() const noexcept { return heapData_ == nullptr; }
-
-    // Get pointer to the first element (works in both modes)
-    pointer storagePtr() noexcept {
-        return heapData_ ? heapData_ : reinterpret_cast<pointer>(inlineBuffer_);
-    }
-
-    // Get pointer to the first element (works in both modes; read-only)
-    const_pointer storagePtr() const noexcept {
-        return heapData_ ? heapData_ : reinterpret_cast<const_pointer>(inlineBuffer_);
-    }
-
-    // Move elements [first, last) to uninitialized storage at dest (source is left destroyed)
-    static void moveRangeUninit(pointer dest, pointer first, pointer last) noexcept(
-        IsNothrowMoveConstructibleV<value_type>) {
-        for (; first != last; ++first, ++dest) {
-            ::new (static_cast<void*>(dest)) value_type(NEX_MOVE(*first));
-            first->~value_type();
-        }
-    }
-
-    // Copy elements [first, last) to uninitialized storage at dest
-    static void copyRangeUninit(pointer dest, const_pointer first, const_pointer last) {
-        pointer cur = dest;
-        try {
-            for (; first != last; ++first, ++cur) {
-                ::new (static_cast<void*>(cur)) value_type(*first);
-            }
-        } catch (...) {
-            // Destroy successfully constructed elements before re-throwing
-            while (cur != dest) {
-                --cur;
-                cur->~value_type();
-            }
-            throw;
-        }
-    }
-
-    // Destroy elements in range [first, last)
-    static void destroyRange(pointer first, pointer last) noexcept {
-        for (; first != last; ++first) {
-            first->~value_type();
-        }
-    }
-
-    // Allocate a raw, uninitialized heap buffer for exactly cap elements
-    static pointer allocateHeap(size_type cap) {
-        return static_cast<pointer>(::operator new(cap * sizeof(value_type)));
-    }
-
-    // Free a heap buffer (does NOT destroy elements — caller must do that first)
-    static void freeHeap(pointer p) noexcept {
-        ::operator delete(static_cast<void*>(p));
-    }
-
-    // Grow capacity to at least requiredCapacity, migrating all live elements
-    void growTo(size_type requiredCapacity) {
-        size_type newCap = heapCapacity_ == 0 ? (NEX_STD max)(InlineCapacity * 2, requiredCapacity)
-                                               : (NEX_STD max)(heapCapacity_ * 2, requiredCapacity);
-        pointer newData = allocateHeap(newCap);
-        try {
-            moveRangeUninit(newData, storagePtr(), storagePtr() + size_);
-        } catch (...) {
-            freeHeap(newData);
-            throw;
-        }
-        if (heapData_) {
-            freeHeap(heapData_);
-        }
-        heapData_ = newData;
-        heapCapacity_ = newCap;
+    // Returns the index of the element pointed to by pos, relative to the beginning of the vector.
+    NEX_HIDDEN_FROM_ABI constexpr size_type indexOf(const_iterator pos) const noexcept {
+        return static_cast<size_type>(pos - cbegin());
     }
 
 public:
-    ////// Constructors and assignment operators ----------------------------------
+    // Default constructor initializes an empty SmallVec with inline storage.
+    constexpr SmallVec() noexcept = default;
 
-    // Default constructor (empty container, no heap allocation)
-    SmallVec() noexcept = default;
+    // Constructs a SmallVec with count default-initialized elements.
+    constexpr explicit SmallVec(size_type count)
+        : buffer_(count) {}
 
-    // Construct with count default-inserted elements
-    explicit SmallVec(size_type count) {
-        resize(count);
-    }
+    // Constructs a SmallVec with count copies of value.
+    constexpr SmallVec(size_type count, const_reference value)
+        : buffer_(count, value) {}
 
-    // Construct with count copies of value
-    SmallVec(size_type count, const_reference value) {
-        resize(count, value);
-    }
-
-    // Construct from initializer list
-    SmallVec(InitList<value_type> init) {
+    // Constructs a SmallVec from an initializer list of values.
+    constexpr SmallVec(InitList<value_type> init) {
         reserve(init.size());
-        for (const value_type& v : init) {
-            pushBack(v);
+        for (const value_type& value : init) {
+            pushBack(value);
         }
     }
 
-    // Construct from an iterator range [first, last)
+    // Constructs a SmallVec from a pair of iterators.
     template <typename InputIt,
               typename = EnableIf<
-                  IsConvertibleV<
-                      StdIteratorValueType<InputIt>, value_type>>>
-    SmallVec(InputIt first, InputIt last) {
-        for (; first != last; ++first) {
-            pushBack(*first);
-        }
+                  IsConvertibleV<IteratorValueType<InputIt>, value_type>>>
+    constexpr SmallVec(InputIt first, InputIt last) {
+        assign(first, last);
     }
 
-    // Copy constructor
-    SmallVec(const SmallVec& other) {
-        reserve(other.size_);
-        copyRangeUninit(storagePtr(), other.storagePtr(), other.storagePtr() + other.size_);
-        size_ = other.size_;
-    }
+    // Default copy semantics
+    constexpr SmallVec(const SmallVec&) = default;
+    constexpr SmallVec(SmallVec&&) noexcept(IsNothrowMoveConstructibleV<value_type>) = default;
 
-    // Copy assignment operator
-    SmallVec& operator=(const SmallVec& other) {
-        if (this == &other) return *this;
-        assign(other.begin(), other.end());
-        return *this;
-    }
+    // Default move semantics
+    constexpr SmallVec& operator=(const SmallVec&) = default;
+    constexpr SmallVec& operator=(SmallVec&&) noexcept(IsNothrowMoveConstructibleV<value_type>) = default;
 
-    // Move constructor
-    SmallVec(SmallVec&& other) noexcept(IsNothrowMoveConstructibleV<value_type>) {
-        if (other.isInline()) {
-            // Cannot steal the inline buffer — move elements individually
-            moveRangeUninit(storagePtr(), other.storagePtr(), other.storagePtr() + other.size_);
-            size_ = other.size_;
-            other.size_ = 0;
-        } else {
-            // Steal the heap pointer
-            heapData_ = other.heapData_;
-            heapCapacity_ = other.heapCapacity_;
-            size_ = other.size_;
-            other.heapData_ = nullptr;
-            other.heapCapacity_ = 0;
-            other.size_ = 0;
-        }
-    }
-
-    // Move assignment operator
-    SmallVec& operator=(SmallVec&& other) noexcept(IsNothrowMoveConstructibleV<value_type>) {
-        if (this == &other) return *this;
-        clear();
-        if (other.isInline()) {
-            if (!isInline()) {
-                freeHeap(heapData_);
-                heapData_ = nullptr;
-                heapCapacity_ = 0;
-            }
-            moveRangeUninit(storagePtr(), other.storagePtr(), other.storagePtr() + other.size_);
-            size_ = other.size_;
-            other.size_ = 0;
-        } else {
-            if (!isInline()) freeHeap(heapData_);
-            heapData_ = other.heapData_;
-            heapCapacity_ = other.heapCapacity_;
-            size_ = other.size_;
-            other.heapData_ = nullptr;
-            other.heapCapacity_ = 0;
-            other.size_ = 0;
-        }
-        return *this;
-    }
-
-    // Assign from initializer list
-    SmallVec& operator=(InitList<value_type> init) {
+    // Assignment from initializer list 
+    constexpr SmallVec& operator=(InitList<value_type> init) {
         assign(init);
         return *this;
     }
 
-    // Destructor
-    ~SmallVec() {
-        destroyRange(storagePtr(), storagePtr() + size_);
-        if (heapData_) freeHeap(heapData_);
-    }
-
-    ////// Assignment helpers ----------------------------------
-
-    // Replace contents with count copies of value
-    void assign(size_type count, const_reference value) {
+    // Assigns count copies of value to the SmallVec, replacing its current contents.
+    constexpr void assign(size_type count, const_reference value) {
         clear();
-        resize(count, value);
+        buffer_.resize(count, value);
     }
 
-    // Replace contents from an iterator range [first, last)
+    // Assigns the elements in the range [first, last) to the SmallVec, replacing its current contents.
     template <typename InputIt,
               typename = EnableIf<
-                  IsConvertibleV<
-                      StdIteratorValueType<InputIt>, value_type>>>
-    void assign(InputIt first, InputIt last) {
+                  IsConvertibleV<IteratorValueType<InputIt>, value_type>>>
+    constexpr void assign(InputIt first, InputIt last) {
         clear();
         for (; first != last; ++first) {
             pushBack(*first);
         }
     }
 
-    // Replace contents with an initializer list
-    void assign(InitList<value_type> init) {
+    // Assigns the elements in the initializer list to the SmallVec, replacing its current contents.
+    constexpr void assign(InitList<value_type> init) {
         clear();
         reserve(init.size());
-        for (const value_type& v : init) {
-            pushBack(v);
+        for (const value_type& value : init) {
+            pushBack(value);
         }
     }
 
-    ////// Iterator support ----------------------------------
+    // Returns an iterator to the beginning of the SmallVec.
+    constexpr iterator begin() noexcept { return buffer_.data(); }
+    // Returns a const iterator to the beginning of the SmallVec.
+    constexpr const_iterator begin() const noexcept { return buffer_.data(); }
+    // Returns a const iterator to the beginning of the SmallVec.
+    constexpr const_iterator cbegin() const noexcept { return buffer_.data(); }
 
-    // Get iterator to the beginning
-    iterator begin() noexcept { return storagePtr(); }
+    // Returns an iterator to the end of the SmallVec.
+    constexpr iterator end() noexcept { return begin() + size(); }
+    // Returns a const iterator to the end of the SmallVec.
+    constexpr const_iterator end() const noexcept { return begin() + size(); }
+    // Returns a const iterator to the end of the SmallVec.
+    constexpr const_iterator cend() const noexcept { return cbegin() + size(); }
 
-    // Get const iterator to the beginning
-    const_iterator begin() const noexcept { return storagePtr(); }
+    // Returns a reverse iterator to the beginning of the reversed SmallVec.
+    constexpr reverse_iterator rbegin() noexcept { return reverse_iterator(end()); }
+    // Returns a const reverse iterator to the beginning of the reversed SmallVec.
+    constexpr const_reverse_iterator rbegin() const noexcept { return const_reverse_iterator(end()); }
+    // Returns a const reverse iterator to the beginning of the reversed SmallVec.
+    constexpr const_reverse_iterator crbegin() const noexcept { return const_reverse_iterator(cend()); }
 
-    // Get const iterator to the beginning
-    const_iterator cbegin() const noexcept { return storagePtr(); }
+    // Returns a reverse iterator to the end of the reversed SmallVec.
+    constexpr reverse_iterator rend() noexcept { return reverse_iterator(begin()); }
+    // Returns a const reverse iterator to the end of the reversed SmallVec.
+    constexpr const_reverse_iterator rend() const noexcept { return const_reverse_iterator(begin()); }
+    // Returns a const reverse iterator to the end of the reversed SmallVec.
+    constexpr const_reverse_iterator crend() const noexcept { return const_reverse_iterator(cbegin()); }
 
-    // Get iterator to the end
-    iterator end() noexcept { return storagePtr() + size_; }
-
-    // Get const iterator to the end
-    const_iterator end() const noexcept { return storagePtr() + size_; }
-
-    // Get const iterator to the end
-    const_iterator cend() const noexcept { return storagePtr() + size_; }
-
-    // Get reverse iterator to the beginning of the reversed view
-    reverse_iterator rbegin() noexcept { return reverse_iterator(end()); }
-
-    // Get const reverse iterator to the beginning of the reversed view
-    const_reverse_iterator rbegin() const noexcept { return const_reverse_iterator(end()); }
-
-    // Get const reverse iterator to the beginning of the reversed view
-    const_reverse_iterator crbegin() const noexcept { return const_reverse_iterator(cend()); }
-
-    // Get reverse iterator to the end of the reversed view
-    reverse_iterator rend() noexcept { return reverse_iterator(begin()); }
-
-    // Get const reverse iterator to the end of the reversed view
-    const_reverse_iterator rend() const noexcept { return const_reverse_iterator(begin()); }
-
-    // Get const reverse iterator to the end of the reversed view
-    const_reverse_iterator crend() const noexcept { return const_reverse_iterator(cbegin()); }
-
-    ////// Element access ----------------------------------
-
-    // Access element at index with bounds checking
-    reference at(size_type pos) {
-        NEX_ASSERT_MSG(pos < size_, "Index out of range");
-        return storagePtr()[pos];
+    // Returns a reference to the element at the specified position, with bounds checking.
+    constexpr reference at(size_type pos) {
+        NEX_ASSERT_MSG(pos < size(), "Index out of range");
+        return buffer_[pos];
     }
 
-    // Access element at index with bounds checking (read-only)
-    const_reference at(size_type pos) const {
-        NEX_ASSERT_MSG(pos < size_, "Index out of range");
-        return storagePtr()[pos];
+    // Returns a const reference to the element at the specified position, with bounds checking.
+    constexpr const_reference at(size_type pos) const {
+        NEX_ASSERT_MSG(pos < size(), "Index out of range");
+        return buffer_[pos];
     }
 
-    // Access element at index (no bounds checking)
-    reference operator[](size_type pos) noexcept { return storagePtr()[pos]; }
+    // Returns a reference to the element at the specified position, without bounds checking.
+    constexpr reference operator[](size_type pos) noexcept { return buffer_[pos]; }
+    // Returns a const reference to the element at the specified position, without bounds checking.
+    constexpr const_reference operator[](size_type pos) const noexcept { return buffer_[pos]; }
 
-    // Access element at index (no bounds checking, read-only)
-    const_reference operator[](size_type pos) const noexcept { return storagePtr()[pos]; }
+    // Returns a reference to the first element.
+    constexpr reference front() noexcept { return buffer_.front(); }
+    // Returns a const reference to the first element.
+    constexpr const_reference front() const noexcept { return buffer_.front(); }
 
-    // Access the first element
-    reference front() noexcept { return storagePtr()[0]; }
+    // Returns a reference to the last element.
+    constexpr reference back() noexcept { return buffer_.back(); }
+    // Returns a const reference to the last element.
+    constexpr const_reference back() const noexcept { return buffer_.back(); }
 
-    // Access the first element (read-only)
-    const_reference front() const noexcept { return storagePtr()[0]; }
+    // Returns a pointer to the underlying array serving as element storage.
+    constexpr pointer data() noexcept { return buffer_.data(); }
+    // Returns a const pointer to the underlying array serving as element storage.
+    constexpr const_pointer data() const noexcept { return buffer_.data(); }
 
-    // Access the last element
-    reference back() noexcept { return storagePtr()[size_ - 1]; }
+    // Returns the number of elements in the SmallVec.
+    constexpr size_type size() const noexcept { return buffer_.size(); }
+    // Returns the number of elements in the SmallVec.
+    constexpr size_type length() const noexcept { return size(); }
 
-    // Access the last element (read-only)
-    const_reference back() const noexcept { return storagePtr()[size_ - 1]; }
+    // Returns true if the SmallVec contains no elements.
+    constexpr bool empty() const noexcept { return buffer_.empty(); }
 
-    // Get pointer to the underlying contiguous storage
-    pointer data() noexcept { return storagePtr(); }
+    // Returns the capacity of the SmallVec.
+    constexpr size_type capacity() const noexcept { return buffer_.capacity(); }
 
-    // Get pointer to the underlying contiguous storage (read-only)
-    const_pointer data() const noexcept { return storagePtr(); }
+    // Returns the maximum number of elements the SmallVec can hold.
+    constexpr size_type maxSize() const noexcept { return buffer_type::maxSize(); }
 
-    ////// Capacity and size ----------------------------------
+    // Returns true if the SmallVec is using inline storage, false if it has allocated heap storage.
+    constexpr bool usingInlineStorage() const noexcept { return buffer_.usingInlineStorage(); }
 
-    // Get the number of elements
-    size_type size() const noexcept { return size_; }
+    /**
+     * @brief Reserves storage for at least newCapacity elements.
+     * @note 
+     * If newCapacity is greater than the current capacity, new storage is allocated and
+     * existing elements are moved to the new storage.
+     */
+    constexpr void reserve(size_type newCapacity) { buffer_.reserve(newCapacity); }
 
-    // Get the number of elements (same as size)
-    size_type length() const noexcept { return size_; }
+    // Reduces the capacity of the SmallVec to fit its size, potentially freeing heap storage.
+    constexpr void shrinkToFit() { buffer_.shrinkToFit(); }
 
-    // Check if the container is empty
-    bool empty() const noexcept { return size_ == 0; }
+    // Adds a new element to the end of the SmallVec, copying the value.
+    constexpr void pushBack(const_reference value) { buffer_.append(&value, 1); }
 
-    // Get the current storage capacity
-    size_type capacity() const noexcept {
-        return heapData_ ? heapCapacity_ : InlineCapacity;
-    }
+    // Adds a new element to the end of the SmallVec, moving the value.
+    constexpr void pushBack(value_type&& value) { buffer_.appendMove(&value, 1); }
 
-    // Get the maximum possible number of elements
-    size_type maxSize() const noexcept {
-        return (NumericLimits<size_type>::max() / sizeof(value_type)) - 1;
-    }
-
-    // Check whether the container is currently using the inline buffer
-    bool usingInlineStorage() const noexcept { return isInline(); }
-
-    // Reserve storage for at least newCapacity elements (no-op if already sufficient)
-    void reserve(size_type newCapacity) {
-        if (newCapacity <= capacity()) return;
-        growTo(newCapacity);
-    }
-
-    // Reduce the heap allocation to fit the current size (no effect in inline mode)
-    void shrinkToFit() {
-        if (isInline()) return;
-        if (size_ == 0) {
-            freeHeap(heapData_);
-            heapData_ = nullptr;
-            heapCapacity_ = 0;
-            return;
-        }
-        if (size_ <= InlineCapacity) {
-            // Move elements back to inline buffer
-            pointer inl = reinterpret_cast<pointer>(inlineBuffer_);
-            moveRangeUninit(inl, heapData_, heapData_ + size_);
-            freeHeap(heapData_);
-            heapData_ = nullptr;
-            heapCapacity_ = 0;
-            return;
-        }
-        if (size_ < heapCapacity_) {
-            pointer newData = allocateHeap(size_);
-            moveRangeUninit(newData, heapData_, heapData_ + size_);
-            freeHeap(heapData_);
-            heapData_ = newData;
-            heapCapacity_ = size_;
-        }
-    }
-
-    ////// Modifiers ----------------------------------
-
-    // Append a copy of value
-    void pushBack(const_reference value) {
-        if (size_ == capacity()) growTo(size_ + 1);
-        ::new (static_cast<void*>(storagePtr() + size_)) value_type(value);
-        ++size_;
-    }
-
-    // Append a moved value
-    void pushBack(value_type&& value) {
-        if (size_ == capacity()) growTo(size_ + 1);
-        ::new (static_cast<void*>(storagePtr() + size_)) value_type(NEX_MOVE(value));
-        ++size_;
-    }
-
-    // Construct an element in place at the end
+    // Constructs a new element in place at the end of the SmallVec with the given arguments.
     template <typename... Args>
-    reference emplaceBack(Args&&... args) {
-        if (size_ == capacity()) growTo(size_ + 1);
-        value_type* ptr = 
-            ::new (static_cast<void*>(storagePtr() + size_)) value_type(NEX_FORWARD<Args>(args)...);
-        ++size_;
-        return *ptr;
+        requires(meta::IsConstructibleV<value_type, Args...>)
+    constexpr reference emplaceBack(Args&&... args) {
+        buffer_.appendConstruct(NEX_FORWARD<Args>(args)...);
+        return back();
     }
 
-    // Remove the last element
-    void popBack() noexcept {
-        NEX_ASSERT_MSG(size_ > 0, "popBack called on empty SmallVec");
-        --size_;
-        storagePtr()[size_].~value_type();
+    // Removes the last element from the SmallVec.
+    constexpr void popBack() noexcept(IsNothrowDestructibleV<value_type>) {
+        NEX_ASSERT_MSG(!empty(), "popBack called on empty SmallVec");
+        buffer_.remove(buffer_.size() - 1, 1);
     }
 
-    // Resize to count elements (new elements are default-constructed)
-    void resize(size_type count) {
-        if (count < size_) {
-            destroyRange(storagePtr() + count, storagePtr() + size_);
-        } else if (count > size_) {
-            reserve(count);
-            for (size_type i = size_; i < count; ++i) {
-                ::new (static_cast<void*>(storagePtr() + i)) value_type();
-            }
-        }
-        size_ = count;
-    }
+    /**
+     * @brief Resizes the SmallVec to contain count elements.
+     * @note
+     * If the current size is less than count, additional default-inserted elements are appended.
+     * If the current size is greater than count, the SmallVec is reduced to its first count elements.
+     */
+    constexpr void resize(size_type count) { buffer_.resize(count); }
+    constexpr void resize(size_type count, const_reference value) { buffer_.resize(count, value); }
 
-    // Resize to count elements, filling new slots with value
-    void resize(size_type count, const_reference value) {
-        if (count < size_) {
-            destroyRange(storagePtr() + count, storagePtr() + size_);
-        } else if (count > size_) {
-            reserve(count);
-            for (size_type i = size_; i < count; ++i) {
-                ::new (static_cast<void*>(storagePtr() + i)) value_type(value);
-            }
-        }
-        size_ = count;
-    }
-
-    // Insert a copy of value before pos
-    iterator insert(const_iterator pos, const_reference value) {
+    // Inserts a copy of value before the element at pos.
+    constexpr iterator insert(const_iterator pos, const_reference value) {
         return emplace(pos, value);
     }
 
-    // Insert a moved value before pos
-    iterator insert(const_iterator pos, value_type&& value) {
+    // Inserts a moved value before the element at pos.
+    constexpr iterator insert(const_iterator pos, value_type&& value) {
         return emplace(pos, NEX_MOVE(value));
     }
 
-    // Insert count copies of value before pos
-    iterator insert(const_iterator pos, size_type count, const_reference value) {
-        if (count == 0) return const_cast<iterator>(pos);
-        size_type idx = static_cast<size_type>(pos - cbegin());
-        NEX_ASSERT_MSG(idx <= size_, "Iterator out of range");
-        size_type newSize = size_ + count;
-        reserve(newSize);
-        pointer base = storagePtr();
-        // Shift elements right to make room
-        for (size_type i = newSize - 1; i >= idx + count; --i) {
-            if (i < size_) {
-                ::new (static_cast<void*>(base + i)) value_type(NEX_MOVE(base[i - count]));
-                base[i - count].~value_type();
-            } else {
-                ::new (static_cast<void*>(base + i)) value_type(NEX_MOVE(base[i - count]));
-                base[i - count].~value_type();
-            }
+    // Inserts count copies of value before the element at pos.
+    constexpr iterator insert(const_iterator pos, size_type count, const_reference value) {
+        const size_type index = indexOf(pos);
+        NEX_ASSERT_MSG(index <= size(), "Iterator out of range");
+        for (size_type offset = 0; offset < count; ++offset) {
+            emplace(cbegin() + index + offset, value);
         }
-        // Construct new elements
-        for (size_type i = idx; i < idx + count; ++i) {
-            ::new (static_cast<void*>(base + i)) value_type(value);
-        }
-        size_ = newSize;
-        return begin() + static_cast<difference_type>(idx);
+        return begin() + index;
     }
 
-    // Insert elements from initializer list before pos
-    iterator insert(const_iterator pos, InitList<value_type> init) {
-        size_type idx = static_cast<size_type>(pos - cbegin());
-        for (const value_type& v : init) {
-            insert(cbegin() + static_cast<difference_type>(idx), v);
-            ++idx;
+    // Inserts elements from the range [first, last) before the element at pos.
+    constexpr iterator insert(const_iterator pos, InitList<value_type> init) {
+        const size_type index = indexOf(pos);
+        NEX_ASSERT_MSG(index <= size(), "Iterator out of range");
+        size_type current = index;
+        for (const value_type& value : init) {
+            emplace(cbegin() + current, value);
+            ++current;
         }
-        return begin() + static_cast<difference_type>(idx - init.size());
+        return begin() + index;
     }
 
-    // Construct an element in place before pos
+    // Inserts elements from the range [first, last) before the element at pos.
     template <typename... Args>
-    iterator emplace(const_iterator pos, Args&&... args) {
-        size_type idx = static_cast<size_type>(pos - cbegin());
-        NEX_ASSERT_MSG(idx <= size_, "Iterator out of range");
-        if (size_ == capacity()) growTo(size_ + 1);
-        pointer base = storagePtr();
-        if (idx < size_) {
-            // Shift elements right by one
-            ::new (static_cast<void*>(base + size_)) value_type(NEX_MOVE(base[size_ - 1]));
-            for (size_type i = size_ - 1; i > idx; --i) {
-                base[i] = NEX_MOVE(base[i - 1]);
-            }
-            base[idx].~value_type();
+    constexpr iterator emplace(const_iterator pos, Args&&... args) {
+        const size_type index = indexOf(pos);
+        NEX_ASSERT_MSG(index <= size(), "Iterator out of range");
+
+        if (index == size()) {
+            emplaceBack(NEX_FORWARD<Args>(args)...);
+            return end() - 1;
         }
-        ::new (static_cast<void*>(base + idx)) value_type(NEX_FORWARD<Args>(args)...);
-        ++size_;
-        return begin() + static_cast<difference_type>(idx);
+
+        buffer_.append(&back(), 1);
+        pointer values = data();
+        for (size_type current = size() - 1; current > index; --current) {
+            values[current] = NEX_MOVE(values[current - 1]);
+        }
+        NEX_DESTROY_AT(values + index);
+        NEX_CONSTRUCT_AT(values + index, NEX_FORWARD<Args>(args)...);
+        return begin() + index;
     }
 
-    // Erase the element at pos
-    iterator erase(const_iterator pos) noexcept(IsNothrowMoveAssignableV<value_type>) {
+    // Removes the element at pos, returning an iterator to the next element.
+    constexpr iterator erase(const_iterator pos) noexcept(
+        IsNothrowMoveAssignableV<value_type> && IsNothrowDestructibleV<value_type>) {
         return erase(pos, pos + 1);
     }
 
-    // Erase elements in range [first, last)
-    iterator erase(const_iterator first, const_iterator last) noexcept(
-        IsNothrowMoveAssignableV<value_type>) {
-        size_type idxFirst = static_cast<size_type>(first - cbegin());
-        size_type idxLast = static_cast<size_type>(last - cbegin());
-        NEX_ASSERT_MSG(idxFirst <= idxLast && idxLast <= size_, "Iterator range out of bounds");
-        pointer base = storagePtr();
-        size_type eraseCount = idxLast - idxFirst;
-        if (eraseCount == 0) return begin() + static_cast<difference_type>(idxFirst);
-        // Shift remaining elements left
-        for (size_type i = idxFirst; i + eraseCount < size_; ++i) {
-            base[i] = NEX_MOVE(base[i + eraseCount]);
+    // Removes the elements in the range [first, last), returning an iterator to the next element after the last removed.
+    constexpr iterator erase(const_iterator first, const_iterator last) noexcept(
+        IsNothrowMoveAssignableV<value_type> && IsNothrowDestructibleV<value_type>) {
+        const size_type firstIndex = indexOf(first);
+        const size_type lastIndex = indexOf(last);
+        NEX_ASSERT_MSG(firstIndex <= lastIndex && lastIndex <= size(), "Iterator range out of bounds");
+
+        const size_type erased = lastIndex - firstIndex;
+        if (erased == 0) return begin() + firstIndex;
+
+        pointer values = data();
+        for (size_type current = firstIndex; current + erased < size(); ++current) {
+            values[current] = NEX_MOVE(values[current + erased]);
         }
-        // Destroy the now-excess tail elements
-        destroyRange(base + size_ - eraseCount, base + size_);
-        size_ -= eraseCount;
-        return begin() + static_cast<difference_type>(idxFirst);
+        buffer_.remove(size() - erased, erased);
+        return begin() + firstIndex;
     }
 
-    // Remove all elements (does not release memory)
-    void clear() noexcept {
-        destroyRange(storagePtr(), storagePtr() + size_);
-        size_ = 0;
+    // Removes all elements from the SmallVec, leaving it with a size of 0.
+    constexpr void clear() noexcept { buffer_.clear(); }
+
+    // Swaps the contents of this SmallVec with another SmallVec.
+    constexpr void swap(SmallVec& other) noexcept(noexcept(buffer_.swap(other.buffer_))) {
+        buffer_.swap(other.buffer_);
     }
 
-    // Swap contents with another SmallVec
-    void swap(SmallVec& other) noexcept(IsNothrowMoveConstructibleV<value_type>) {
-        if (this == &other) return;
-        if (!isInline() && !other.isInline()) {
-            // Both on heap: swap pointers
-            NEX_STD swap(heapData_, other.heapData_);
-            NEX_STD swap(heapCapacity_, other.heapCapacity_);
-            NEX_STD swap(size_, other.size_);
-            return;
-        }
-        // At least one is inline — move element by element through a temporary
-        SmallVec tmp(NEX_MOVE(*this));
-        *this = NEX_MOVE(other);
-        other = NEX_MOVE(tmp);
-    }
-
-    ////// Conversion ----------------------------------
-
-    // Convert to a heap-owning dynamic array (Vec<ElementType>)
-    Vec<value_type> toVec() const {
+    // Converts the SmallVec to a standard vector.
+    constexpr Vec<value_type> toVec() const {
         return Vec<value_type>(begin(), end());
     }
 
-    // Construct a SmallVec from a heap-owning dynamic array (Vec<ElementType>)
-    static SmallVec fromVec(const Vec<value_type>& vec) {
-        SmallVec result;
-        result.reserve(vec.size());
-        for (const value_type& v : vec) {
-            result.pushBack(v);
-        }
-        return result;
+    // Creates a SmallVec from a standard vector.
+    static constexpr SmallVec fromVec(const Vec<value_type>& vec) {
+        return SmallVec(vec.begin(), vec.end());
     }
 
-    ////// Comparison operators ----------------------------------
-
-    // Equality
-    friend bool operator==(const SmallVec& lhs, const SmallVec& rhs) noexcept {
-        if (lhs.size_ != rhs.size_) return false;
-        for (size_type i = 0; i < lhs.size_; ++i) {
-            if (!(lhs[i] == rhs[i])) return false;
+    // Comparison operators for SmallVec, allowing lexicographical comparison of elements.
+    friend constexpr bool operator==(const SmallVec& lhs, const SmallVec& rhs) noexcept {
+        if (lhs.size() != rhs.size()) return false;
+        for (size_type index = 0; index < lhs.size(); ++index) {
+            if (!(lhs[index] == rhs[index])) return false;
         }
         return true;
     }
 
-    // Inequality
-    friend bool operator!=(const SmallVec& lhs, const SmallVec& rhs) noexcept {
+    // Inequality operator for SmallVec, returns true if the two SmallVecs are not equal.
+    friend constexpr bool operator!=(const SmallVec& lhs, const SmallVec& rhs) noexcept {
         return !(lhs == rhs);
     }
 
-    // Lexicographic less-than
-    friend bool operator<(const SmallVec& lhs, const SmallVec& rhs) noexcept {
-        return NEX_STD lexicographical_compare(lhs.begin(), lhs.end(),
-                                               rhs.begin(), rhs.end());
+    // Less-than operator for SmallVec, performs lexicographical comparison of elements.
+    friend constexpr bool operator<(const SmallVec& lhs, const SmallVec& rhs) noexcept {
+        return NEX_STD lexicographical_compare(lhs.begin(), lhs.end(), rhs.begin(), rhs.end());
     }
 
-    // Lexicographic less-than-or-equal
-    friend bool operator<=(const SmallVec& lhs, const SmallVec& rhs) noexcept {
+    // Less-than-or-equal operator for SmallVec, returns true if lhs is less than or equal to rhs.
+    friend constexpr bool operator<=(const SmallVec& lhs, const SmallVec& rhs) noexcept {
         return !(rhs < lhs);
     }
 
-    // Lexicographic greater-than
-    friend bool operator>(const SmallVec& lhs, const SmallVec& rhs) noexcept {
+    // Greater-than operator for SmallVec, returns true if lhs is greater than rhs.
+    friend constexpr bool operator>(const SmallVec& lhs, const SmallVec& rhs) noexcept {
         return rhs < lhs;
     }
 
-    // Lexicographic greater-than-or-equal
-    friend bool operator>=(const SmallVec& lhs, const SmallVec& rhs) noexcept {
+    // Greater-than-or-equal operator for SmallVec, returns true if lhs is greater than or equal to rhs.
+    friend constexpr bool operator>=(const SmallVec& lhs, const SmallVec& rhs) noexcept {
         return !(lhs < rhs);
     }
 };

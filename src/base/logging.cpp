@@ -279,7 +279,7 @@ usize LogStream::append(cstring data, usize length) noexcept {
         data = "<null>";
         length = strlen(data);
     }
-    auto nul = memchr(data, '\0', length);
+    auto nul = NEX_MEMCHR(data, '\0', length);
     if (nul) {
         // Adjust the length to exclude the null terminator
         length = static_cast<cstring>(nul) - data;

@@ -7,6 +7,7 @@
 
 #include "nex/core/view/byte_span.h"
 #include "nex/base/assert_crash.h"
+#include "nex/base/memory.h"
 
 NEX_NAMESPACE_BEGIN
 
@@ -16,16 +17,6 @@ NEX_NAMESPACE_BEGIN
 ByteSpan::const_reference ByteSpan::at(size_type pos) const {
     NEX_ASSERT_MSG(pos >= 0 && pos < size_, "Index out of range");
     return data_[pos];
-}
-
-////// Conversion methods -----------------------------
-
-// Convert to dynamic array of bytes (Vec<uint8>)
-Vec<ByteSpan::value_type> ByteSpan::toVec() const {
-    if (empty()) {
-        return Vec<value_type>();
-    }
-    return Vec<value_type>(data_, data_ + size_);
 }
 
 ////// Modifiers --------------------------------------------------
@@ -94,7 +85,7 @@ ByteSpan ByteSpan::mid(size_type start, size_type count /* = npos */) const {
 ByteSpan::size_type 
 ByteSpan::indexOf(value_type byte, ByteSpan::size_type pos /* = 0 */) const noexcept {
     if (pos >= size_) return ByteSpan::npos;
-    const_byte_ptr result = static_cast<const_byte_ptr>(NEX_STD memchr(data_ + pos, byte, size_ - pos));
+    const_byte_ptr result = static_cast<const_byte_ptr>(NEX_MEMCHR(data_ + pos, byte, size_ - pos));
     return result ? static_cast<size_type>(result - data_) : ByteSpan::npos;
 }
 
@@ -108,7 +99,7 @@ ByteSpan::indexOf(const ByteSpan& other, ByteSpan::size_type pos /* = 0 */) cons
     const_byte_ptr end = data_ + size_ - other.size() + 1;
     
     for (const_byte_ptr p = start; p < end; ++p) {
-        if (NEX_STD memcmp(p, other.data_, other.size_) == 0) {
+        if (NEX_MEMCMP(p, other.data_, other.size_) == 0) {
             return static_cast<size_type>(p - data_);
         }
     }
@@ -140,7 +131,7 @@ ByteSpan::lastIndexOf(ByteSpan other, ByteSpan::size_type pos /* = npos */) cons
 
     for (size_type i = pos + 1; i > 0; --i) {
         size_type start = i - 1;
-        if (NEX_STD memcmp(data_ + start, other.data_, other.size_) == 0) {
+        if (NEX_MEMCMP(data_ + start, other.data_, other.size_) == 0) {
             return start;
         }
     }
@@ -201,7 +192,7 @@ ByteSpan::findLastNotOf(ByteSpan other, ByteSpan::size_type pos /* = npos */) co
 bool ByteSpan::startsWith(ByteSpan prefix) const noexcept {
     if (prefix.empty()) return true;
     return size_ >= prefix.size_ &&
-            NEX_STD memcmp(data_, prefix.data_, prefix.size_) == 0;
+            NEX_MEMCMP(data_, prefix.data_, prefix.size_) == 0;
 }
 
 // Check if view starts with byte
@@ -213,7 +204,7 @@ bool ByteSpan::startsWith(value_type byte) const noexcept {
 bool ByteSpan::endsWith(ByteSpan suffix) const noexcept {
     if (suffix.empty()) return true;
     return size_ >= suffix.size_ &&
-            NEX_STD memcmp(data_ + size_ - suffix.size_, suffix.data_, suffix.size_) == 0;
+            NEX_MEMCMP(data_ + size_ - suffix.size_, suffix.data_, suffix.size_) == 0;
 }
 
 // Check if view ends with byte
@@ -246,7 +237,7 @@ ByteSpan::size_type ByteSpan::count(value_type byte) const noexcept {
 int32 ByteSpan::compare(const ByteSpan& other) const noexcept {
     size_type rlen = (NEX_STD min)(size_, other.size_);
     if (rlen > 0) {
-        int32 result = NEX_STD memcmp(data_, other.data_, rlen);
+        int32 result = NEX_MEMCMP(data_, other.data_, rlen);
         if (result != 0) return result;
     }
     if (size_ < other.size_) return -1;

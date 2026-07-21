@@ -137,6 +137,21 @@ using ::memchr;
  */
 using ::memcmp;
 
+/**
+ * @brief Returns the offset of a member within a struct/class.
+ * @tparam Type The type of the struct/class.
+ * @tparam MemberT The type of the member.
+ * @param member A pointer to the member within the struct/class.
+ * @return The offset of the member within the struct/class, represented as a signed integer type.
+ * @note This function is only safe for standard-layout types. It uses reinterpret_cast to calculate
+ *       the offset of the member from the beginning of the struct/class.
+ */
+template <typename Type, typename MemberT>
+NEX_HIDDEN_FROM_ABI constexpr isize offsetOf(MemberT Type::*member) noexcept {
+    static_assert(meta::IsStandardLayoutV<Type>, "Error: 'offsetOf' only safe for standard-layout types");
+    return reinterpret_cast<isize>(&reinterpret_cast<Type*>(0)->*member);
+}
+
 // ======================================================================================
 // Define macros for constructing and destroying objects in a specified memory location
 // ======================================================================================
@@ -174,5 +189,12 @@ using ::memcmp;
 // Compares the first `count` bytes of the memory areas `ptr1` and `ptr2`.
 #define NEX_MEMCMP(ptr1, ptr2, count) \
     NEX_PREPEND_NAMESPACE(memcmp(ptr1, ptr2, count))
+
+// ======================================================================================
+// Define macros for getting the offset of a member within a struct/class
+// ======================================================================================
+
+#define NEX_OFFSET_OF(type, member) \
+    NEX_PREPEND_NAMESPACE(offsetOf<type>(&type::member))
 
 NEX_NAMESPACE_END

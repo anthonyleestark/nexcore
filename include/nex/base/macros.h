@@ -148,14 +148,6 @@
  * readability and maintainability.
  */
 
-// Get the number of elements in a statically sized array
-#define NEX_SIZEOF(arr) \
-    (sizeof(arr) / sizeof((arr)[0]))
-
-// Get the offset of a member within a struct/class
-#define NEX_OFFSET_OF(type, member) \
-    offsetOf(type, member)
-
 // Get the size of a struct/class member
 #define NEX_MEMBER_SIZE(type, member) \
     sizeof(((type*)0)->member)

@@ -25,24 +25,6 @@
 NEX_NAMESPACE_BEGIN
 
 // =================================================================================
-// Utility functions for compile-time and runtime operations
-// =================================================================================
-
-// Get the size of a statically sized array
-template <typename Type, usize Size>
-constexpr usize arraySize(Type (&)[Size]) noexcept {
-    return Size;
-}
-
-// Get the offset of a member within a struct/class
-template <typename Type, typename MemberT>
-constexpr isize offsetOf(MemberT Type::*member) noexcept {
-    static_assert(meta::IsStandardLayoutV<Type>, 
-        "Error: 'offsetOf' only safe for standard-layout types");
-    return reinterpret_cast<isize>(&reinterpret_cast<Type*>(0)->*member);
-}
-
-// =================================================================================
 // Utility functions for safe deletion of pointers and members
 // =================================================================================
 

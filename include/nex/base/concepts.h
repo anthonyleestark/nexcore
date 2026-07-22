@@ -54,6 +54,10 @@ concept FloatingPoint = meta::FloatingPoint<Type>;
 template <typename Type>
 concept Arithmetic = meta::Arithmetic<Type>;
 
+/// Checks whether Type is an object type (i.e., not a function, reference, or void).
+template <typename Type>
+concept ObjectType = meta::ObjectType<Type>;
+
 /// Checks whether two types are the same type.
 template <typename Type1, typename Type2>
 concept SameAs = meta::SameAs<Type1, Type2>;

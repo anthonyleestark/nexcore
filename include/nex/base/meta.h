@@ -283,44 +283,57 @@ NEX_NODISCARD constexpr bool IsConstantEvaluated() noexcept {
 #endif
 
 // Determine whether integral type Type is signed or unsigned
-template <class Type, bool = IsIntegralV<Type>>
-struct NEX_HIDDEN_FROM_ABI SignCheckBase {
-    using Underlying = RemoveCvT<Type>;
+#if NEX_HAS_BUILTIN(__is_signed) && NEX_HAS_BUILTIN(__is_unsigned)
+    template <class Type>
+    constexpr bool IsSignedIntegralV = __is_signed(Type);
 
-    static constexpr bool Signed   = static_cast<Underlying>(-1) < static_cast<Underlying>(0);
-    static constexpr bool Unsigned = !Signed;
-};
+    template <class Type>
+    constexpr bool IsUnsignedIntegralV = __is_unsigned(Type);
+#else  // No builtin support
+    template <class Type, bool = IsIntegralV<Type>>
+    struct NEX_HIDDEN_FROM_ABI SignCheckBase {
+        using Underlying = RemoveCvT<Type>;
 
-// Specialization of _SignCheckBase for non-integral types
-template <class Type>
-struct NEX_HIDDEN_FROM_ABI SignCheckBase<Type, false> {
-    static constexpr bool Signed   = IsFloatingPointV<Type>;   // floating-point Type is signed
-    static constexpr bool Unsigned = false;                    // non-arithmetic Type is neither signed nor unsigned
-};
+        static constexpr bool Signed   = static_cast<Underlying>(-1) < static_cast<Underlying>(0);
+        static constexpr bool Unsigned = !Signed;
+    };
 
-// Determine whether an integral type is signed
-template <class Type>
-struct IsSignedIntegral : BoolConstant<SignCheckBase<Type>::Signed> {};
+    // Specialization of _SignCheckBase for non-integral types
+    template <class Type>
+    struct NEX_HIDDEN_FROM_ABI SignCheckBase<Type, false> {
+        static constexpr bool Signed   = IsFloatingPointV<Type>;   // floating-point Type is signed
+        static constexpr bool Unsigned = false;                    // non-arithmetic Type is neither signed nor unsigned
+    };
 
-template <class Type>
-constexpr bool IsSignedIntegralV = IsSignedIntegral<Type>::value;
+    // Determine whether an integral type is signed
+    template <class Type>
+    struct IsSignedIntegral : BoolConstant<SignCheckBase<Type>::Signed> {};
 
-// Determine whether an integral type is unsigned
-template <class Type>
-struct IsUnsignedIntegral : BoolConstant<SignCheckBase<Type>::Unsigned> {};
+    template <class Type>
+    constexpr bool IsSignedIntegralV = IsSignedIntegral<Type>::value;
 
-template <class Type>
-constexpr bool IsUnsignedIntegralV = IsUnsignedIntegral<Type>::value;
+    // Determine whether an integral type is unsigned
+    template <class Type>
+    struct IsUnsignedIntegral : BoolConstant<SignCheckBase<Type>::Unsigned> {};
+
+    template <class Type>
+    constexpr bool IsUnsignedIntegralV = IsUnsignedIntegral<Type>::value;
+#endif
 
 // Determine whether a type is an arithmetic type (either integral or floating-point)
-template <class Type>
-NEX_HIDDEN_FROM_ABI constexpr bool IsArithmeticVImpl = IsIntegralV<Type> || IsFloatingPointV<Type>;
+#if NEX_HAS_BUILTIN(__is_arithmetic)
+    template <class Type>
+    constexpr bool IsArithmeticV = __is_arithmetic(RemoveCvT<Type>);
+#else  // No builtin support
+    template <class Type>
+    NEX_HIDDEN_FROM_ABI constexpr bool IsArithmeticVImpl = IsIntegralV<Type> || IsFloatingPointV<Type>;
 
-template <class Type>
-struct IsArithmetic : BoolConstant<IsArithmeticVImpl<Type>> {};
+    template <class Type>
+    struct IsArithmetic : BoolConstant<IsArithmeticVImpl<Type>> {};
 
-template <class Type>
-constexpr bool IsArithmeticV = IsArithmetic<Type>::value;
+    template <class Type>
+    constexpr bool IsArithmeticV = IsArithmetic<Type>::value;
+#endif
 
 // Determine whether a type is a literal type (i.e., a type that can be used in constant expressions)
 template <class Type>
@@ -330,107 +343,168 @@ template <class Type>
 constexpr bool IsLiteralTypeV = IsLiteralType<Type>::value;
 
 // Determine whether a type is the void type
-template <class Type>
-constexpr bool IsVoidV = IsSameV<RemoveCvT<Type>, void>;
+#if NEX_HAS_BUILTIN(__is_void)
+    template <class Type>
+    constexpr bool IsVoidV = __is_void(RemoveCvT<Type>);
+#else  // No builtin support
+    template <class Type>
+    constexpr bool IsVoidV = IsSameV<RemoveCvT<Type>, void>;
+#endif
 
 template <class Type>
 struct IsVoid : BoolConstant<IsVoidV<Type>> {};
 
 // Determine whether a type is a raw pointer
-template <class>
-NEX_HIDDEN_FROM_ABI constexpr bool IsPointerVImpl = false;
+#if NEX_HAS_BUILTIN(__is_pointer)
+    template <class Type>
+    constexpr bool IsPointerV = __is_pointer(RemoveCvT<Type>);
+#else  // No builtin support
+    template <class>
+    NEX_HIDDEN_FROM_ABI constexpr bool IsPointerVImpl = false;
 
-// Specialization of _IsPointerV for pointer types, 
-// which checks if the type is a pointer by checking if it is of the form Type*
-template <class Type>
-NEX_HIDDEN_FROM_ABI constexpr bool IsPointerVImpl<Type*> = true;
+    // Specialization of IsPointerVImpl for pointer types, 
+    // which checks if the type is a pointer by checking if it is of the form Type*
+    template <class Type>
+    NEX_HIDDEN_FROM_ABI constexpr bool IsPointerVImpl<Type*> = true;
 
-// Determine whether a type is a raw pointer
-template <class Type>
-constexpr bool IsPointerV = IsPointerVImpl<RemoveCvT<Type>>;
+    // Determine whether a type is a raw pointer
+    template <class Type>
+    constexpr bool IsPointerV = IsPointerVImpl<RemoveCvT<Type>>;
+#endif
 
 // Determine whether a cv-qualified type is a null-pointer type
-template <class Type>
-constexpr bool IsNullPointerV = IsSameV<RemoveCvT<Type>, decltype(nullptr)>;
+#if NEX_HAS_BUILTIN(__is_null_pointer)
+    template <class Type>
+    constexpr bool IsNullPointerV = __is_null_pointer(RemoveCvT<Type>);
+#else  // No builtin support
+    template <class Type>
+    constexpr bool IsNullPointerV = IsSameV<RemoveCvT<Type>, decltype(nullptr)>;
+#endif
 
 template <class Type>
 struct IsNullPointer : BoolConstant<IsNullPointerV<Type>> {};
 
 // Determine whether type argument is an lvalue reference
-template <class>
-constexpr bool IsLvalueReferenceV = false;
+#if NEX_HAS_BUILTIN(__is_lvalue_reference)
+    template <class Type>
+    constexpr bool IsLvalueReferenceV = __is_lvalue_reference(Type);
+#else  // No builtin support
+    template <class>
+    constexpr bool IsLvalueReferenceV = false;
 
-template <class Type>
-constexpr bool IsLvalueReferenceV<Type&> = true;
+    template <class Type>
+    constexpr bool IsLvalueReferenceV<Type&> = true;
+#endif
 
 // Determine whether type argument is an rvalue reference
 template <class Type>
 struct IsLvalueReference : BoolConstant<IsLvalueReferenceV<Type>> {};
 
 // Determine whether type argument is an rvalue reference
-template <class>
-constexpr bool IsRvalueReferenceV = false;
+#if NEX_HAS_BUILTIN(__is_rvalue_reference)
+    template <class Type>
+    constexpr bool IsRvalueReferenceV = __is_rvalue_reference(Type);
+#else  // No builtin support
+    template <class>
+    constexpr bool IsRvalueReferenceV = false;
 
-template <class Type>
-constexpr bool IsRvalueReferenceV<Type&&> = true;
+    template <class Type>
+    constexpr bool IsRvalueReferenceV<Type&&> = true;
+#endif
 
 // Determine whether type argument is an rvalue reference
 template <class Type>
 struct IsRvalueReference : BoolConstant<IsRvalueReferenceV<Type>> {};
 
 // Determine whether type argument is a reference (either lvalue or rvalue)
-template <class>
-constexpr bool IsReferenceV = false;
+#if NEX_HAS_BUILTIN(__is_reference)
+    template <class Type>
+    constexpr bool IsReferenceV = __is_reference(Type);
+#else  // No builtin support
+    template <class>
+    constexpr bool IsReferenceV = false;
 
-template <class Type>
-constexpr bool IsReferenceV<Type&> = true;
+    template <class Type>
+    constexpr bool IsReferenceV<Type&> = true;
 
-template <class Type>
-constexpr bool IsReferenceV<Type&&> = true;
+    template <class Type>
+    constexpr bool IsReferenceV<Type&&> = true;
+#endif
 
 // Check if a type is a reference (either lvalue or rvalue)
 template <class Type>
 struct IsReference : BoolConstant<IsReferenceV<Type>> {};
 
 // Determine whether type argument is const qualified
-template <class>
-constexpr bool IsConstV = false;
+#if NEX_HAS_BUILTIN(__is_const)
+    template <class Type>
+    constexpr bool IsConstV = __is_const(Type);
+#else  // No builtin support
+    template <class>
+    constexpr bool IsConstV = false;
 
-template <class Type>
-constexpr bool IsConstV<const Type> = true;
+    template <class Type>
+    constexpr bool IsConstV<const Type> = true;
+#endif
 
 template <class Type>
 struct IsConst : BoolConstant<IsConstV<Type>> {};
 
 // Determine whether type argument is volatile qualified
-template <class>
-constexpr bool IsVolatileV = false;
+#if NEX_HAS_BUILTIN(__is_volatile)
+    template <class Type>
+    constexpr bool IsVolatileV = __is_volatile(Type);
+#else  // No builtin support
+    template <class>
+    constexpr bool IsVolatileV = false;
 
-template <class Type>
-constexpr bool IsVolatileV<volatile Type> = true;
+    template <class Type>
+    constexpr bool IsVolatileV<volatile Type> = true;
+#endif
 
 template <class Type>
 struct IsVolatile : BoolConstant<IsVolatileV<Type>> {};
 
 // Determine whether a type is an array type
-template <class>
-constexpr bool IsArrayV = false;
+#if NEX_HAS_BUILTIN(__is_array)
+    template <class Type>
+    constexpr bool IsArrayV = __is_array(Type);
+#else  // No builtin support
+    template <class>
+    constexpr bool IsArrayV = false;
+
+    template <class Type, unsigned long long Size>
+    constexpr bool IsArrayV<Type[Size]> = true;
+
+    template <class Type>
+    constexpr bool IsArrayV<Type[]> = true;
+#endif
 
 // Determine whether a type is a bounded array type (i.e., an array with a known size)
-template <class Type>
-constexpr bool IsBoundedArrayV = false;
+#if NEX_HAS_BUILTIN(__is_bounded_array)
+    template <class Type>
+    constexpr bool IsBoundedArrayV = __is_bounded_array(Type);
+#else  // No builtin support
+    template <class Type>
+    constexpr bool IsBoundedArrayV = false;
+
+    // Specialization of IsBoundedArrayV for bounded array types, which checks if the type is of the form Type[Size]
+    template <class Type, unsigned long long Size>
+    constexpr bool IsBoundedArrayV<Type[Size]> = true;
+#endif
 
 // Determine whether a type is an unbounded array type (i.e., an array with an unknown size)
-template <class Type>
-constexpr bool IsUnboundedArrayV = false;
+#if NEX_HAS_BUILTIN(__is_unbounded_array)
+    template <class Type>
+    constexpr bool IsUnboundedArrayV = __is_unbounded_array(Type);
+#else  // No builtin support
+    template <class Type>
+    constexpr bool IsUnboundedArrayV = false;
 
-// Specialization of IsBoundedArrayV for bounded array types, which checks if the type is of the form Type[Size]
-template <class Type, unsigned long long Size>
-constexpr bool IsBoundedArrayV<Type[Size]> = true;
-
-// Specialization of IsUnboundedArrayV for unbounded array types, which checks if the type is of the form Type[]
-template <class Type>
-constexpr bool IsUnboundedArrayV<Type[]> = true;
+    // Specialization of IsUnboundedArrayV for unbounded array types, which checks if the type is of the form Type[]
+    template <class Type>
+    constexpr bool IsUnboundedArrayV<Type[]> = true;
+#endif
 
 template <class Type>
 struct IsArray : BoolConstant<IsBoundedArrayV<Type> || IsUnboundedArrayV<Type>> {};
@@ -471,18 +545,31 @@ template <class Type>
 constexpr bool IsClassV = IsClass<Type>::value;
 
 // Determine whether a type is a fundamental type (i.e., an arithmetic type, void, nullptr_t, etc.)
-template <class Type>
-constexpr bool IsFundamentalV = IsArithmeticV<Type> || IsVoidV<Type> || IsNullPointerV<Type>;
+#if NEX_HAS_BUILTIN(__is_fundamental)
+    template <class Type>
+    constexpr bool IsFundamentalV = __is_fundamental(RemoveCvT<Type>);
+#else  // No builtin support
+    template <class Type>
+    constexpr bool IsFundamentalV = IsArithmeticV<Type> || IsVoidV<Type> || IsNullPointerV<Type>;
+#endif
 
 template <class Type>
 struct IsFundamental : BoolConstant<IsFundamentalV<Type>> {};
 
 // Determine whether a type is a compound type (i.e., an array, class, union, or enumeration type)
-template <class Type>
-struct IsCompound : BoolConstant<!IsFundamentalV<Type>> {};
+#if NEX_HAS_BUILTIN(__is_compound)
+    template <class Type>
+    constexpr bool IsCompoundV = __is_compound(RemoveCvT<Type>);
 
-template <class Type>
-constexpr bool IsCompoundV = IsCompound<Type>::value;
+    template <class Type>
+    struct IsCompound : BoolConstant<IsCompoundV<Type>> {};
+#else  // No builtin support
+    template <class Type>
+    struct IsCompound : BoolConstant<!IsFundamentalV<Type>> {};
+
+    template <class Type>
+    constexpr bool IsCompoundV = IsCompound<Type>::value;
+#endif
 
 // Determine whether a class is empty 
 // (i.e., a class type with no non-static data members, no virtual functions, and no virtual base classes)
@@ -852,15 +939,25 @@ AddRvalueReferenceT<Type> declval() noexcept {
 
 // Determine whether Type is a function type 
 // (i.e., a type that can be called with a function call syntax, excluding reference types and void types)
-template <class Type>
-constexpr bool IsFunctionV = !IsConstV<const Type> && !IsReferenceV<Type>;
+#if NEX_HAS_BUILTIN(__is_function)
+    template <class Type>
+    constexpr bool IsFunctionV = __is_function(Type);
+#else  // No builtin support
+    template <class Type>
+    constexpr bool IsFunctionV = !IsConstV<const Type> && !IsReferenceV<Type>;
+#endif
 
 template <class Type>
 struct IsFunction : BoolConstant<IsFunctionV<Type>> {};
 
 // Determine whether Type is an object type (i.e., a type that is not a function, reference, or void)
-template <class Type>
-constexpr bool IsObjectV = IsConstV<const Type> && !IsVoidV<Type>;
+#if NEX_HAS_BUILTIN(__is_object)
+    template <class Type>
+    constexpr bool IsObjectV = __is_object(Type);
+#else  // No builtin support
+    template <class Type>
+    constexpr bool IsObjectV = IsConstV<const Type> && !IsVoidV<Type>;
+#endif
 
 template <class Type>
 struct IsObject : BoolConstant<IsObjectV<Type>> {};
@@ -888,21 +985,22 @@ struct IsObject : BoolConstant<IsObjectV<Type>> {};
 #endif
 
 // Determine whether Type is a pointer to a member object of a class or struct
-template <class>
-struct NEX_HIDDEN_FROM_ABI IsMemberObjectPointerImpl {
-    static constexpr bool value = false;
-};
-
-template <class Type1, class Type2>
-struct NEX_HIDDEN_FROM_ABI IsMemberObjectPointerImpl<Type1 Type2::*> {
-    static constexpr bool value = !IsFunctionV<Type1>;
-    using ClassType             = Type2;
-};
 
 #if NEX_HAS_BUILTIN(__is_member_object_pointer)
     template <class Type>
     constexpr bool IsMemberObjectPointerV = __is_member_object_pointer(Type);
 #else  // No builtin support
+    template <class>
+    struct NEX_HIDDEN_FROM_ABI IsMemberObjectPointerImpl {
+        static constexpr bool value = false;
+    };
+
+    template <class Type1, class Type2>
+    struct NEX_HIDDEN_FROM_ABI IsMemberObjectPointerImpl<Type1 Type2::*> {
+        static constexpr bool value = !IsFunctionV<Type1>;
+        using ClassType             = Type2;
+    };
+
     template <class Type>
     constexpr bool IsMemberObjectPointerV = IsMemberObjectPointerImpl<RemoveCvT<Type>>::value;
 #endif
@@ -1535,6 +1633,10 @@ concept FloatingPoint = IsFloatingPointV<Type>;
 // Checks whether Type is either integral or floating-point.
 template <typename Type>
 concept Arithmetic = IsArithmeticV<Type>;
+
+// Checks whether Type is an object type (i.e., not a function, reference, or void).
+template <typename Type>
+concept ObjectType = IsObjectV<Type>;
 
 // Checks whether two types are the same type.
 template <typename Type1, typename Type2>

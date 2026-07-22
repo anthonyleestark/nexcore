@@ -28,6 +28,10 @@
 // For enum Endian
 #include "nex/base/endian.h"
 
+#if NEX_COMPILER_IS_MSVC
+    #include <stdlib.h>  // For MSVC _byteswap_xxx()
+#endif
+
 NEX_NAMESPACE_BEGIN
 
 /**
@@ -254,6 +258,139 @@ NEX_NODISCARD NEX_HIDDEN_FROM_ABI constexpr Type rotl(Type value, int32 count) n
 template <meta::UnsignedIntegral Type>
 NEX_NODISCARD NEX_HIDDEN_FROM_ABI constexpr Type rotr(Type value, int32 count) noexcept {
     return _rotr_Impl(value, count);
+}
+
+/**
+ * @brief Swaps the byte order of an integer (fallback implementation).
+ * @note This function is internal only and should not be used directly. Use `byteswap` instead.
+ */
+template <meta::Integral Type>
+NEX_NODISCARD NEX_HIDDEN_FROM_ABI constexpr Type _byteswapFallback_Impl(Type value) noexcept {
+    if constexpr (sizeof(Type) == 1) {
+        return value;
+    } else if constexpr (sizeof(Type) == 2) {
+        uint16 v = NEX_BIT_CAST<uint16>(value);
+        return NEX_BIT_CAST<Type>((v >> 8) | (v << 8));
+    } else if constexpr (sizeof(Type) == 4) {
+        uint32 v = NEX_BIT_CAST<uint32>(value);
+        return NEX_BIT_CAST<Type>(((v & 0x000000FFu) << 24) | ((v & 0x0000FF00u) << 8) |
+                                 ((v & 0x00FF0000u) >> 8)  | ((v & 0xFF000000u) >> 24));
+    } else if constexpr (sizeof(Type) == 8) {
+        uint64 v = NEX_BIT_CAST<uint64>(value);
+        return NEX_BIT_CAST<Type>(
+            ((v & 0x00000000000000FFull) << 56) | ((v & 0x000000000000FF00ull) << 40) |
+            ((v & 0x0000000000FF0000ull) << 24) | ((v & 0x00000000FF000000ull) <<  8) |
+            ((v & 0x000000FF00000000ull) >>  8) | ((v & 0x0000FF0000000000ull) >> 24) |
+            ((v & 0x00FF000000000000ull) >> 40) | ((v & 0xFF00000000000000ull) >> 56)
+        );
+    } else {
+        static_assert(sizeof(Type) == 0, "Error: byteswap is unimplemented for integral types of this size");
+    }
+}
+
+/**
+ * @brief Swaps the byte order of an integer.
+ * @tparam Type An integral type (either signed or unsigned).
+ * @param value The value to swap the byte order for.
+ * @return The value with its byte order reversed.
+ */
+template <meta::Integral Type>
+NEX_NODISCARD NEX_HIDDEN_FROM_ABI constexpr Type byteswap(Type value) noexcept {
+    using UType = meta::MakeUnsignedT<Type>;
+    if constexpr (sizeof(Type) == 1) {
+        return value;
+    } else if constexpr (sizeof(Type) == 2) {
+#if NEX_HAS_BUILTIN(__builtin_bswap16)
+        return NEX_BIT_CAST<Type>(__builtin_bswap16(NEX_BIT_CAST<UType>(value)));
+#elif NEX_COMPILER_IS_MSVC
+        return NEX_BIT_CAST<Type>(_byteswap_ushort(NEX_BIT_CAST<UType>(value)));
+#else
+        return _byteswapFallback_Impl(value);
+#endif  // ^^^for uint16
+    } else if constexpr (sizeof(Type) == 4) {
+#if NEX_HAS_BUILTIN(__builtin_bswap32)
+        return NEX_BIT_CAST<Type>(__builtin_bswap32(NEX_BIT_CAST<UType>(value)));
+#elif NEX_COMPILER_IS_MSVC
+        return NEX_BIT_CAST<Type>(_byteswap_ulong(NEX_BIT_CAST<UType>(value)));
+#else
+        return _byteswapFallback_Impl(value);
+#endif  // ^^^for uint32
+    } else if constexpr (sizeof(Type) == 8) {
+#if NEX_HAS_BUILTIN(__builtin_bswap64)
+        return NEX_BIT_CAST<Type>(__builtin_bswap64(NEX_BIT_CAST<UType>(value)));
+#elif NEX_COMPILER_IS_MSVC
+        return NEX_BIT_CAST<Type>(_byteswap_uint64(NEX_BIT_CAST<UType>(value)));
+#else
+        return _byteswapFallback_Impl(value);
+#endif  // ^^^for uint64
+#if NEX_HAS_BUILTIN_INT128
+    } else if constexpr (sizeof(Type) == 16) {
+    #if NEX_HAS_BUILTIN(__builtin_bswap128)
+        return NEX_BIT_CAST<Type>(__builtin_bswap128(NEX_BIT_CAST<UType>(value)));
+    #else
+        UType v = NEX_BIT_CAST<UType>(value);
+        const uint64 high = static_cast<uint64>(v >> 64);
+        const uint64 low  = static_cast<uint64>(v);
+        return NEX_BIT_CAST<Type>(
+            (static_cast<UType>(byteswap(low)) << 64) | static_cast<UType>(byteswap(high))
+        );
+    #endif // ^^^NEX_HAS_BUILTIN(__builtin_bswap128)
+#endif   // ^^^NEX_HAS_BUILTIN_INT128
+    } else {
+        static_assert(sizeof(Type) == 0, "Error: byteswap is unimplemented for integral types of this size");
+    }
+}
+
+/**
+ * @brief Converts an integer from host byte order to big-endian byte order.
+ * @tparam Type An integral type (either signed or unsigned).
+ * @param value The value to convert.
+ * @return The value in big-endian byte order.
+ */
+template <meta::Integral Type>
+NEX_NODISCARD NEX_HIDDEN_FROM_ABI constexpr Type hostToBigEndian(Type value) noexcept {
+    if constexpr (isBigEndian()) {
+        return value;
+    } else {
+        return byteswap(value);
+    }
+}
+
+/**
+ * @brief Converts an integer from host byte order to little-endian byte order.
+ * @tparam Type An integral type (either signed or unsigned).
+ * @param value The value to convert.
+ * @return The value in little-endian byte order.
+ */
+template <meta::Integral Type>
+NEX_NODISCARD NEX_HIDDEN_FROM_ABI constexpr Type hostToLittleEndian(Type value) noexcept {
+    if constexpr (isLittleEndian()) {
+        return value;
+    } else {
+        return byteswap(value);
+    }
+}
+
+/**
+ * @brief Converts an integer from big-endian byte order to host byte order.
+ * @tparam Type An integral type (either signed or unsigned).
+ * @param value The value to convert.
+ * @return The value in host byte order.
+ */
+template <meta::Integral Type>
+NEX_NODISCARD NEX_HIDDEN_FROM_ABI constexpr Type bigEndianToHost(Type value) noexcept {
+    return hostToBigEndian(value);
+}
+
+/**
+ * @brief Converts an integer from little-endian byte order to host byte order.
+ * @tparam Type An integral type (either signed or unsigned).
+ * @param value The value to convert.
+ * @return The value in host byte order.
+ */
+template <meta::Integral Type>
+NEX_NODISCARD NEX_HIDDEN_FROM_ABI constexpr Type littleEndianToHost(Type value) noexcept {
+    return hostToLittleEndian(value);
 }
 
 NEX_NAMESPACE_END

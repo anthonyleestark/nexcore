@@ -68,7 +68,7 @@ enum class Endian {
 };
 
 // ======================================================================================
-// Endianness detection and utilities
+// Endianness detection utility functions
 // ======================================================================================
 
 /**
@@ -87,21 +87,6 @@ constexpr bool isLittleEndian() noexcept {
 NEX_NODISCARD NEX_HIDDEN_FROM_ABI NEX_ALWAYS_INLINE
 constexpr bool isBigEndian() noexcept {
     return Endian::Native == Endian::Big;
-}
-
-/**
- * @brief Gets the native endianness of the system as an integer.
- * @return `0` for little-endian, `1` for big-endian, and `-1` for unknown endianness.
- */
-NEX_NODISCARD NEX_HIDDEN_FROM_ABI NEX_ALWAYS_INLINE
-constexpr int getNativeEndian() noexcept {
-    if constexpr (Endian::Native == Endian::Little) {
-        return 0;   // Little Endian
-    } else if constexpr (Endian::Native == Endian::Big) {
-        return 1;   // Big Endian
-    } else {
-        return -1;  // Unknown Endian
-    }
 }
 
 NEX_NAMESPACE_END

@@ -1556,6 +1556,38 @@ concept ConvertibleTo =
         static_cast<To>(declval<From>());
     };
 
+// Checks whether Type can be destroyed.
+template <typename Type>
+concept Destructible = IsNothrowDestructibleV<Type>;
+
+// Checks whether Type can be constructed from Args.
+template <typename Type, typename... Args>
+concept ConstructibleFrom =
+    Destructible<Type> &&
+    IsConstructibleV<Type, Args...>;
+
+// Checks whether Type can be default-initialized.
+template <typename Type>
+concept DefaultInitializable =
+    ConstructibleFrom<Type> &&
+    requires {
+        Type{};
+        ::new (static_cast<void*>(nullptr)) Type;
+    };
+
+// Checks whether Type can be move-constructed.
+template <typename Type>
+concept MoveConstructible =
+    ConstructibleFrom<Type, Type> &&
+    ConvertibleTo<Type, Type>;
+
+// Checks whether Type can be copy-constructed.
+template <typename Type>
+concept CopyConstructible = 
+    MoveConstructible<Type> && ConstructibleFrom<Type, Type&> && ConvertibleTo<Type&, Type> && 
+    ConstructibleFrom<Type, const Type&> && ConvertibleTo<const Type&, Type> && 
+    ConstructibleFrom<Type, const Type> && ConvertibleTo<const Type, Type>;
+
 // Checks whether Tp and Up have a common reference type that is the same in both directions,
 // and that both Tp and Up are convertible to that common reference type.
 template <class Tp, class Up>

@@ -95,18 +95,18 @@ Result<void> Json::loadFromFile(StringView filePath) {
     // Convert file path to UTF-8 string
     const Utf8String path = toUtf8String(filePath);
     if (path.empty()) {
-        return Result<void>::error({
+        return error(
             ErrorCode::InvalidArgument, "Invalid file path"
-        });
+        );
     }
 
     // Attempt to open and parse the file
     try {
         NEX_STD ifstream file(path);
         if (!file.is_open()) {
-            return Result<void>::error({
+            return error(
                 ErrorCode::FileNotFound, "File not found"
-            });
+            );
         }
 
         nlohmann::json j;
@@ -114,7 +114,7 @@ Result<void> Json::loadFromFile(StringView filePath) {
         impl_->json = NEX_MOVE(j);
         impl_->loaded = true;
         
-        return Result<void>::ok();
+        return ok();
     } 
     catch (const nlohmann::json::parse_error& e) {
         // JSON parsing error -> file exists but content is not valid JSON
@@ -122,58 +122,58 @@ Result<void> Json::loadFromFile(StringView filePath) {
         // or contains invalid characters.
         // Perhaps we can distinguish this from deserialization errors, 
         // but for now we can use a general error code
-        return Result<void>::error({
+        return error(
             ErrorCode::InvalidConfigFormat, "Invalid JSON format"
-        });
+        );
     }
     catch (const nlohmann::json::type_error& e) {
         // Type mismatch error during parsing (e.g., expecting an object but found an array)
-        return Result<void>::error({
+        return error(
             ErrorCode::InvalidType, "Type mismatch error"
-        });
+        );
     }
     catch (const nlohmann::json::out_of_range& e) {
         // Required key does not exist in the JSON (e.g., accessing a non-existent key during parsing)
-        return Result<void>::error({
+        return error(
             ErrorCode::MissingRequiredSetting, "Missing required setting"
-        });
+        );
     }
     catch (const nlohmann::json::invalid_iterator& e) {
         // Rarely occurs during parsing, but still mapped to a general error code
         // This can happen if the JSON structure is unexpectedly modified during parsing,
         // or if there is an internal issue with the JSON library's iterator handling.
-        return Result<void>::error({
+        return error(
             ErrorCode::InvalidConfig, "Invalid configuration"
-        });
+        );
     }
     catch (const nlohmann::json::other_error& e) {
         // Catch-all for other JSON-related errors that don't fit the above categories
         // This can include errors related to memory allocation, encoding issues, or other 
         // unexpected conditions encountered by the JSON library.
-        return Result<void>::error({
+        return error(
             ErrorCode::SerializationFailed, "Serialization failed"
-        });
+        );
     }
     catch (const std::ios_base::failure& e) {   // catch more specific file I/O errors
         // This can occur if there are issues with reading the file, such as permission errors,
         // disk errors, or if the file is being accessed by another process. It indicates that
         // the file could not be read successfully, even if it exists.
-        return Result<void>::error({
+        return error(
             ErrorCode::IoError, "I/O error"
-        });
+        );
     }
     catch (const std::exception& e) {
         // Catch other exceptions (rarely occurs during parsing, 
         // but can happen due to unexpected conditions)
-        return Result<void>::error({
+        return error(
             ErrorCode::DeserializationFailed, "Deserialization failed"
-        });
+        );
     }
     catch (...) {
         // Catch-all for any other unforeseen errors
-        return Result<void>::error({
+        return error(
             ErrorCode::UnknownError, "Unknown error"
-        });
+        );
     }
 }
 
@@ -182,9 +182,9 @@ Result<void> Json::loadFromString(StringView jsonString) {
     // Convert JSON string to UTF-8 std::string
     const Utf8String text = toUtf8String(jsonString);
     if (text.empty()) {
-        return Result<void>::error({
+        return error(
             ErrorCode::InvalidArgument, "Invalid argument"
-        });
+        );
     }
 
     // Attempt to parse the JSON string
@@ -194,56 +194,56 @@ Result<void> Json::loadFromString(StringView jsonString) {
         impl_->loaded = true;
         
         // Successfully loaded and parsed JSON
-        return Result<void>::ok();
+        return ok();
     } 
     catch (const nlohmann::json::parse_error& e) {
         // JSON parsing error -> content is not valid JSON
         // It might be because the string is empty, malformed, having invalid format,
         // or contains invalid characters.
-        return Result<void>::error({
+        return error(
             ErrorCode::InvalidFormat, "Invalid format"
-        });
+        );
     }
     catch (const nlohmann::json::type_error& e) {
         // Type mismatch error during parsing (e.g., expecting an object but found an array)
-        return Result<void>::error({
+        return error(
             ErrorCode::InvalidConfig, "Invalid configuration"
-        });
+        );
     }
     catch (const nlohmann::json::out_of_range& e) {
         // Required key does not exist in the JSON (e.g., accessing a non-existent key during parsing)
-        return Result<void>::error({
+        return error(
             ErrorCode::MissingRequiredSetting, "Missing required setting"
-        });
+        );
     }
     catch (const nlohmann::json::invalid_iterator& e) {
         // Rarely occurs during parsing, but still mapped to a general error code
         // This can happen if the JSON structure is unexpectedly modified during parsing,
         // or if there is an internal issue with the JSON library's iterator handling.
-        return Result<void>::error({
+        return error(
             ErrorCode::InvalidConfig, "Invalid configuration"
-        });
+        );
     }
     catch (const nlohmann::json::other_error& e) {
         // Catch-all for other JSON-related errors that don't fit the above categories
         // This can include errors related to memory allocation, encoding issues, or other 
         // unexpected conditions encountered by the JSON library.
-        return Result<void>::error({
+        return error(
             ErrorCode::SerializationFailed, "Serialization failed"
-        });
+        );
     }
     catch (const std::exception& e) {
         // Catch other exceptions (rarely occurs during parsing, 
         // but can happen due to unexpected conditions)
-        return Result<void>::error({
+        return error(
             ErrorCode::DeserializationFailed, "Deserialization failed"
-        });
+        );
     }
     catch (...) {
         // Catch-all for any other unforeseen errors
-        return Result<void>::error({
+        return error(
             ErrorCode::UnknownError, "Unknown error"
-        });
+        );
     }
 }
 

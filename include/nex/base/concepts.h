@@ -119,35 +119,23 @@ concept TotallyOrderedWith = NEX_STD totally_ordered_with<Type1, Type2>;
 
 /// Checks whether Type can be destroyed.
 template <typename Type>
-concept Destructible = meta::IsNothrowDestructibleV<Type>;
+concept Destructible = meta::Destructible<Type>;
 
 /// Checks whether Type can be constructed from Args.
 template <typename Type, typename... Args>
-concept ConstructibleFrom =
-    Destructible<Type> &&
-    meta::IsConstructibleV<Type, Args...>;
+concept ConstructibleFrom = meta::ConstructibleFrom<Type, Args...>;
 
 /// Checks whether Type can be default-initialized.
 template <typename Type>
-concept DefaultInitializable =
-    ConstructibleFrom<Type> &&
-    requires {
-        Type{};
-        ::new (static_cast<void_ptr>(nullptr)) Type;
-    };
+concept DefaultInitializable = meta::DefaultInitializable<Type>;
 
 /// Checks whether Type can be move-constructed.
 template <typename Type>
-concept MoveConstructible =
-    ConstructibleFrom<Type, Type> &&
-    ConvertibleTo<Type, Type>;
+concept MoveConstructible = meta::MoveConstructible<Type>;
 
 /// Checks whether Type can be copy-constructed.
 template <typename Type>
-concept CopyConstructible = 
-    MoveConstructible<Type> && ConstructibleFrom<Type, Type&> && ConvertibleTo<Type&, Type> && 
-    ConstructibleFrom<Type, const Type&> && ConvertibleTo<const Type&, Type> && 
-    ConstructibleFrom<Type, const Type> && ConvertibleTo<const Type, Type>;
+concept CopyConstructible = meta::CopyConstructible<Type>;
 
 /// Checks whether Type can be moved, assigned, and swapped.
 template <typename Type>

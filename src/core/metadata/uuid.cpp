@@ -153,28 +153,28 @@ Result<Uuid> Uuid::fromString(StringView str) noexcept {
     // Convert the input string to UTF-8 for validation and parsing
     auto res = str.toString().toUtf8();
     if (!res.isOk()) {
-        return Result<Uuid>::error({
+        return error(
             ErrorCode::InvalidFormat, 
             "Failed to convert input string to UTF-8 for UUID parsing"
-        });
+        );
     }
 
     // Validate the UTF-8 string format for a UUID (e.g., "123e4567-e89b-12d3-a456-426614174000")
     Utf8String utf8 = res.value();
     if (utf8.empty() || !uuids::uuid::is_valid_uuid(utf8)) {
-        return Result<Uuid>::error({
+        return error(
             ErrorCode::InvalidFormat, 
             "Input string is not a valid UUID format"
-        });
+        );
     }
 
     // Parse the UUID using the stduuid library
     auto resParse = uuids::uuid::from_string(utf8);
     if (!resParse.has_value()) {
-        return Result<Uuid>::error({
+        return error(
             ErrorCode::InvalidFormat,
             "Failed to parse UUID from string"
-        });
+        );
     }
 
     // Successfully parsed the UUID, create a Uuid instance to hold it
@@ -182,7 +182,7 @@ Result<Uuid> Uuid::fromString(StringView str) noexcept {
     parsedUuid.impl_->uuid = *resParse;
 
     // Successfully parsed the UUID, return it wrapped in a Result
-    return Result<Uuid>::ok(parsedUuid);
+    return ok(parsedUuid);
 }
 
 // Check if the Uuid is nil/invalid (all bits equal to zero)

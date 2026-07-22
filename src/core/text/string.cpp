@@ -174,7 +174,7 @@ Result<Utf8String> String::toUtf8() const {
 // Convert to UTF-16 string
 Result<Utf16String> String::toUtf16() const {
     // Since the internal representation is already UTF-16, we can directly return it as a result
-    return Result<Utf16String>::ok(buffer_);
+    return ok(buffer_);
 }
 
 ////// Concatenation operator -----------------------

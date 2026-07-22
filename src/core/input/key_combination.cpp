@@ -133,7 +133,7 @@ parseFromUtf8String(Utf8StringView text) {
 
     const Utf8String trimmed = trimAscii(text);
     if (trimmed.empty()) {
-        return Result<KeyCombination>::ok(KeyCombination::none());
+        return ok(KeyCombination::none());
     }
 
     uint32 modifiers = 0;
@@ -147,9 +147,9 @@ parseFromUtf8String(Utf8StringView text) {
             Utf8StringView(trimmed).substr(start, tokenEnd - start));
 
         if (token.empty()) {
-            return Result<KeyCombination>::error({
+            return error(
                 ErrorCode::InvalidArgument, "Empty token in key combination string"
-            });
+            );
         }
 
         // Check if the token is a modifier or a virtual key
@@ -165,9 +165,9 @@ parseFromUtf8String(Utf8StringView text) {
         } else {
             uint32 parsedKey = 0;
             if (!parseVirtualKeyToken(token, parsedKey)) {
-                return Result<KeyCombination>::error({
+                return error(
                     ErrorCode::InvalidArgument, "Invalid virtual key token"
-                });
+                );
             }
             virtualKey = parsedKey;
         }
@@ -180,12 +180,12 @@ parseFromUtf8String(Utf8StringView text) {
 
     KeyCombination combination(modifiers, virtualKey);
     if (!combination.isValid()) {
-        return Result<KeyCombination>::error({
+        return error(
             ErrorCode::InvalidArgument, "Invalid key combination"
-        });
+        );
     }
 
-    return Result<KeyCombination>::ok(combination.normalized());
+    return ok(combination.normalized());
 }
 
 NEX_ANONYMOUS_NAMESPACE_END
@@ -228,9 +228,9 @@ String KeyCombination::toString(StringFormat format /* = StringFormat::HumanRead
 Result<KeyCombination> KeyCombination::fromString(const String& text) {
     const auto utf8Result = text.toUtf8();
     if (!utf8Result.isOk()) {
-        return Result<KeyCombination>::error({
+        return error(
             ErrorCode::InvalidArgument, "Invalid string: Failed to convert to UTF-8"
-        });
+        );
     }
     return parseFromUtf8String(utf8Result.value());
 }

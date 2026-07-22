@@ -455,12 +455,143 @@ private:
 };
 
 /**
+ * @struct Ok
+ * @brief Represents a successful result with a value.
+ * @details
+ * This struct is used internally by the Result class to represent a successful outcome of an operation,
+ * encapsulating the value returned by the operation. It ensures that the value type meets the necessary
+ * requirements for use in a Result, such as being copy or move constructible.
+ * @tparam ValueType The type of the value to be encapsulated in the Ok result struct.
+ */
+template <class ValueType>
+struct NEX_INTERNAL Ok {
+    static_assert(ResultValueTypeEvaluator<ValueType>::value);
+    using value_type = ValueType;
+    value_type value;
+};
+
+/**
+ * @struct Ok<void>
+ * @brief Specialization of Ok result struct for void type.
+ * @details
+ * This specialization is used when the Result represents a successful outcome without any associated value.
+ * It allows the Result class to indicate success without needing to store any data, simplifying the interface 
+ * for operations that do not return a value.
+ */
+template <>
+struct NEX_INTERNAL Ok<void> {
+    using value_type = void;
+};
+
+/**
+ * @brief Creates a successful result with the given value.
+ * @tparam ValueType The type of the value to be encapsulated in the Ok result struct.
+ * @param value The value to be encapsulated in the Ok result struct.
+ * @return An Ok result struct containing the provided value.
+ * @note This function is used to create a successful result that can be returned from a function,
+ *       indicating that the operation was successful and providing the resulting value.
+ */
+template <class ValueType>
+NEX_NODISCARD NEX_API constexpr auto ok(ValueType&& value) noexcept {
+    using value_type = meta::RemoveCvrefT<ValueType>;
+    return Ok<value_type>{NEX_FORWARD<ValueType>(value)};  // forward original type
+}
+
+/**
+ * @brief Creates a successful result without any associated value (void specialization).
+ * @return An Ok<void> indicating a successful outcome without any value.
+ * @note This function is used to create a successful result for operations that do not return a value,
+ *       allowing the Result class to indicate success without needing to store any data.
+ */
+template <class = void>
+NEX_NODISCARD NEX_API constexpr auto ok() noexcept -> Ok<void> {
+    return {};
+}
+
+/**
+ * @brief Creates a successful result with the given value, allowing for perfect forwarding of arguments.
+ * @tparam ValueType The type of the value to be encapsulated in the Ok result struct.
+ * @tparam Args The types of the arguments to be forwarded to construct the value.
+ * @param args The arguments to be forwarded to construct the value.
+ * @return An Ok result struct containing the constructed value.
+ * @note This function is used to create a successful result that can be returned from a function,
+ *       indicating that the operation was successful and providing the resulting value.
+ *       It allows for perfect forwarding of arguments to construct the value in place.
+ */
+template <class ValueType, class... Args>
+    requires(!meta::IsVoidV<ValueType> && meta::ConstructibleFrom<ValueType, Args...>)
+NEX_NODISCARD NEX_API constexpr auto makeOkResult(Args&&... args) noexcept -> Ok<ValueType> {
+    return Ok<ValueType>{ValueType(NEX_FORWARD<Args>(args)...)};
+}
+
+/**
+ * @struct Err
+ * @brief Represents an error result with an error value.
+ * @details
+ * This struct is used internally by the Result class to represent a failed outcome of an operation,
+ * encapsulating the error information. It ensures that the error type meets the necessary requirements
+ * for use in a Result, such as being copy or move constructible.
+ * @tparam ErrorType The type of the error to be encapsulated in the Err result struct.
+ */
+template <class ErrorType>
+struct NEX_INTERNAL Err {
+    static_assert(ResultErrorTypeEvaluator<ErrorType>::value);
+    using error_type = ErrorType;
+    error_type error;
+};
+
+/**
+ * @brief Creates an error result with the given error value.
+ * @tparam ErrorType The type of the error to be encapsulated in the Err result struct.
+ * @param error The error value to be encapsulated in the Err result struct.
+ * @return An Err result struct containing the provided error value.
+ * @note This function is used to create an error result that can be returned from a function,
+ *       indicating that the operation failed and providing the associated error information.
+ */
+template <class ErrorType>
+NEX_NODISCARD NEX_API constexpr auto error(ErrorType&& error) noexcept {
+    using error_type = meta::RemoveCvrefT<ErrorType>;
+    return Err<error_type>{NEX_FORWARD<ErrorType>(error)};  // forward original type
+}
+
+/**
+ * @brief Creates an error result with the given error value, allowing for perfect forwarding of arguments.
+ * @tparam Args The types of the arguments to be forwarded to construct the error value.
+ * @param args The arguments to be forwarded to construct the error value.
+ * @return An Err result struct containing the constructed error value.
+ * @note This function is used to create an error result that can be returned from a function,
+ *       indicating that the operation failed and providing the associated error information.
+ *       It allows for perfect forwarding of arguments to construct the error value in place.
+ */
+template <class... Args>
+    requires(meta::ConstructibleFrom<Error, Args...>)
+NEX_NODISCARD NEX_API constexpr auto error(Args&&... args) noexcept -> Err<Error> {
+    return Err<Error>{Error(NEX_FORWARD<Args>(args)...)};
+}
+
+/**
+ * @brief Creates an error result with the given error value, allowing for perfect forwarding of arguments.
+ * @tparam ErrorType The type of the error to be encapsulated in the Err result struct.
+ * @tparam Args The types of the arguments to be forwarded to construct the error value.
+ * @param args The arguments to be forwarded to construct the error value.
+ * @return An Err result struct containing the constructed error value.
+ * @note This function is used to create an error result that can be returned from a function,
+ *       indicating that the operation failed and providing the associated error information.
+ *       It allows for perfect forwarding of arguments to construct the error value in place.
+ */
+template <class ErrorType, class... Args>
+    requires(meta::ConstructibleFrom<ErrorType, Args...>)
+NEX_NODISCARD NEX_API constexpr auto makeErrorResult(Args&&... args) noexcept -> Err<ErrorType> {
+    return Err<ErrorType>{ErrorType(NEX_FORWARD<Args>(args)...)};
+}
+
+/**
  * @class Result
  * @brief Represents the result of an operation that can either succeed with a value or fail with an error.
  * 
  * @details
- * This template class provides a convenient way to represent the result of an operation, including whether 
- * it succeeded or failed, along with an optional value on success or an error on failure. It is designed 
+ * This template class provides a convenient way to represent the result of an operation, including whether
+ * it succeeded or failed, along with an optional value on success or an error on failure. It is designed
  * to be used in functions that may fail and need to return detailed error information without using exceptions.
  * 
  * Result supports:
@@ -480,11 +611,11 @@ private:
  * ```
  * Result<int32> divide(int32 a, int32 b) {
  *     if (b == 0) {
- *         return Result<int32>::error({
+ *         return error(
  *             ErrorCode::InvalidArgument, "Division by zero is not allowed"
- *         });
+ *         );
  *     }
- *     return Result<int32>::ok(a / b);
+ *     return ok(a / b);
  * }
  * ```
  */
@@ -538,35 +669,6 @@ private:
         : base(tag, NEX_FORWARD<Func>(func), NEX_FORWARD<Args>(args)...) {}
 
 public:
-    // Create a successful result (void specialization) with no value
-    static constexpr Result ok() noexcept requires meta::IsVoidV<value_type> {
-        return Result(in_place);
-    }
-
-    // Create a successful result with an expected value
-    static constexpr Result ok(value_type value) noexcept requires (!meta::IsVoidV<value_type>) {
-        return Result(in_place, NEX_MOVE(value));
-    }
-
-    // Create a successful result with perfect forwarding of arguments to construct the value
-    template<typename... Args>
-        requires (!meta::IsVoidV<value_type> && meta::IsConstructibleV<value_type, Args...>)
-    static constexpr Result ok(Args&&... args) noexcept {
-        return Result(in_place, NEX_FORWARD<Args>(args)...);
-    }
-
-    // Create an error result with an unexpected error
-    static constexpr Result error(error_type error) noexcept {
-        return Result(unexpect, NEX_MOVE(error));
-    }
-
-    // Create an error result with perfect forwarding of arguments to construct the error
-    template<typename... Args>
-        requires meta::IsConstructibleV<error_type, Args...>
-    static constexpr Result error(Args&&... args) noexcept {
-        return Result(unexpect, NEX_FORWARD<Args>(args)...);
-    }
-
     // Check if the result is successful
     constexpr bool isOk() const noexcept { return this->hasValueImpl(); }
 
@@ -989,6 +1091,32 @@ public:
         noexcept(meta::IsNothrowConstructibleV<value_type, const OtherValue&> && 
                  meta::IsNothrowConstructibleV<error_type, const OtherError&>)
         : base(other.hasValue(), NEX_MOVE(other.storageImpl())) {}
+
+    // Allow move construction and binding from an Ok result struct with a different value type,
+    // as long as the value type is move constructible and convertible to the current value type
+    template <class OtherValue>
+        requires(!meta::IsVoidV<value_type> &&
+            meta::IsMoveConstructibleV<value_type> && meta::IsMoveConstructibleV<error_type>)
+    constexpr explicit(!meta::IsConvertibleV<const OtherValue&, value_type>)
+    Result(Ok<OtherValue>&& okResult)
+        noexcept(meta::IsNothrowConstructibleV<value_type, const OtherValue&>)
+        : base(in_place, NEX_MOVE(okResult.value)) {}
+
+    // Allow construction and binding from an Ok<void> result when the current value type is void,
+    // as long as the error type is copy constructible
+    template<class = void>
+        requires(meta::IsVoidV<value_type> && meta::IsCopyConstructibleV<error_type>)
+    constexpr Result(const Ok<void>&) noexcept : base(in_place) {}
+
+    // Allow move construction and binding from an Err result struct with a different error type,
+    // as long as the error type is move constructible and convertible to the current error type
+    template <class OtherError>
+        requires((meta::IsVoidV<value_type> || meta::IsMoveConstructibleV<value_type>) &&
+            meta::IsMoveConstructibleV<error_type>)
+    constexpr explicit(!meta::IsConvertibleV<const OtherError&, error_type>)
+    Result(Err<OtherError>&& errResult)
+        noexcept(meta::IsNothrowConstructibleV<error_type, const OtherError&>)
+        : base(unexpect, NEX_MOVE(errResult.error)) {}
 
     // Default destructor
     constexpr ~Result() = default;

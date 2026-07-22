@@ -77,9 +77,9 @@ bool doValidateIdentifier(StringView str, bool allowLeadingZeros) {
 Result<Version> doValidateVersionString(StringView versionStr) {
     //// 0. Check for empty string
     if (versionStr.empty()) {
-        return Result<Version>::error({
+        return error(
             ErrorCode::InvalidFormat, "Version string is empty"
-        });
+        );
     }
 
     //// 1. Separate Build Metadata (+)
@@ -107,41 +107,41 @@ Result<Version> doValidateVersionString(StringView versionStr) {
         if (c == u'.') dots++;
     }
     if (dots != 2) {
-        return Result<Version>::error({
+        return error(
             ErrorCode::InvalidFormat, "Invalid core version format"
-        });
+        );
     }
 
     // Split core into major, minor, patch and validate each
     auto coreParts = text::split(core, u'.');
     if (coreParts.size() != 3) {
-        return Result<Version>::error({
+        return error(
             ErrorCode::InvalidFormat, "Core version must have three parts"
-        });
+        );
     }
     for (const auto& part : coreParts) {
         if (!isValidVersionNumber(part)) {
-            return Result<Version>::error({
+            return error(
                 ErrorCode::InvalidFormat, "Version number parts must be valid unsigned integers"
-            });
+            );
         }
         if (hasLeadingZero(part)) {
-            return Result<Version>::error({
+            return error(
                 ErrorCode::InvalidFormat, "Version number parts must not have leading zeros"
-            });
+            );
         }
     }
 
     //// 4. Validate Pre-release and Build Metadata
     if (!pre.empty() && !doValidateIdentifier(pre, false)) {
-        return Result<Version>::error({
+        return error(
             ErrorCode::InvalidFormat, "Invalid pre-release identifier format"
-        });
+        );
     }
     if (!build.empty() && !doValidateIdentifier(build, true)) {
-        return Result<Version>::error({
+        return error(
             ErrorCode::InvalidFormat, "Invalid build metadata identifier format"
-        });
+        );
     }
 
     // If we reach here, the version string is valid, 
@@ -159,20 +159,20 @@ Result<Version> doValidateVersionString(StringView versionStr) {
     // A version like 0.0.0 is still considered valid if it has at least a valid pre-release or build metadata
     if (version.major == 0 && version.minor == 0 && version.patch == 0 
         && version.preRelease.empty() && version.buildMetadata.empty()) {
-        return Result<Version>::error({
+        return error(
             ErrorCode::InvalidFormat, "Version is all zeros and has no metadata"
-        });
+        );
     }
     // A version is considered valid if major, minor, and patch are within the allowed range
     // (0 to 65535 for uint16) and pre-release/build metadata are properly formatted if present
     if (version.major > 0xFFFF || version.minor > 0xFFFF || version.patch > 0xFFFF) {
-        return Result<Version>::error({
+        return error(
             ErrorCode::InvalidFormat, "Version numbers exceed maximum allowed values"
-        });
+        );
     }
 
     // If we reach here, the version is valid, so we return it as a successful result
-    return Result<Version>::ok(version);
+    return ok(version);
 }
 
 NEX_ANONYMOUS_NAMESPACE_END
@@ -185,9 +185,9 @@ NEX_ANONYMOUS_NAMESPACE_END
 Result<Version> Version::fromString(StringView versionStr) {
     auto validationResult = doValidateVersionString(versionStr);
     if (validationResult.isOk()) {
-        return Result<Version>::ok(validationResult.value());
+        return ok(validationResult.value());
     } else {
-        return Result<Version>::error(validationResult.error());
+        return error(validationResult.error());
     }
 }
 
@@ -197,9 +197,9 @@ Result<Version> Version::fromPacked(uint64 packedVersion) {
     if ((packedVersion >> 32) > 0xFFFF 
         || ((packedVersion >> 16) & 0xFFFF) > 0xFFFF 
         || (packedVersion & 0xFFFF) > 0xFFFF) {
-        return Result<Version>::error({
+        return error(
             ErrorCode::InvalidFormat, "Packed version exceeds maximum allowed values"
-        });
+        );
     }
 
     // Extract major, minor, and patch versions from the packed integer
@@ -207,7 +207,7 @@ Result<Version> Version::fromPacked(uint64 packedVersion) {
     version.major = static_cast<uint16>((packedVersion >> 32) & 0xFFFF);
     version.minor = static_cast<uint16>((packedVersion >> 16) & 0xFFFF);
     version.patch = static_cast<uint16>(packedVersion & 0xFFFF);
-    return Result<Version>::ok(version);
+    return ok(version);
 }
 
 // Validate a string representation of a version, returning a boolean result
@@ -217,11 +217,11 @@ bool Version::isValidVersionString(StringView versionStr) noexcept {
 
 // Validate a string representation of a version, returning a Result containing an Error if invalid
 Result<void> Version::validateVersionString(StringView versionStr) noexcept {
-    auto result = validateVersionString(versionStr);
+    auto result = doValidateVersionString(versionStr);
     if (result.isOk()) {
-        return Result<void>::ok();
+        return ok();
     } else {
-        return Result<void>::error(result.error());
+        return error(result.error());
     }
 }
 

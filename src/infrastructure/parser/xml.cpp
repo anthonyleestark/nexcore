@@ -247,21 +247,21 @@ Result<void> XmlDocument::loadFromFile(StringView path) {
     Utf8String utf8;
     const auto success = toUtf8String(path, utf8);
     if (!success || utf8.empty()) {
-        return Result<void>::error({
+        return error(
             ErrorCode::DeserializationFailed,
             "Failed to convert file path to UTF-8 for XML parsing"
-        });
+        );
     }
 
     // Load XML from file using pugixml
     pugi::xml_parse_result pr = impl_->doc.load_file(utf8.c_str());
     impl_->loaded = static_cast<bool>(pr);
     if (impl_->loaded) {
-        return Result<void>::ok();
+        return ok();
     } else {
-        return Result<void>::error({
+        return error(
             ErrorCode::DeserializationFailed, "Failed to parse XML file"
-        });
+        );
     }
 }
 
@@ -271,21 +271,21 @@ Result<void> XmlDocument::loadFromString(const StringView content) {
     Utf8String utf8;
     const auto success = toUtf8String(content, utf8);
     if (!success || utf8.empty()) {
-        return Result<void>::error({
+        return error(
             ErrorCode::DeserializationFailed,
             "Failed to convert input string to UTF-8 for XML parsing"
-        });
+        );
     }
 
     // Load XML from string using pugixml
     pugi::xml_parse_result pr = impl_->doc.load_string(utf8.c_str());
     impl_->loaded = static_cast<bool>(pr);
     if (impl_->loaded) {
-        return Result<void>::ok();
+        return ok();
     } else {
-        return Result<void>::error({
+        return error(
             ErrorCode::DeserializationFailed, "Failed to parse XML string"
-        });
+        );
     }
 }
 

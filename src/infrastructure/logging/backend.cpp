@@ -107,7 +107,7 @@ LogRecord createLogRecord(PendingLog&& payload) {
 Result<void> process(LogRecord&& record) noexcept {
     // Process the log record (e.g., format and route to sinks)
     // TODO: For demonstration purposes, we'll assume processing is always successful.
-    return Result<void>::ok();
+    return ok();
 }
 
 NEX_LAYER_NAMESPACE_END(logging)

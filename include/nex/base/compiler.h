@@ -373,3 +373,31 @@
 #define NEX_EXTERN_CPP_BEGIN        extern "C++" {
 #define NEX_EXTERN_CPP_END          }
 #define NEX_EXTERN_CPP_BLOCK(...)   NEX_EXTERN_CPP_BEGIN __VA_ARGS__ NEX_EXTERN_CPP_END
+
+// ================================================================================
+// Compiler endian detection macros (on GCC/Clang)
+// ================================================================================
+
+#if NEX_COMPILER_IS_CLANG || NEX_COMPILER_GCC_COMPATIBLE
+    #if !defined(__BYTE_ORDER__)
+        #error Compiler does not define __BYTE_ORDER__ macro for endian detection.
+    #endif
+#endif  // ^^NEX_COMPILER_IS_CLANG || NEX_COMPILER_GCC_COMPATIBLE
+
+#if defined(__BYTE_ORDER__) && defined(__ORDER_LITTLE_ENDIAN__) && defined(__ORDER_BIG_ENDIAN__)
+    #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+        #define NEX_COMPILER_HAS_LITTLE_ENDIAN_MACRO 1
+        #define NEX_COMPILER_HAS_BIG_ENDIAN_MACRO 0
+    #elif __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
+        #define NEX_COMPILER_HAS_LITTLE_ENDIAN_MACRO 0
+        #define NEX_COMPILER_HAS_BIG_ENDIAN_MACRO 1
+    #else
+        #error Unknown byte order detected by the compiler.
+    #endif
+#elif defined(__LITTLE_ENDIAN__) || defined(_LITTLE_ENDIAN)
+    #define NEX_COMPILER_HAS_LITTLE_ENDIAN_MACRO 1
+    #define NEX_COMPILER_HAS_BIG_ENDIAN_MACRO 0
+#elif defined(__BIG_ENDIAN__) || defined(_BIG_ENDIAN)
+    #define NEX_COMPILER_HAS_LITTLE_ENDIAN_MACRO 0
+    #define NEX_COMPILER_HAS_BIG_ENDIAN_MACRO 1
+#endif  // ^^Endian detection

@@ -21,7 +21,7 @@ NEX_NAMESPACE_BEGIN
 
 /**
  * @class SmallVec
- * @brief A vector-like container backed by a SmallBuffer.
+ * @brief A small, inline-optimized dynamic vector that can grow as needed.
  *
  * @details
  * SmallVec provides the familiar vector interface while delegating inline storage,
@@ -30,9 +30,13 @@ NEX_NAMESPACE_BEGIN
  *
  * @tparam ElementType The element type.
  * @tparam InlineCapacity The number of elements stored inline. Must be greater than zero.
+ * @tparam Growth The growth policy to use when resizing the vector. Default is DoubleGrowth.
  */
-template <typename ElementType, usize InlineCapacity = 8>
-    requires (InlineCapacity > 0)
+template <
+    typename ElementType,
+    usize InlineCapacity = 8,
+    GrowthPolicy Growth = DoubleGrowth
+> requires (InlineCapacity > 0)
 class NEX_API SmallVec {
 public:
     using value_type = ElementType;
@@ -46,7 +50,7 @@ public:
     using const_iterator = const_pointer;
     using reverse_iterator = ReverseIterator<iterator>;
     using const_reverse_iterator = ReverseIterator<const_iterator>;
-    using buffer_type = SmallBuffer<value_type, InlineCapacity>;
+    using buffer_type = SmallBuffer<value_type, InlineCapacity, Growth>;
 
     // Inline buffer capacity constant
     static constexpr size_type inlineCapacity = InlineCapacity;

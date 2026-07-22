@@ -54,14 +54,33 @@ public:
     constexpr MemoryBlock(pointer_type data, size_type size) noexcept
         : data_(data), size_(size) {}
 
+    // Creates a MemoryBlock from a mutable object, capturing its address and size
+    template <meta::ObjectType Object>
+    NEX_NODISCARD static constexpr MemoryBlock fromObject(Object& obj) noexcept {
+        return { &obj, sizeof(Object) };
+    }
+
+    // Creates a MemoryBlock from a mutable array, capturing its address and size
+    NEX_NODISCARD static constexpr
+    MemoryBlock fromBytes(pointer_type data, size_type size) noexcept {
+        return { data, size };
+    }
+
+    // Creates a MemoryBlock from a ByteRange and a base pointer,
+    // adjusting the pointer by the range's start offset
+    NEX_NODISCARD static constexpr
+    MemoryBlock fromRange(ByteRange range, pointer_type base) noexcept {
+        return { static_cast<byte_ptr>(base) + range.start(), range.length() };
+    }
+
     // Determine if the memory block is empty (size is zero)
     NEX_NODISCARD constexpr bool empty() const noexcept {
         return size_ == 0;
     }
 
-    // Determine if the memory block is valid (data is not null and size is greater than zero)
-    NEX_NODISCARD constexpr bool valid() const noexcept {
-        return data_ != nullptr && size_ > 0;
+    // Determine if the memory block is null (data pointer is null)
+    NEX_NODISCARD constexpr bool isNull() const noexcept {
+        return data_ == nullptr;
     }
 
     // Get the size of the memory block, which is the number of bytes it contains
@@ -100,6 +119,7 @@ public:
 
     // Casts the memory block to a typed pointer of the specified TargetType
     template <typename TargetType>
+        requires (meta::ObjectType<TargetType>)
     constexpr TargetType* as() noexcept {
         NEX_ASSERT_MSG(size() >= sizeof(TargetType), "Error: MemoryBlock size is smaller than the size of TargetType");
         NEX_ASSERT(reinterpret_cast<uintptr>(data()) % alignof(TargetType) == 0);
@@ -108,6 +128,7 @@ public:
 
     // Casts the memory block to a typed const pointer of the specified TargetType
     template <typename TargetType>
+        requires (meta::ObjectType<TargetType>)
     constexpr const TargetType* as() const noexcept {
         NEX_ASSERT_MSG(size() >= sizeof(TargetType), "Error: MemoryBlock size is smaller than the size of TargetType");
         NEX_ASSERT(reinterpret_cast<uintptr>(data()) % alignof(TargetType) == 0);
@@ -159,14 +180,33 @@ public:
     constexpr ConstMemoryBlock(MemoryBlock block) noexcept
         : data_(block.data_), size_(block.size_) {}
 
+    // Creates a ConstMemoryBlock from a mutable object, capturing its address and size
+    template <meta::ObjectType Object>
+    NEX_NODISCARD static constexpr ConstMemoryBlock fromObject(const Object& obj) noexcept {
+        return { &obj, sizeof(Object) };
+    }
+
+    // Creates a ConstMemoryBlock from a mutable array, capturing its address and size
+    NEX_NODISCARD static constexpr
+    ConstMemoryBlock fromBytes(pointer_type data, size_type size) noexcept {
+        return { data, size };
+    }
+
+    // Creates a ConstMemoryBlock from a ByteRange and a base pointer,
+    // adjusting the pointer by the range's start offset
+    NEX_NODISCARD static constexpr
+    ConstMemoryBlock fromRange(ByteRange range, pointer_type base) noexcept {
+        return { static_cast<const_byte_ptr>(base) + range.start(), range.length() };
+    }
+
     // Determine if the memory block is empty (size is zero)
     NEX_NODISCARD constexpr bool empty() const noexcept {
         return size_ == 0;
     }
 
-    // Determine if the memory block is valid (data is not null and size is greater than zero)
-    NEX_NODISCARD constexpr bool valid() const noexcept {
-        return data_ != nullptr && size_ > 0;
+    // Determine if the memory block is null (data pointer is null)
+    NEX_NODISCARD constexpr bool isNull() const noexcept {
+        return data_ == nullptr;
     }
 
     // Get the size of the memory block, which is the number of bytes it contains
@@ -205,6 +245,7 @@ public:
 
     // Casts the const memory block to a typed const pointer of the specified TargetType
     template <typename TargetType>
+        requires (meta::ObjectType<TargetType>)
     constexpr const TargetType* as() const noexcept {
         NEX_ASSERT_MSG(size() >= sizeof(TargetType), "Error: MemoryBlock size is smaller than the size of TargetType");
         NEX_ASSERT(reinterpret_cast<uintptr>(data()) % alignof(TargetType) == 0);

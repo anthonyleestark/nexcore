@@ -374,20 +374,4 @@ Span(Span<Type, Extent>&&) -> Span<Type, dynamicExtent>;
 template <meta::ObjectType Type, usize Extent>
 Span(const Span<Type, Extent>&&) -> Span<Type, dynamicExtent>;
 
-// =================================================================================
-// Common span type aliases for convenience
-// =================================================================================
-
-using ByteSpan = Span<const byte, dynamicExtent>;        // Represents a span of bytes (immutable)
-using WritableByteSpan = Span<byte, dynamicExtent>;      // Represents a span of bytes (mutable)
-using ConstByteSpan = Span<const byte, dynamicExtent>;   // Represents a span of bytes (immutable, const)
-using IndexSpan = Span<usize, dynamicExtent>;            // Represents a span of indices (immutable)
-using SignedSpan = Span<isize, dynamicExtent>;           // Represents a span of signed offsets or indexes (immutable)
-
-template <typename Type>
-using MutableSpan = Span<Type, dynamicExtent>;           // Represents a mutable span of a specific type
-
-template <typename Type>
-using ImmutableSpan = Span<const Type, dynamicExtent>;   // Represents an immutable span of a specific type
-
 NEX_NAMESPACE_END

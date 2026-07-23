@@ -59,7 +59,7 @@ public:
 private:
     // Internal buffer to store bits (8 bits per byte)
     Vec<block_type> buffer_;
-    
+
     // Number of bits (may be less than buffer_.size() * 8)
     size_type bitCount_;
 
@@ -71,27 +71,27 @@ public:
 
     // Get the number of bits per byte
     static constexpr size_type bitsPerByte() noexcept { return 8; }
-    
+
     // Get the index of the byte in the buffer for a given bit index
     static constexpr size_type byteIndex(size_type bitIndex) noexcept {
         return bitIndex / bitsPerByte();
     }
-    
+
     // Get the offset of the bit in the byte for a given bit index
     static constexpr size_type bitOffset(size_type bitIndex) noexcept {
         return bitIndex % bitsPerByte();
     }
-    
+
     // Get the mask for a given bit index
     static constexpr block_type bitMask(size_type bitIndex) noexcept {
         return static_cast<block_type>(1U << bitOffset(bitIndex));
     }
-    
+
     // Calculate required buffer size for a given number of bits
     static constexpr size_type bufferSizeForBits(size_type bitCount) noexcept {
         return (bitCount + bitsPerByte() - 1) / bitsPerByte();
     }
-    
+
     // Clear unused bits in the last byte
     void clearUnusedBits() noexcept;
 
@@ -99,25 +99,25 @@ public:
 
     // Default constructor
     explicit BitArray() : bitCount_(0) {}
-    
+
     // Construct from size (all bits initialized to false)
     explicit BitArray(size_type size);
-    
+
     // Construct from size and fill value
     explicit BitArray(size_type size, value_type fillValue);
-    
+
     // Construct from another BitArray
     BitArray(const BitArray& other) : buffer_(other.buffer_), bitCount_(other.bitCount_) {}
-    
+
     // Copy assignment operator
     BitArray& operator=(const BitArray& other);
-    
+
     // Move constructor
     BitArray(BitArray&& other) noexcept;
-    
+
     // Move assignment operator
     BitArray& operator=(BitArray&& other) noexcept;
-    
+
     // Destructor
     ~BitArray() = default;
 
@@ -127,17 +127,17 @@ public:
     constexpr size_type size() const noexcept {
         return bitCount_;
     }
-    
+
     // Get length of the BitArray (same as size)
     constexpr size_type length() const noexcept {
         return bitCount_;
     }
-    
+
     // Check if the BitArray is empty
     constexpr bool empty() const noexcept {
         return bitCount_ == 0;
     }
-    
+
     // Reserve capacity (in bits)
     void reserve(size_type capacity) {
         buffer_.reserve(bufferSizeForBits(capacity));
@@ -152,7 +152,7 @@ public:
     void reserveBytes(size_type capacity) {
         buffer_.reserve(capacity);
     }
-    
+
     // Get capacity (in bytes)
     size_type capacityBytes() const noexcept {
         return buffer_.capacity();
@@ -165,17 +165,17 @@ public:
 
     // Get maximum possible size
     size_type maxSize() const noexcept {
-        return buffer_.max_size() * bitsPerByte();
+        return buffer_.maxSize() * bitsPerByte();
     }
-    
+
     // Resize the BitArray (newSize is number of bits)
     void resize(size_type newSize) {
         resize(newSize, false);
     }
-    
+
     // Resize the BitArray with fill value
     void resize(size_type newSize, value_type fillValue);
-    
+
     // Clear the BitArray (set size to 0, does not deallocate memory)
     void clear() noexcept;
 
@@ -191,27 +191,27 @@ public:
 
     // Test bit at index (returns true if set, false if clear)
     bool testBit(size_type index) const noexcept;
-    
+
     // Set bit at index to true
     void setBit(size_type index) noexcept;
-    
+
     // Set bit at index to specified value
     void setBit(size_type index, value_type value) noexcept;
-    
+
     // Clear bit at index (set to false)
     void clearBit(size_type index) noexcept;
-    
+
     // Toggle bit at index
     void toggleBit(size_type index) noexcept;
-    
+
     // Access bit at index (with bounds checking)
     const_reference at(size_type index) const;
-    
+
     // Access bit at index (no bounds checking)
     const_reference operator[](size_type index) const noexcept {
         return testBit(index);
     }
-    
+
     ////// Set bit at index using operator (returns reference-like proxy) ------------------------------
 
     /**
@@ -241,48 +241,48 @@ public:
         // Constructor
         BitReference(BitArray* buffer, size_type index) 
             : buffer_(buffer), index_(index) {}
-        
+
         // Assignment operator to set the bit value
         BitReference& operator=(bool value) noexcept {
             buffer_->setBit(index_, value);
             return *this;
         }
-        
+
         // Assignment operator to copy from another BitReference
         BitReference& operator=(const BitReference& other) noexcept {
             buffer_->setBit(index_, other.buffer_->testBit(other.index_));
             return *this;
         }
-        
+
         // Conversion operator to read the bit value
         operator bool() const noexcept {
             return buffer_->testBit(index_);
         }
-        
+
         // Compound assignment operators for bitwise operations
         BitReference& operator|=(bool value) noexcept {
             if (value) buffer_->setBit(index_);
             return *this;
         }
-        
+
         // Compound assignment operator for bitwise AND
         BitReference& operator&=(bool value) noexcept {
             if (!value) buffer_->clearBit(index_);
             return *this;
         }
-        
+
         // Compound assignment operator for bitwise XOR
         BitReference& operator^=(bool value) noexcept {
             if (value) buffer_->toggleBit(index_);
             return *this;
         }
-        
+
         // Bitwise NOT operator to invert the bit value
         bool operator~() const noexcept {
             return !buffer_->testBit(index_);
         }
     };
-    
+
     // Access bit at index for setting (returns reference-like proxy)
     reference operator[](size_type index) noexcept {
         return BitReference(this, index);
@@ -331,7 +331,7 @@ public:
         // Iterator operations
         Iterator& operator++() noexcept { ++index_; return *this; }
         Iterator operator++(int32) noexcept { Iterator tmp = *this; ++(*this); return tmp; }
-        
+
         Iterator& operator--() noexcept { --index_; return *this; }
         Iterator operator--(int32) noexcept { Iterator tmp = *this; --(*this); return tmp; }
 
@@ -533,20 +533,20 @@ public:
 
     // Fill all bits with value
     BitArray& fill(value_type value);
-    
+
     // Fill bits in range with value
     BitArray& fill(value_type value, size_type start, size_type count);
-    
+
     // Set all bits
     BitArray& setAll() {
         return fill(true);
     }
-    
+
     // Clear all bits
     BitArray& clearAll() {
         return fill(false);
     }
-    
+
     // Swap with another BitArray
     void swap(BitArray& other) noexcept {
         buffer_.swap(other.buffer_);
@@ -557,24 +557,24 @@ public:
 
     // Bitwise AND
     BitArray& operator&=(const BitArray& other);
-    
+
     // Bitwise OR
     BitArray& operator|=(const BitArray& other);
-    
+
     // Bitwise XOR
     BitArray& operator^=(const BitArray& other);
-    
+
     // Bitwise NOT (invert all bits)
     BitArray operator~() const;
-    
+
     ////// Non-member bitwise operators ------------------------------
 
     // Bitwise AND
     friend BitArray operator&(const BitArray& a, const BitArray& b);
-    
+
     // Bitwise OR
     friend BitArray operator|(const BitArray& a, const BitArray& b);
-    
+
     // Bitwise XOR
     friend BitArray operator^(const BitArray& a, const BitArray& b);
 
@@ -586,7 +586,7 @@ public:
         if (count >= bitCount_) return *this;
         return mid(0, count);
     }
-    
+
     // Get right part of the buffer
     BitArray right(size_type count) const noexcept {
         if (count == 0) return BitArray();
@@ -594,7 +594,7 @@ public:
         size_type start = bitCount_ - count;
         return mid(start, count);
     }
-    
+
     // Get middle part of the buffer
     BitArray mid(size_type start, size_type count = npos) const noexcept;
 
@@ -604,19 +604,19 @@ public:
     size_type count(value_type value = true) const noexcept {
         return value ? countTrue() : countFalse();
     }
-    
+
     // Count number of bits set to true
     size_type countTrue() const noexcept;
-    
+
     // Count number of bits set to false
     size_type countFalse() const noexcept;
-    
+
     // Check if any bit is set
     bool any() const noexcept;
-    
+
     // Check if all bits are set
     bool all() const noexcept;
-    
+
     // Check if no bits are set
     bool none() const noexcept {
         return !any();
@@ -626,30 +626,30 @@ public:
 
     // Compare with another BitArray
     int32 compare(const BitArray& other) const noexcept;
-    
+
     // Equality operator
     bool operator==(const BitArray& other) const noexcept;
-    
+
     // Inequality operator
     bool operator!=(const BitArray& other) const noexcept {
         return !(*this == other);
     }
-    
+
     // Less-than operator
     bool operator<(const BitArray& other) const noexcept {
         return compare(other) < 0;
     }
-    
+
     // Less-than-or-equal operator
     bool operator<=(const BitArray& other) const noexcept {
         return compare(other) <= 0;
     }
-    
+
     // Greater-than operator
     bool operator>(const BitArray& other) const noexcept {
         return compare(other) > 0;
     }
-    
+
     // Greater-than-or-equal operator
     bool operator>=(const BitArray& other) const noexcept {
         return compare(other) >= 0;

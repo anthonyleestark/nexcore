@@ -264,53 +264,53 @@ public:
 
         // Index of the bit in the BitSet
         usize index_;
-        
+
     public:
         // Constructor
         BitReference(BitSet* bitSet, usize index) 
             : bitSet_(bitSet), index_(index) {}
-        
+
         // Assignment operator to set the bit value
         BitReference& operator=(bool value) noexcept {
             bitSet_->setBit(index_, value);
             return *this;
         }
-        
+
         // Assignment operator to copy from another BitReference
         BitReference& operator=(const BitReference& other) noexcept {
             bitSet_->setBit(index_, other.bitSet_->testBit(other.index_));
             return *this;
         }
-        
+
         // Conversion operator to read the bit value
         operator bool() const noexcept {
             return bitSet_->testBit(index_);
         }
-        
+
         // Compound assignment operators for bitwise operations
         BitReference& operator|=(bool value) noexcept {
             if (value) bitSet_->setBit(index_);
             return *this;
         }
-        
+
         // Compound assignment operator for bitwise AND
         BitReference& operator&=(bool value) noexcept {
             if (!value) bitSet_->clearBit(index_);
             return *this;
         }
-        
+
         // Compound assignment operator for bitwise XOR
         BitReference& operator^=(bool value) noexcept {
             if (value) bitSet_->toggleBit(index_);
             return *this;
         }
-        
+
         // Bitwise NOT operator to invert the bit value
         bool operator~() const noexcept {
             return !bitSet_->testBit(index_);
         }
     };
-    
+
     // Access bit at index for setting (returns reference-like proxy)
     BitReference operator[](usize index) noexcept {
         return BitReference(this, index);

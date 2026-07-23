@@ -510,6 +510,9 @@ public:
     // Returns the current number of elements in the buffer.
     NEX_HIDDEN_FROM_ABI constexpr size_type size() const noexcept { return size_; }
 
+    // Determines whether the buffer is empty (contains no elements).
+    NEX_HIDDEN_FROM_ABI constexpr bool empty() const noexcept { return size_ == 0; }
+
     // Returns the current capacity of the buffer (number of elements it can hold without resizing).
     NEX_HIDDEN_FROM_ABI constexpr size_type capacity() const noexcept { return capacity_; }
 

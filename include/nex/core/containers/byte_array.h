@@ -44,7 +44,6 @@ public:
     using value_type = uint8;
     using size_type = usize;
     using difference_type = isize;
-    using allocator_type = typename Vec<value_type>::allocator_type;
     using pointer = value_type*;
     using const_pointer = const value_type*;
     using reference = value_type&;
@@ -258,7 +257,7 @@ public:
 
     // Get maximum possible size
     size_type max_size() const noexcept {
-        return buffer_.max_size();
+        return buffer_.maxSize();
     }
 
     // Reserve capacity
@@ -341,18 +340,18 @@ public:
 
     // Append single byte
     ByteArray& appendByte(value_type byte) {
-        buffer_.push_back(byte);
+        buffer_.pushBack(byte);
         return *this;
     }
 
     // Append single byte
     void pushBack(value_type byte) {
-        buffer_.push_back(byte);
+        buffer_.pushBack(byte);
     }
 
     // Remove the last byte
     void popBack() {
-        buffer_.pop_back();
+        buffer_.popBack();
     }
 
     // Prepend another ByteArray

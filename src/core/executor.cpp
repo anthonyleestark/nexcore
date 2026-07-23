@@ -93,7 +93,7 @@ ThreadPool::ThreadPool(uint32 threadCount /*= Thread::hardwareConcurrency()*/)
 // Start all threads in the pool and begin processing tasks from the shared queue.
 void ThreadPool::start() {
     for (size_t i = 0; i < impl_->threads_.capacity(); ++i) {
-        impl_->threads_.emplace_back();     // Create a new Thread object for each worker thread
+        impl_->threads_.emplaceBack();     // Create a new Thread object for each worker thread
         impl_->threads_.back().start([this]() {
             while (true) {
                 // Check for stop request

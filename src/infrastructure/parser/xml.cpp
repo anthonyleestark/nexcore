@@ -197,7 +197,7 @@ Vec<XmlNode> XmlNode::children(StringView name) const {
         XmlNode item;
         item.impl_ = NEX_STD make_unique<Impl>();
         item.impl_->node = child;
-        list.push_back(NEX_MOVE(item));
+        list.pushBack(NEX_MOVE(item));
     }
 
     return list;

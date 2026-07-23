@@ -75,15 +75,15 @@ BitArray& BitArray::operator=(BitArray&& other) noexcept {
 void BitArray::resize(size_type newSize, value_type fillValue) {
     size_type oldSize = bitCount_;
     bitCount_ = newSize;
-    
+
     if (newSize == 0) {
         buffer_.clear();
         return;
     }
-    
+
     size_type requiredBytes = bufferSizeForBits(newSize);
     size_type currentBytes = buffer_.size();
-    
+
     if (requiredBytes > currentBytes) {
         // Need to grow
         block_type fillByte = fillValue ? 0xFF : 0x00;
@@ -92,7 +92,7 @@ void BitArray::resize(size_type newSize, value_type fillValue) {
         // Need to shrink
         buffer_.resize(requiredBytes);
     }
-    
+
     // If we're extending, fill new bits
     if (newSize > oldSize && fillValue) {
         // New bits are already filled by resize, but we need to handle
@@ -107,7 +107,7 @@ void BitArray::resize(size_type newSize, value_type fillValue) {
             }
         }
     }
-    
+
     clearUnusedBits();
 }
 
@@ -212,16 +212,16 @@ BitArray& BitArray::fill(value_type value, size_type start, size_type count) {
 BitArray& BitArray::operator&=(const BitArray& other) {
     size_type minSize = NEX_STD min(bitCount_, other.bitCount_);
     size_type minBytes = NEX_STD min(buffer_.size(), other.buffer_.size());
-    
+
     for (size_type i = 0; i < minBytes; ++i) {
         buffer_[i] &= other.buffer_[i];
     }
-    
+
     // Clear remaining bytes if this buffer is larger
     if (buffer_.size() > minBytes) {
         NEX_STD fill(buffer_.begin() + minBytes, buffer_.end(), static_cast<block_type>(0));
     }
-    
+
     // Adjust bit count to minimum
     bitCount_ = minSize;
     clearUnusedBits();
@@ -233,12 +233,12 @@ BitArray& BitArray::operator|=(const BitArray& other) {
     if (other.bitCount_ > bitCount_) {
         resize(other.bitCount_, false);
     }
-    
+
     size_type minBytes = NEX_STD min(buffer_.size(), other.buffer_.size());
     for (size_type i = 0; i < minBytes; ++i) {
         buffer_[i] |= other.buffer_[i];
     }
-    
+
     clearUnusedBits();
     return *this;
 }
@@ -248,12 +248,12 @@ BitArray& BitArray::operator^=(const BitArray& other) {
     if (other.bitCount_ > bitCount_) {
         resize(other.bitCount_, false);
     }
-    
+
     size_type minBytes = NEX_STD min(buffer_.size(), other.buffer_.size());
     for (size_type i = 0; i < minBytes; ++i) {
         buffer_[i] ^= other.buffer_[i];
     }
-    
+
     clearUnusedBits();
     return *this;
 }
@@ -296,7 +296,7 @@ BitArray BitArray::mid(size_type start, size_type count /* = npos */) const noex
     size_type maxCount = bitCount_ - start;
     size_type actualCount = (count == npos) 
                             ? maxCount : NEX_STD min(count, maxCount);
-    
+
     BitArray result(actualCount);
     for (size_type i = 0; i < actualCount; ++i) {
         result.setBit(i, testBit(start + i));
@@ -348,7 +348,7 @@ bool BitArray::all() const noexcept {
 // Compare with another BitArray
 int32 BitArray::compare(const BitArray& other) const noexcept {
     size_type minSize = NEX_STD min(bitCount_, other.bitCount_);
-    
+
     // Compare common bits
     for (size_type i = 0; i < minSize; ++i) {
         bool thisBit = testBit(i);
@@ -357,7 +357,7 @@ int32 BitArray::compare(const BitArray& other) const noexcept {
             return thisBit ? 1 : -1;
         }
     }
-    
+
     // If sizes differ, the shorter one is "less"
     if (bitCount_ < other.bitCount_) return -1;
     if (bitCount_ > other.bitCount_) return 1;
@@ -368,7 +368,7 @@ int32 BitArray::compare(const BitArray& other) const noexcept {
 bool BitArray::operator==(const BitArray& other) const noexcept {
     if (bitCount_ != other.bitCount_) return false;
     if (bitCount_ == 0) return true;
-    
+
     // Compare bytes (except last byte which may have unused bits)
     size_type fullBytes = bitCount_ / bitsPerByte();
     if (fullBytes > 0) {
@@ -376,7 +376,7 @@ bool BitArray::operator==(const BitArray& other) const noexcept {
             return false;
         }
     }
-    
+
     // Compare remaining bits in the last byte
     size_type remainingBits = bitCount_ % bitsPerByte();
     if (remainingBits > 0) {
@@ -386,7 +386,7 @@ bool BitArray::operator==(const BitArray& other) const noexcept {
             return false;
         }
     }
-    
+
     return true;
 }
 

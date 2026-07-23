@@ -60,14 +60,14 @@ Vec<String> text::split(StringView str, char16 delimiter /* = u' ' */) {
 
     // Iterate through the string and split it based on the delimiter
     while (end != StringView::npos) {
-        result.emplace_back(str.substr(start, end - start));
+        result.emplaceBack(str.substr(start, end - start));
         start = end + 1;
         end = str.find(delimiter, start);
     }
 
     // Add the last segment after the final delimiter
     if (start < str.size()) {
-        result.emplace_back(str.substr(start));
+        result.emplaceBack(str.substr(start));
     }
 
     return result;

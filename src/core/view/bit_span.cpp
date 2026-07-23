@@ -25,7 +25,7 @@ Vec<BitSpan::value_type> BitSpan::toVec() const noexcept {
     Vec<value_type> vec;
     vec.reserve(bitCount_);
     for (size_type i = 0; i < bitCount_; ++i) {
-        vec.push_back(testBit(i));
+        vec.pushBack(testBit(i));
     }
     return vec;
 }

@@ -15,6 +15,7 @@
 #include "nex/base/init.h"
 #include "nex/base/traits.h"
 #include "nex/base/iterator.h"
+#include "nex/base/span.h"
 #include "nex/core/containers/vector.h"
 
 NEX_NAMESPACE_BEGIN
@@ -94,10 +95,10 @@ public:
 
     // Default copy semantics
     constexpr SmallVec(const SmallVec&) = default;
-    constexpr SmallVec(SmallVec&&) noexcept(IsNothrowMoveConstructibleV<value_type>) = default;
+    constexpr SmallVec& operator=(const SmallVec&) = default;
 
     // Default move semantics
-    constexpr SmallVec& operator=(const SmallVec&) = default;
+    constexpr SmallVec(SmallVec&&) noexcept(IsNothrowMoveConstructibleV<value_type>) = default;
     constexpr SmallVec& operator=(SmallVec&&) noexcept(IsNothrowMoveConstructibleV<value_type>) = default;
 
     // Assignment from initializer list 
@@ -134,80 +135,105 @@ public:
 
     // Returns an iterator to the beginning of the SmallVec.
     constexpr iterator begin() noexcept { return buffer_.data(); }
+
     // Returns a const iterator to the beginning of the SmallVec.
     constexpr const_iterator begin() const noexcept { return buffer_.data(); }
+
     // Returns a const iterator to the beginning of the SmallVec.
     constexpr const_iterator cbegin() const noexcept { return buffer_.data(); }
 
     // Returns an iterator to the end of the SmallVec.
     constexpr iterator end() noexcept { return begin() + size(); }
+
     // Returns a const iterator to the end of the SmallVec.
     constexpr const_iterator end() const noexcept { return begin() + size(); }
+
     // Returns a const iterator to the end of the SmallVec.
     constexpr const_iterator cend() const noexcept { return cbegin() + size(); }
 
     // Returns a reverse iterator to the beginning of the reversed SmallVec.
-    constexpr reverse_iterator rbegin() noexcept { return reverse_iterator(end()); }
+    constexpr reverse_iterator rbegin() noexcept {
+        return reverse_iterator(end());
+    }
+
     // Returns a const reverse iterator to the beginning of the reversed SmallVec.
-    constexpr const_reverse_iterator rbegin() const noexcept { return const_reverse_iterator(end()); }
+    constexpr const_reverse_iterator rbegin() const noexcept {
+        return const_reverse_iterator(end());
+    }
+
     // Returns a const reverse iterator to the beginning of the reversed SmallVec.
-    constexpr const_reverse_iterator crbegin() const noexcept { return const_reverse_iterator(cend()); }
+    constexpr const_reverse_iterator crbegin() const noexcept {
+        return const_reverse_iterator(cend());
+    }
 
     // Returns a reverse iterator to the end of the reversed SmallVec.
-    constexpr reverse_iterator rend() noexcept { return reverse_iterator(begin()); }
+    constexpr reverse_iterator rend() noexcept {
+        return reverse_iterator(begin());
+    }
+
     // Returns a const reverse iterator to the end of the reversed SmallVec.
-    constexpr const_reverse_iterator rend() const noexcept { return const_reverse_iterator(begin()); }
+    constexpr const_reverse_iterator rend() const noexcept {
+        return const_reverse_iterator(begin()); 
+    }
+
     // Returns a const reverse iterator to the end of the reversed SmallVec.
-    constexpr const_reverse_iterator crend() const noexcept { return const_reverse_iterator(cbegin()); }
+    constexpr const_reverse_iterator crend() const noexcept {
+        return const_reverse_iterator(cbegin()); 
+    }
 
     // Returns a reference to the element at the specified position, with bounds checking.
-    constexpr reference at(size_type pos) {
+    NEX_NODISCARD constexpr reference at(size_type pos) {
         NEX_ASSERT_MSG(pos < size(), "Index out of range");
         return buffer_[pos];
     }
 
     // Returns a const reference to the element at the specified position, with bounds checking.
-    constexpr const_reference at(size_type pos) const {
+    NEX_NODISCARD constexpr const_reference at(size_type pos) const {
         NEX_ASSERT_MSG(pos < size(), "Index out of range");
         return buffer_[pos];
     }
 
     // Returns a reference to the element at the specified position, without bounds checking.
-    constexpr reference operator[](size_type pos) noexcept { return buffer_[pos]; }
+    NEX_NODISCARD constexpr reference operator[](size_type pos) noexcept { return buffer_[pos]; }
+
     // Returns a const reference to the element at the specified position, without bounds checking.
-    constexpr const_reference operator[](size_type pos) const noexcept { return buffer_[pos]; }
+    NEX_NODISCARD constexpr const_reference operator[](size_type pos) const noexcept { return buffer_[pos]; }
 
     // Returns a reference to the first element.
-    constexpr reference front() noexcept { return buffer_.front(); }
+    NEX_NODISCARD constexpr reference front() noexcept { return buffer_.front(); }
+
     // Returns a const reference to the first element.
-    constexpr const_reference front() const noexcept { return buffer_.front(); }
+    NEX_NODISCARD constexpr const_reference front() const noexcept { return buffer_.front(); }
 
     // Returns a reference to the last element.
-    constexpr reference back() noexcept { return buffer_.back(); }
+    NEX_NODISCARD constexpr reference back() noexcept { return buffer_.back(); }
+
     // Returns a const reference to the last element.
-    constexpr const_reference back() const noexcept { return buffer_.back(); }
+    NEX_NODISCARD constexpr const_reference back() const noexcept { return buffer_.back(); }
 
     // Returns a pointer to the underlying array serving as element storage.
-    constexpr pointer data() noexcept { return buffer_.data(); }
+    NEX_NODISCARD constexpr pointer data() noexcept { return buffer_.data(); }
+
     // Returns a const pointer to the underlying array serving as element storage.
-    constexpr const_pointer data() const noexcept { return buffer_.data(); }
+    NEX_NODISCARD constexpr const_pointer data() const noexcept { return buffer_.data(); }
 
     // Returns the number of elements in the SmallVec.
-    constexpr size_type size() const noexcept { return buffer_.size(); }
+    NEX_NODISCARD constexpr size_type size() const noexcept { return buffer_.size(); }
+
     // Returns the number of elements in the SmallVec.
-    constexpr size_type length() const noexcept { return size(); }
+    NEX_NODISCARD constexpr size_type length() const noexcept { return size(); }
 
     // Returns true if the SmallVec contains no elements.
-    constexpr bool empty() const noexcept { return buffer_.empty(); }
+    NEX_NODISCARD constexpr bool empty() const noexcept { return buffer_.empty(); }
 
     // Returns the capacity of the SmallVec.
-    constexpr size_type capacity() const noexcept { return buffer_.capacity(); }
+    NEX_NODISCARD constexpr size_type capacity() const noexcept { return buffer_.capacity(); }
 
     // Returns the maximum number of elements the SmallVec can hold.
-    constexpr size_type maxSize() const noexcept { return buffer_type::maxSize(); }
+    NEX_NODISCARD constexpr size_type maxSize() const noexcept { return buffer_type::maxSize(); }
 
     // Returns true if the SmallVec is using inline storage, false if it has allocated heap storage.
-    constexpr bool usingInlineStorage() const noexcept { return buffer_.usingInlineStorage(); }
+    NEX_NODISCARD constexpr bool usingInlineStorage() const noexcept { return buffer_.usingInlineStorage(); }
 
     /**
      * @brief Reserves storage for at least newCapacity elements.
@@ -234,6 +260,39 @@ public:
         return back();
     }
 
+    // Appends the elements in the range [first, last) to the end of the SmallVec.
+    template <typename InputIt,
+              typename = EnableIf<
+                  IsConvertibleV<IteratorValueType<InputIt>, value_type>>>
+    constexpr void append(InputIt first, InputIt last) {
+        auto count = static_cast<size_type>(last - first);
+        NEX_ASSERT_MSG(count <= maxSize() - size(), "Error: Appending would exceed maximum size");
+        reserve(size() + count);
+        for (; first != last; ++first) {
+            pushBack(*first);
+        }
+    }
+
+    // Appends the elements in the initializer list to the end of the SmallVec.
+    constexpr void append(InitList<value_type> init) {
+        append(init.begin(), init.end());
+    }
+
+    // Append a Vector to the end of this SmallVec.
+    constexpr void append(const Vec<value_type>& vec) {
+        append(vec.begin(), vec.end());
+    }
+
+    // Appends another SmallVec to the end of this SmallVec.
+    constexpr void append(const SmallVec& other) {
+        append(other.begin(), other.end());
+    }
+
+    // Appends a Span to the end of this SmallVec.
+    constexpr void append(const Span<value_type>& span) {
+        append(span.begin(), span.end());
+    }
+
     // Removes the last element from the SmallVec.
     constexpr void popBack() noexcept(IsNothrowDestructibleV<value_type>) {
         NEX_ASSERT_MSG(!empty(), "popBack called on empty SmallVec");
@@ -247,6 +306,13 @@ public:
      * If the current size is greater than count, the SmallVec is reduced to its first count elements.
      */
     constexpr void resize(size_type count) { buffer_.resize(count); }
+
+    /**
+     * @brief Resizes the SmallVec to contain count elements.
+     * @note
+     * If the current size is less than count, additional copies of value are appended.
+     * If the current size is greater than count, the SmallVec is reduced to its first count elements.
+     */
     constexpr void resize(size_type count, const_reference value) { buffer_.resize(count, value); }
 
     // Inserts a copy of value before the element at pos.
@@ -265,6 +331,18 @@ public:
         NEX_ASSERT_MSG(index <= size(), "Iterator out of range");
         for (size_type offset = 0; offset < count; ++offset) {
             emplace(cbegin() + index + offset, value);
+        }
+        return begin() + index;
+    }
+
+    // Inserts elements from the range [first, last) before the element at pos.
+    constexpr iterator insert(const_iterator pos, const_iterator first, const_iterator last) {
+        const size_type index = indexOf(pos);
+        NEX_ASSERT_MSG(index <= size(), "Iterator out of range");
+        size_type current = index;
+        for (const_iterator it = first; it != last; ++it) {
+            emplace(cbegin() + current, *it);
+            ++current;
         }
         return begin() + index;
     }
@@ -326,6 +404,39 @@ public:
         return begin() + firstIndex;
     }
 
+    // Removes count elements starting from index, with bounds checking.
+    constexpr iterator erase(size_type index, size_type count = 1) noexcept(
+        IsNothrowMoveAssignableV<value_type> && IsNothrowDestructibleV<value_type>) {
+        NEX_ASSERT_MSG(index + count <= size(), "Index and count out of bounds");
+        return erase(cbegin() + index, cbegin() + index + count);
+    }
+
+    // Removes the first occurrence of value from the SmallVec, if it exists.
+    constexpr bool remove(const_reference value) noexcept(
+        IsNothrowMoveAssignableV<value_type> && IsNothrowDestructibleV<value_type>) {
+        for (size_type index = 0; index < size(); ++index) {
+            if (operator[](index) == value) {
+                erase(cbegin() + index);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    // Removes all occurrences of value from the SmallVec, if they exist.
+    constexpr size_type removeAll(const_reference value) noexcept(
+        IsNothrowMoveAssignableV<value_type> && IsNothrowDestructibleV<value_type>) {
+        size_type removedCount = 0;
+        for (size_type index = 0; index < size(); ++index) {
+            if (operator[](index) == value) {
+                erase(cbegin() + index);
+                ++removedCount;
+                --index; // Adjust index since the elements have shifted left
+            }
+        }
+        return removedCount;
+    }
+
     // Removes all elements from the SmallVec, leaving it with a size of 0.
     constexpr void clear() noexcept { buffer_.clear(); }
 
@@ -334,14 +445,44 @@ public:
         buffer_.swap(other.buffer_);
     }
 
-    // Converts the SmallVec to a standard vector.
-    constexpr Vec<value_type> toVec() const {
+    // Finds the first occurrence of value in the SmallVec and returns an iterator to it.
+    // If the value is not found, returns end().
+    template <typename AnyValueType>
+        requires (IsConvertibleV<AnyValueType, value_type>)
+    constexpr iterator find(const AnyValueType& value) {
+        for (auto it = begin(); it != end(); ++it) {
+            if (*it == value) {
+                return it;
+            }
+        }
+        return end();
+    }
+
+    // Determines whether the SmallVec contains the specified value.
+    template <typename AnyValueType>
+        requires (IsConvertibleV<AnyValueType, value_type>)
+    NEX_NODISCARD constexpr bool contains(const AnyValueType& value) {
+        return find(value) != end();
+    }
+
+    // Creates a SmallVec from a standard Vec.
+    NEX_NODISCARD static constexpr SmallVec fromVec(const Vec<value_type>& vec) {
+        return SmallVec(vec.begin(), vec.end());
+    }
+
+    // Converts the SmallVec to a standard Vec.
+    NEX_NODISCARD constexpr Vec<value_type> asVec() const {
         return Vec<value_type>(begin(), end());
     }
 
-    // Creates a SmallVec from a standard vector.
-    static constexpr SmallVec fromVec(const Vec<value_type>& vec) {
-        return SmallVec(vec.begin(), vec.end());
+    // Converts the SmallVec to a span, providing a view of the elements without copying.
+    NEX_NODISCARD constexpr Span<value_type> asSpan() noexcept {
+        return Span<value_type>(data(), size());
+    }
+
+    // Converts the SmallVec to a const span, providing a view of the elements without copying.
+    NEX_NODISCARD constexpr Span<const value_type> asSpan() const noexcept {
+        return Span<const value_type>(data(), size());
     }
 
     // Comparison operators for SmallVec, allowing lexicographical comparison of elements.

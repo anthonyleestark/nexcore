@@ -10,6 +10,7 @@
 #include "nex/base/namespace.h"
 #include "nex/base/meta.h"
 #include "nex/base/casts.h"
+#include "nex/base/memory.h"
 
 NEX_NAMESPACE_BEGIN
 

@@ -9,14 +9,45 @@
 #include <string.h> 
 
 #include "nex/base/namespace.h"
+#include "nex/base/compiler.h"
+#include "nex/base/attributes.h"
 #include "nex/base/meta.h"
 #include "nex/base/types.h"
 #include "nex/base/casts.h"
+
+#if NEX_COMPILER_IS_MSVC
+    // Forward declare _mm_prefetch to avoid including <intrin.h>
+    NEX_EXTERN_C NEX_NORETURN void _mm_prefetch(const char* p, int i);
+#endif
 
 NEX_NAMESPACE_BEGIN
 
 // Assert non-null pointer for constructAt and destroyAt functions
 #define NEX_MEMORY_ASSERT_NON_NULL(condition, message) (void(0))
+
+/**
+ * @brief Obtains the actual address of an object, safely bypassing any overloaded operator&.
+ * @note Utilizes a compiler built-in to guarantee the extraction of the real memory address, 
+ *       even if the type has a custom or malicious address-of operator.
+ * @tparam Type The type of the object whose address is being taken.
+ * @param Value The lvalue reference to the object.
+ * @return A pointer to the object (Type*).
+ */
+template <class Type>
+NEX_NODISCARD NEX_MSVC_INTRINSIC NEX_ALWAYS_INLINE constexpr 
+auto addressOf(Type& Value) noexcept -> decltype(meta::_addressOf(Value)) {
+    return meta::_addressOf(Value);
+}
+
+/**
+ * @brief Deleted overload to explicitly prevent taking the address of rvalue temporaries.
+ * @note This overload triggers a compile-time error if a temporary object is passed, 
+ *       protecting against dangerous dangling pointers to short-lived resources.
+ * @tparam Type The type of the rvalue temporary.
+ */
+template <class Type>
+NEX_NODISCARD NEX_MSVC_INTRINSIC NEX_ALWAYS_INLINE constexpr 
+const Type* addressOf(const Type&&) = delete;
 
 /**
  * @brief Constructs an object of type `Type` at the specified memory location `location` using the provided arguments.
@@ -51,7 +82,7 @@ template <class Type, meta::EnableIfT<meta::IsArrayV<Type>, int32> = 0>
 NEX_HIDDEN_FROM_ABI constexpr void _destroyAt_Internal(Type* location) {
     NEX_MEMORY_ASSERT_NON_NULL(location != nullptr, "Error: null pointer given to destroyAt");
     for (auto&& val : *location) {
-        _destroyAt_Internal(NEX_ADDRESS_OF(val));
+        _destroyAt_Internal(addressOf(val));
     }
 }
 
@@ -138,7 +169,7 @@ using ::memchr;
 using ::memcmp;
 
 /**
- * @brief Returns the offset of a member within a struct/class.
+ * @brief Calculates the offset of a member within a struct/class.
  * @tparam Type The type of the struct/class.
  * @tparam MemberT The type of the member.
  * @param member A pointer to the member within the struct/class.
@@ -151,6 +182,88 @@ NEX_HIDDEN_FROM_ABI constexpr isize offsetOf(MemberT Type::*member) noexcept {
     static_assert(meta::IsStandardLayoutV<Type>, "Error: 'offsetOf' only safe for standard-layout types");
     return reinterpret_cast<isize>(&reinterpret_cast<Type*>(0)->*member);
 }
+
+/**
+ * @brief Retrieves the containing struct/class from a pointer to a member.
+ * @tparam Type The type of the containing struct/class.
+ * @tparam MemberPtr A pointer to the member within the struct/class.
+ * @param ptr A pointer to the member within the struct/class.
+ * @return A pointer to the containing struct/class.
+ * @note This function is only safe for standard-layout types. It uses reinterpret_cast to calculate
+ *       the address of the containing struct/class from the address of the member.
+ */
+template <typename Type, auto MemberPtr>
+NEX_NODISCARD NEX_MSVC_INTRINSIC NEX_ALWAYS_INLINE constexpr 
+Type* containerOf(
+    meta::RemoveReferenceT<decltype(meta::declval<Type>().*MemberPtr)>* ptr
+) noexcept {
+    return _containerOf_Impl<Type, MemberPtr>(ptr);
+}
+
+/**
+ * @brief Checks if a pointer is aligned to a specified byte boundary.
+ * @param ptr The pointer to check for alignment.
+ * @param alignment The alignment boundary in bytes (must be a power of two).
+ * @return True if the pointer is aligned to the specified boundary; otherwise, false.
+ * @note This function is useful for ensuring that pointers meet specific alignment requirements, 
+ *       which can be critical for performance and correctness in low-level programming.
+ */
+NEX_NODISCARD NEX_MSVC_INTRINSIC NEX_ALWAYS_INLINE constexpr 
+bool isAligned(const_void_ptr ptr, usize alignment) noexcept {
+    return (reinterpret_cast<uintptr>(ptr) & (alignment - 1)) == 0;
+}
+
+/**
+ * @brief Aligns a given address up to the next multiple of the specified alignment.
+ * @param addr The address to be aligned.
+ * @param alignment The alignment boundary in bytes (must be a power of two).
+ * @return The aligned address, which is the next multiple of the specified alignment.
+ * @note This function is useful for ensuring that memory addresses meet specific alignment requirements, 
+ *       which can be critical for performance and correctness in low-level programming.
+ */
+NEX_NODISCARD NEX_MSVC_INTRINSIC NEX_ALWAYS_INLINE constexpr 
+uintptr alignUp(uintptr addr, usize alignment) noexcept {
+    return (addr + (alignment - 1)) & ~(alignment - 1);
+}
+
+/**
+ * @brief Aligns a given pointer up to the next multiple of the specified alignment.
+ * @tparam T The type of the pointer.
+ * @param ptr The pointer to be aligned.
+ * @param alignment The alignment boundary in bytes (must be a power of two).
+ * @return The aligned pointer, which is the next multiple of the specified alignment.
+ * @note This function is useful for ensuring that pointers meet specific alignment requirements, 
+ *       which can be critical for performance and correctness in low-level programming.
+ */
+template <typename Type>
+NEX_NODISCARD NEX_MSVC_INTRINSIC NEX_ALWAYS_INLINE constexpr 
+Type* alignUpPointer(Type* ptr, usize alignment) noexcept {
+    return reinterpret_cast<Type*>(alignUp(reinterpret_cast<uintptr>(ptr), alignment));
+}
+
+/**
+ * @brief Prefetches a memory address into the CPU cache to improve access speed.
+ * @param ptr A pointer to the memory address to prefetch.
+ * @note This function is a hint to the CPU that the specified memory address will be accessed soon, 
+ *       allowing the CPU to load it into the cache ahead of time. This can improve performance in 
+ *       scenarios where memory access patterns are predictable.
+ */
+NEX_MSVC_INTRINSIC NEX_ALWAYS_INLINE constexpr
+void prefetch(const_void_ptr ptr) noexcept {
+#if NEX_HAS_BUILTIN(__builtin_prefetch)
+    __builtin_prefetch(ptr, 0, 3);   // Read, high temporal locality
+#elif NEX_COMPILER_IS_MSVC
+    _mm_prefetch(static_cast<const_nchar_ptr>(ptr), _MM_HINT_T0);
+#endif  // ^^^prefetch
+}
+
+// ======================================================================================
+// Define macro for object address retrieval
+// ======================================================================================
+
+// Obtains the actual address of an object, safely bypassing any overloaded operator&.
+#define NEX_ADDRESS_OF \
+    NEX_PREPEND_NAMESPACE(addressOf)
 
 // ======================================================================================
 // Define macros for constructing and destroying objects in a specified memory location
@@ -191,10 +304,15 @@ NEX_HIDDEN_FROM_ABI constexpr isize offsetOf(MemberT Type::*member) noexcept {
     NEX_PREPEND_NAMESPACE(memcmp(ptr1, ptr2, count))
 
 // ======================================================================================
-// Define macros for getting the offset of a member within a struct/class
+// Define macros for struct/class member offset and container retrieval
 // ======================================================================================
 
+// Calculates the offset of a member within a struct/class.
 #define NEX_OFFSET_OF(type, member) \
     NEX_PREPEND_NAMESPACE(offsetOf<type>(&type::member))
+
+// Retrieves the containing struct/class from a pointer to a member.
+#define NEX_CONTAINER_OF \
+    NEX_PREPEND_NAMESPACE(containerOf)
 
 NEX_NAMESPACE_END

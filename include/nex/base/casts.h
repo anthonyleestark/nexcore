@@ -132,30 +132,6 @@ noexcept(meta::IsNothrowMoveConstructibleV<Type> && meta::IsNothrowMoveAssignabl
 }
 
 /**
- * @brief Obtains the actual address of an object, safely bypassing any overloaded operator&.
- * @note Utilizes a compiler built-in to guarantee the extraction of the real memory address, 
- *       even if the type has a custom or malicious address-of operator.
- * @tparam Type The type of the object whose address is being taken.
- * @param Value The lvalue reference to the object.
- * @return A pointer to the object (Type*).
- */
-template <class Type>
-NEX_NODISCARD NEX_MSVC_INTRINSIC NEX_ALWAYS_INLINE constexpr 
-auto addressOf(Type& Value) noexcept -> decltype(meta::_addressOf(Value)) {
-    return meta::_addressOf(Value);
-}
-
-/**
- * @brief Deleted overload to explicitly prevent taking the address of rvalue temporaries.
- * @note This overload triggers a compile-time error if a temporary object is passed, 
- *       protecting against dangerous dangling pointers to short-lived resources.
- * @tparam Type The type of the rvalue temporary.
- */
-template <class Type>
-NEX_NODISCARD NEX_MSVC_INTRINSIC NEX_ALWAYS_INLINE constexpr 
-const Type* addressOf(const Type&&) = delete;
-
-/**
  * @brief Reinterprets the bits of a source value as a destination type.
  * @note Safe alternative to reinterpret_cast or memcpy for bit-blitting. 
  *       Requires types to be trivially copyable and of identical size.
@@ -256,7 +232,7 @@ Dest polymorphicCast(Source* polyPointer) noexcept {
  */
 template <typename Type, auto MemberPtr>
 NEX_NODISCARD NEX_MSVC_INTRINSIC NEX_ALWAYS_INLINE constexpr 
-Type* containerOf(
+Type* _containerOf_Impl(
     meta::RemoveReferenceT<decltype(meta::declval<Type>().*MemberPtr)>* ptr
 ) noexcept {
     static_assert(meta::IsStandardLayoutV<Type>, 
@@ -279,7 +255,7 @@ NEX_NODISCARD NEX_MSVC_INTRINSIC NEX_ALWAYS_INLINE constexpr
 Type* downcastMember(
     meta::RemoveReferenceT<decltype(meta::declval<Type>().*MemberPtr)>* memberPtr
 ) noexcept {
-    return containerOf<Type, MemberPtr>(memberPtr);
+    return _containerOf_Impl<Type, MemberPtr>(memberPtr);
 }
 
 /**
@@ -292,7 +268,7 @@ NEX_NODISCARD NEX_MSVC_INTRINSIC NEX_ALWAYS_INLINE constexpr
 Type& derefMember(
     meta::RemoveReferenceT<decltype(meta::declval<Type>().*MemberPtr)>* memberPtr
 ) noexcept {
-    return *containerOf<Type, MemberPtr>(memberPtr);
+    return *_containerOf_Impl<Type, MemberPtr>(memberPtr);
 }
 
 /**
@@ -345,10 +321,6 @@ Derived* safeDowncast(Base* base) noexcept {
 #define NEX_SWAP \
     NEX_PREPEND_NAMESPACE(swap)
 
-// Obtains the actual address of an object
-#define NEX_ADDRESS_OF \
-    NEX_PREPEND_NAMESPACE(addressOf)
-
 // Reinterprets the bits of a source value as a destination type, 
 // with safety checks for trivial copyability and size
 #define NEX_BIT_CAST \
@@ -370,10 +342,6 @@ Derived* safeDowncast(Base* base) noexcept {
 // using dynamic_cast in Debug builds and static_cast in Release builds
 #define NEX_POLYMORPHIC_CAST \
     NEX_PREPEND_NAMESPACE(polymorphicCast)
-
-// Get the containing struct/class from a pointer to a member
-#define NEX_CONTAINER_OF \
-    NEX_PREPEND_NAMESPACE(containerOf)
 
 // Safely downcasts a pointer to a member to a pointer to its containing structure
 #define NEX_DOWNCAST_MEMBER \

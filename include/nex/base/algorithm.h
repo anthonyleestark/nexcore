@@ -22,7 +22,7 @@ NEX_NAMESPACE_BEGIN
 template <typename ValueType>
 constexpr void assign(ValueType* dest, const ValueType* first, const ValueType* last) noexcept
     requires(meta::IsTriviallyCopyAssignableV<ValueType>) {
-    NEX_MEMCPY(dest, first, (last - first) * sizeof(ValueType));
+    NEX_MEMCPY(dest, first, (last - first));
 }
 
 /**
@@ -81,7 +81,7 @@ constexpr void fill(ValueType* dest, SizeType count, const ValueType& value)
 template <typename ValueType>
 constexpr void copy(ValueType* dest, const ValueType* first, const ValueType* last) noexcept
     requires(meta::IsTriviallyCopyConstructibleV<ValueType>) {
-    NEX_MEMCPY(dest, first, (last - first) * sizeof(ValueType));
+    NEX_MEMCPY(dest, first, (last - first));
 }
 
 /**
@@ -110,7 +110,7 @@ constexpr void copy(ValueType* dest, const ValueType* first, const ValueType* la
 template <typename ValueType>
 constexpr void relocate(ValueType* dest, ValueType* first, ValueType* last) noexcept
     requires(meta::IsTriviallyMoveConstructibleV<ValueType>) {
-    NEX_MEMMOVE(dest, first, (last - first) * sizeof(ValueType));
+    NEX_MEMMOVE(dest, first, (last - first));
 }
 
 /**

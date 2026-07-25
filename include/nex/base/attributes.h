@@ -803,3 +803,25 @@
 #else  // Compiler does not support [[lifetimebound]] attribute
     #define NEX_LIFETIMEBOUND
 #endif  // NEX_LIFETIMEBOUND
+
+/**
+ * @def NEX_NO_SANITIZE(...)
+ * @brief Annotate a function to disable specific sanitizers for that function
+ * 
+ * @details
+ * This macro expands to the appropriate compiler-specific attribute to disable specific sanitizers for the annotated 
+ * function. The `...` parameter allows you to specify one or more sanitizers to disable, such as "address", "thread", 
+ * or "undefined". If the compiler does not support a no_sanitize attribute, the macro expands to nothing, allowing 
+ * the code to compile without errors.
+ * 
+ * @see https://clang.llvm.org/docs/AttributeReference.html#no_sanitize
+ */
+#if !defined(NEX_NO_SANITIZE)
+    #if NEX_HAS_CLANG_ATTRIBUTE(no_sanitize)
+        #define NEX_NO_SANITIZE(...) NEX_CLANG_ATTRIBUTE(no_sanitize(__VA_ARGS__))
+    #elif NEX_HAS_GCC_ATTRIBUTE(no_sanitize)
+        #define NEX_NO_SANITIZE(...) NEX_GCC_ATTRIBUTE(no_sanitize(__VA_ARGS__))
+    #else  // Compiler does not support [[no_sanitize]] attribute
+        #define NEX_NO_SANITIZE(...)
+    #endif  // NEX_NO_SANITIZE
+#endif  // !defined(NEX_NO_SANITIZE)

@@ -52,12 +52,15 @@ private:
     // The character type must be trivially copyable because this is raw storage used by BasicString,
     // not an owning container for general objects.
     static_assert(meta::IsTriviallyCopyableV<value_type>,
-        "BasicStringStorage requires a trivially copyable character type");
+        "Error: BasicStringStorage requires a trivially copyable character type");
 
-    // SSO keeps short content in shortData and switches the same memory to longData
-    // only after overflowing InlineCapacity. This union avoids paying for both
-    // representations at once while size_, capacity_, and isShort_ retain the metadata
-    // required to identify the active layout.
+    /**
+     * @note
+     * SSO keeps short content in shortData and switches the same memory to longData
+     * only after overflowing InlineCapacity. This union avoids paying for both
+     * representations at once while size_, capacity_, and isShort_ retain the metadata
+     * required to identify the active layout.
+     */
     union Storage {
         value_type shortData[inlineCapacity + 1];   // Inline storage for short strings.
         pointer longData;                           // Pointer to heap storage for long strings.
@@ -319,7 +322,7 @@ public:
 
         size_type sourceIndex = 0;
         if (sourceOffset(source, count, sourceIndex)) {
-            NEX_MEMMOVE(mutableData(), mutableData() + sourceIndex, count * sizeof(value_type));
+            NEX_MEMMOVE(mutableData(), mutableData() + sourceIndex, count);
             size_ = count;
             writeTerminator();
             return;
@@ -422,7 +425,7 @@ public:
         NEX_MEMMOVE(
             mutableData() + position + count,
             mutableData() + position + removed,
-            (removable - removed + 1) * sizeof(value_type)
+            (removable - removed + 1)
         );
         if (count > 0) {
             NEX_COPY_RANGE(mutableData() + position, source, source + count);

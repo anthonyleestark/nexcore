@@ -303,6 +303,30 @@
     #define NEX_HAS_EXTENSION(x) __has_extension(x)
 #endif  // !defined(NEX_HAS_EXTENSION)
 
+/**
+ * @def NEX_HAS_KEYWORD
+ * @brief Check if a compiler keyword is available
+ * 
+ * @details
+ * A proprietary Clang/GCC feature-test operator used to check if a specific compiler keyword
+ * (e.g., __has_cpp_attribute, __has_builtin) is available in the current compilation context.
+ * Evaluates to 1 if the keyword is available, or 0 otherwise.
+ */
+
+// '__is_identifier' returns '0' if '__x' is a reserved identifier provided by the compiler
+// and '1' otherwise.
+#if !defined(__is_identifier)
+    #define __is_identifier(__x) 1
+#endif  // !defined(__is_identifier)
+
+#if !defined(__has_keyword)
+    #define __has_keyword(__x) !(__is_identifier(__x))
+#endif  // !defined(__has_keyword)
+
+#if !defined(NEX_HAS_KEYWORD)
+    #define NEX_HAS_KEYWORD(x) __has_keyword(x)
+#endif  // !defined(NEX_HAS_KEYWORD)
+
 // =================================================================================
 // Language/compiler-specific type definitions and feature detection
 // =================================================================================

@@ -302,9 +302,9 @@ using ssize     = isize;        // Represents the difference between pointers in
 
 NEX_INLINE_NAMESPACE_BEGIN(literals)
 
-constexpr usize operator""_uz(uint64 value) noexcept      { return static_cast<usize>(value); }
-constexpr isize operator""_iz(uint64 value) noexcept      { return static_cast<isize>(value); }
-constexpr max_align operator""_ma(ldouble value) noexcept { return static_cast<max_align>(value); }
+constexpr usize operator""_uz(uint64 value) noexcept          { return static_cast<usize>(value); }
+constexpr isize operator""_iz(uint64 value) noexcept          { return static_cast<isize>(value); }
+constexpr max_align operator""_ma(long double value) noexcept { return static_cast<max_align>(value); }
 
 NEX_INLINE_NAMESPACE_END(literals)
 

@@ -6,7 +6,10 @@
 #pragma once
 
 // Include the standard C library header for memory manipulation functions
-#include <string.h> 
+#include <string.h>
+
+// Include placement-new declarations used by constructAt.
+#include <new>
 
 #include "nex/base/namespace.h"
 #include "nex/base/compiler.h"
@@ -258,19 +261,21 @@ template <class To, class From>
 NEX_HIDDEN_FROM_ABI constexpr To* memcpy(To* dest, const From* src, usize elemCount) noexcept {
     if NEX_CONSTEVAL_CONTEXT {
         return constexprMemcpy(dest, src, elemCount);
-    } else if constexpr (meta::IsVoidV<meta::RemoveCvT<From>>) {
-        // `elemCount` is already a byte count when `From` is void, since `sizeof(void)` is ill-formed.
-        return static_cast<To*>(::memcpy(
-            static_cast<void_ptr>(dest),
-            static_cast<const_void_ptr>(src),
-            elemCount
-        ));
     } else {
-        return static_cast<To*>(::memcpy(
-            static_cast<void_ptr>(dest),
-            static_cast<const_void_ptr>(src),
-            elemCount * sizeof(From)
-        ));
+        if constexpr (meta::IsVoidV<meta::RemoveCvT<From>>) {
+            // `elemCount` is already a byte count when `From` is void, since `sizeof(void)` is ill-formed.
+            return static_cast<To*>(::memcpy(
+                static_cast<void_ptr>(dest),
+                static_cast<const_void_ptr>(src),
+                elemCount
+            ));
+        } else {
+            return static_cast<To*>(::memcpy(
+                static_cast<void_ptr>(dest),
+                static_cast<const_void_ptr>(src),
+                elemCount * sizeof(From)
+            ));
+        }
     }
 }
 
@@ -292,20 +297,6 @@ void* memcpy(void* dest, const void* src, usize count) noexcept {
     }
 }
 
-// Internal helper to determine whether a value of Type1 can be compared
-// with a value of Type2 using the less-than operator (<).
-template <class Type1 = void, class Type2 = Type1>
-struct NEX_HIDDEN_FROM_ABI Less_Internal {};
-
-// Specialization for void types, which allows comparing any two types using the less-than operator (<).
-template <>
-struct NEX_HIDDEN_FROM_ABI Less_Internal<void, void> {
-    template <class Type1, class Type2>
-    NEX_HIDDEN_FROM_ABI constexpr bool operator()(const Type1& lhs, const Type2& rhs) const {
-        return lhs < rhs;
-    }
-};
-
 /**
  * @brief Checks if the range [first, last) is valid, meaning that first <= last.
  * @tparam Type The type of the pointers.
@@ -324,20 +315,8 @@ bool isValidRange(const Type* first, const Type* last) {
         return __builtin_constant_p(first <= last) && first <= last;
     }
 
-    return !Less_Internal<>()(last, first);
+    return reinterpret_cast<uintptr>(first) <= reinterpret_cast<uintptr>(last);
 }
-
-// Internal helper to determine if two pointer types are less-than comparable.
-template <class Type1, class Type2, class = void>
-struct NEX_HIDDEN_FROM_ABI IsLessThanComparable_Internal : meta::FalseType {};
-
-// Specialization for pointer types that are less-than comparable.
-template <class Type1, class Type2>
-struct NEX_HIDDEN_FROM_ABI
-    IsLessThanComparable_Internal<
-        Type1, Type2,
-        meta::VoidT<decltype(meta::declval<Type1>() < meta::declval<Type2>())>
-    > : meta::TrueType {};
 
 /**
  * @brief Checks if the pointer `ptr` is within the range [begin, end).
@@ -350,41 +329,23 @@ struct NEX_HIDDEN_FROM_ABI
  * @note This function is constexpr and can be evaluated at compile time.
  */
 template <class Type1, class Type2>
-    requires (IsLessThanComparable_Internal<const Type1*, const Type2*>::value)
 NEX_NO_SANITIZE("address") NEX_HIDDEN_FROM_ABI constexpr
 bool isPointerInRange(const Type1* begin, const Type1* end, const Type2* ptr) {
-  NEX_MEMORY_ASSERT_VALID_INPUT_RANGE(isValidRange(begin, end), "[begin, end) is not a valid range");
+    NEX_MEMORY_ASSERT_VALID_INPUT_RANGE(isValidRange(begin, end), "[begin, end) is not a valid range");
 
     if NEX_CONSTEVAL_CONTEXT {
         // If this is not a constant during constant evaluation we know that ptr is not part of the allocation where
         // [begin, end) is.
         if (!__builtin_constant_p(begin <= ptr && ptr < end))
-        return false;
+            return false;
+
+        return begin <= ptr && ptr < end;
     }
 
-    return !Less_Internal<>()(ptr, begin) && Less_Internal<>()(ptr, end);
-}
-
-/**
- * @brief Checks if the pointer `ptr` is within the range [begin, end) for types that are not less-than comparable.
- * @tparam Type1 The type of the begin and end pointers.
- * @tparam Type2 The type of the ptr pointer.
- * @param begin A pointer to the first element of the range.
- * @param end A pointer to one past the last element of the range.
- * @param ptr A pointer to check if it is within the range.
- * @return true if ptr is within the range [begin, end), false otherwise.
- * @note This function is constexpr and can be evaluated at compile time.
- */
-template <class Type1, class Type2>
-    requires (!IsLessThanComparable_Internal<const Type1*, const Type2*>::value)
-NEX_NO_SANITIZE("address") NEX_HIDDEN_FROM_ABI constexpr
-bool isPointerInRange(const Type1* begin, const Type1* end, const Type2* ptr) {
-    if NEX_CONSTEVAL_CONTEXT {
-        return false;
-    }
-
-    return reinterpret_cast<const char*>(begin) <= reinterpret_cast<const char*>(ptr) &&
-            reinterpret_cast<const char*>(ptr) < reinterpret_cast<const char*>(end);
+    auto beginAddress = reinterpret_cast<uintptr>(begin);
+    auto endAddress = reinterpret_cast<uintptr>(end);
+    auto ptrAddress = reinterpret_cast<uintptr>(ptr);
+    return beginAddress <= ptrAddress && ptrAddress < endAddress;
 }
 
 /**
@@ -425,36 +386,37 @@ struct NEX_HIDDEN_FROM_ABI IsAlwaysBitcastable_Internal {
         /**
          * @note
          * Beyond the simple case, we say that one type is "always bit-castable" to another if:
-         * - (1) `From` and `To` have the same value representation, and in addition every possible value of `From` has
-         *   a corresponding value in the `To` type (in other words, the set of values of `To` is a superset of the set of
-         *   values of `From`);
-         * - (2) When the corresponding values are not the same value (as, for example, between an unsigned and a signed
-         *   integer, where a large positive value of the unsigned integer corresponds to a negative value in the signed
-         *   integer type), the value of `To` that results from a bitwise copy of `From` is the same what would be
-         *   produced by the built-in assignment (if it were defined for the two types, to which there are minor
-         *   exceptions, e.g. built-in arrays).
+         * - (1) `From` and `To` have the same value representation, and in addition every possible value of `From`
+         *   has a corresponding value in the `To` type (in other words, the set of values of `To` is a superset of
+         *   the set of values of `From`);
+         * - (2) When the corresponding values are not the same value (as, for example, between an unsigned and
+         *   a signed integer, where a large positive value of the unsigned integer corresponds to a negative value
+         *   in the signed integer type), the value of `To` that results from a bitwise copy of `From` is the same
+         *   what would be produced by the built-in assignment (if it were defined for the two types, to which
+         *   there are minor exceptions, e.g. built-in arrays).
          *
          * In practice, that means:
-         * - all integral types (except `bool`, see below) -- that is, character types and `int` types, both signed and
-         *   unsigned...
+         * - all integral types (except `bool`, see below) -- that is, character types and `int` types, both signed
+         *   and unsigned...
          * - as well as arrays of such types...
          * - ...that have the same size.
          *
          * Other trivially-copyable types can't be validly bit-cast outside of their own type:
-         * - floating-point types normally have different sizes and thus aren't bit-castable between each other (fails
-         * #1);
-         * - integral types and floating-point types use different representations, so for example bit-casting an integral
-         *   `1` to `float` results in a very small less-than-one value, unlike built-in assignment that produces `1.0`
-         *   (fails #2);
-         * - booleans normally use only a single bit of their object representation; bit-casting an integer to a boolean
-         *   will result in a boolean object with an incorrect representation, which is undefined behavior (fails #2).
+         * - floating-point types normally have different sizes and thus aren't bit-castable between each other
+         *   (fails #1);
+         * - integral types and floating-point types use different representations, so for example bit-casting
+         *   an integral `1` to `float` results in a very small less-than-one value, unlike built-in assignment
+         *   that produces `1.0` (fails #2);
+         * - booleans normally use only a single bit of their object representation; bit-casting an integer to
+         *   a boolean will result in a boolean object with an incorrect representation, which is undefined
+         *   behavior (fails #2).
          *   Bit-casting from a boolean into an integer, however, is valid;
          * - enumeration types may have different ranges of possible values (fails #1);
-         * - for pointers, it is not guaranteed that pointers to different types use the same set of values to represent
-         *   addresses, and the conversion results are explicitly unspecified for types with different alignments
-         *   (fails #1);
-         * - for structs and unions it is impossible to determine whether the set of values of one of them is a subset of
-         *   the other (fails #1);
+         * - for pointers, it is not guaranteed that pointers to different types use the same set of values to
+         *   represent addresses, and the conversion results are explicitly unspecified for types with different
+         *   alignments (fails #1);
+         * - for structs and unions it is impossible to determine whether the set of values of one of them is
+         *   a subset of the other (fails #1);
          * - there is no need to consider `nullptr` for practical purposes.
          */
         (
@@ -464,20 +426,6 @@ struct NEX_HIDDEN_FROM_ABI IsAlwaysBitcastable_Internal {
             !meta::IsSameV<UnqualTo, bool>
         );
 };
-
-#if (NEX_HAS_KEYWORD(__datasizeof) || NEX_HAS_EXTENSION(datasizeof)) && 0
-    template <class Type>
-    inline const usize datasizeofV = __datasizeof(Type);
-#else
-    template <class Type>
-    struct NEX_HIDDEN_FROM_ABI FirstPaddingByte_Internal {
-        NEX_NO_UNIQUE_ADDRESS Type v;
-        char firstPaddingByte;
-    };
-
-    template <class Type>
-    inline const usize datasizeofV = __builtin_offsetof(FirstPaddingByte_Internal<Type>, firstPaddingByte);
-#endif
 
 /**
  * @brief Moves `elemCount` of elements from the memory area `src` to the memory area `dest` (compile-time safe).
@@ -509,14 +457,14 @@ NEX_HIDDEN_FROM_ABI constexpr To* constexprMemmove(To* dest, From* src, usize el
                 }
             }
         }
-    } else if (elemCount > 0) {
-#if NEX_HAS_BUILTIN(__builtin_memmove)
-        __builtin_memmove(dest, src, (elemCount - 1) * sizeof(To) + datasizeofV<To>);
-#else
-        for (usize i = 0; i != elemCount; ++i) {
-            assignTriviallyCopyable(dest[i], src[i]);
+    } else {
+        if (elemCount > 0) {
+            ::memmove(
+                static_cast<void_ptr>(dest),
+                static_cast<const_void_ptr>(src),
+                elemCount * sizeof(To)
+            );
         }
-#endif
     }
 
     return dest;
@@ -534,6 +482,8 @@ NEX_HIDDEN_FROM_ABI constexpr To* constexprMemmove(To* dest, From* src, usize el
  */
 template <class To, class From>
 NEX_HIDDEN_FROM_ABI constexpr To* memmove(To* dest, const From* src, usize elemCount) noexcept {
+    static_assert(IsAlwaysBitcastable_Internal<From, To>::value);
+
     if NEX_CONSTEVAL_CONTEXT {
         return constexprMemmove(dest, src, elemCount);
     } else {
@@ -763,11 +713,11 @@ Type1* constexprMemchr(Type1* str, Type2 value, usize count) {
  */
 template <class Type1, class Type2>
 NEX_HIDDEN_FROM_ABI constexpr
-Type1* memchr(const Type1* str, Type2 value, usize count) {
+Type1* memchr(Type1* str, Type2 value, usize count) {
     if NEX_CONSTEVAL_CONTEXT {
-        return constexprMemchr(const_cast<Type1*>(str), value, count);
+        return constexprMemchr(str, value, count);
     } else {
-        return static_cast<Type1*>(::memchr(const_cast<Type1*>(str), static_cast<int32>(value), count));
+        return static_cast<Type1*>(::memchr(str, static_cast<int32>(value), count));
     }
 }
 
@@ -808,13 +758,28 @@ void* constexprMemchr(void* str, int32 value, usize count) {
  * @return A pointer to the first occurrence of the character `value` in the memory area, or `nullptr`
  *         if the character is not found.
  */
-template <>
 NEX_HIDDEN_FROM_ABI constexpr
-void* memchr(const void* str, int32 value, usize count) {
+void* memchr(void* str, int32 value, usize count) {
+    if NEX_CONSTEVAL_CONTEXT {
+        return constexprMemchr(str, value, count);
+    } else {
+        return ::memchr(str, value, count);
+    }
+}
+
+/**
+ * @brief Searches a read-only byte range for the first occurrence of `value`.
+ * @param str A pointer to the memory area to be searched.
+ * @param value The character to be searched for (interpreted as an unsigned char).
+ * @param count The number of bytes to be searched.
+ * @return A pointer to the first matching byte, or `nullptr` if the character is not found.
+ */
+NEX_HIDDEN_FROM_ABI constexpr
+const void* memchr(const void* str, int32 value, usize count) {
     if NEX_CONSTEVAL_CONTEXT {
         return constexprMemchr(const_cast<void*>(str), value, count);
     } else {
-        return const_cast<void*>(::memchr(str, value, count));
+        return ::memchr(str, value, count);
     }
 }
 
@@ -998,7 +963,7 @@ int memcmp(const void* lhs, const void* rhs, usize count) {
  *       the offset of the member from the beginning of the struct/class.
  */
 template <typename Type, typename MemberT>
-NEX_HIDDEN_FROM_ABI constexpr isize offsetOf(MemberT Type::*member) noexcept {
+NEX_HIDDEN_FROM_ABI isize offsetOf(MemberT Type::*member) noexcept {
     static_assert(meta::IsStandardLayoutV<Type>, "Error: 'offsetOf' only safe for standard-layout types");
     return reinterpret_cast<isize>(&reinterpret_cast<Type*>(0)->*member);
 }
@@ -1013,7 +978,7 @@ NEX_HIDDEN_FROM_ABI constexpr isize offsetOf(MemberT Type::*member) noexcept {
  *       the address of the containing struct/class from the address of the member.
  */
 template <typename Type, auto MemberPtr>
-NEX_NODISCARD NEX_MSVC_INTRINSIC NEX_ALWAYS_INLINE constexpr 
+NEX_NODISCARD NEX_MSVC_INTRINSIC NEX_ALWAYS_INLINE
 Type* containerOf(
     meta::RemoveReferenceT<decltype(meta::declval<Type>().*MemberPtr)>* ptr
 ) noexcept {
@@ -1028,7 +993,7 @@ Type* containerOf(
  * @note This function is useful for ensuring that pointers meet specific alignment requirements, 
  *       which can be critical for performance and correctness in low-level programming.
  */
-NEX_NODISCARD NEX_MSVC_INTRINSIC NEX_ALWAYS_INLINE constexpr 
+NEX_NODISCARD NEX_MSVC_INTRINSIC NEX_ALWAYS_INLINE
 bool isAligned(const_void_ptr ptr, usize alignment) noexcept {
     return (reinterpret_cast<uintptr>(ptr) & (alignment - 1)) == 0;
 }
@@ -1056,7 +1021,7 @@ uintptr alignUp(uintptr addr, usize alignment) noexcept {
  *       which can be critical for performance and correctness in low-level programming.
  */
 template <typename Type>
-NEX_NODISCARD NEX_MSVC_INTRINSIC NEX_ALWAYS_INLINE constexpr 
+NEX_NODISCARD NEX_MSVC_INTRINSIC NEX_ALWAYS_INLINE
 Type* alignUpPointer(Type* ptr, usize alignment) noexcept {
     return reinterpret_cast<Type*>(alignUp(reinterpret_cast<uintptr>(ptr), alignment));
 }
@@ -1068,7 +1033,7 @@ Type* alignUpPointer(Type* ptr, usize alignment) noexcept {
  *       allowing the CPU to load it into the cache ahead of time. This can improve performance in 
  *       scenarios where memory access patterns are predictable.
  */
-NEX_MSVC_INTRINSIC NEX_ALWAYS_INLINE constexpr
+NEX_MSVC_INTRINSIC NEX_ALWAYS_INLINE
 void prefetch(const_void_ptr ptr) noexcept {
 #if NEX_HAS_BUILTIN(__builtin_prefetch)
     __builtin_prefetch(ptr, 0, 3);   // Read, high temporal locality
@@ -1091,7 +1056,7 @@ void prefetch(const_void_ptr ptr) noexcept {
 
 // Constructs an object of type `Type` at the specified memory location `ptr` using the provided arguments.
 #define NEX_CONSTRUCT_AT(ptr, ...) \
-    NEX_PREPEND_NAMESPACE(constructAt(ptr, __VA_ARGS__))
+    NEX_PREPEND_NAMESPACE(constructAt(ptr __VA_OPT__(,) __VA_ARGS__))
 
 // Destroys the object of type `Type` at the specified memory location `ptr`.
 #define NEX_DESTROY_AT(ptr) \

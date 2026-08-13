@@ -85,6 +85,33 @@
 // Source location utility class and macros
 // ================================================================================================
 
+#if NEX_COMPILER_IS_CLANG && NEX_HAS_BUILTIN(__builtin_source_location)
+    #if NEX_NO_STL
+        NEX_STD_BEGIN
+
+        // Provide a minimal implementation of std::source_location for Clang
+        // when the STL is not available.
+        class source_location {
+        public:
+            /**
+             * @note
+             * The names source_location::__impl, _M_file_name, _M_function_name, _M_line, and _M_column
+             * are hard-coded in the compiler and must not be changed here.
+             */
+            struct __impl {
+                const char* _M_file_name;
+                const char* _M_function_name;
+                unsigned _M_line;
+                unsigned _M_column;
+            };
+        };
+
+        NEX_STD_END
+    #else
+        #include <source_location>
+    #endif
+#endif
+
 NEX_NAMESPACE_BEGIN
 
 /**
@@ -296,40 +323,23 @@ public:
 // Source location class implementation
 // ================================================================================================
 
-#if NEX_COMPILER_IS_CLANG || NEX_COMPILER_GCC_COMPATIBLE
+#if NEX_COMPILER_IS_CLANG && NEX_HAS_BUILTIN(__builtin_source_location)
 
 private:
-    /**
-     * @note
-     * The names SourceLocation::__impl, _M_file_name, _M_function_name, _M_line, and _M_column
-     * are hard-coded in the compiler and must not be changed here.
-     */
-    struct __impl {
-        FilePathType        _M_file_name;
-        FunctionNameType    _M_function_name;
-        LineNumberType      _M_line;
-        ColumnNumberType    _M_column;
-    };
+    using BuiltinSourceLocationPtr = decltype(__builtin_source_location());
 
     // Pointer to the implementation struct that holds the source location information
-    const __impl* __ptr_ = nullptr;
-
-    // Helper function to cast a pointer to the implementation struct, which is used 
-    // for accessing the source location information
-    static consteval const __impl* cast_bsl_ptr(auto ptr) noexcept {
-        union {
-            decltype(ptr) src;
-            const __impl* dst;
-        } u{.src = ptr};
-        return u.dst;
-    }
+    BuiltinSourceLocationPtr __ptr_ = nullptr;
 
 public:
-    // The defaulted `ptr` argument ensures that the builtin is evaluated within the context of the caller. 
-    // The exact type of `ptr` is deferred and deduced at the caller side. An explicit value should never be provided.
-    static consteval SourceLocation current(auto ptr = __builtin_source_location()) noexcept {
+    // The defaulted `ptr` argument ensures that the builtin is evaluated within the context of the caller.
+    // An explicit value should never be provided, as it would defeat the purpose of capturing the caller's
+    // source location.
+    static consteval SourceLocation current(
+        BuiltinSourceLocationPtr ptr = __builtin_source_location()
+    ) noexcept {
         SourceLocation loc;
-        loc.__ptr_ = cast_bsl_ptr(ptr);
+        loc.__ptr_ = ptr;
         return loc;
     }
 
@@ -366,7 +376,7 @@ public:
     }
 #endif  // !NEX_USE_DETAILED_FUNCTION_SIGNATURE
 
-#else  // ^^NEX_COMPILER_IS_CLANG || NEX_COMPILER_GCC_COMPATIBLE
+#else  // ^^NEX_COMPILER_IS_CLANG && NEX_HAS_BUILTIN(__builtin_source_location)
 
 private:
     /**

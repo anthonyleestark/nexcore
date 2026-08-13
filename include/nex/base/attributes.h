@@ -179,17 +179,18 @@
  */
 #if NEX_BUILD_MODE_IS_RELEASE
     // In release builds, we can use the appropriate always-inline attribute for the compiler
-    #if NEX_HAS_CLANG_ATTRIBUTE(always_inline)
-        #define NEX_ALWAYS_INLINE NEX_CLANG_ATTRIBUTE(always_inline) inline
-    #elif NEX_HAS_GCC_ATTRIBUTE(always_inline)
-        #define NEX_ALWAYS_INLINE NEX_GCC_ATTRIBUTE(always_inline) inline
-    #elif NEX_COMPILER_MSVC_COMPATIBLE
+    #if NEX_COMPILER_MSVC_COMPATIBLE
+        // MSVC-specific always-inline directive
         #define NEX_ALWAYS_INLINE __forceinline
-    #else  // Compiler does not support an always-inline attribute
+    #elif (NEX_COMPILER_IS_CLANG || NEX_COMPILER_GCC_COMPATIBLE) && NEX_HAS_ATTRIBUTE(always_inline)
+        // Clang and GCC support the always_inline attribute,
+        // which can be used to suggest that a function should always be inlined
+        #define NEX_ALWAYS_INLINE inline __attribute__((always_inline))
+    #else  // Fallback for other compilers or when the always_inline attribute is not available
         #define NEX_ALWAYS_INLINE inline
     #endif
 #else
-    // In debug builds, we avoid forcing inlining 
+    // In debug builds, we avoid forcing inlining
     // to preserve function boundaries for better debugging experience
     #define NEX_ALWAYS_INLINE inline
 #endif  // ^^NEX_ALWAYS_INLINE

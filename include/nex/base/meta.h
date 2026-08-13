@@ -218,6 +218,110 @@ struct RemoveCv<const volatile Type> {
 template <class Type>
 using RemoveCvT = typename RemoveCv<Type>::type;
 
+// RemoveReference implementation to remove reference qualifiers
+template <class Type>
+struct RemoveReference {
+    using type = Type;
+    using ConstThruRefType = const Type;
+};
+
+template <class Type>
+struct RemoveReference<Type&> {
+    using type = Type;
+    using ConstThruRefType = const Type&;
+};
+
+template <class Type>
+struct RemoveReference<Type&&> {
+    using type = Type;
+    using ConstThruRefType = const Type&&;
+};
+
+template <class Type>
+using RemoveReferenceT = typename RemoveReference<Type>::type;
+
+template <class Type>
+using ConstThruRefImpl = typename RemoveReference<Type>::ConstThruRefType;
+
+template <class Type>
+using RemoveCvrefTImpl NEX_MSVC_KNOWN_SEMANTICS = RemoveCvT<RemoveReferenceT<Type>>;
+
+// Remove reference and cv-qualifiers from a type
+template <class Type>
+using RemoveCvrefT = RemoveCvrefTImpl<Type>;
+
+template <class Type>
+struct RemoveCvref {
+    using type = RemoveCvrefT<Type>;
+};
+
+// Remove array extent from a type
+template <class Type>
+struct RemoveExtent {
+    using type = Type;
+};
+
+template <class Type, unsigned long long Size>
+struct RemoveExtent<Type[Size]> {
+    using type = Type;
+};
+
+template <class Type>
+struct RemoveExtent<Type[]> {
+    using type = Type;
+};
+
+template <class Type>
+using RemoveExtentT = typename RemoveExtent<Type>::type;
+
+// Remove all array extents from a type
+template <class Type>
+struct RemoveAllExtents {
+    using type = Type;
+};
+
+template <class Type, unsigned long long Size>
+struct RemoveAllExtents<Type[Size]> {
+    using type = typename RemoveAllExtents<Type>::type;
+};
+
+template <class Type>
+struct RemoveAllExtents<Type[]> {
+    using type = typename RemoveAllExtents<Type>::type;
+};
+
+template <class Type>
+using RemoveAllExtentsT = typename RemoveAllExtents<Type>::type;
+
+// Remove pointer qualifiers from a type
+template <class Type>
+struct RemovePointer {
+    using type = Type;
+};
+
+template <class Type>
+struct RemovePointer<Type*> {
+    using type = Type;
+};
+
+template <class Type>
+struct RemovePointer<Type* const> {
+    using type = Type;
+};
+
+template <class Type>
+struct RemovePointer<Type* volatile> {
+    using type = Type;
+};
+
+template <class Type>
+struct RemovePointer<Type* const volatile> {
+    using type = Type;
+};
+
+template <class Type>
+using RemovePointerT = typename RemovePointer<Type>::type;
+
 // Determine whether a type is any of a list of types
 template <class Type, class... Types>
 constexpr bool IsAnyOfV = (IsSameV<Type, Types> || ...);
@@ -627,110 +731,6 @@ struct IsBaseOf : BoolConstant<__is_base_of(Base, Derived)> {};
 
 template <class Base, class Derived>
 constexpr bool IsBaseOfV = IsBaseOf<Base, Derived>::value;
-
-// RemoveReference implementation to remove reference qualifiers
-template <class Type>
-struct RemoveReference {
-    using type = Type;
-    using ConstThruRefType = const Type;
-};
-
-template <class Type>
-struct RemoveReference<Type&> {
-    using type = Type;
-    using ConstThruRefType = const Type&;
-};
-
-template <class Type>
-struct RemoveReference<Type&&> {
-    using type = Type;
-    using ConstThruRefType = const Type&&;
-};
-
-template <class Type>
-using RemoveReferenceT = typename RemoveReference<Type>::type;
-
-template <class Type>
-using ConstThruRefImpl = typename RemoveReference<Type>::ConstThruRefType;
-
-template <class Type>
-using RemoveCvrefTImpl NEX_MSVC_KNOWN_SEMANTICS = RemoveCvT<RemoveReferenceT<Type>>;
-
-// Remove reference and cv-qualifiers from a type
-template <class Type>
-using RemoveCvrefT = RemoveCvrefTImpl<Type>;
-
-template <class Type>
-struct RemoveCvref {
-    using type = RemoveCvrefT<Type>;
-};
-
-// Remove array extent from a type
-template <class Type>
-struct RemoveExtent {
-    using type = Type;
-};
-
-template <class Type, unsigned long long Size>
-struct RemoveExtent<Type[Size]> {
-    using type = Type;
-};
-
-template <class Type>
-struct RemoveExtent<Type[]> {
-    using type = Type;
-};
-
-template <class Type>
-using RemoveExtentT = typename RemoveExtent<Type>::type;
-
-// Remove all array extents from a type
-template <class Type>
-struct RemoveAllExtents {
-    using type = Type;
-};
-
-template <class Type, unsigned long long Size>
-struct RemoveAllExtents<Type[Size]> {
-    using type = typename RemoveAllExtents<Type>::type;
-};
-
-template <class Type>
-struct RemoveAllExtents<Type[]> {
-    using type = typename RemoveAllExtents<Type>::type;
-};
-
-template <class Type>
-using RemoveAllExtentsT = typename RemoveAllExtents<Type>::type;
-
-// Remove pointer qualifiers from a type
-template <class Type>
-struct RemovePointer {
-    using type = Type;
-};
-
-template <class Type>
-struct RemovePointer<Type*> {
-    using type = Type;
-};
-
-template <class Type>
-struct RemovePointer<Type* const> {
-    using type = Type;
-};
-
-template <class Type>
-struct RemovePointer<Type* volatile> {
-    using type = Type;
-};
-
-template <class Type>
-struct RemovePointer<Type* const volatile> {
-    using type = Type;
-};
-
-template <class Type>
-using RemovePointerT = typename RemovePointer<Type>::type;
 
 // Copy const-qualifier from one type to another
 template <class From, class To>

@@ -86,7 +86,7 @@
 // ================================================================================================
 
 #if NEX_COMPILER_IS_CLANG && NEX_HAS_BUILTIN(__builtin_source_location)
-    #if NEX_NO_STL
+    #if defined(NEX_NO_STL)
         NEX_STD_BEGIN
 
         // Provide a minimal implementation of std::source_location for Clang

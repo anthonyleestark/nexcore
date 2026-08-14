@@ -45,6 +45,13 @@ using TrueType = meta::TrueType;
 /// Represents the compile-time constant value `false`.
 using FalseType = meta::FalseType;
 
+/// AlwaysFalse is a helper type trait that always evaluates to false,
+/// used to delay static_assert until template instantiation.
+template <typename ...Args>
+using AlwaysFalse = meta::AlwaysFalse<Args...>;
+template <typename ...Args>
+inline constexpr bool AlwaysFalseV = meta::AlwaysFalseV<Args...>;
+
 /// Checks whether Type is an integral type (e.g., int32, int64, nchar, etc.).
 template <class Type>
 using IsIntegral = BoolConstant<meta::IsIntegralV<Type>>;

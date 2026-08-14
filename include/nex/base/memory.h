@@ -34,6 +34,9 @@
 // Assert valid input range for isPointerInRange function
 #define NEX_MEMORY_ASSERT_VALID_INPUT_RANGE(condition, message) (void(0))
 
+// Assert non-overlapping ranges for memory operations
+#define NEX_MEMORY_ASSERT_NON_OVERLAPPING_RANGES(condition, message) (void(0))
+
 NEX_NAMESPACE_BEGIN
 
 /**
@@ -1076,7 +1079,37 @@ void prefetch(const_void_ptr ptr) noexcept {
     NEX_PREPEND_NAMESPACE(destroyAt(ptr))
 
 // ======================================================================================
-// Define macros for low-level memory manipulation functions
+// Define macros for low-level memory manipulation functions (compile-time safe versions)
+// ======================================================================================
+
+// Copies `count` of elements from the memory area `src` to the memory area `dest`
+#define NEX_CONSTEXPR_MEMCPY(dest, src, count) \
+    NEX_PREPEND_NAMESPACE(constexprMemcpy(dest, src, count))
+
+// Moves `count` of elements from the memory area `src` to the memory area `dest`.
+// The memory areas may overlap.
+#define NEX_CONSTEXPR_MEMMOVE(dest, src, count) \
+    NEX_PREPEND_NAMESPACE(constexprMemmove(dest, src, count))
+
+// Sets the first `count` bytes of the memory area pointed to by `dest` to the specified value `value`.
+#define NEX_CONSTEXPR_MEMSET(dest, value, byteCount) \
+    NEX_PREPEND_NAMESPACE(constexprMemset(dest, value, byteCount))
+
+// Searches for the first occurrence of the character `value` (interpreted as an unsigned char)
+// in the first `count` bytes of the memory area pointed to by `ptr`.
+#define NEX_CONSTEXPR_MEMCHR(ptr, value, byteCount) \
+    NEX_PREPEND_NAMESPACE(constexprMemchr(ptr, value, byteCount))
+
+// Compares the first `count` bytes of the memory areas `ptr1` and `ptr2`.
+#define NEX_CONSTEXPR_MEMCMP(ptr1, ptr2, count) \
+    NEX_PREPEND_NAMESPACE(constexprMemcmp(ptr1, ptr2, count))
+
+// Compares the first `count` bytes of the memory areas `ptr1` and `ptr2` for equality.
+#define NEX_CONSTEXPR_MEMCMP_EQUAL(ptr1, ptr2, count) \
+    NEX_PREPEND_NAMESPACE(constexprMemcmpEqual(ptr1, ptr2, count))
+
+// ======================================================================================
+// Define macros for low-level memory manipulation functions (runtime versions)
 // ======================================================================================
 
 // Copies `count` of elements from the memory area `src` to the memory area `dest`.

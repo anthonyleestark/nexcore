@@ -56,6 +56,16 @@ using TrueType  = BoolConstant<true>;
 // Represents the compile-time constant value `false`.
 using FalseType = BoolConstant<false>;
 
+// AlwaysFalse is a helper type trait that always evaluates to false,
+// used to delay static_assert until template instantiation.
+template <typename ...Args>
+struct AlwaysFalse {
+    static constexpr bool value = false;
+};
+
+template <typename ...Args>
+inline constexpr bool AlwaysFalseV = AlwaysFalse<Args...>::value;
+
 // EnableIf implementation for SFINAE
 template <bool BoolCond, class Type = void>
 struct EnableIf {};     // no member "type" when !BoolCond
@@ -392,7 +402,13 @@ NEX_NODISCARD constexpr bool IsConstantEvaluated() noexcept {
     constexpr bool IsSignedIntegralV = __is_signed(Type);
 
     template <class Type>
+    struct IsSignedIntegral : BoolConstant<IsSignedIntegralV<Type>> {};
+
+    template <class Type>
     constexpr bool IsUnsignedIntegralV = __is_unsigned(Type);
+
+    template <class Type>
+    struct IsUnsignedIntegral : BoolConstant<IsUnsignedIntegralV<Type>> {};
 #else  // No builtin support
     template <class Type, bool = IsIntegralV<Type>>
     struct NEX_HIDDEN_FROM_ABI SignCheckBase {

@@ -8,7 +8,7 @@
 // Include the standard C library header for memory manipulation functions
 #include <string.h>
 
-// Include placement-new declarations used by constructAt.
+// Include placement-new declarations used by constructAt().
 #include <new>
 
 #include "nex/base/namespace.h"
@@ -129,7 +129,7 @@ NEX_HIDDEN_FROM_ABI constexpr void destroyAt(Type* location) {
  * @note This function is only enabled for types that are trivially copyable and assignable.
  */
 template <class To, class From>
-    requires (meta::IsAssignableV<To&, From const&>)
+    requires (meta::IsTriviallyCopyableV<To> && meta::IsAssignableV<To&, From const&>)
 NEX_HIDDEN_FROM_ABI constexpr To& assignTriviallyCopyable(To& dest, From const& src) {
     dest = src;
     return dest;
@@ -146,7 +146,9 @@ NEX_HIDDEN_FROM_ABI constexpr To& assignTriviallyCopyable(To& dest, From const& 
  * @note This function is only enabled for types that are trivially copyable and constructible from `From`.
  */
 template <class To, class From>
-    requires (!meta::IsAssignableV<To&, From const&> && meta::IsAssignableV<To&, From&&>)
+    requires (meta::IsTriviallyCopyableV<To> &&
+              !meta::IsAssignableV<To&, From const&> &&
+              meta::IsAssignableV<To&, From&&>)
 NEX_HIDDEN_FROM_ABI constexpr To& assignTriviallyCopyable(To& dest, From& src) {
     // this is safe, we're not actually moving anything since the assignment is trivial
     dest = static_cast<From&&>(src);
@@ -164,8 +166,8 @@ NEX_HIDDEN_FROM_ABI constexpr To& assignTriviallyCopyable(To& dest, From& src) {
  * @note This function is only enabled for types that are trivially copyable and constructible from `From const&`.
  */
 template <class To, class From>
-    requires (!meta::IsAssignableV<To&, From const&> &&
-              !meta::IsAssignableV<To&, From&&> &&
+    requires (meta::IsTriviallyCopyableV<To> &&
+              !meta::IsAssignableV<To&, From const&> && !meta::IsAssignableV<To&, From&&> &&
               meta::IsConstructibleV<To, From const&>)
 NEX_HIDDEN_FROM_ABI constexpr To& assignTriviallyCopyable(To& dest, From const& src) {
     // To is trivially destructible, so we don't need to call its destructor
@@ -185,7 +187,8 @@ NEX_HIDDEN_FROM_ABI constexpr To& assignTriviallyCopyable(To& dest, From const& 
  * @note This function is only enabled for types that are trivially copyable and constructible from `From&&`.
  */
 template <class To, class From>
-    requires (!meta::IsAssignableV<To&, From const&> && !meta::IsAssignableV<To&, From&&> &&
+    requires (meta::IsTriviallyCopyableV<To> &&
+              !meta::IsAssignableV<To&, From const&> && !meta::IsAssignableV<To&, From&&> &&
               !meta::IsConstructibleV<To, From const&> && meta::IsConstructibleV<To, From&&>)
 NEX_HIDDEN_FROM_ABI constexpr To& assignTriviallyCopyable(To& dest, From& src) {
     // To is trivially destructible, so we don't need to call its destructor
@@ -206,35 +209,35 @@ NEX_HIDDEN_FROM_ABI constexpr To& assignTriviallyCopyable(To& dest, From& src) {
 #undef memcmp
 
 /**
- * @brief Copies `elemCount` of elements from the memory area `src` to the memory area `dest` (compile-time safe).
+ * @brief Copies `count` of elements from the memory area `src` to the memory area `dest` (compile-time safe).
  * @tparam To The type of the destination pointer.
  * @tparam From The type of the source pointer.
  * @param dest A pointer to the destination memory area.
  * @param src A pointer to the source memory area.
- * @param elemCount The number of elements to copy.
+ * @param elementCount The number of elements to copy.
  * @return A pointer to the destination memory area `dest`.
  * @note The memory areas must not overlap. Use `memmove` if the memory areas do overlap.
  */
 template <class To, class From>
-NEX_HIDDEN_FROM_ABI constexpr To* constexprMemcpy(To* dest, const From* src, usize elemCount) noexcept {
+NEX_HIDDEN_FROM_ABI constexpr To* constexprMemcpy(To* dest, const From* src, usize elementCount) noexcept {
     // Branch at compile time on whether `From` is `void`, since `sizeof(void)` is ill-formed:
-    // for the void case `elemCount` is already a byte count, for the generic case it is an element count.
+    // for the void case `elementCount` is already a byte count, for the generic case it is an element count.
     // Note: the builtin's return value is discarded (rather than static_cast to `To*`) because casting
     // a `void*` obtained from `__builtin_memcpy` back to a typed pointer is not a valid constant
     // expression prior to C++26; `dest` is already correctly typed, so it is returned directly instead.
     if constexpr (meta::IsVoidV<meta::RemoveCvT<From>>) {
 #if NEX_HAS_BUILTIN(__builtin_memcpy)
-        __builtin_memcpy(dest, src, elemCount);
+        __builtin_memcpy(dest, src, elementCount);
 #else
         auto* destBytes = static_cast<uint8*>(static_cast<void_ptr>(dest));
         auto* srcBytes = static_cast<const uint8*>(static_cast<const_void_ptr>(src));
-        for (usize i = 0; i < elemCount; ++i) {
+        for (usize i = 0; i < elementCount; ++i) {
             destBytes[i] = srcBytes[i];
         }
 #endif
         return dest;
     } else {
-        auto sizeBytes = elemCount * sizeof(From);
+        auto sizeBytes = elementCount * sizeof(From);
 #if NEX_HAS_BUILTIN(__builtin_memcpy)
         __builtin_memcpy(dest, src, sizeBytes);
 #else
@@ -248,32 +251,32 @@ NEX_HIDDEN_FROM_ABI constexpr To* constexprMemcpy(To* dest, const From* src, usi
 }
 
 /**
- * @brief Copies `elemCount` of elements from the memory area `src` to the memory area `dest`.
+ * @brief Copies `count` of elements from the memory area `src` to the memory area `dest`.
  * @tparam To The type of the destination pointer.
  * @tparam From The type of the source pointer.
  * @param dest A pointer to the destination memory area.
  * @param src A pointer to the source memory area.
- * @param elemCount The number of elements to copy.
+ * @param elementCount The number of elements to copy.
  * @return A pointer to the destination memory area `dest`.
  * @note The memory areas must not overlap. Use `memmove` if the memory areas do overlap.
  */
 template <class To, class From>
-NEX_HIDDEN_FROM_ABI constexpr To* memcpy(To* dest, const From* src, usize elemCount) noexcept {
+NEX_HIDDEN_FROM_ABI constexpr To* memcpy(To* dest, const From* src, usize elementCount) noexcept {
     if NEX_CONSTEVAL_CONTEXT {
-        return constexprMemcpy(dest, src, elemCount);
+        return constexprMemcpy(dest, src, elementCount);
     } else {
         if constexpr (meta::IsVoidV<meta::RemoveCvT<From>>) {
-            // `elemCount` is already a byte count when `From` is void, since `sizeof(void)` is ill-formed.
+            // `elementCount` is already a byte count when `From` is void, since `sizeof(void)` is ill-formed.
             return static_cast<To*>(::memcpy(
                 static_cast<void_ptr>(dest),
                 static_cast<const_void_ptr>(src),
-                elemCount
+                elementCount
             ));
         } else {
             return static_cast<To*>(::memcpy(
                 static_cast<void_ptr>(dest),
                 static_cast<const_void_ptr>(src),
-                elemCount * sizeof(From)
+                elementCount * sizeof(From)
             ));
         }
     }
@@ -283,17 +286,17 @@ NEX_HIDDEN_FROM_ABI constexpr To* memcpy(To* dest, const From* src, usize elemCo
  * @brief Copies `count` of bytes from the memory area `src` to the memory area `dest`.
  * @param dest A pointer to the destination memory area.
  * @param src A pointer to the source memory area.
- * @param count The number of bytes to copy.
+ * @param byteCount The number of bytes to copy.
  * @return A pointer to the destination memory area `dest`.
  * @note The memory areas must not overlap. Use `memmove` if the memory areas do overlap.
  */
 template <>
 NEX_HIDDEN_FROM_ABI constexpr
-void* memcpy(void* dest, const void* src, usize count) noexcept {
+void* memcpy(void* dest, const void* src, usize byteCount) noexcept {
     if NEX_CONSTEVAL_CONTEXT {
-        return constexprMemcpy(dest, src, count);
+        return constexprMemcpy(dest, src, byteCount);
     } else {
-        return ::memcpy(dest, src, count);
+        return ::memcpy(dest, src, byteCount);
     }
 }
 
@@ -428,41 +431,41 @@ struct NEX_HIDDEN_FROM_ABI IsAlwaysBitcastable_Internal {
 };
 
 /**
- * @brief Moves `elemCount` of elements from the memory area `src` to the memory area `dest` (compile-time safe).
+ * @brief Moves `count` of elements from the memory area `src` to the memory area `dest` (compile-time safe).
  * @param dest A pointer to the destination memory area.
  * @param src A pointer to the source memory area.
- * @param elemCount The number of elements to move.
+ * @param elementCount The number of elements to move.
  * @return A pointer to the destination memory area `dest`.
  * @note The memory areas may overlap. Use `memcpy` if the memory areas do not overlap.
  */
 template <class To, class From>
-NEX_HIDDEN_FROM_ABI constexpr To* constexprMemmove(To* dest, From* src, usize elemCount) noexcept {
+NEX_HIDDEN_FROM_ABI constexpr To* constexprMemmove(To* dest, From* src, usize elementCount) noexcept {
     static_assert(IsAlwaysBitcastable_Internal<From, To>::value);
 
     if NEX_CONSTEVAL_CONTEXT {
 #if NEX_HAS_BUILTIN(__builtin_memmove)
         if constexpr (meta::IsSameV<meta::RemoveCvT<To>, meta::RemoveCvT<From>>) {
-            __builtin_memmove(dest, src, elemCount * sizeof(To));
+            __builtin_memmove(dest, src, elementCount * sizeof(To));
             return dest;
         } else
 #endif
         {
-            if (isPointerInRange(src, src + elemCount, dest)) {
-                for (; elemCount > 0; --elemCount) {
-                    assignTriviallyCopyable(dest[elemCount - 1], src[elemCount - 1]);
+            if (isPointerInRange(src, src + elementCount, dest)) {
+                for (; elementCount > 0; --elementCount) {
+                    assignTriviallyCopyable(dest[elementCount - 1], src[elementCount - 1]);
                 }
             } else {
-                for (usize i = 0; i != elemCount; ++i) {
+                for (usize i = 0; i != elementCount; ++i) {
                     assignTriviallyCopyable(dest[i], src[i]);
                 }
             }
         }
     } else {
-        if (elemCount > 0) {
+        if (elementCount > 0) {
             ::memmove(
                 static_cast<void_ptr>(dest),
                 static_cast<const_void_ptr>(src),
-                elemCount * sizeof(To)
+                elementCount * sizeof(To)
             );
         }
     }
@@ -471,23 +474,28 @@ NEX_HIDDEN_FROM_ABI constexpr To* constexprMemmove(To* dest, From* src, usize el
 }
 
 /**
- * @brief Moves `elemCount` of elements from the memory area `src` to the memory area `dest`.
+ * @brief Moves `count` of elements from the memory area `src` to the memory area `dest`.
  * @tparam To The type of the destination pointer.
  * @tparam From The type of the source pointer.
  * @param dest A pointer to the destination memory area.
  * @param src A pointer to the source memory area.
- * @param elemCount The number of elements to move.
+ * @param elementCount The number of elements to move.
  * @return A pointer to the destination memory area `dest`.
  * @note The memory areas may overlap. Use `memcpy` if the memory areas do not overlap.
  */
 template <class To, class From>
-NEX_HIDDEN_FROM_ABI constexpr To* memmove(To* dest, const From* src, usize elemCount) noexcept {
+NEX_HIDDEN_FROM_ABI constexpr To* memmove(To* dest, const From* src, usize elementCount) noexcept {
     static_assert(IsAlwaysBitcastable_Internal<From, To>::value);
 
     if NEX_CONSTEVAL_CONTEXT {
-        return constexprMemmove(dest, src, elemCount);
+        return constexprMemmove(dest, src, elementCount);
     } else {
-        return static_cast<To*>(::memmove(static_cast<void_ptr>(dest), static_cast<const_void_ptr>(src), elemCount * sizeof(To)));
+        return static_cast<To*>(
+            ::memmove(
+                static_cast<void_ptr>(dest),
+                static_cast<const_void_ptr>(src),
+                elementCount * sizeof(To)
+            ));
     }
 }
 
@@ -495,7 +503,7 @@ NEX_HIDDEN_FROM_ABI constexpr To* memmove(To* dest, const From* src, usize elemC
  * @brief Moves `count` bytes from the memory area `src` to the memory area `dest` (compile-time safe).
  * @param dest A pointer to the destination memory area.
  * @param src A pointer to the source memory area.
- * @param count The number of bytes to move.
+ * @param byteCount The number of bytes to move.
  * @return A pointer to the destination memory area `dest`.
  * @note The memory areas may overlap. Unlike the generic overload, `void` pointers carry no element
  *       type, so there is no per-element assignment/bitcastable machinery to apply here -- this simply
@@ -503,16 +511,20 @@ NEX_HIDDEN_FROM_ABI constexpr To* memmove(To* dest, const From* src, usize elemC
  */
 template <>
 NEX_HIDDEN_FROM_ABI constexpr
-void* constexprMemmove(void* dest, const void* src, usize count) noexcept {
+void* constexprMemmove(void* dest, const void* src, usize byteCount) noexcept {
 #if NEX_HAS_BUILTIN(__builtin_memmove)
-    __builtin_memmove(dest, src, count);
+    __builtin_memmove(dest, src, byteCount);
 #else
-    if (isPointerInRange(static_cast<const uint8*>(src), static_cast<const uint8*>(src) + count, static_cast<const uint8*>(dest))) {
-        for (usize i = count; i > 0; --i) {
+    if (isPointerInRange(
+        static_cast<const uint8*>(src),
+        static_cast<const uint8*>(src) + byteCount,
+        static_cast<const uint8*>(dest)
+    )) {
+        for (usize i = byteCount; i > 0; --i) {
             static_cast<uint8*>(dest)[i - 1] = static_cast<const uint8*>(src)[i - 1];
         }
     } else {
-        for (usize i = 0; i != count; ++i) {
+        for (usize i = 0; i != byteCount; ++i) {
             static_cast<uint8*>(dest)[i] = static_cast<const uint8*>(src)[i];
         }
     }
@@ -524,17 +536,17 @@ void* constexprMemmove(void* dest, const void* src, usize count) noexcept {
  * @brief Moves `count` bytes from the memory area `src` to the memory area `dest`.
  * @param dest A pointer to the destination memory area.
  * @param src A pointer to the source memory area.
- * @param count The number of bytes to move.
+ * @param byteCount The number of bytes to move.
  * @return A pointer to the destination memory area `dest`.
  * @note The memory areas may overlap. Use `memcpy` if the memory areas do not overlap.
  */
 template <>
 NEX_HIDDEN_FROM_ABI constexpr
-void* memmove(void* dest, const void* src, usize count) noexcept {
+void* memmove(void* dest, const void* src, usize byteCount) noexcept {
     if NEX_CONSTEVAL_CONTEXT {
-        return constexprMemmove(dest, src, count);
+        return constexprMemmove(dest, src, byteCount);
     } else {
-        return ::memmove(dest, src, count);
+        return ::memmove(dest, src, byteCount);
     }
 }
 
@@ -544,7 +556,7 @@ void* memmove(void* dest, const void* src, usize count) noexcept {
  * @tparam Type The type of the pointer to the memory area (must be a byte-sized type).
  * @param dest A pointer to the memory area to be set.
  * @param value The value to be set (interpreted as an unsigned char).
- * @param count The number of bytes to set.
+ * @param byteCount The number of bytes to set.
  * @return A pointer to the memory area `dest`.
  * @note Only available for byte-sized `Type`s: filling a wider type with a repeating byte
  *       pattern requires reinterpreting its object representation, which cannot be expressed
@@ -553,9 +565,9 @@ void* memmove(void* dest, const void* src, usize count) noexcept {
  */
 template <class Type>
     requires (sizeof(Type) == 1)
-NEX_HIDDEN_FROM_ABI constexpr Type* constexprMemset(Type* dest, int32 value, usize count) noexcept {
+NEX_HIDDEN_FROM_ABI constexpr Type* constexprMemset(Type* dest, int32 value, usize byteCount) noexcept {
     auto byteValue = static_cast<Type>(static_cast<uint8>(value));
-    for (usize i = 0; i < count; ++i) {
+    for (usize i = 0; i < byteCount; ++i) {
         dest[i] = byteValue;
     }
     return dest;
@@ -566,7 +578,7 @@ NEX_HIDDEN_FROM_ABI constexpr Type* constexprMemset(Type* dest, int32 value, usi
  * @tparam Type The type of the pointer to the memory area.
  * @param dest A pointer to the memory area to be set.
  * @param value The value to be set (interpreted as an unsigned char).
- * @param count The number of bytes to set.
+ * @param byteCount The number of bytes to set.
  * @return A pointer to the memory area `dest`.
  * @note Compile-time evaluation is only available when `sizeof(Type) == 1`; for wider types
  *       `memset` always defers to the runtime C library implementation (see `constexprMemset`).
@@ -578,15 +590,15 @@ NEX_HIDDEN_FROM_ABI constexpr Type* constexprMemset(Type* dest, int32 value, usi
  *       straight to the runtime `::memset` below, matching `void* memset(void*, int, size_t)`.
  */
 template <class Type>
-NEX_HIDDEN_FROM_ABI constexpr Type* memset(Type* dest, int32 value, usize count) noexcept {
+NEX_HIDDEN_FROM_ABI constexpr Type* memset(Type* dest, int32 value, usize byteCount) noexcept {
     if constexpr (meta::IsVoidV<meta::RemoveCvT<Type>>) {
         // no-op: falls through to the runtime memset call below.
     } else if constexpr (sizeof(Type) == 1) {
         if NEX_CONSTEVAL_CONTEXT {
-            return constexprMemset(dest, value, count);
+            return constexprMemset(dest, value, byteCount);
         }
     }
-    return static_cast<Type*>(::memset(static_cast<void_ptr>(dest), value, count));
+    return static_cast<Type*>(::memset(static_cast<void_ptr>(dest), value, byteCount));
 }
 
 // Internal helper to determine whether a value of Type1 can be compared
@@ -658,14 +670,14 @@ inline const bool IsTriviallyEqualityComparableV_Internal =
  * @tparam Type1 The type of the pointer to the memory area.
  * @tparam Type2 The type of the character to be searched for.
  * @param ptr A pointer to the memory area to be searched.
- * @param c The character to be searched for (interpreted as an unsigned char).
- * @param count The number of bytes to be searched.
- * @return A pointer to the first occurrence of the character `c` in the memory area, or `nullptr`
+ * @param value The character to be searched for (interpreted as an unsigned char).
+ * @param byteCount The number of bytes to be searched.
+ * @return A pointer to the first occurrence of the character `value` in the memory area, or `nullptr`
  *         if the character is not found.
  */
 template <class Type1, class Type2>
 NEX_HIDDEN_FROM_ABI constexpr
-Type1* constexprMemchr(Type1* str, Type2 value, usize count) {
+Type1* constexprMemchr(Type1* str, Type2 value, usize byteCount) {
     static_assert(sizeof(Type1) == 1 && IsTriviallyEqualityComparableV_Internal<Type1, Type2>,
                     "Calling memchr on non-trivially equality comparable types is unsafe.");
 
@@ -673,12 +685,12 @@ Type1* constexprMemchr(Type1* str, Type2 value, usize count) {
     // use __builtin_char_memchr to optimize constexpr evaluation if we can
 #if NEX_HAS_BUILTIN(__builtin_char_memchr)
         if constexpr (meta::IsSameV<meta::RemoveCvT<Type1>, char> && meta::IsSameV<meta::RemoveCvT<Type2>, char>) {
-            return __builtin_char_memchr(str, value, count);
+            return __builtin_char_memchr(str, value, byteCount);
         } else
 #endif
         {
-            for (; count; --count) {
-                if (*str == value)
+            for (; byteCount; --byteCount) {
+                if (static_cast<uint8>(*str) == static_cast<uint8>(value))
                     return str;
                 ++str;
             }
@@ -686,12 +698,11 @@ Type1* constexprMemchr(Type1* str, Type2 value, usize count) {
         }
     } else {
 #if NEX_HAS_BUILTIN(__builtin_memcpy) && NEX_HAS_BUILTIN(__builtin_memchr)
-        char value_buffer = 0;
-        __builtin_memcpy(&value_buffer, addressOf(value), sizeof(char));
-        return static_cast<Type1*>(__builtin_memchr(str, value_buffer, count));
+        char value_buffer = static_cast<char>(static_cast<uint8>(value));
+        return static_cast<Type1*>(__builtin_memchr(str, value_buffer, byteCount));
 #else
-        for (; count; --count) {
-            if (*str == value)
+        for (; byteCount; --byteCount) {
+            if (static_cast<uint8>(*str) == static_cast<uint8>(value))
                 return str;
             ++str;
         }
@@ -706,18 +717,18 @@ Type1* constexprMemchr(Type1* str, Type2 value, usize count) {
  * @tparam Type1 The type of the pointer to the memory area.
  * @tparam Type2 The type of the character to be searched for.
  * @param ptr A pointer to the memory area to be searched.
- * @param c The character to be searched for (interpreted as an unsigned char).
- * @param count The number of bytes to be searched.
- * @return A pointer to the first occurrence of the character `c` in the memory area, or `nullptr`
+ * @param value The character to be searched for (interpreted as an unsigned char).
+ * @param byteCount The number of bytes to be searched.
+ * @return A pointer to the first occurrence of the character `value` in the memory area, or `nullptr`
  *         if the character is not found.
  */
 template <class Type1, class Type2>
 NEX_HIDDEN_FROM_ABI constexpr
-Type1* memchr(Type1* str, Type2 value, usize count) {
+Type1* memchr(Type1* str, Type2 value, usize byteCount) {
     if NEX_CONSTEVAL_CONTEXT {
-        return constexprMemchr(str, value, count);
+        return constexprMemchr(str, value, byteCount);
     } else {
-        return static_cast<Type1*>(::memchr(str, static_cast<int32>(value), count));
+        return static_cast<Type1*>(::memchr(str, static_cast<uint8>(value), byteCount));
     }
 }
 
@@ -726,7 +737,7 @@ Type1* memchr(Type1* str, Type2 value, usize count) {
  *        in the first `count` bytes of the memory area pointed to by `ptr` (compile-time safe).
  * @param ptr A pointer to the memory area to be searched.
  * @param value The character to be searched for (interpreted as an unsigned char).
- * @param count The number of bytes to be searched.
+ * @param byteCount The number of bytes to be searched.
  * @return A pointer to the first occurrence of the character `value` in the memory area, or `nullptr`
  *         if the character is not found.
  * @note Unlike the generic overload, a `void` pointer has no element type, so the trivial-equality-
@@ -734,13 +745,13 @@ Type1* memchr(Type1* str, Type2 value, usize count) {
  */
 template <>
 NEX_HIDDEN_FROM_ABI constexpr
-void* constexprMemchr(void* str, int32 value, usize count) {
+void* constexprMemchr(void* str, int32 value, usize byteCount) {
 #if NEX_HAS_BUILTIN(__builtin_memchr)
-    return __builtin_memchr(str, value, count);
+    return __builtin_memchr(str, value, byteCount);
 #else
     auto* bytes = static_cast<uint8*>(str);
     auto byteValue = static_cast<uint8>(value);
-    for (; count; --count) {
+    for (; byteCount; --byteCount) {
         if (*bytes == byteValue)
             return bytes;
         ++bytes;
@@ -754,16 +765,16 @@ void* constexprMemchr(void* str, int32 value, usize count) {
  *        in the first `count` bytes of the memory area pointed to by `ptr`.
  * @param ptr A pointer to the memory area to be searched.
  * @param value The character to be searched for (interpreted as an unsigned char).
- * @param count The number of bytes to be searched.
+ * @param byteCount The number of bytes to be searched.
  * @return A pointer to the first occurrence of the character `value` in the memory area, or `nullptr`
  *         if the character is not found.
  */
 NEX_HIDDEN_FROM_ABI constexpr
-void* memchr(void* str, int32 value, usize count) {
+void* memchr(void* str, int32 value, usize byteCount) {
     if NEX_CONSTEVAL_CONTEXT {
-        return constexprMemchr(str, value, count);
+        return constexprMemchr(str, value, byteCount);
     } else {
-        return ::memchr(str, value, count);
+        return ::memchr(str, value, byteCount);
     }
 }
 
@@ -771,15 +782,15 @@ void* memchr(void* str, int32 value, usize count) {
  * @brief Searches a read-only byte range for the first occurrence of `value`.
  * @param str A pointer to the memory area to be searched.
  * @param value The character to be searched for (interpreted as an unsigned char).
- * @param count The number of bytes to be searched.
+ * @param byteCount The number of bytes to be searched.
  * @return A pointer to the first matching byte, or `nullptr` if the character is not found.
  */
 NEX_HIDDEN_FROM_ABI constexpr
-const void* memchr(const void* str, int32 value, usize count) {
+const void* memchr(const void* str, int32 value, usize byteCount) {
     if NEX_CONSTEVAL_CONTEXT {
-        return constexprMemchr(const_cast<void*>(str), value, count);
+        return constexprMemchr(const_cast<void*>(str), value, byteCount);
     } else {
-        return ::memchr(str, value, count);
+        return ::memchr(str, value, byteCount);
     }
 }
 
@@ -801,19 +812,19 @@ inline const bool IsTriviallyLexicographicallyComparableV_Internal =
     (meta::IsUnsignedIntegralV<Type1> || IsByteV_Internal<Type1>);
 
 /**
- * @brief Compares the first `elemCount` of elements of the memory areas `ptr1` and `ptr2`.
+ * @brief Compares the first `count` of elements of the memory areas `ptr1` and `ptr2`.
  * @tparam Type1 The type of the elements in the first memory area.
  * @tparam Type2 The type of the elements in the second memory area.
  * @param ptr1 A pointer to the first memory area to be compared.
  * @param ptr2 A pointer to the second memory area to be compared.
- * @param elemCount The number of elements to be compared.
- * @return An integer less than, equal to, or greater than zero if the first `elemCount` elements of `ptr1`
- *         are found, respectively, to be less than, to match, or be greater than the first `elemCount`
+ * @param elementCount The number of elements to be compared.
+ * @return An integer less than, equal to, or greater than zero if the first `count` elements of `ptr1`
+ *         are found, respectively, to be less than, to match, or be greater than the first `elementCount`
  *         elements of `ptr2`.
  */
 template <class Type1, class Type2>
 NEX_HIDDEN_FROM_ABI constexpr
-int constexprMemcmp(const Type1* lhs, const Type2* rhs, usize elemCount) {
+int constexprMemcmp(const Type1* lhs, const Type2* rhs, usize elementCount) {
     // Because of IsTriviallyLexicographicallyComparableV_Internal we know that comparing the object
     // representations is equivalent to a ::memcmp. Since we have multiple objects contiguously in memory,
     // we can call ::memcmp once instead of invoking it on every object individually.
@@ -823,31 +834,31 @@ int constexprMemcmp(const Type1* lhs, const Type2* rhs, usize elemCount) {
     if NEX_CONSTEVAL_CONTEXT {
 #if NEX_HAS_BUILTIN(__builtin_memcmp)
         if (sizeof(Type1) == 1 && !meta::IsSameV<Type1, bool>) {
-            return __builtin_memcmp(lhs, rhs, elemCount * sizeof(Type1));
+            return __builtin_memcmp(lhs, rhs, elementCount * sizeof(Type1));
         }
 #endif
-        while (elemCount != 0) {
+        while (elementCount != 0) {
             if (*lhs < *rhs)
                 return -1;
             if (*rhs < *lhs)
                 return 1;
 
-            --elemCount;
+            --elementCount;
             ++lhs;
             ++rhs;
         }
         return 0;
     } else {
 #if NEX_HAS_BUILTIN(__builtin_memcmp)
-        return __builtin_memcmp(lhs, rhs, elemCount * sizeof(Type1));
+        return __builtin_memcmp(lhs, rhs, elementCount * sizeof(Type1));
 #else
-        while (elemCount != 0) {
+        while (elementCount != 0) {
             if (*lhs < *rhs)
                 return -1;
             if (*rhs < *lhs)
                 return 1;
 
-            --elemCount;
+            --elementCount;
             ++lhs;
             ++rhs;
         }
@@ -857,18 +868,18 @@ int constexprMemcmp(const Type1* lhs, const Type2* rhs, usize elemCount) {
 }
 
 /**
- * @brief Compares the first `elemCount` of elements of the memory areas `ptr1` and `ptr2`.
+ * @brief Compares the first `count` of elements of the memory areas `ptr1` and `ptr2`.
  * @tparam Type1 The type of the elements in the first memory area.
  * @tparam Type2 The type of the elements in the second memory area.
  * @param ptr1 A pointer to the first memory area to be compared.
  * @param ptr2 A pointer to the second memory area to be compared.
- * @param elemCount The number of elements to be compared.
- * @return true if the first `elemCount` elements of `ptr1` are equal to the first `elemCount` elements of `ptr2`,
+ * @param elementCount The number of elements to be compared.
+ * @return true if the first `elementCount` elements of `ptr1` are equal to the first `elementCount` elements of `ptr2`,
  *         false otherwise.
  */
 template <class Type1, class Type2>
 NEX_HIDDEN_FROM_ABI constexpr
-bool constexprMemcmpEqual(const Type1* lhs, const Type2* rhs, usize elemCount) {
+bool constexprMemcmpEqual(const Type1* lhs, const Type2* rhs, usize elementCount) {
     // Because of IsTriviallyEqualityComparableV_Internal we know that comparing the object representations
     // is equivalent to a ::memcmp(...) == 0. Since we have multiple objects contiguously in memory, we can
     // call memcmp once instead of invoking it on every object individually.
@@ -878,27 +889,27 @@ bool constexprMemcmpEqual(const Type1* lhs, const Type2* rhs, usize elemCount) {
     if NEX_CONSTEVAL_CONTEXT {
 #if NEX_HAS_BUILTIN(__builtin_memcmp)
         if (sizeof(Type1) == 1 && meta::IsIntegralV<Type1> && !meta::IsSameV<Type1, bool>) {
-            return __builtin_memcmp(lhs, rhs, elemCount * sizeof(Type1)) == 0;
+            return __builtin_memcmp(lhs, rhs, elementCount * sizeof(Type1)) == 0;
         }
 #endif
-        while (elemCount != 0) {
+        while (elementCount != 0) {
             if (*lhs != *rhs)
                 return false;
 
-            --elemCount;
+            --elementCount;
             ++lhs;
             ++rhs;
         }
         return true;
     } else {
 #if NEX_HAS_BUILTIN(__builtin_memcmp)
-        return ::__builtin_memcmp(lhs, rhs, elemCount * sizeof(Type1)) == 0;
+        return ::__builtin_memcmp(lhs, rhs, elementCount * sizeof(Type1)) == 0;
 #else
-        while (elemCount != 0) {
+        while (elementCount != 0) {
             if (*lhs != *rhs)
                 return false;
 
-            --elemCount;
+            --elementCount;
             ++lhs;
             ++rhs;
         }
@@ -908,24 +919,26 @@ bool constexprMemcmpEqual(const Type1* lhs, const Type2* rhs, usize elemCount) {
 }
 
 /**
- * @brief Compares the first `elemCount` of elements of the memory areas `ptr1` and `ptr2`.
+ * @brief Compares the first `count` of elements of the memory areas `ptr1` and `ptr2`.
  * @param ptr1 A pointer to the first memory area to be compared.
  * @param ptr2 A pointer to the second memory area to be compared.
- * @param elemCount The number of elements to be compared.
- * @return An integer less than, equal to, or greater than zero if the first `elemCount` elements of `ptr1`
- *         are found, respectively, to be less than, to match, or be greater than the first `elemCount`
+ * @param elementCount The number of elements to be compared.
+ * @return An integer less than, equal to, or greater than zero if the first `elementCount` elements of `ptr1`
+ *         are found, respectively, to be less than, to match, or be greater than the first `elementCount`
  *         elements of `ptr2`.
  */
 template <class Type1, class Type2>
 NEX_HIDDEN_FROM_ABI constexpr
-int memcmp(const Type1* lhs, const Type2* rhs, usize elemCount) {
+int memcmp(const Type1* lhs, const Type2* rhs, usize elementCount) {
+    static_assert(IsTriviallyLexicographicallyComparableV_Internal<Type1, Type2>,
+                  "Type1 and Type2 have to be trivially lexicographically comparable");
     if NEX_CONSTEVAL_CONTEXT {
-        return constexprMemcmp(lhs, rhs, elemCount);
+        return constexprMemcmp(lhs, rhs, elementCount);
     } else {
         return ::memcmp(
             static_cast<const_void_ptr>(lhs),
             static_cast<const_void_ptr>(rhs),
-            elemCount * sizeof(Type1)
+            elementCount * sizeof(Type1)
         );
     }
 }
@@ -934,7 +947,7 @@ int memcmp(const Type1* lhs, const Type2* rhs, usize elemCount) {
  * @brief Compares the first `count` bytes of the memory areas `ptr1` and `ptr2`.
  * @param ptr1 A pointer to the first memory area to be compared.
  * @param ptr2 A pointer to the second memory area to be compared.
- * @param count The number of bytes to be compared.
+ * @param byteCount The number of bytes to be compared.
  * @return An integer less than, equal to, or greater than zero if the first `count` bytes of `ptr1`
  *         are found, respectively, to be less than, to match, or be greater than the first `count`
  *         bytes of `ptr2`.
@@ -945,11 +958,11 @@ int memcmp(const Type1* lhs, const Type2* rhs, usize elemCount) {
  */
 template <>
 NEX_HIDDEN_FROM_ABI constexpr
-int memcmp(const void* lhs, const void* rhs, usize count) {
+int memcmp(const void* lhs, const void* rhs, usize byteCount) {
     if NEX_CONSTEVAL_CONTEXT {
-        return __builtin_memcmp(lhs, rhs, count);
+        return __builtin_memcmp(lhs, rhs, byteCount);
     } else {
-        return ::memcmp(lhs, rhs, count);
+        return ::memcmp(lhs, rhs, byteCount);
     }
 }
 
@@ -1066,23 +1079,23 @@ void prefetch(const_void_ptr ptr) noexcept {
 // Define macros for low-level memory manipulation functions
 // ======================================================================================
 
-// Copies `count` elements from the memory area `src` to the memory area `dest`.
+// Copies `count` of elements from the memory area `src` to the memory area `dest`.
 #define NEX_MEMCPY(dest, src, count) \
     NEX_PREPEND_NAMESPACE(memcpy(dest, src, count))
 
-// Moves `count` elements from the memory area `src` to the memory area `dest`.
+// Moves `count` of elements from the memory area `src` to the memory area `dest`.
 // The memory areas may overlap.
 #define NEX_MEMMOVE(dest, src, count) \
     NEX_PREPEND_NAMESPACE(memmove(dest, src, count))
 
 // Sets the first `count` bytes of the memory area pointed to by `dest` to the specified value `value`.
-#define NEX_MEMSET(dest, value, count) \
-    NEX_PREPEND_NAMESPACE(memset(dest, value, count))
+#define NEX_MEMSET(dest, value, byteCount) \
+    NEX_PREPEND_NAMESPACE(memset(dest, value, byteCount))
 
-// Searches for the first occurrence of the character `c` (interpreted as an unsigned char)
+// Searches for the first occurrence of the character `value` (interpreted as an unsigned char)
 // in the first `count` bytes of the memory area pointed to by `ptr`.
-#define NEX_MEMCHR(ptr, c, count) \
-    NEX_PREPEND_NAMESPACE(memchr(ptr, c, count))
+#define NEX_MEMCHR(ptr, value, byteCount) \
+    NEX_PREPEND_NAMESPACE(memchr(ptr, value, byteCount))
 
 // Compares the first `count` bytes of the memory areas `ptr1` and `ptr2`.
 #define NEX_MEMCMP(ptr1, ptr2, count) \

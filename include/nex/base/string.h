@@ -994,7 +994,7 @@ public:
 
 /**
  * @class NString
- * @brief A string class that owns a null-terminated sequence of narrow/native characters (`nchar`).
+ * @brief A string class that owns a null-terminated sequence of native narrow characters (`nchar`).
  */
 using NString = BasicString<nchar>;
 
@@ -1003,6 +1003,12 @@ using NString = BasicString<nchar>;
  * @brief A string class that owns a null-terminated sequence of wide characters (`wchar`).
  */
 using WString = BasicString<wchar>;
+
+/**
+ * @class AnsiString
+ * @brief A string class that owns a null-terminated sequence of ANSI characters (`char`).
+ */
+using AnsiString = BasicString<char>;
 
 #if NEX_HAS_BUILTIN_CHAR8_T
     /**
@@ -1023,5 +1029,25 @@ using Utf16String = BasicString<char16>;
  * @brief A string class that owns a null-terminated sequence of UTF-32 characters (`char32`).
  */
 using Utf32String = BasicString<char32>;
+
+#if NEX_PLATFORM_IS_WINDOWS
+    /**
+     * @typedef LocalString
+     * @brief   A string class that owns a null-terminated sequence of local characters.
+     * @details
+     * The LocalString type is defined as BasicString<wchar> on Windows platforms,
+     * as Windows uses wide characters with UTF-16 encoding for local strings.
+     */
+    using LocalString = BasicString<wchar>;
+#elif NEX_PLATFORM_FAMILY_IS_POSIX
+    /**
+     * @typedef LocalString
+     * @brief   A string class that owns a null-terminated sequence of local characters.
+     * @details
+     * The LocalString type is defined as BasicString<char8> on POSIX platforms (macOS/Linux),
+     * as POSIX uses narrow characters with UTF-8 encoding for local strings.
+     */
+    using LocalString = BasicString<char8>;
+#endif
 
 NEX_NAMESPACE_END

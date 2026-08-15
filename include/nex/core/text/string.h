@@ -491,7 +491,7 @@ public:
 
     // Shrink the capacity to fit the size
     void shrinkToFit() {
-        buffer_.shrink_to_fit();
+        buffer_.shrinkToFit();
     }
 
     // Resize the string to a new length, 
@@ -515,13 +515,13 @@ public:
 
     // Push back a character
     String& pushBack(value_type ch) {
-        buffer_.push_back(ch);
+        buffer_.pushBack(ch);
         return *this;
     }
 
     // Remove the last character
     String& popBack() {
-        if (!buffer_.empty()) buffer_.pop_back();
+        if (!buffer_.empty()) buffer_.popBack();
         return *this;
     }
 

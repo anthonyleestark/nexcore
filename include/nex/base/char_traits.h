@@ -18,7 +18,7 @@ NEX_NAMESPACE_BEGIN
 template <class Type>
 inline const bool IsCharTypeV = false;
 
-// Specialization for nchar (narrow/native character type).
+// Specialization for nchar (native narrow character type).
 template <>
 inline const bool IsCharTypeV<nchar> = true;
 
@@ -48,7 +48,7 @@ struct IsCharType : meta::BoolConstant<IsCharTypeV<Type>> {};
 template <class Type>
 inline const bool IsSingleByteCharTypeV = false;
 
-// Specialization for nchar (narrow/native character type).
+// Specialization for nchar (native narrow character type).
 template <>
 inline const bool IsSingleByteCharTypeV<nchar> = true;
 
@@ -118,7 +118,7 @@ struct CharTraits {
 
 /**
  * @struct CharTraits<nchar>
- * @brief  Traits specialization for narrow/native character type (nchar).
+ * @brief  Traits specialization for native narrow character type (nchar).
  */
 template <>
 struct CharTraits<nchar> {

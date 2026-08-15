@@ -557,7 +557,7 @@ struct NumericLimitConstants {
 #define NEX_CODEPOINT_MAX           NEX_PREPEND_NAMESPACE(NumericLimitConstants::c32max)
 
 // =================================================================================
-// Macro definitions for narrow/native & wide character limits (C-style)
+// Macro definitions for native narrow & wide character limits (C-style)
 // =================================================================================
 
 #define NEX_NCHAR_MIN               NEX_PREPEND_NAMESPACE(NumericLimitConstants::ncharmin)

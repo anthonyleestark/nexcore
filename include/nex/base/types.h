@@ -500,7 +500,7 @@ using snorm16   = int16;        // 16-bit signed normalized fixed-point ([-1.0, 
 
 using char16    = char16_t;                 // UTF-16 code unit (since C++11)
 using char32    = char32_t;                 // UTF-32 code unit (since C++11)
-using nchar     = char;                     // Narrow/native character type (platform-dependent)
+using nchar     = char;                     // Native narrow character type (C++ standard char)
 using wchar     = wchar_t;                  // Wide character type (platform-dependent)
 using schar     = signed char;              // Signed byte / narrow character storage
 using uchar     = unsigned char;            // Unsigned byte / narrow character storage
@@ -771,8 +771,8 @@ static_assert(sizeof(raw_byte) == 1, "Error: raw_byte must be exactly 1 byte in 
 // Standard character pointer types (encoding-aware; C++20)
 // =================================================================================
 
-using nchar_ptr             = nchar*;           // Pointer to narrow/native char
-using const_nchar_ptr       = const nchar*;     // Pointer to const narrow/native char
+using nchar_ptr             = nchar*;           // Pointer to native narrow char
+using const_nchar_ptr       = const nchar*;     // Pointer to const native narrow char
 
 #if NEX_HAS_BUILTIN_CHAR8_T
     using char8_ptr         = char8*;           // Pointer to UTF-8 code unit
@@ -790,8 +790,8 @@ using const_wchar_ptr       = const wchar*;     // Pointer to const wide charact
 // Short aliases for standard character pointer types (Rust-style)
 // =================================================================================
 
-using ncptr         = nchar_ptr;                // Pointer to narrow/native char (nchar_ptr)
-using cncptr        = const_nchar_ptr;          // Pointer to const narrow/native char (const_nchar_ptr)
+using ncptr         = nchar_ptr;                // Pointer to native narrow char (nchar_ptr)
+using cncptr        = const_nchar_ptr;          // Pointer to const native narrow char (const_nchar_ptr)
 
 #if NEX_HAS_BUILTIN_CHAR8_T
     using c8ptr     = char8_ptr;                // Pointer to UTF-8 code unit (char8_ptr)
@@ -809,7 +809,7 @@ using cwcptr        = const_wchar_ptr;          // Pointer to const wide charact
 // Null-terminated string pointer types (C-style / zero-terminated)
 // =================================================================================
 
-using cstring       = const_nchar_ptr;          // Null-terminated narrow/native string
+using cstring       = const_nchar_ptr;          // Null-terminated native narrow string
 
 #if NEX_HAS_BUILTIN_CHAR8_T
     using u8cstring = const_char8_ptr;          // Null-terminated UTF-8 string
@@ -823,7 +823,7 @@ using wcstring      = const_wchar_ptr;          // Null-terminated wide string
 // Short aliases for null-terminated string pointer types (Rust-style)
 // =================================================================================
 
-using cstr          = cstring;                  // Null-terminated narrow/native string (cstring)
+using cstr          = cstring;                  // Null-terminated native narrow string (cstring)
 
 #if NEX_HAS_BUILTIN_CHAR8_T
     using u8cstr    = u8cstring;                // Null-terminated UTF-8 string (u8cstring)
@@ -837,7 +837,7 @@ using wcstr         = wcstring;                 // Null-terminated wide string (
 // Macro definitions for null-terminated string literal prefixes (C-style)
 // =================================================================================
 
-#define NEX_CSTR_C(x)        (x)                // Null-terminated narrow/native string literal
+#define NEX_CSTR_C(x)        (x)                // Null-terminated native narrow string literal
 
 #if NEX_HAS_BUILTIN_CHAR8_T
     #define NEX_U8CSTR_C(x)  (u8 ## x)          // Null-terminated UTF-8 string literal

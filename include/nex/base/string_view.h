@@ -294,7 +294,7 @@ public:
 
 /**
  * @typedef NStringView
- * @brief   A non-owning view over a narrow/native character sequence (`nchar`).
+ * @brief   A non-owning view over a native narrow character sequence (`nchar`).
  */
 using NStringView = BasicStringView<nchar>;
 
@@ -303,6 +303,12 @@ using NStringView = BasicStringView<nchar>;
  * @brief   A non-owning view over a wide character sequence (`wchar`).
  */
 using WStringView = BasicStringView<wchar>;
+
+/**
+ * @typedef AnsiStringView
+ * @brief   A non-owning view over an ANSI character sequence (`nchar`).
+ */
+using AnsiStringView = BasicStringView<nchar>;
 
 #if NEX_HAS_BUILTIN_CHAR8_T
     /**
@@ -323,5 +329,25 @@ using Utf16StringView = BasicStringView<char16>;
  * @brief   A non-owning view over a UTF-32 character sequence (`char32`).
  */
 using Utf32StringView = BasicStringView<char32>;
+
+#if NEX_PLATFORM_IS_WINDOWS
+    /**
+     * @typedef LocalStringView
+     * @brief   A non-owning view over a local character sequence.
+     * @details
+     * The LocalStringView type is defined as BasicStringView<wchar> on Windows platforms,
+     * as Windows uses wide characters with UTF-16 encoding for local strings.
+     */
+    using LocalStringView = BasicStringView<wchar>;
+#elif NEX_PLATFORM_FAMILY_IS_POSIX
+    /**
+     * @typedef LocalStringView
+     * @brief   A non-owning view over a local character sequence.
+     * @details
+     * The LocalStringView type is defined as BasicStringView<char8> on POSIX platforms (macOS/Linux),
+     * as POSIX uses narrow characters with UTF-8 encoding for local strings.
+     */
+    using LocalStringView = BasicStringView<char8>;
+#endif
 
 NEX_NAMESPACE_END

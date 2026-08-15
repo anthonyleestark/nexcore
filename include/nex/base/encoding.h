@@ -354,7 +354,7 @@ Result<usize> countUtf32CodePoints(Utf32StringView input) noexcept;
  * @return Result containing the converted UTF-16 string if successful, or an error if the conversion fails
  */
 NEX_NODISCARD NEX_API 
-Result<Utf16String> ansiToUtf16(Utf8StringView ansi);
+Result<Utf16String> ansiToUtf16(AnsiStringView ansi);
 
 /**
  * @brief Convert UTF-16 string to ANSI string
@@ -363,7 +363,7 @@ Result<Utf16String> ansiToUtf16(Utf8StringView ansi);
  *         or an error if the conversion fails
  */
 NEX_NODISCARD NEX_API
-Result<Utf8String> utf16ToAnsi(Utf16StringView utf16);
+Result<AnsiString> utf16ToAnsi(Utf16StringView utf16);
 
 /**
  * @brief Convert local string to UTF-16 string
@@ -372,7 +372,7 @@ Result<Utf8String> utf16ToAnsi(Utf16StringView utf16);
  *         or an error if the conversion fails
  */
 NEX_NODISCARD NEX_API
-Result<Utf16String> localToUtf16(Utf8StringView local);
+Result<Utf16String> localToUtf16(LocalStringView local);
 
 /**
  * @brief Convert UTF-16 string to local string
@@ -380,7 +380,7 @@ Result<Utf16String> localToUtf16(Utf8StringView local);
  * @return Result containing the converted local string if successful, or an error if the conversion fails
  */
 NEX_NODISCARD NEX_API
-Result<Utf8String> utf16ToLocal(Utf16StringView utf16);
+Result<LocalString> utf16ToLocal(Utf16StringView utf16);
 
 /**
  * @brief Convert UTF-8 string to UTF-16 string

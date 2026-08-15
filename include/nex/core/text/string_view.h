@@ -21,7 +21,7 @@ NEX_NAMESPACE_BEGIN
  * It stores a pointer to the string data and its length, without owning the data.
  * 
  * StringView supports:
- * - Construction from String, std::u16string_view and other string types
+ * - Construction from String, Utf16StringView and other string types
  * - Substring operations (substr, left, right, mid)
  * - Character access and iteration
  * - Comparison operations
@@ -72,16 +72,16 @@ public:
         : data_(nullTerminatedUtf16)
         , size_(nullTerminatedUtf16 
             ? NEX_STD char_traits<value_type>::length(nullTerminatedUtf16) : 0) {}
-    
+
     // Construct from String
     StringView(const String& data);
-    
+
     // Copy constructor
     constexpr StringView(const StringView& other) = default;
-    
+
     // Copy assignment operator
     constexpr StringView& operator=(const StringView& other) = default;
-    
+
     // Destructor
     constexpr ~StringView() = default;
 
@@ -91,7 +91,7 @@ public:
 
 public:
     ////// Element access -----------------------
-    
+
     // Access character at index (no bounds checking)
     constexpr value_type operator[](size_type pos) const noexcept {
         return data_[pos];
@@ -112,14 +112,14 @@ public:
         NEX_ASSERT_MSG(pos < size_, "Position out of range");
         return data_[pos];
     }
-    
+
     // Get pointer to the underlying data (UTF-16 encoded)
     constexpr const_pointer data() const noexcept { 
         return data_; 
     }
 
     ////// Basic properties -----------------------
-    
+
     // Check if view is empty
     constexpr bool empty() const noexcept { 
         // size_ == 0 implies data_ can be null or non-null, 
@@ -210,21 +210,21 @@ public:
     }
 
     ////// Subview operations -----------------------
-    
+
     // Get substring view
     StringView substr(size_type pos, size_type count = npos) const;
-    
+
     // Get left part of the view
     StringView left(size_type count) const noexcept;
-    
+
     // Get right part of the view
     StringView right(size_type count) const noexcept;
-    
+
     // Get middle part of the view
     StringView mid(size_type start, size_type count = npos) const noexcept;
 
     ////// Comparison -----------------------
-    
+
     // Compare with another view
     constexpr int32 compare(StringView other) const noexcept  {
         int32 result = NEX_STD char_traits<char16>::compare(data_, other.data_, 0);
@@ -233,7 +233,7 @@ public:
         if (size() > other.size()) { return 1; } // Data is identical in the common prefix, but this view is longer
         return 0;  // Data is identical and sizes are equal, so the views are equal
     }
-    
+
     // Compare substring with another view
     int32 compare(size_type pos, size_type count, StringView other) const;
 
@@ -241,49 +241,49 @@ public:
 
     // Find first occurrence of substring
     size_type find(StringView substring, size_type pos = 0) const;
-    
+
     // Find first occurrence of character
     size_type find(value_type ch, size_type pos = 0) const;
-    
+
     // Find last occurrence of substring
     size_type rfind(StringView substring, size_type pos = npos) const;
-    
+
     // Find last occurrence of character
     size_type rfind(value_type ch, size_type pos = npos) const;
-    
+
     // Find first occurrence of any character in the set
     size_type findFirstOf(StringView input, size_type pos = 0) const;
-    
+
     // Find first occurrence of any character not in the set
     size_type findFirstNotOf(StringView input, size_type pos = 0) const;
-    
+
     // Find last occurrence of any character in the set
     size_type findLastOf(StringView input, size_type pos = npos) const;
-    
+
     // Find last occurrence of any character not in the set
     size_type findLastNotOf(StringView input, size_type pos = npos) const;
-    
+
     // Check if view starts with prefix
     bool startsWith(StringView prefix) const;
-    
+
     // Check if view starts with character
     constexpr bool startsWith(value_type ch) const noexcept {
         return !empty() && front() == ch;
     }
-    
+
     // Check if view ends with suffix
     bool endsWith(StringView suffix) const;
-    
+
     // Check if view ends with character
     constexpr bool endsWith(value_type ch) const noexcept {
         return !empty() && back() == ch;
     }
-    
+
     // Check if view contains substring
     bool contains(StringView str) const noexcept {
         return find(str) != npos;
     }
-    
+
     // Check if view contains character
     bool contains(value_type ch) const noexcept {
         return find(ch) != npos;
@@ -295,27 +295,27 @@ public:
     friend constexpr bool operator==(StringView lhs, StringView rhs) noexcept {
         return lhs.compare(rhs) == 0;
     }
-    
+
     // Inequality operator
     friend constexpr bool operator!=(StringView lhs, StringView rhs) noexcept {
         return !(lhs == rhs);
     }
-    
+
     // Less-than operator
     friend constexpr bool operator<(StringView lhs, StringView rhs) noexcept {
         return lhs.compare(rhs) < 0;
     }
-    
+
     // Less-than-or-equal operator
     friend constexpr bool operator<=(StringView lhs, StringView rhs) noexcept {
         return !(rhs < lhs);
     }
-    
+
     // Greater-than operator
     friend constexpr bool operator>(StringView lhs, StringView rhs) noexcept {
         return rhs < lhs;
     }
-    
+
     // Greater-than-or-equal operator
     friend constexpr bool operator>=(StringView lhs, StringView rhs) noexcept {
         return !(lhs < rhs);

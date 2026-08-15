@@ -124,12 +124,12 @@ bool encoding::isUnicodeAlpha(char16 ch) noexcept {
 
 // Check if a UTF-8 string contains invalid sequences
 bool encoding::containsInvalidUtf8Sequences(Utf8StringView input) noexcept {
-    cstring ptr = input.data();
-    cstring end = ptr + input.size();
+    u8cstring ptr = input.data();
+    u8cstring end = ptr + input.size();
 
     while (ptr < end) {
         // Get the first byte to determine the length of the UTF-8 sequence
-        uchar byte = static_cast<uchar>(*ptr);
+        char8 byte = static_cast<char8>(*ptr);
         usize expectedLength = utf8SequenceLength(byte);
 
         if (expectedLength == 0 || ptr + expectedLength > end) {
@@ -138,7 +138,7 @@ bool encoding::containsInvalidUtf8Sequences(Utf8StringView input) noexcept {
 
         // Validate continuation bytes
         for (usize i = 1; i < expectedLength; ++i) {
-            if ((static_cast<uchar>(ptr[i]) & 0xC0) != 0x80) {
+            if ((static_cast<char8>(ptr[i]) & 0xC0) != 0x80) {
                 return true; // Invalid continuation byte found
             }
         }
@@ -161,7 +161,7 @@ bool encoding::isValidUtf8Sequence(Utf8StringView input) noexcept {
     }
 
     // Get the first byte to determine the length of the UTF-8 sequence
-    uchar firstByte = static_cast<uchar>(input[0]);
+    char8 firstByte = static_cast<char8>(input[0]);
     usize expectedLength = utf8SequenceLength(firstByte);
     if (expectedLength == 0 || expectedLength > input.size()) {
         return false; // Invalid first byte or not enough bytes in the input
@@ -169,7 +169,7 @@ bool encoding::isValidUtf8Sequence(Utf8StringView input) noexcept {
 
     // Check continuation bytes
     for (usize i = 1; i < expectedLength; ++i) {
-        if ((static_cast<uchar>(input[i]) & 0xC0) != 0x80) {
+        if ((static_cast<char8>(input[i]) & 0xC0) != 0x80) {
             return false; // Invalid continuation byte
         }
     }
@@ -188,7 +188,7 @@ Result<char32> encoding::decodeUtf8CodePoint(Utf8StringView input, usize& advanc
     }
 
     // Get the first byte to determine the length of the UTF-8 sequence
-    uchar b0 = static_cast<uchar>(input[0]);
+    char8 b0 = static_cast<char8>(input[0]);
     usize len = utf8SequenceLength(b0);
 
     if (len == 0 || len > input.size()) {
@@ -206,7 +206,7 @@ Result<char32> encoding::decodeUtf8CodePoint(Utf8StringView input, usize& advanc
         // First, validate the continuation bytes before decoding 
         // to prevent invalid memory access and ensure the sequence is well-formed.
         for (usize i = 1; i < len; ++i) {
-            if ((static_cast<uchar>(input[i]) & 0xC0) != 0x80) {
+            if ((static_cast<char8>(input[i]) & 0xC0) != 0x80) {
                 return error(
                     ErrorCode::InvalidFormat, "Invalid continuation byte" 
                 );
@@ -216,15 +216,15 @@ Result<char32> encoding::decodeUtf8CodePoint(Utf8StringView input, usize& advanc
         // Decode the code point from the UTF-8 sequence based on the length determined by the first byte
 
         if (len == 2) {
-            cp = ((b0 & 0x1F) << 6) | (static_cast<uchar>(input[1]) & 0x3F);
+            cp = ((b0 & 0x1F) << 6) | (static_cast<char8>(input[1]) & 0x3F);
             min_cp = 0x80;
         } else if (len == 3) {
-            cp = ((b0 & 0x0F) << 12) | ((static_cast<uchar>(input[1]) & 0x3F) << 6) 
-                 | (static_cast<uchar>(input[2]) & 0x3F);
+            cp = ((b0 & 0x0F) << 12) | ((static_cast<char8>(input[1]) & 0x3F) << 6) 
+                 | (static_cast<char8>(input[2]) & 0x3F);
             min_cp = 0x800;
         } else if (len == 4) {
-            cp = ((b0 & 0x07) << 18) | ((static_cast<uchar>(input[1]) & 0x3F) << 12) 
-                 | ((static_cast<uchar>(input[2]) & 0x3F) << 6) | (static_cast<uchar>(input[3]) & 0x3F);
+            cp = ((b0 & 0x07) << 18) | ((static_cast<char8>(input[1]) & 0x3F) << 12) 
+                 | ((static_cast<char8>(input[2]) & 0x3F) << 6) | (static_cast<char8>(input[3]) & 0x3F);
             min_cp = 0x10000;
         }
     }
@@ -255,7 +255,7 @@ Result<char32> encoding::decodeUtf8CodePoint(Utf8StringView input, usize& advanc
 
 // Get the byte number of a UTF-8 code point
 usize encoding::utf8SequenceLength(char8 firstByte) {
-    uchar byte = static_cast<uchar>(firstByte);
+    char8 byte = static_cast<char8>(firstByte);
     if (byte <= 0x7F) {
         return 1; // ASCII character (1 byte)
     } else if ((byte & 0xE0) == 0xC0) {
@@ -295,13 +295,13 @@ usize encoding::encodeUtf8CodePoint(char32 cp, char8* out) {
 // Count the number of Unicode code points in a UTF-8 string
 Result<usize> encoding::countUtf8CodePoints(Utf8StringView input) noexcept {
     usize count = 0;
-    cstring ptr = input.data();
-    cstring end = ptr + input.size();
+    u8cstring ptr = input.data();
+    u8cstring end = ptr + input.size();
 
     while (ptr < end) {
         // Get the first byte to determine the length of the UTF-8 sequence,
         // and validate the sequence before counting to ensure we don't count invalid sequences.
-        uchar byte = static_cast<uchar>(*ptr);
+        char8 byte = static_cast<char8>(*ptr);
         usize expectedLength = utf8SequenceLength(byte);
         if (expectedLength == 0 || ptr + expectedLength > end) {
             return error( 
@@ -454,7 +454,7 @@ Result<usize> encoding::countUtf32CodePoints(Utf32StringView input) noexcept {
 // ========================================================================================
 
 // Convert ANSI string to UTF-16 string
-Result<Utf16String> encoding::ansiToUtf16(Utf8StringView ansi) {
+Result<Utf16String> encoding::ansiToUtf16(AnsiStringView ansi) {
 #if NEX_PLATFORM_IS_WINDOWS
     // Windows-specific implementation using MultiByteToWideChar
 
@@ -481,13 +481,22 @@ Result<Utf16String> encoding::ansiToUtf16(Utf8StringView ansi) {
     return ok(NEX_MOVE(utf16));
 
 #else
-    // On non-Windows platforms, we can assume ANSI is UTF-8 and convert to UTF-16
-    return utf8ToUtf16(ansi);
+    // On POSIX platforms, NexCore treats ANSI strings as UTF-8 by convention.
+    // AnsiString uses nchar (char), while Utf8String uses char8,
+    // so bridge the representation explicitly before conversion.
+    Utf8String utf8;
+    utf8.reserve(ansi.size());
+
+    for (usize i = 0; i < ansi.size(); ++i) {
+        utf8.pushBack(static_cast<char8>(ansi[i]));
+    }
+
+    return utf8ToUtf16(utf8.asView());
 #endif
 }
 
 // Convert UTF-16 string to ANSI string
-Result<Utf8String> encoding::utf16ToAnsi(Utf16StringView utf16) {
+Result<AnsiString> encoding::utf16ToAnsi(Utf16StringView utf16) {
 #if NEX_PLATFORM_IS_WINDOWS
     // Windows-specific implementation using WideCharToMultiByte
 
@@ -508,7 +517,7 @@ Result<Utf8String> encoding::utf16ToAnsi(Utf16StringView utf16) {
     }
 
     BOOL usedDefaultChar = FALSE;
-    Utf8String ansi(requiredSize, '\0');
+    AnsiString ansi(requiredSize, '\0');
     WideCharToMultiByte(CP_ACP, 0, 
                         reinterpret_cast<LPCWCH>(utf16.data()), 
                         len, 
@@ -527,29 +536,58 @@ Result<Utf8String> encoding::utf16ToAnsi(Utf16StringView utf16) {
     return ok(NEX_MOVE(ansi));
 
 #else
-    // On non-Windows platforms, we can assume ANSI is UTF-8 and convert from UTF-16 to UTF-8
-    return utf16ToUtf8(utf16);
+    // On POSIX platforms, NexCore treats ANSI strings as UTF-8 by convention.
+    // Convert to UTF-8 first, then bridge char8 -> nchar (char) explicitly.
+    auto result = utf16ToUtf8(utf16);
+    if (!result.isOk()) {
+        return error(result.error());
+    }
+
+    const Utf8String& utf8 = result.value();
+
+    AnsiString ansi;
+    ansi.reserve(utf8.size());
+
+    for (usize i = 0; i < utf8.size(); ++i) {
+        ansi.pushBack(static_cast<nchar>(utf8[i]));
+    }
+
+    return ok(NEX_MOVE(ansi));
 #endif
 }
 
 // Convert local string to UTF-16 string
-Result<Utf16String> encoding::localToUtf16(Utf8StringView local) {
+Result<Utf16String> encoding::localToUtf16(LocalStringView local) {
 #if NEX_PLATFORM_IS_WINDOWS
-    // On Windows, local encoding is typically ANSI, so we can reuse the ANSI conversion
-    return ansiToUtf16(local);
+    // On Windows, LocalString uses the native UTF-16 wchar representation.
+    Utf16String utf16;
+    utf16.reserve(local.size());
+
+    for (usize i = 0; i < local.size(); ++i) {
+        utf16.pushBack(static_cast<char16>(local[i]));
+    }
+
+    return ok(NEX_MOVE(utf16));
 #else
-    // On non-Windows platforms, we can assume local encoding is UTF-8 and convert to UTF-16
+    // On POSIX platforms, we can assume local encoding is UTF-8 and convert to UTF-16
     return utf8ToUtf16(local);
 #endif
 }
 
 // Convert UTF-16 string to local string
-Result<Utf8String> encoding::utf16ToLocal(Utf16StringView utf16) {
+Result<LocalString> encoding::utf16ToLocal(Utf16StringView utf16) {
 #if NEX_PLATFORM_IS_WINDOWS
-    // On Windows, local encoding is typically ANSI, so we can reuse the ANSI conversion
-    return utf16ToAnsi(utf16);
+    // On Windows, LocalString uses the native UTF-16 wchar representation.
+    LocalString local;
+    local.reserve(utf16.size());
+
+    for (usize i = 0; i < utf16.size(); ++i) {
+        local.pushBack(static_cast<wchar>(utf16[i]));
+    }
+
+    return ok(NEX_MOVE(local));
 #else
-    // On non-Windows platforms, we can assume local encoding is UTF-8 and convert to UTF-8
+    // On POSIX platforms, we can assume local encoding is UTF-8 and convert to UTF-8
     return utf16ToUtf8(utf16);
 #endif
 }
@@ -582,15 +620,14 @@ Result<Utf16String> encoding::utf8ToUtf16(Utf8StringView utf8) {
     return ok(NEX_MOVE(utf16));
 
 #else
-    // On non-Windows platforms, we can assume UTF-8 is already in the correct encoding and convert to UTF-16
-
+    // On POSIX platforms, we can assume UTF-8 is already in the correct encoding and convert to UTF-16
     Utf16String result;
 
     // Reserve enough space to avoid multiple reallocations (worst case: all ASCII characters)
     result.reserve(utf8.size());
     
-    cstring ptr = utf8.data();
-    cstring end = ptr + utf8.size();
+    u8cstring ptr = utf8.data();
+    u8cstring end = ptr + utf8.size();
     
     while (ptr < end) {
         usize advance = 0;
@@ -610,7 +647,6 @@ Result<Utf16String> encoding::utf8ToUtf16(Utf8StringView utf8) {
 
     // Successfully converted UTF-8 to UTF-16, return the result
     return ok(NEX_MOVE(result));
-
 #endif
 }
 
@@ -646,8 +682,7 @@ Result<Utf8String> encoding::utf16ToUtf8(Utf16StringView utf16) {
     // Successfully converted UTF-16 to UTF-8, return the result
     return ok(NEX_MOVE(utf8));
 #else
-    // On non-Windows platforms, we can assume UTF-16 is already in the correct encoding and convert to UTF-8
-    
+    // On POSIX platforms, we can assume UTF-16 is already in the correct encoding and convert to UTF-8
     Utf8String result;
 
     // Reserve enough space to avoid multiple reallocations (worst case: all characters are 4-byte code points)
@@ -656,7 +691,7 @@ Result<Utf8String> encoding::utf16ToUtf8(Utf16StringView utf16) {
     usize i = 0;
     while (i < utf16.size()) {
         usize advance = 0;
-        auto decodeRes = decodeUtf16CodePoint(utf16.substr(i), advance);
+        auto decodeRes = decodeUtf16CodePoint(utf16.subview(i), advance);
 
         if (!decodeRes.isOk()) { 
             // Failed to decode a UTF-16 code point, return an error result
@@ -672,7 +707,7 @@ Result<Utf8String> encoding::utf16ToUtf8(Utf16StringView utf16) {
             );
         }
 
-        result.append(reinterpret_cast<cstring>(u8buf), u8len);
+        result.append(reinterpret_cast<u8cstring>(u8buf), u8len);
         i += advance;
     }
 
@@ -722,14 +757,14 @@ Result<Utf32String> encoding::utf16ToUtf32(Utf16StringView utf16) {
     usize i = 0;
     while (i < utf16.size()) {
         usize advance = 0;
-        auto decodeRes = decodeUtf16CodePoint(utf16.substr(i), advance);
+        auto decodeRes = decodeUtf16CodePoint(utf16.subview(i), advance);
 
         if (!decodeRes.isOk()) { 
             // Failed to decode a UTF-16 code point, return an error result
             return error(decodeRes.error());
         }
 
-        result.push_back(decodeRes.value());
+        result.pushBack(decodeRes.value());
         i += advance;
     }
 

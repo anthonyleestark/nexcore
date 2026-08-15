@@ -3,13 +3,9 @@
  * Copyright (c) 2026 Anthony Lee Stark. All rights reserved.
  */
 
-#include <array>
-#include <cstdint>
-#include <vector>
-
 #include "nex/core/text/string_view.h"
-#include "nex/core/text/string.h"
-#include "nex/base/result.h"
+#include "nex/core/containers/array.h"
+#include "nex/core/containers/vector.h"
 
 NEX_NAMESPACE_BEGIN
 
@@ -44,22 +40,22 @@ constexpr StringView::size_type kCodeUnitCount = 1u << 16;
 
 // Type alias for the character lookup table, which is an array of uint64_t 
 // where each bit represents the presence of a UTF-16 code unit in the substring
-using CharLookupTable = NEX_STD array<NEX_STD uint64_t, kCodeUnitCount / kBitsPerWord>;
+using CharLookupTable = Array<uint64, kCodeUnitCount / kBitsPerWord>;
 
 // Build a lookup table for the characters in the input substring
 inline CharLookupTable buildCharLookupTable(StringView input) {
     CharLookupTable table{};
     for (StringView::size_type i = 0; i < input.size(); ++i) {
-        const auto ch = static_cast<NEX_STD uint16_t>(input[i]);
-        table[ch / kBitsPerWord] |= NEX_STD uint64_t{1} << (ch % kBitsPerWord);
+        const auto ch = static_cast<uint16>(input[i]);
+        table[ch / kBitsPerWord] |= uint64{1} << (ch % kBitsPerWord);
     }
     return table;
 }
 
 // Check if the character is present in the substring using the lookup table
 inline bool lookupContains(const CharLookupTable& table, StringView::value_type ch) {
-    const auto codeUnit = static_cast<NEX_STD uint16_t>(ch);
-    return (table[codeUnit / kBitsPerWord] & (NEX_STD uint64_t{1} << (codeUnit % kBitsPerWord))) != 0;
+    const auto codeUnit = static_cast<uint16>(ch);
+    return (table[codeUnit / kBitsPerWord] & (uint64{1} << (codeUnit % kBitsPerWord))) != 0;
 }
 
 NEX_ANONYMOUS_NAMESPACE_END
@@ -67,77 +63,6 @@ NEX_ANONYMOUS_NAMESPACE_END
 // =================================================================================
 // Implementation of StringView class methods
 // =================================================================================
-
-////// Construction ------------------------
-
-// Construct from String (forward declaration needed)
-StringView::StringView(const String& data)
-    : data_(data.data()), size_(data.size()) {}
-
-////// Conversion ------------------------
-
-// Convert to String (creates a new String instance from the view)
-String StringView::toString() const {
-    return String(*this);
-}
-
-////// Operations -----------------------
-
-// Copy substring to destination
-String StringView::copy(size_type count, size_type pos /* = 0 */) const {
-    return String(substr(pos, count));
-}
-
-////// Subview operations -----------------------
-
-// Get substring view
-StringView StringView::substr(size_type pos, size_type count /* = npos */) const {
-    if (pos > size()) {
-        NEX_ASSERT_MSG(false, "Position out of range");
-        return StringView();
-    }
-    if (count == npos) {
-        count = size() - pos;
-    }
-    size_type rcount = NEX_STD min(count, size() - pos);
-    return StringView(data_ + pos, rcount);
-}
-
-// Get left part of the view
-StringView StringView::left(size_type count) const noexcept {
-    if (count >= size()) {
-        return *this;
-    }
-    return StringView(data_, count);
-}
-
-// Get right part of the view
-StringView StringView::right(size_type count) const noexcept {
-    if (count >= size()) {
-        return *this;
-    }
-    return StringView(data_ + size() - count, count);
-}
-
-// Get middle part of the view
-StringView StringView::mid(size_type start, size_type count) const noexcept {
-    if (start >= size()) {
-        return StringView();
-    }
-    if (count == npos || start + count > size()) {
-        count = size() - start;
-    }
-    return StringView(data_ + start, count);
-}
-
-////// Comparison -----------------------
-
-// Compare substring with another view
-int32 StringView::compare(size_type pos, size_type count, StringView other) const {
-    return substr(pos, count).compare(other);
-}
-
-////// Searching -----------------------
 
 /**
  * @brief Find first occurrence of substring
@@ -157,26 +82,26 @@ int32 StringView::compare(size_type pos, size_type count, StringView other) cons
  * @param pos The position in the view to start the search from (default is 0)
  * @return The index of the first occurrence of the substring, or npos if not found
  */
-StringView::size_type StringView::find(StringView substring, size_type pos) const {
-    if (pos > size_) {
-        return substring.size_ == 0 ? size_ : npos;
+StringView::size_type StringView::find(self other, size_type pos) const {
+    if (pos > size()) {
+        return other.size() == 0 ? size() : npos;
     }
-    if (substring.size_ == 0) {
+    if (other.size() == 0) {
         return pos;
     }
-    if (substring.size_ == 1) {
-        return find(substring.data_[0], pos);
+    if (other.size() == 1) {
+        return find(other[0], pos);
     }
 
-    const size_type remaining = size_ - pos;
-    if (substring.size_ > remaining) {
+    const size_type remaining = size() - pos;
+    if (other.size() > remaining) {
         return npos;
     }
 
-    const size_type needleSize = substring.size_;
-    NEX_STD vector<size_type> longestPrefixSuffix(needleSize, 0);
+    const size_type needleSize = other.size();
+    Vec<size_type> longestPrefixSuffix(needleSize, 0);
     for (size_type i = 1, prefixLength = 0; i < needleSize;) {
-        if (substring.data_[i] == substring.data_[prefixLength]) {
+        if (other[i] == other[prefixLength]) {
             longestPrefixSuffix[i++] = ++prefixLength;
         } else if (prefixLength != 0) {
             prefixLength = longestPrefixSuffix[prefixLength - 1];
@@ -185,8 +110,8 @@ StringView::size_type StringView::find(StringView substring, size_type pos) cons
         }
     }
 
-    for (size_type haystackIndex = pos, needleIndex = 0; haystackIndex < size_;) {
-        if (data_[haystackIndex] == substring.data_[needleIndex]) {
+    for (size_type haystackIndex = pos, needleIndex = 0; haystackIndex < size();) {
+        if (operator[](haystackIndex) == other[needleIndex]) {
             ++haystackIndex;
             ++needleIndex;
             if (needleIndex == needleSize) {
@@ -217,11 +142,11 @@ StringView::size_type StringView::find(StringView substring, size_type pos) cons
  * @return The index of the first occurrence of the character, or npos if not found
  */
 StringView::size_type StringView::find(value_type ch, size_type pos) const {
-    if (pos >= size_) {
+    if (pos >= size()) {
         return npos;
     }
-    const char16* result = NEX_STD char_traits<char16>::find(data_ + pos, size_ - pos, ch);
-    return result ? static_cast<size_type>(result - data_) : npos;
+    const char16* result = traits_type::find(data() + pos, size() - pos, ch);
+    return result ? static_cast<size_type>(result - data()) : npos;
 }
 
 /**
@@ -236,23 +161,23 @@ StringView::size_type StringView::find(value_type ch, size_type pos) const {
  * @return The index of the last occurrence of the substring, or npos if not found
  */
 StringView::size_type StringView::rfind(StringView substring, size_type pos) const {
-    if (substring.size_ > size_) {
+    if (substring.size() > size()) {
         return npos;
     }
-    if (substring.size_ == 0) {
-        return pos < size_ ? pos : size_;
+    if (substring.size() == 0) {
+        return pos < size() ? pos : size();
     }
-    if (substring.size_ == 1) {
-        return rfind(substring.data_[0], pos);
+    if (substring.size() == 1) {
+        return rfind(substring[0], pos);
     }
 
-    const size_type remaining = pos < size_ ? pos + 1 : size_;
-    if (substring.size_ > remaining) {
+    const size_type remaining = pos < size() ? pos + 1 : size();
+    if (substring.size() > remaining) {
         return npos;
     }
 
-    for (size_type haystackIndex = remaining - substring.size_; haystackIndex != npos; --haystackIndex) {
-        if (NEX_STD char_traits<char16>::compare(data_ + haystackIndex, substring.data_, substring.size_) == 0) {
+    for (size_type haystackIndex = remaining - substring.size(); haystackIndex != npos; --haystackIndex) {
+        if (traits_type::compare(data() + haystackIndex, substring.data(), substring.size()) == 0) {
             return haystackIndex;
         }
     }
@@ -275,11 +200,11 @@ StringView::size_type StringView::rfind(StringView substring, size_type pos) con
  * @return The index of the last occurrence of the character, or npos if not found
  */
 StringView::size_type StringView::rfind(value_type ch, size_type pos) const {
-    if (pos >= size_) {
+    if (pos >= size()) {
         return npos;
     }
     for (size_type i = pos + 1; i-- > 0;) {
-        if (data_[i] == ch) {
+        if (operator[](i) == ch) {
             return i;
         }
     }
@@ -298,13 +223,13 @@ StringView::size_type StringView::rfind(value_type ch, size_type pos) const {
  * @return The index of the first occurrence of any character in the set, or npos if not found
  */
 StringView::size_type StringView::findFirstOf(StringView input, size_type pos) const {
-    if (pos >= size_ || input.size_ == 0) {
+    if (pos >= size() || input.size() == 0) {
         return npos;
     }
 
-    if (input.size_ < kLinearSearchThreshold) {
-        for (size_type i = pos; i < size_; ++i) {
-            if (NEX_STD char_traits<char16>::find(input.data_, input.size_, data_[i]) != nullptr) {
+    if (input.size() < kLinearSearchThreshold) {
+        for (size_type i = pos; i < size(); ++i) {
+            if (traits_type::find(input.data(), input.size(), operator[](i)) != nullptr) {
                 return i;
             }
         }
@@ -312,8 +237,8 @@ StringView::size_type StringView::findFirstOf(StringView input, size_type pos) c
     }
 
     const CharLookupTable inputChars = buildCharLookupTable(input);
-    for (size_type i = pos; i < size_; ++i) {
-        if (lookupContains(inputChars, data_[i])) {
+    for (size_type i = pos; i < size(); ++i) {
+        if (lookupContains(inputChars, operator[](i))) {
             return i;
         }
     }
@@ -333,16 +258,16 @@ StringView::size_type StringView::findFirstOf(StringView input, size_type pos) c
  * @return The index of the first occurrence of any character not in the set, or npos if not found
  */
 StringView::size_type StringView::findFirstNotOf(StringView input, size_type pos) const {
-    if (pos >= size_) {
+    if (pos >= size()) {
         return npos;
     }
-    if (input.size_ == 0) {
+    if (input.size() == 0) {
         return pos;
     }
 
-    if (input.size_ < kLinearSearchThreshold) {
-        for (size_type i = pos; i < size_; ++i) {
-            if (NEX_STD char_traits<char16>::find(input.data_, input.size_, data_[i]) == nullptr) {
+    if (input.size() < kLinearSearchThreshold) {
+        for (size_type i = pos; i < size(); ++i) {
+            if (traits_type::find(input.data(), input.size(), operator[](i)) == nullptr) {
                 return i;
             }
         }
@@ -350,8 +275,8 @@ StringView::size_type StringView::findFirstNotOf(StringView input, size_type pos
     }
 
     const CharLookupTable inputChars = buildCharLookupTable(input);
-    for (size_type i = pos; i < size_; ++i) {
-        if (!lookupContains(inputChars, data_[i])) {
+    for (size_type i = pos; i < size(); ++i) {
+        if (!lookupContains(inputChars, operator[](i))) {
             return i;
         }
     }
@@ -371,15 +296,15 @@ StringView::size_type StringView::findFirstNotOf(StringView input, size_type pos
  * @return The index of the last occurrence of any character in the set, or npos if not found
  */
 StringView::size_type StringView::findLastOf(StringView input, size_type pos) const {
-    if (size_ == 0 || input.size_ == 0) {
+    if (size() == 0 || input.size() == 0) {
         return npos;
     }
 
-    const size_type start = pos < size_ ? pos : size_ - 1;
+    const size_type start = pos < size() ? pos : size() - 1;
 
-    if (input.size_ < kLinearSearchThreshold) {
+    if (input.size() < kLinearSearchThreshold) {
         for (size_type i = start + 1; i-- > 0;) {
-            if (NEX_STD char_traits<char16>::find(input.data_, input.size_, data_[i]) != nullptr) {
+            if (traits_type::find(input.data(), input.size(), operator[](i)) != nullptr) {
                 return i;
             }
         }
@@ -388,7 +313,7 @@ StringView::size_type StringView::findLastOf(StringView input, size_type pos) co
 
     const CharLookupTable inputChars = buildCharLookupTable(input);
     for (size_type i = start + 1; i-- > 0;) {
-        if (lookupContains(inputChars, data_[i])) {
+        if (lookupContains(inputChars, operator[](i))) {
             return i;
         }
     }
@@ -408,18 +333,18 @@ StringView::size_type StringView::findLastOf(StringView input, size_type pos) co
  * @return The index of the last occurrence of any character not in the set, or npos if not found
  */
 StringView::size_type StringView::findLastNotOf(StringView input, size_type pos) const {
-    if (size_ == 0) {
+    if (size() == 0) {
         return npos;
     }
 
-    const size_type start = pos < size_ ? pos : size_ - 1;
-    if (input.size_ == 0) {
+    const size_type start = pos < size() ? pos : size() - 1;
+    if (input.size() == 0) {
         return start;
     }
 
-    if (input.size_ < kLinearSearchThreshold) {
+    if (input.size() < kLinearSearchThreshold) {
         for (size_type i = start + 1; i-- > 0;) {
-            if (NEX_STD char_traits<char16>::find(input.data_, input.size_, data_[i]) == nullptr) {
+            if (traits_type::find(input.data(), input.size(), operator[](i)) == nullptr) {
                 return i;
             }
         }
@@ -428,25 +353,12 @@ StringView::size_type StringView::findLastNotOf(StringView input, size_type pos)
 
     const CharLookupTable inputChars = buildCharLookupTable(input);
     for (size_type i = start + 1; i-- > 0;) {
-        if (!lookupContains(inputChars, data_[i])) {
+        if (!lookupContains(inputChars, operator[](i))) {
             return i;
         }
     }
 
     return npos;
-}
-
-// Check if view starts with prefix
-bool StringView::startsWith(StringView prefix) const {
-    return size() >= prefix.size() &&
-           NEX_STD char_traits<char16>::compare(data_, prefix.data_, prefix.size_) == 0;
-}
-
-// Check if view ends with suffix
-bool StringView::endsWith(StringView suffix) const {
-    return size() >= suffix.size() &&
-           NEX_STD char_traits<char16>::compare(data_ + size() - suffix.size()
-                                                    , suffix.data_, suffix.size_) == 0;
 }
 
 NEX_NAMESPACE_END

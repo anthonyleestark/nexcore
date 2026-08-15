@@ -75,6 +75,9 @@ public:
     NEX_HIDDEN_FROM_ABI constexpr BasicStringView(span_type span) noexcept
         : data_(span.data()), size_(span.size()) {}
 
+    // Default destructor.
+    NEX_HIDDEN_FROM_ABI constexpr ~BasicStringView() noexcept = default;
+
     // Returns a read-only pointer to the string view's content.
     NEX_NODISCARD NEX_HIDDEN_FROM_ABI constexpr const_pointer data() const noexcept { return data_; }
 
@@ -152,6 +155,18 @@ public:
         return self(data_ + size_ - count, count);
     }
 
+    // Removes the first count characters from the view.
+    NEX_HIDDEN_FROM_ABI constexpr void removePrefix(size_type count) noexcept {
+        if (count > size()) { count = size(); }
+        *this = subview(count);
+    }
+
+    // Removes the last count characters from the view.
+    NEX_HIDDEN_FROM_ABI constexpr void removeSuffix(size_type count) noexcept {
+        if (count > size()) { count = size(); }
+        *this = first(size() - count);
+    }
+
     // Returns the index of the first occurrence of the specified character, or npos if not found.
     NEX_NODISCARD NEX_HIDDEN_FROM_ABI constexpr usize find(char_type ch, size_type position = 0) const {
         if (position >= size_) {
@@ -224,16 +239,26 @@ public:
     }
 
     // Determines whether the string view starts with the specified substring.
-    NEX_NODEBUG NEX_HIDDEN_FROM_ABI constexpr bool startsWith(self other) const noexcept {
+    NEX_NODISCARD NEX_HIDDEN_FROM_ABI constexpr bool startsWith(self other) const noexcept {
         if (other.empty()) return true;
         return size_ >= other.size() && traits_type::compare(data_, other.data(), other.size()) == 0;
     }
 
+    // Determines whether the string view starts with the specified character.
+    NEX_NODISCARD NEX_HIDDEN_FROM_ABI constexpr bool startsWith(char_type ch) const noexcept {
+        return !empty() && traits_type::eq(data_[0], ch);
+    }
+
     // Determines whether the string view ends with the specified substring.
-    NEX_NODEBUG NEX_HIDDEN_FROM_ABI constexpr bool endsWith(self other) const noexcept {
+    NEX_NODISCARD NEX_HIDDEN_FROM_ABI constexpr bool endsWith(self other) const noexcept {
         if (other.empty()) return true;
         return size_ >= other.size() &&
             traits_type::compare(data_ + size_ - other.size(), other.data(), other.size()) == 0;
+    }
+
+    // Determines whether the string view ends with the specified character.
+    NEX_NODISCARD NEX_HIDDEN_FROM_ABI constexpr bool endsWith(char_type ch) const noexcept {
+        return !empty() && traits_type::eq(data_[size_ - 1], ch);
     }
 
     // Compares this string view with another string view lexicographically.

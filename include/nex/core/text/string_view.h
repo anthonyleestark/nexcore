@@ -126,21 +126,13 @@ public:
     NEX_NODISCARD constexpr value_type operator[](size_type pos) const noexcept { return view_[pos]; }
 
     // Returns the character at the specified position with bounds checking.
-    NEX_NODISCARD constexpr value_type at(size_type pos) const {
-        NEX_VERIFY_MSG(pos < view_.size(), "StringView::at: position out of range");
-        return view_.at(pos);
-    }
+    NEX_NODISCARD constexpr value_type at(size_type pos) const { return view_.at(pos); }
 
     // Returns the first character in the string view.
-    NEX_NODISCARD constexpr value_type front() const noexcept {
-        NEX_VERIFY_MSG(!empty(), "StringView::front: string view is empty");
-        return view_.front();
-    }
+    NEX_NODISCARD constexpr value_type front() const noexcept { return view_.front(); }
+
     // Returns the last character in the string view.
-    NEX_NODISCARD constexpr value_type back() const noexcept {
-        NEX_VERIFY_MSG(!empty(), "StringView::back: string view is empty");
-        return view_.back();
-    }
+    NEX_NODISCARD constexpr value_type back() const noexcept { return view_.back(); }
 
     // Returns a subview of the string view starting at position with an optional count.
     NEX_NODISCARD constexpr self subview(size_type pos, size_type count = npos) const {

@@ -118,25 +118,25 @@ public:
 
     // Returns the character at position with bounds checking.
     NEX_NODISCARD NEX_HIDDEN_FROM_ABI constexpr const_reference at(size_type position) const {
-        NEX_VERIFY_MSG(position < size_, "BasicStringView::at: position out of range");
+        NEX_VERIFY_MSG(position < size_, "Error: String view index is out of bounds");
         return data_[position];
     }
 
     // Returns the first character in the string view.
     NEX_NODISCARD NEX_HIDDEN_FROM_ABI constexpr const_reference front() const {
-        NEX_VERIFY_MSG(!empty(), "BasicStringView::front: string view is empty");
+        NEX_VERIFY_MSG(!empty(), "Error: Cannot access front of an empty string view");
         return data_[0];
     }
 
     // Returns the last character in the string view.
     NEX_NODISCARD NEX_HIDDEN_FROM_ABI constexpr const_reference back() const {
-        NEX_VERIFY_MSG(!empty(), "BasicStringView::back: string view is empty");
+        NEX_VERIFY_MSG(!empty(), "Error: Cannot access back of an empty string view");
         return data_[size_ - 1];
     }
 
     // Returns a subview of the string view starting at position with an optional count.
     NEX_NODISCARD NEX_HIDDEN_FROM_ABI constexpr self subview(size_type position, size_type count = npos) const {
-        NEX_VERIFY_MSG(position <= size_, "BasicStringView::subview: position out of range");
+        NEX_VERIFY_MSG(position <= size_, "Error: String view index is out of bounds");
         if (count == npos || count > size_ - position) {
             count = size_ - position;
         }
@@ -145,13 +145,13 @@ public:
 
     // Returns a subview of the first count characters of the string view.
     NEX_NODISCARD NEX_HIDDEN_FROM_ABI constexpr self first(size_type count) const {
-        NEX_VERIFY_MSG(count <= size_, "BasicStringView::first: count out of range");
+        NEX_VERIFY_MSG(count <= size_, "Error: Character count exceeds string view size");
         return self(data_, count);
     }
 
     // Returns a subview of the last count characters of the string view.
     NEX_NODISCARD NEX_HIDDEN_FROM_ABI constexpr self last(size_type count) const {
-        NEX_VERIFY_MSG(count <= size_, "BasicStringView::last: count out of range");
+        NEX_VERIFY_MSG(count <= size_, "Error: Character count exceeds string view size");
         return self(data_ + size_ - count, count);
     }
 

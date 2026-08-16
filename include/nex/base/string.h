@@ -561,6 +561,9 @@ public:
     using self = BasicString<char_type, InlineCapacity, Growth>;
     using self_view = BasicStringView<char_type>;
 
+    using iterator = pointer;
+    using const_iterator = self_view::const_iterator;
+
     // The underlying storage type that manages the character sequence.
     using storage_type = BasicStringStorage<CharType, InlineCapacity, Growth>;
 
@@ -625,6 +628,11 @@ public:
         storage_.assign(initList.begin(), initList.size());
     }
 
+    // Creates a string by copying count copies of a character.
+    NEX_HIDDEN_FROM_ABI constexpr explicit BasicString(size_type count, char_type ch) {
+        storage_.assign(count, ch);
+    }
+
     // Releases resources and destroys the string.
     NEX_HIDDEN_FROM_ABI constexpr ~BasicString() noexcept = default;
 
@@ -640,7 +648,8 @@ public:
     // Returns the maximum number of content characters that can be stored in the string.
     NEX_NODISCARD NEX_HIDDEN_FROM_ABI static constexpr size_type maxSize() noexcept { return storage_type::maxSize(); }
 
-    // Returns the current capacity of the string.
+    // Returns the current capacity of the string,
+    // which is the number of content characters that can be stored without requiring a reallocation.
     NEX_NODISCARD NEX_HIDDEN_FROM_ABI constexpr size_type capacity() const noexcept { return storage_.capacity(); }
 
     // Reserves capacity for at least newCapacity content characters.
@@ -663,6 +672,30 @@ public:
 
     // Returns a read-only pointer to the string's content, including a NUL terminator.
     NEX_NODISCARD NEX_HIDDEN_FROM_ABI constexpr const_pointer cStr() const noexcept { return storage_.cStr(); }
+
+    // Returns a mutable iterator to the first character in the string.
+    NEX_NODISCARD NEX_HIDDEN_FROM_ABI constexpr iterator begin() noexcept { return storage_.data(); }
+
+    // Returns an immutable const iterator to the first character in the string.
+    NEX_NODISCARD NEX_HIDDEN_FROM_ABI constexpr const_iterator begin() const noexcept { return storage_.data(); }
+
+    // Returns a mutable iterator to one past the last character in the string.
+    NEX_NODISCARD NEX_HIDDEN_FROM_ABI constexpr iterator end() noexcept {
+        return storage_.data() + storage_.size();
+    }
+
+    // Returns an immutable const iterator to one past the last character in the string.
+    NEX_NODISCARD NEX_HIDDEN_FROM_ABI constexpr const_iterator end() const noexcept {
+        return storage_.data() + storage_.size();
+    }
+
+    // Returns an immutable const iterator to the first character in the string.
+    NEX_NODISCARD NEX_HIDDEN_FROM_ABI constexpr const_iterator cbegin() const noexcept { return storage_.data(); }
+
+    // Returns an immutable const iterator to one past the last character in the string.
+    NEX_NODISCARD NEX_HIDDEN_FROM_ABI constexpr const_iterator cend() const noexcept {
+        return storage_.data() + storage_.size();
+    }
 
     // Returns the character at position with bounds checking.
     NEX_NODISCARD NEX_HIDDEN_FROM_ABI constexpr reference at(size_type position) noexcept {
@@ -699,14 +732,14 @@ public:
         return storage_.back();
     }
 
-    // Returns a non-owning view of the string's content as a BasicStringView.
-    NEX_NODISCARD NEX_HIDDEN_FROM_ABI constexpr self_view asView() const noexcept {
-        return self_view(storage_.data(), storage_.size());
-    }
-
     // Returns the last content character.
     NEX_NODISCARD NEX_HIDDEN_FROM_ABI constexpr const_reference back() const noexcept {
         return storage_.back();
+    }
+
+    // Returns a non-owning view of the string's content as a BasicStringView.
+    NEX_NODISCARD NEX_HIDDEN_FROM_ABI constexpr self_view asView() const noexcept {
+        return self_view(storage_.data(), storage_.size());
     }
 
     // Assign a null-terminated character sequence to the string, replacing its content.
@@ -867,6 +900,14 @@ public:
         storage_.erase(position, count);
     }
 
+    // Returns a substring of the string starting at position and containing up to count characters.
+    NEX_NODISCARD NEX_HIDDEN_FROM_ABI constexpr self substr(size_type position, size_type count = npos) const {
+        NEX_ASSERT_MSG(position <= size(), "Error: Substring position is out of bounds");
+        const size_type removable = size() - position;
+        const size_type substringCount = count < removable ? count : removable;
+        return self(data() + position, substringCount);
+    }
+
     // Concatenates two BasicString objects and returns the result.
     NEX_HIDDEN_FROM_ABI constexpr self operator+(const self& other) const {
         self result(*this);
@@ -962,9 +1003,19 @@ public:
         return size() == other.size() && compare(other) == 0;
     }
 
+    // Compares this string with another BasicStringView object for equality.
+    NEX_NODISCARD NEX_HIDDEN_FROM_ABI constexpr bool operator==(self_view view) const noexcept {
+        return size() == view.size() && compare(view) == 0;
+    }
+
     // Compares this string with another BasicString object for inequality.
     NEX_NODISCARD NEX_HIDDEN_FROM_ABI constexpr bool operator!=(const self& other) const noexcept {
         return !(*this == other);
+    }
+
+    // Compares this string with another BasicStringView object for inequality.
+    NEX_NODISCARD NEX_HIDDEN_FROM_ABI constexpr bool operator!=(self_view view) const noexcept {
+        return !(*this == view);
     }
 
     // Compares this string with another BasicString object for lexicographical ordering.
@@ -972,9 +1023,19 @@ public:
         return compare(other) < 0;
     }
 
+    // Compares this string with another BasicStringView object for lexicographical ordering.
+    NEX_NODISCARD NEX_HIDDEN_FROM_ABI constexpr bool operator<(self_view view) const noexcept {
+        return compare(view) < 0;
+    }
+
     // Compares this string with another BasicString object for lexicographical ordering.
     NEX_NODISCARD NEX_HIDDEN_FROM_ABI constexpr bool operator<=(const self& other) const noexcept {
         return compare(other) <= 0;
+    }
+
+    // Compares this string with another BasicStringView object for lexicographical ordering.
+    NEX_NODISCARD NEX_HIDDEN_FROM_ABI constexpr bool operator<=(self_view view) const noexcept {
+        return compare(view) <= 0;
     }
 
     // Compares this string with another BasicString object for lexicographical ordering.
@@ -982,9 +1043,19 @@ public:
         return compare(other) > 0;
     }
 
+    // Compares this string with another BasicStringView object for lexicographical ordering.
+    NEX_NODISCARD NEX_HIDDEN_FROM_ABI constexpr bool operator>(self_view view) const noexcept {
+        return compare(view) > 0;
+    }
+
     // Compares this string with another BasicString object for lexicographical ordering.
     NEX_NODISCARD NEX_HIDDEN_FROM_ABI constexpr bool operator>=(const self& other) const noexcept {
         return compare(other) >= 0;
+    }
+
+    // Compares this string with another BasicStringView object for lexicographical ordering.
+    NEX_NODISCARD NEX_HIDDEN_FROM_ABI constexpr bool operator>=(self_view view) const noexcept {
+        return compare(view) >= 0;
     }
 };
 

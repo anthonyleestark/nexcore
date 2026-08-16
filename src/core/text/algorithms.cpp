@@ -60,14 +60,14 @@ Vec<String> text::split(StringView str, char16 delimiter /* = u' ' */) {
 
     // Iterate through the string and split it based on the delimiter
     while (end != StringView::npos) {
-        result.emplaceBack(str.substr(start, end - start));
+        result.emplaceBack(str.subview(start, end - start));
         start = end + 1;
         end = str.find(delimiter, start);
     }
 
     // Add the last segment after the final delimiter
     if (start < str.size()) {
-        result.emplaceBack(str.substr(start));
+        result.emplaceBack(str.subview(start));
     }
 
     return result;
@@ -98,10 +98,10 @@ String text::truncate(StringView str, usize maxLength, char16 ellipsis /* = u'â€
         return String(); // Return an empty string if maxLength is zero
     }
     if (maxLength == 1) {
-        return String().append(ellipsis); // Return just the ellipsis if maxLength is one
+        return String() + ellipsis; // Return just the ellipsis if maxLength is one
     }
     // Truncate the string and add the ellipsis at the end
-    return str.substr(0, maxLength - 1).toString() + ellipsis;
+    return String(str.subview(0, maxLength - 1)) + ellipsis;
 }
 
 // Trim characters from both sides of the string
@@ -119,7 +119,7 @@ String text::trim(StringView str, char16 trimChar /* = u' ' */) noexcept {
     }
 
     // Return the trimmed substring as a new String
-    return str.substr(start, end - start).toString();
+    return str.subview(start, end - start);
 }
 
 // Trim characters from the left side of the string
@@ -133,7 +133,7 @@ String text::trimLeft(StringView str, char16 trimChar /* = u' ' */) noexcept {
     }
 
     // Return the left-trimmed substring as a new String
-    return str.substr(start, end - start).toString();
+    return str.subview(start, end - start);
 }
 
 // Trim characters from the right side of the string
@@ -147,7 +147,7 @@ String text::trimRight(StringView str, char16 trimChar /* = u' ' */) noexcept {
     }
 
     // Return the right-trimmed substring as a new String
-    return str.substr(start, end - start).toString();
+    return str.subview(start, end - start);
 }
 
 // Replace multiple consecutive whitespace characters in a string with a single space character
@@ -179,7 +179,7 @@ String text::normalizeSpaces(StringView str) {
     String trimmed = trim(str);
 
     // Then, replace multiple consecutive whitespace characters with a single space
-    return squashSpaces(trimmed);
+    return squashSpaces(trimmed.asView());
 }
 
 // Convert a string to lowercase
@@ -247,7 +247,7 @@ String text::left(StringView str, usize count) {
     if (count >= str.size()) {
         return String(str); // Return the entire string if count exceeds its length
     }
-    return str.substr(0, count).toString();
+    return str.subview(0, count);
 }
 
 // Extract a substring from the middle of the string
@@ -259,7 +259,7 @@ String text::mid(StringView str, usize start, usize count) {
         count = str.size() - start; // Adjust count to get the remaining substring if it exceeds the length
     }
 
-    return str.substr(start, count).toString();
+    return str.subview(start, count);
 }
 
 // Extract a substring from the right side of the string
@@ -267,7 +267,7 @@ String text::right(StringView str, usize count) {
     if (count >= str.size()) {
         return String(str); // Return the entire string if count exceeds its length
     }
-    return str.substr(str.size() - count, count).toString();
+    return str.subview(str.size() - count, count);
 }
 
 // Extract a substring that is between two specified delimiters
@@ -283,7 +283,7 @@ String text::substringBetween(StringView str, StringView open, StringView close)
         return String(); // Return an empty string if the closing delimiter is not found
     }
 
-    return str.substr(start, end - start).toString();
+    return str.subview(start, end - start);
 }
 
 // Check if a string contains any of the characters from a given set
@@ -382,12 +382,12 @@ String text::erase(StringView str, StringView substring) {
     // Iterate through the string and build a new string
     // without the specified substring
     while (end != StringView::npos) {
-        result += str.substr(start, end - start);   // Add the part before the substring
+        result += str.subview(start, end - start);  // Add the part before the substring
         start = end + substring.size();             // Move past the substring
         end = str.find(substring, start);           // Find the next occurrence
     }
 
-    result += str.substr(start); // Add the remaining part of the string after the last substring
+    result += str.subview(start); // Add the remaining part of the string after the last substring
 
     return result;
 }
@@ -419,13 +419,13 @@ String text::replace(StringView str, StringView target, StringView replacement) 
 
     // Iterate through the string and replace the target substring
     while (end != StringView::npos) {
-        result += str.substr(start, end - start);   // Add the part before the target
+        result += str.subview(start, end - start);  // Add the part before the target
         result += replacement;                      // Add the replacement substring
         start = end + target.size();                // Move past the target substring
         end = str.find(target, start);              // Find the next occurrence of the target
     }
 
-    result += str.substr(start); // Add the remaining part of the string after the last target
+    result += str.subview(start); // Add the remaining part of the string after the last target
 
     return result;
 }

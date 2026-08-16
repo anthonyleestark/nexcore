@@ -12,6 +12,7 @@
 #include "nex/base/result.h"
 #include "nex/base/assert_crash.h"
 #include "nex/base/charconv.h"
+#include "nex/base/encoding.h"
 #include "nex/core/text/string_view.h"
 
 NEX_NAMESPACE_BEGIN
@@ -226,6 +227,12 @@ public:
     // Converts the string to a UTF-32 string, returning a Result that may contain an error if the conversion fails.
     NEX_NODISCARD Result<Utf32String> toUtf32() const { return encoding::utf16ToUtf32(buffer_.asView()); }
 
+    // Converts the string to an ANSI string, returning a Result that may contain an error if the conversion fails.
+    NEX_NODISCARD Result<AnsiString> toAnsi() const { return encoding::utf16ToAnsi(buffer_.asView()); }
+
+    // Converts the string to a Local string, returning a Result that may contain an error if the conversion fails.
+    NEX_NODISCARD Result<LocalString> toLocal() const { return encoding::utf16ToLocal(buffer_.asView()); }
+
     // Returns the number of characters in the string, not including the null terminator.
     NEX_NODISCARD constexpr size_type size() const noexcept { return buffer_.size(); }
 
@@ -307,6 +314,9 @@ public:
 
     // Returns a non-owning view of the string's content as a StringView.
     NEX_NODISCARD constexpr self_view asView() const noexcept { return self_view(buffer_.data(), buffer_.size()); }
+
+    // Returns a non-owning view of the string's content as a UTF-16 string view.
+    NEX_NODISCARD constexpr base_view asUtf16() const noexcept { return base_view(buffer_.data(), buffer_.size()); }
 
     // Assigns the content of another string object to this string, replacing its content.
     constexpr self& assign(const self& other) noexcept { return *this = other; }

@@ -10,6 +10,7 @@
 #include "nex/base/casts.h"
 #include "nex/base/encoding.h"
 #include "nex/infrastructure/parser/json.h"
+#include "src/infrastructure/parser/parser_helper.h"
 
 // Include nlohmann/json
 #include <nlohmann/json.hpp>
@@ -38,28 +39,16 @@ struct Json::Impl {
 
 NEX_ANONYMOUS_NAMESPACE_BEGIN
 
-// Convert StringView to UTF-8 string (std::string)
-Utf8String toUtf8String(StringView value) {
-    using namespace NEX_PREPEND_NAMESPACE(encoding);
-    const auto result = utf16ToUtf8(Utf16StringView(value.data(), value.size()));
-    return result.isOk() ? result.value() : Utf8String();
-}
-
-// Convert UTF-8 string (std::string) to String
-String fromUtf8String(const Utf8String& value) {
-    return String::fromUtf8(value);
-}
-
 // Navigate JSON using dot-separated key path (e.g., "application.name")
-const nlohmann::json* navigatePathImpl(const nlohmann::json& root, const Utf8String& keyPath) {
-    if (keyPath.empty()) {
+const nlohmann::json* navigatePathImpl(const nlohmann::json& root, const NString& keyPathU8) {
+    if (keyPathU8.empty()) {
         return nullptr;
     }
 
     const nlohmann::json* current = &root;
 
-    NEX_STD stringstream ss(keyPath);
-    Utf8String segment;
+    NEX_STD stringstream ss(keyPathU8.cStr());
+    NEX_STD string segment;
 
     while (NEX_STD getline(ss, segment, '.')) {
         if (segment.empty()) {
@@ -67,7 +56,7 @@ const nlohmann::json* navigatePathImpl(const nlohmann::json& root, const Utf8Str
         }
 
         // Check if current node is an object and contains the segment as a key
-        if (!current->is_object() || !current->contains(segment)) {
+        if (!current->is_object() || !current->contains(segment.c_str())) {
             return nullptr;
         }
 
@@ -93,7 +82,7 @@ NEX_DEFINE_DEFAULT_DTOR(Json);
 // Load JSON from file
 Result<void> Json::loadFromFile(StringView filePath) {
     // Convert file path to UTF-8 string
-    const Utf8String path = toUtf8String(filePath);
+    const NString path = parser_helper::toUtf8Narrow(filePath);
     if (path.empty()) {
         return error(
             ErrorCode::InvalidArgument, "Invalid file path"
@@ -102,7 +91,7 @@ Result<void> Json::loadFromFile(StringView filePath) {
 
     // Attempt to open and parse the file
     try {
-        NEX_STD ifstream file(path);
+        NEX_STD ifstream file(path.cStr());
         if (!file.is_open()) {
             return error(
                 ErrorCode::FileNotFound, "File not found"
@@ -180,7 +169,7 @@ Result<void> Json::loadFromFile(StringView filePath) {
 // Load JSON from string
 Result<void> Json::loadFromString(StringView jsonString) {
     // Convert JSON string to UTF-8 std::string
-    const Utf8String text = toUtf8String(jsonString);
+    const NString text = parser_helper::toUtf8Narrow(jsonString);
     if (text.empty()) {
         return error(
             ErrorCode::InvalidArgument, "Invalid argument"
@@ -255,7 +244,7 @@ const Json::NodeHandle* Json::navigatePath(StringView keyPath) const {
     }
 
     // Convert key path to UTF-8 string and navigate the JSON structure
-    const Utf8String path = toUtf8String(keyPath);
+    const NString path = parser_helper::toUtf8Narrow(keyPath);
     const nlohmann::json* node = navigatePathImpl(impl_->json, path);
     if (!node) {
         impl_->nodeHandle.reset();
@@ -271,18 +260,18 @@ const Json::NodeHandle* Json::navigatePath(StringView keyPath) const {
 // Get string value by key path
 String Json::getString(StringView keyPath, StringView defaultValue /* = StringView() */) const {
     if (!isValid()) {
-        return defaultValue.toString();
+        return defaultValue;
     }
 
     // Navigate to the node using the key path
     const NodeHandle* h = navigatePath(keyPath);
     const nlohmann::json* node = h ? h->node : nullptr;
     if (!node || !node->is_string()) {
-        return defaultValue.toString();
+        return defaultValue;
     }
 
     // Convert the JSON string to String and return
-    return fromUtf8String(node->get<Utf8String>());
+    return parser_helper::fromUtf8Narrow(node->get<NEX_STD string>().c_str());
 }
 
 // Get integer value by key path
@@ -372,7 +361,7 @@ bool Json::tryGetString(StringView keyPath, String& value) const {
     if (!node || !node->is_string()) return false;
 
     // Convert the JSON string to String and set the output parameter
-    value = fromUtf8String(node->get<Utf8String>());
+    value = parser_helper::fromUtf8Narrow(node->get<NEX_STD string>().c_str());
     return true;
 }
 
@@ -501,7 +490,7 @@ bool Json::tryGetStringAt(StringView keyPath, usize index, String& value) const 
     if (!elem.is_string()) return false;
 
     // Convert the JSON string to String and set the output parameter
-    value = fromUtf8String(elem.get<Utf8String>());
+    value = parser_helper::fromUtf8Narrow(elem.get<NEX_STD string>().c_str());
     return true;
 }
 
@@ -532,11 +521,11 @@ String Json::toString(bool pretty /* = false */) const {
 
     // Convert JSON to string with optional pretty-printing
     if (pretty) {
-        return fromUtf8String(impl_->json.dump(2));
+        return parser_helper::fromUtf8Narrow(impl_->json.dump(2).c_str());
     }
 
     // Compact JSON string
-    return fromUtf8String(impl_->json.dump());
+    return parser_helper::fromUtf8Narrow(impl_->json.dump().c_str());
 }
 
 NEX_LAYER_NAMESPACE_END(parser)

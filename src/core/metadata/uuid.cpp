@@ -7,6 +7,7 @@
 
 #include "nex/core/metadata/uuid.h"
 #include "nex/base/assert_crash.h"
+#include "nex/base/encoding.h"
 #include "nex/core/text/string.h"
 #include "nex/core/text/string_view.h"
 
@@ -136,12 +137,12 @@ Uuid Uuid::generateV7() noexcept {
     newUuid.impl_->uuid = uuids::uuid{data};
 
     // Validate that the generator produces valid UUIDs (this is a sanity check and should always pass)
-    NEX_ASSERT_MSG(!newUuid.impl_->uuid.is_nil(), "Generated UUID should not be nil");
-    NEX_ASSERT_MSG(newUuid.impl_->uuid.as_bytes().size() == 16, "Generated UUID should be 16 bytes");
+    NEX_ASSERT_MSG(!newUuid.impl_->uuid.is_nil(), "Error: Generated UUID should not be nil");
+    NEX_ASSERT_MSG(newUuid.impl_->uuid.as_bytes().size() == 16, "Error: Generated UUID should be 16 bytes");
     NEX_ASSERT_MSG(newUuid.impl_->uuid.variant() == uuids::uuid_variant::rfc, 
-                        "Generated UUID should have RFC variant");
+                        "Error: Generated UUID should have RFC variant");
     NEX_ASSERT_MSG(newUuid.impl_->uuid.version() == uuids::uuid_version::time_based, 
-                        "Generated UUID should be version 7 (time-based)");
+                        "Error: Generated UUID should be version 7 (time-based)");
 
     // Successfully generated a new version 7 UUID, return it
     return newUuid;
@@ -151,7 +152,7 @@ Uuid Uuid::generateV7() noexcept {
 // Parse a Uuid from a string representation
 Result<Uuid> Uuid::fromString(StringView str) noexcept {
     // Convert the input string to UTF-8 for validation and parsing
-    auto res = str.toString().toUtf8();
+    auto res = encoding::utf16ToUtf8(str.asBasicView());
     if (!res.isOk()) {
         return error(
             ErrorCode::InvalidFormat, 
@@ -159,9 +160,9 @@ Result<Uuid> Uuid::fromString(StringView str) noexcept {
         );
     }
 
-    // Validate the UTF-8 string format for a UUID (e.g., "123e4567-e89b-12d3-a456-426614174000")
-    Utf8String utf8 = res.value();
-    if (utf8.empty() || !uuids::uuid::is_valid_uuid(utf8)) {
+    // Validate the UTF-8 string format (narrow characters) for a UUID (e.g., "123e4567-e89b-12d3-a456-426614174000")
+    NString utf8Narrow = reinterpret_cast<cstring>(res->data());
+    if (utf8Narrow.empty() || !uuids::uuid::is_valid_uuid(utf8Narrow)) {
         return error(
             ErrorCode::InvalidFormat, 
             "Input string is not a valid UUID format"
@@ -169,7 +170,7 @@ Result<Uuid> Uuid::fromString(StringView str) noexcept {
     }
 
     // Parse the UUID using the stduuid library
-    auto resParse = uuids::uuid::from_string(utf8);
+    auto resParse = uuids::uuid::from_string(utf8Narrow);
     if (!resParse.has_value()) {
         return error(
             ErrorCode::InvalidFormat,
@@ -193,8 +194,8 @@ bool Uuid::isNil() const noexcept {
 // Convert to string
 String Uuid::toString() const {
     // Convert the internal UUID to its string representation using the stduuid library
-    Utf8String utf8 = uuids::to_string<nchar>(impl_->uuid);
-    return String::fromUtf8(utf8);
+    NString utf8 = uuids::to_string<nchar>(impl_->uuid).c_str();
+    return String::fromUtf8(reinterpret_cast<u8cstring>(utf8.cStr()));
 }
 
 // Get a hash value for the Uuid (enables use in hash-based containers)

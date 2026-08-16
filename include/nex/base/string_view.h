@@ -21,9 +21,9 @@ NEX_NAMESPACE_BEGIN
  * @brief  A non-owning view of a contiguous sequence of characters.
  *
  * @details
- * BasicStringView provides a lightweight, non-owning reference to a sequence of characters. It does not manage the
- * lifetime of the underlying data and is intended for read-only access. It can be used to efficiently pass around
- * substrings or character sequences without copying.
+ * BasicStringView provides a lightweight, non-owning reference to a sequence of characters.
+ * It does not manage the lifetime of the underlying data and is intended for read-only access.
+ * It can be used to efficiently pass around substrings or character sequences without copying.
  *
  * @tparam CharType The character type (e.g., nchar, wchar, char8, char16, char32).
  */
@@ -282,9 +282,19 @@ public:
         return size_ == other.size() && compare(other) == 0;
     }
 
+    // Compares this string view with a null-terminated character sequence for equality.
+    NEX_NODISCARD NEX_HIDDEN_FROM_ABI constexpr bool operator==(const_pointer str) const noexcept {
+        return *this == self(str, traits_type::length(str));
+    }
+
     // Compares this string view with another string view for inequality.
     NEX_NODISCARD NEX_HIDDEN_FROM_ABI constexpr bool operator!=(self other) const noexcept {
         return !(*this == other);
+    }
+
+    // Compares this string view with a null-terminated character sequence for inequality.
+    NEX_NODISCARD NEX_HIDDEN_FROM_ABI constexpr bool operator!=(const_pointer str) const noexcept {
+        return !(*this == self(str, traits_type::length(str)));
     }
 
     // Compares this string view with another string view for lexicographical ordering.
@@ -292,9 +302,19 @@ public:
         return compare(other) < 0;
     }
 
+    // Compares this string view with a null-terminated character sequence for lexicographical ordering.
+    NEX_NODISCARD NEX_HIDDEN_FROM_ABI constexpr bool operator<(const_pointer str) const noexcept {
+        return *this < self(str, traits_type::length(str));
+    }
+
     // Compares this string view with another string view for lexicographical ordering.
     NEX_NODISCARD NEX_HIDDEN_FROM_ABI constexpr bool operator<=(self other) const noexcept {
         return compare(other) <= 0;
+    }
+
+    // Compares this string view with a null-terminated character sequence for lexicographical ordering.
+    NEX_NODISCARD NEX_HIDDEN_FROM_ABI constexpr bool operator<=(const_pointer str) const noexcept {
+        return *this <= self(str, traits_type::length(str));
     }
 
     // Compares this string view with another string view for lexicographical ordering.
@@ -302,9 +322,19 @@ public:
         return compare(other) > 0;
     }
 
+    // Compares this string view with a null-terminated character sequence for lexicographical ordering.
+    NEX_NODISCARD NEX_HIDDEN_FROM_ABI constexpr bool operator>(const_pointer str) const noexcept {
+        return *this > self(str, traits_type::length(str));
+    }
+
     // Compares this string view with another string view for lexicographical ordering.
     NEX_NODISCARD NEX_HIDDEN_FROM_ABI constexpr bool operator>=(self other) const noexcept {
         return compare(other) >= 0;
+    }
+
+    // Compares this string view with a null-terminated character sequence for lexicographical ordering.
+    NEX_NODISCARD NEX_HIDDEN_FROM_ABI constexpr bool operator>=(const_pointer str) const noexcept {
+        return *this >= self(str, traits_type::length(str));
     }
 
     // Returns a Span representing the string view's content.

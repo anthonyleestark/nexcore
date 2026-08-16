@@ -8,8 +8,8 @@
 #include <charconv>
 
 #include "nex/base/string.h"
-#include "nex/core/input/key_combination.h"
 #include "nex/core/text/string.h"
+#include "nex/core/input/key_combination.h"
 
 NEX_NAMESPACE_BEGIN
 
@@ -20,7 +20,7 @@ NEX_NAMESPACE_BEGIN
 NEX_ANONYMOUS_NAMESPACE_BEGIN
 
 // Trim leading and trailing ASCII whitespace from a string
-Utf8String trimAscii(Utf8StringView text) {
+NString trimAscii(NStringView text) {
     usize start = 0;
     usize end = text.size();
 
@@ -31,12 +31,12 @@ Utf8String trimAscii(Utf8StringView text) {
         --end;
     }
 
-    return Utf8String(text.substr(start, end - start));
+    return NString(text.subview(start, end - start));
 }
 
 // Convert a string to uppercase ASCII
-Utf8String toUpperAscii(Utf8StringView text) {
-    Utf8String upper(text);
+NString toUpperAscii(NStringView text) {
+    NString upper(text);
     NEX_STD transform(upper.begin(), upper.end(), upper.begin(),
         [](uchar ch) {
             return static_cast<nchar>(NEX_STD toupper(ch));
@@ -45,7 +45,7 @@ Utf8String toUpperAscii(Utf8StringView text) {
 }
 
 // Parse an unsigned integer from a string view, ensuring the entire string is consumed
-bool parseUnsignedValue(Utf8StringView text, uint32& value) {
+bool parseUnsignedValue(NStringView text, uint32& value) {
     if (text.empty()) {
         return false;
     }
@@ -57,13 +57,13 @@ bool parseUnsignedValue(Utf8StringView text, uint32& value) {
 }
 
 // Parse function key tokens like "F1", "F2", ..., "F24" and convert them to virtual key codes
-bool parseFunctionKey(Utf8StringView token, uint32& value) {
+bool parseFunctionKey(NStringView token, uint32& value) {
     if (token.size() < 2 || token[0] != 'F') {
         return false;
     }
 
     uint32 number = 0;
-    if (!parseUnsignedValue(token.substr(1), number) || number == 0 || number > 24) {
+    if (!parseUnsignedValue(token.subview(1), number) || number == 0 || number > 24) {
         return false;
     }
 
@@ -72,11 +72,11 @@ bool parseFunctionKey(Utf8StringView token, uint32& value) {
 }
 
 // Parse a virtual key token and convert it to a virtual key code
-bool parseVirtualKeyToken(Utf8StringView token, uint32& value) {
-    const Utf8String upper = toUpperAscii(token);
+bool parseVirtualKeyToken(NStringView token, uint32& value) {
+    const NStringView upper = toUpperAscii(token).asView();
 
     if (upper.rfind("VK", 0) == 0) {
-        return parseUnsignedValue(Utf8StringView(upper).substr(2), value);
+        return parseUnsignedValue(upper.subview(2), value);
     }
 
     // Handle function keys
@@ -104,13 +104,13 @@ bool parseVirtualKeyToken(Utf8StringView token, uint32& value) {
 }
 
 // Convert a virtual key code to a human-readable string representation
-Utf8String virtualKeyToHumanReadable(uint32 virtualKey) {
+NString virtualKeyToHumanReadable(uint32 virtualKey) {
     if ((virtualKey >= 'A' && virtualKey <= 'Z') || (virtualKey >= '0' && virtualKey <= '9')) {
-        return Utf8String(1, static_cast<nchar>(virtualKey));
+        return NString(1, static_cast<nchar>(virtualKey));
     }
 
     if (virtualKey >= 0x70 && virtualKey <= 0x87) {
-        return "F" + NEX_STD to_string((virtualKey - 0x70) + 1);
+        return NString("F") + NEX_STD to_string((virtualKey - 0x70) + 1).c_str();
     }
 
     // Handle common named keys
@@ -122,7 +122,7 @@ Utf8String virtualKeyToHumanReadable(uint32 virtualKey) {
     case 0x2E: return "Delete";
     case 0x08: return "Backspace";
     default:
-        return "VK" + NEX_STD to_string(virtualKey);
+        return NString("VK") + NEX_STD to_string(virtualKey).c_str();
     }
 }
 
@@ -131,7 +131,7 @@ Result<NEX_PREPEND_SUBNAMESPACE(input, KeyCombination)>
 parseFromUtf8String(Utf8StringView text) {
     using NEX_PREPEND_SUBNAMESPACE(input, KeyCombination);
 
-    const Utf8String trimmed = trimAscii(text);
+    const NStringView trimmed = trimAscii(reinterpret_cast<cstring>(text.data())).asView();
     if (trimmed.empty()) {
         return ok(KeyCombination::none());
     }
@@ -142,9 +142,8 @@ parseFromUtf8String(Utf8StringView text) {
     usize start = 0;
     while (start <= trimmed.size()) {
         const usize plusPos = trimmed.find('+', start);
-        const usize tokenEnd = (plusPos == Utf8String::npos) ? trimmed.size() : plusPos;
-        const Utf8String token = trimAscii(
-            Utf8StringView(trimmed).substr(start, tokenEnd - start));
+        const usize tokenEnd = (plusPos == NString::npos) ? trimmed.size() : plusPos;
+        const NString token = trimAscii(trimmed.subview(start, tokenEnd - start));
 
         if (token.empty()) {
             return error(
@@ -153,7 +152,7 @@ parseFromUtf8String(Utf8StringView text) {
         }
 
         // Check if the token is a modifier or a virtual key
-        const Utf8String upper = toUpperAscii(token);
+        const NString upper = toUpperAscii(token.asView());
         if (upper == "CTRL" || upper == "CONTROL") {
             modifiers |= KeyCombination::kModifierCtrl;
         } else if (upper == "ALT") {
@@ -164,7 +163,7 @@ parseFromUtf8String(Utf8StringView text) {
             modifiers |= KeyCombination::kModifierWin;
         } else {
             uint32 parsedKey = 0;
-            if (!parseVirtualKeyToken(token, parsedKey)) {
+            if (!parseVirtualKeyToken(token.asView(), parsedKey)) {
                 return error(
                     ErrorCode::InvalidArgument, "Invalid virtual key token"
                 );
@@ -172,7 +171,7 @@ parseFromUtf8String(Utf8StringView text) {
             virtualKey = parsedKey;
         }
 
-        if (plusPos == Utf8String::npos) {
+        if (plusPos == NString::npos) {
             break;
         }
         start = plusPos + 1;
@@ -198,8 +197,8 @@ NEX_SUBNAMESPACE_BEGIN(input)
 
 // Convert the key combination to a string representation based on the specified format
 String KeyCombination::toString(StringFormat format /* = StringFormat::HumanReadable */) const {
-    Utf8String text;
-    const auto appendToken = [&text](Utf8StringView token) {
+    NString text;
+    const auto appendToken = [&text](NStringView token) {
         if (!text.empty()) {
             text += '+';
         }
@@ -215,13 +214,13 @@ String KeyCombination::toString(StringFormat format /* = StringFormat::HumanRead
 
     if (virtualKey_ != 0) {
         if (format == StringFormat::Debug) {
-            appendToken("VK" + NEX_STD to_string(virtualKey_));
+            appendToken((NString("VK") + NEX_STD to_string(virtualKey_).c_str()).asView());
         } else {
-            appendToken(virtualKeyToHumanReadable(virtualKey_));
+            appendToken(virtualKeyToHumanReadable(virtualKey_).asView());
         }
     }
 
-    return String::fromUtf8(text);
+    return String::fromUtf8(reinterpret_cast<u8cstring>(text.data()));
 }
 
 // Parse a string representation of a key combination and return the corresponding KeyCombination object
@@ -232,12 +231,12 @@ Result<KeyCombination> KeyCombination::fromString(const String& text) {
             ErrorCode::InvalidArgument, "Invalid string: Failed to convert to UTF-8"
         );
     }
-    return parseFromUtf8String(utf8Result.value());
+    return parseFromUtf8String(utf8Result->asView());
 }
 
 // Parse a string view representation of a key combination and return the corresponding KeyCombination object
 Result<KeyCombination> KeyCombination::fromString(StringView text) {
-    return fromString(text.toString());
+    return fromString(text);
 }
 
 NEX_SUBNAMESPACE_END(input)

@@ -969,43 +969,26 @@ public:
 
     // Compares this string with another BasicString object lexicographically.
     NEX_NODISCARD NEX_HIDDEN_FROM_ABI constexpr int32 compare(const self& other) const noexcept {
-        const size_type commonSize = meta::_minOf(size(), other.size());
-        const int32 result = traits_type::compare(data(), other.data(), commonSize);
-        if (result != 0) {
-            return result;
-        }
-        if (size() < other.size()) {
-            return -1;
-        }
-        if (size() > other.size()) {
-            return 1;
-        }
-        return 0;
+        return asView().compare(other.asView());
     }
 
     NEX_NODISCARD NEX_HIDDEN_FROM_ABI constexpr int32 compare(self_view view) const noexcept {
-        const size_type commonSize = meta::_minOf(size(), view.size());
-        const int32 result = traits_type::compare(data(), view.data(), commonSize);
-        if (result != 0) {
-            return result;
-        }
-        if (size() < view.size()) {
-            return -1;
-        }
-        if (size() > view.size()) {
-            return 1;
-        }
-        return 0;
+        return asView().compare(view);
     }
 
     // Compares this string with another BasicString object for equality.
     NEX_NODISCARD NEX_HIDDEN_FROM_ABI constexpr bool operator==(const self& other) const noexcept {
-        return size() == other.size() && compare(other) == 0;
+        return this->asView() == other.asView();
     }
 
     // Compares this string with another BasicStringView object for equality.
     NEX_NODISCARD NEX_HIDDEN_FROM_ABI constexpr bool operator==(self_view view) const noexcept {
-        return size() == view.size() && compare(view) == 0;
+        return this->asView() == view;
+    }
+
+    // Compares this string with a null-terminated character sequence for equality.
+    NEX_NODISCARD NEX_HIDDEN_FROM_ABI constexpr bool operator==(const_pointer str) const noexcept {
+        return this->asView() == str;
     }
 
     // Compares this string with another BasicString object for inequality.
@@ -1018,44 +1001,69 @@ public:
         return !(*this == view);
     }
 
+    // Compares this string with a null-terminated character sequence for inequality.
+    NEX_NODISCARD NEX_HIDDEN_FROM_ABI constexpr bool operator!=(const_pointer str) const noexcept {
+        return !(*this == str);
+    }
+
     // Compares this string with another BasicString object for lexicographical ordering.
     NEX_NODISCARD NEX_HIDDEN_FROM_ABI constexpr bool operator<(const self& other) const noexcept {
-        return compare(other) < 0;
+        return this->asView() < other.asView();
     }
 
     // Compares this string with another BasicStringView object for lexicographical ordering.
     NEX_NODISCARD NEX_HIDDEN_FROM_ABI constexpr bool operator<(self_view view) const noexcept {
-        return compare(view) < 0;
+        return this->asView() < view;
+    }
+
+    // Compares this string with a null-terminated character sequence for lexicographical ordering.
+    NEX_NODISCARD NEX_HIDDEN_FROM_ABI constexpr bool operator<(const_pointer str) const noexcept {
+        return this->asView() < str;
     }
 
     // Compares this string with another BasicString object for lexicographical ordering.
     NEX_NODISCARD NEX_HIDDEN_FROM_ABI constexpr bool operator<=(const self& other) const noexcept {
-        return compare(other) <= 0;
+        return this->asView() <= other.asView();
     }
 
     // Compares this string with another BasicStringView object for lexicographical ordering.
     NEX_NODISCARD NEX_HIDDEN_FROM_ABI constexpr bool operator<=(self_view view) const noexcept {
-        return compare(view) <= 0;
+        return this->asView() <= view;
+    }
+
+    // Compares this string with a null-terminated character sequence for lexicographical ordering.
+    NEX_NODISCARD NEX_HIDDEN_FROM_ABI constexpr bool operator<=(const_pointer str) const noexcept {
+        return this->asView() <= str;
     }
 
     // Compares this string with another BasicString object for lexicographical ordering.
     NEX_NODISCARD NEX_HIDDEN_FROM_ABI constexpr bool operator>(const self& other) const noexcept {
-        return compare(other) > 0;
+        return this->asView() > other.asView();
     }
 
     // Compares this string with another BasicStringView object for lexicographical ordering.
     NEX_NODISCARD NEX_HIDDEN_FROM_ABI constexpr bool operator>(self_view view) const noexcept {
-        return compare(view) > 0;
+        return this->asView() > view;
+    }
+
+    // Compares this string with a null-terminated character sequence for lexicographical ordering.
+    NEX_NODISCARD NEX_HIDDEN_FROM_ABI constexpr bool operator>(const_pointer str) const noexcept {
+        return this->asView() > str;
     }
 
     // Compares this string with another BasicString object for lexicographical ordering.
     NEX_NODISCARD NEX_HIDDEN_FROM_ABI constexpr bool operator>=(const self& other) const noexcept {
-        return compare(other) >= 0;
+        return this->asView() >= other.asView();
     }
 
     // Compares this string with another BasicStringView object for lexicographical ordering.
     NEX_NODISCARD NEX_HIDDEN_FROM_ABI constexpr bool operator>=(self_view view) const noexcept {
-        return compare(view) >= 0;
+        return this->asView() >= view;
+    }
+
+    // Compares this string with a null-terminated character sequence for lexicographical ordering.
+    NEX_NODISCARD NEX_HIDDEN_FROM_ABI constexpr bool operator>=(const_pointer str) const noexcept {
+        return this->asView() >= str;
     }
 };
 

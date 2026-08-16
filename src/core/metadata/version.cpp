@@ -48,7 +48,7 @@ bool doValidateIdentifier(StringView str, bool allowLeadingZeros) {
     while (start < str.size()) {
         usize dotPos = str.find(u'.', start);
         if (dotPos == StringView::npos) dotPos = str.size();
-        auto segment = str.substr(start, dotPos - start);
+        auto segment = str.subview(start, dotPos - start);
         // Check each character in the segment
         for (char16 ch : segment) {
             if (!encoding::isAsciiAlpha(ch) && !encoding::isAsciiDigit(ch) && ch != u'-') {
@@ -86,17 +86,17 @@ Result<Version> doValidateVersionString(StringView versionStr) {
     String build, pre, core;
     usize plusPos = versionStr.find(u'+');
     if (plusPos != StringView::npos) {
-        build = versionStr.substr(plusPos + 1).toString();
-        versionStr = versionStr.substr(0, plusPos); // Remaining is core + pre-release
+        build = versionStr.subview(plusPos + 1);
+        versionStr = versionStr.subview(0, plusPos); // Remaining is core + pre-release
     }
 
     //// 2. Separate Pre-release (-)
     usize dashPos = versionStr.find(u'-');
     if (dashPos != StringView::npos) {
-        pre = versionStr.substr(dashPos + 1).toString();
-        core = versionStr.substr(0, dashPos).toString();
+        pre = versionStr.subview(dashPos + 1);
+        core = versionStr.subview(0, dashPos);
     } else {
-        core = versionStr.toString();
+        core = versionStr;
     }
 
     //// 3. Validate Core (X.Y.Z)
@@ -113,19 +113,19 @@ Result<Version> doValidateVersionString(StringView versionStr) {
     }
 
     // Split core into major, minor, patch and validate each
-    auto coreParts = text::split(core, u'.');
+    auto coreParts = text::split(core.asView(), u'.');
     if (coreParts.size() != 3) {
         return error(
             ErrorCode::InvalidFormat, "Core version must have three parts"
         );
     }
     for (const auto& part : coreParts) {
-        if (!isValidVersionNumber(part)) {
+        if (!isValidVersionNumber(part.asView())) {
             return error(
                 ErrorCode::InvalidFormat, "Version number parts must be valid unsigned integers"
             );
         }
-        if (hasLeadingZero(part)) {
+        if (hasLeadingZero(part.asView())) {
             return error(
                 ErrorCode::InvalidFormat, "Version number parts must not have leading zeros"
             );
@@ -133,12 +133,12 @@ Result<Version> doValidateVersionString(StringView versionStr) {
     }
 
     //// 4. Validate Pre-release and Build Metadata
-    if (!pre.empty() && !doValidateIdentifier(pre, false)) {
+    if (!pre.empty() && !doValidateIdentifier(pre.asView(), false)) {
         return error(
             ErrorCode::InvalidFormat, "Invalid pre-release identifier format"
         );
     }
-    if (!build.empty() && !doValidateIdentifier(build, true)) {
+    if (!build.empty() && !doValidateIdentifier(build.asView(), true)) {
         return error(
             ErrorCode::InvalidFormat, "Invalid build metadata identifier format"
         );
@@ -149,9 +149,9 @@ Result<Version> doValidateVersionString(StringView versionStr) {
     Version version{};
     version.preRelease = pre;
     version.buildMetadata = build;
-    version.major = static_cast<uint16>(NEX_STD stoi(coreParts[0].toUtf8().valueOr("0")));
-    version.minor = static_cast<uint16>(NEX_STD stoi(coreParts[1].toUtf8().valueOr("0")));
-    version.patch = static_cast<uint16>(NEX_STD stoi(coreParts[2].toUtf8().valueOr("0")));
+    version.major = static_cast<uint16>(NEX_STD stoi(coreParts[0].toAnsi().valueOr("0").cStr()));
+    version.minor = static_cast<uint16>(NEX_STD stoi(coreParts[1].toAnsi().valueOr("0").cStr()));
+    version.patch = static_cast<uint16>(NEX_STD stoi(coreParts[2].toAnsi().valueOr("0").cStr()));
 
     //// 5. Final validation of the version instance (e.g., check for valid ranges)
 
@@ -234,10 +234,12 @@ String Version::toString() const {
 String Version::toFullString() const {
     String versionStr = toString();
     if (!preRelease.empty()) {
-        versionStr.append(u"-").append(preRelease);
+        versionStr.append(u"-");
+        versionStr.append(preRelease.asView());
     }
     if (!buildMetadata.empty()) {
-        versionStr.append(u"+").append(buildMetadata);
+        versionStr.append(u"+");
+        versionStr.append(buildMetadata.asView());
     }
     return versionStr;
 }
@@ -254,11 +256,11 @@ bool Version::isValid() const {
     if (major > 0xFFFF || minor > 0xFFFF || patch > 0xFFFF) {
         return false; // Version numbers exceed maximum allowed values
     }
-    if (!preRelease.empty() && !doValidateIdentifier(preRelease, false)) {
+    if (!preRelease.empty() && !doValidateIdentifier(preRelease.asView(), false)) {
         return false; // Invalid pre-release identifier
     }
     // Build metadata allows leading zeros, so we pass 'true' to allow them
-    if (!buildMetadata.empty() && !doValidateIdentifier(buildMetadata, true)) {
+    if (!buildMetadata.empty() && !doValidateIdentifier(buildMetadata.asView(), true)) {
         return false; // Invalid build metadata identifier
     }
     return true;

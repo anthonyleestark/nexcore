@@ -57,16 +57,27 @@ void Thread::Impl::applyThreadName() {
         HANDLE nativeHandle = jthread.native_handle();
         SetThreadDescription(nativeHandle, reinterpret_cast<LPCWSTR>(nameUtf16.c_str()));
     }
-#elif NEX_PLATFORM_IS_MAC || NEX_PLATFORM_IS_LINUX
-    // macOS/Linux: Use pthread_setname_np
+#elif NEX_PLATFORM_IS_MAC
+    // macOS: Use pthread_setname_np
     if (!name.empty()) {
-        auto nameUtf8Res = encoding::utf16ToUtf8(name.view().toStdU16StringView());
+        auto nameUtf8Res = encoding::utf16ToUtf8(name.asUtf16());
         if (!nameUtf8Res) {
             // Failed to convert name to UTF-8; log or handle error if needed
             return;
         }
         auto nameUtf8 = nameUtf8Res.value();
-        pthread_setname_np(nameUtf8.c_str());
+        pthread_setname_np(reinterpret_cast<cstring>(nameUtf8.cStr()));
+    }
+#elif NEX_PLATFORM_IS_LINUX
+    // Linux: Use pthread_setname_np
+    if (!name.empty()) {
+        auto nameUtf8Res = encoding::utf16ToUtf8(name.asUtf16());
+        if (!nameUtf8Res) {
+            // Failed to convert name to UTF-8; log or handle error if needed
+            return;
+        }
+        auto nameUtf8 = nameUtf8Res.value();
+        pthread_setname_np(pthread_self(), reinterpret_cast<cstring>(nameUtf8.cStr()));
     }
 #endif
 }
@@ -266,7 +277,7 @@ bool Thread::stopRequested() const noexcept {
 
 // Set the name of the thread (for debugging purposes)
 void Thread::setName(StringView name) {
-    impl_->name = name.toString();
+    impl_->name = name;
     if (isRunning()) {
         impl_->applyThreadName();
     }
@@ -275,7 +286,7 @@ void Thread::setName(StringView name) {
 // Get the name of the thread (if set). 
 // Returns an empty string if no name was set.
 StringView Thread::getName() const noexcept {
-    return impl_->name;
+    return impl_->name.asView();
 }
 
 // Set the priority of the thread.

@@ -453,7 +453,21 @@ Result<usize> encoding::countUtf32CodePoints(Utf32StringView input) noexcept {
 // Implementation of encoding conversion functions
 // ========================================================================================
 
-// Convert ANSI string to UTF-16 string
+// Converts an ANSI string to a UTF-8 string
+Result<Utf8String> encoding::ansiToUtf8(AnsiStringView ansi) {
+#if NEX_PLATFORM_IS_WINDOWS
+#else
+#endif
+}
+
+// Converts a UTF-8 string to an ANSI string
+Result<AnsiString> encoding::utf8ToAnsi(Utf8StringView utf8) {
+#if NEX_PLATFORM_IS_WINDOWS
+#else
+#endif
+}
+
+// Converts an ANSI string to a UTF-16 string
 Result<Utf16String> encoding::ansiToUtf16(AnsiStringView ansi) {
 #if NEX_PLATFORM_IS_WINDOWS
     // Windows-specific implementation using MultiByteToWideChar
@@ -495,7 +509,7 @@ Result<Utf16String> encoding::ansiToUtf16(AnsiStringView ansi) {
 #endif
 }
 
-// Convert UTF-16 string to ANSI string
+// Converts a UTF-16 string to an ANSI string
 Result<AnsiString> encoding::utf16ToAnsi(Utf16StringView utf16) {
 #if NEX_PLATFORM_IS_WINDOWS
     // Windows-specific implementation using WideCharToMultiByte
@@ -556,7 +570,21 @@ Result<AnsiString> encoding::utf16ToAnsi(Utf16StringView utf16) {
 #endif
 }
 
-// Convert local string to UTF-16 string
+// Converts a local string to a UTF-8 string
+Result<Utf8String> encoding::localToUtf8(LocalStringView local) {
+#if NEX_PLATFORM_IS_WINDOWS
+#else
+#endif
+}
+
+// Converts a UTF-8 string to a local string
+Result<LocalString> encoding::utf8ToLocal(Utf8StringView utf8) {
+#if NEX_PLATFORM_IS_WINDOWS
+#else
+#endif
+}
+
+// Converts a local string to a UTF-16 string
 Result<Utf16String> encoding::localToUtf16(LocalStringView local) {
 #if NEX_PLATFORM_IS_WINDOWS
     // On Windows, LocalString uses the native UTF-16 wchar representation.
@@ -574,7 +602,7 @@ Result<Utf16String> encoding::localToUtf16(LocalStringView local) {
 #endif
 }
 
-// Convert UTF-16 string to local string
+// Converts a UTF-16 string to a local string
 Result<LocalString> encoding::utf16ToLocal(Utf16StringView utf16) {
 #if NEX_PLATFORM_IS_WINDOWS
     // On Windows, LocalString uses the native UTF-16 wchar representation.
@@ -592,7 +620,7 @@ Result<LocalString> encoding::utf16ToLocal(Utf16StringView utf16) {
 #endif
 }
 
-// Convert UTF-8 string to UTF-16 string
+// Converts a UTF-8 string to a UTF-16 string
 Result<Utf16String> encoding::utf8ToUtf16(Utf8StringView utf8) {
 #if NEX_PLATFORM_IS_WINDOWS
     // Windows-specific implementation using MultiByteToWideChar
@@ -650,7 +678,7 @@ Result<Utf16String> encoding::utf8ToUtf16(Utf8StringView utf8) {
 #endif
 }
 
-// Convert UTF-16 string to UTF-8 string
+// Converts a UTF-16 string to a UTF-8 string
 Result<Utf8String> encoding::utf16ToUtf8(Utf16StringView utf16) {
 #if NEX_PLATFORM_IS_WINDOWS
     // Windows-specific implementation using WideCharToMultiByte
@@ -717,7 +745,15 @@ Result<Utf8String> encoding::utf16ToUtf8(Utf16StringView utf16) {
 #endif
 }
 
-// Convert UTF-32 string to UTF-16 string
+// Converts a UTF-32 string to a UTF-8 string
+Result<Utf8String> encoding::utf32ToUtf8(Utf32StringView utf32) {
+}
+
+// Converts a UTF-8 string to a UTF-32 string
+Result<Utf32String> encoding::utf8ToUtf32(Utf8StringView utf8) {
+}
+
+// Converts a UTF-32 string to a UTF-16 string
 Result<Utf16String> encoding::utf32ToUtf16(Utf32StringView utf32) {
     Utf16String result;
 
@@ -749,7 +785,7 @@ Result<Utf16String> encoding::utf32ToUtf16(Utf32StringView utf32) {
     return ok(NEX_MOVE(result));
 }
 
-// Convert UTF-16 string to UTF-32 string
+// Converts a UTF-16 string to a UTF-32 string
 Result<Utf32String> encoding::utf16ToUtf32(Utf16StringView utf16) {
     Utf32String result;
     result.reserve(utf16.size()); // Reserve enough space to avoid multiple reallocations

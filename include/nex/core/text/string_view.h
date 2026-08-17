@@ -15,24 +15,25 @@ NEX_NAMESPACE_BEGIN
 
 /**
  * @class StringView
- * @brief A non-owning view into a UTF-16 string
+ * @brief A non-owning view of a UTF-8 encoded string for NexCore core layer.
  * 
- * This class provides a lightweight, non-owning view into a UTF-16 encoded string.
- * It stores a pointer to the string data and its length, without owning the data.
+ * @details
+ * StringView provides a lightweight, non-owning reference to a UTF-8 encoded string.
+ * It does not manage the lifetime of the underlying data and is intended for read-only access.
+ * It can be used to efficiently pass around substrings or character sequences without copying.
  * 
- * StringView supports:
- * - Construction from String, Utf16StringView and other string types
- * - Substring operations (subview, left, right, mid)
- * - Character access and iteration
- * - Comparison operations
+ * @note
+ * StringView is designed to work with UTF-8 encoded strings, making it suitable for
+ * applications that require Unicode support while maintaining compatibility with existing APIs.
  * 
- * @note StringView does not own the underlying string data. The user must ensure
- *       that the data remains valid for the lifetime of the StringView.
+ * @see String class for an owning UTF-16 string implementation.
+ * @see BasicStringView for a more general non-owning view of character sequences.
  */
 class NEX_API StringView {
 public:
     using self = StringView;
-    using base_view = BasicStringView<char16>;
+    using base_view = BasicStringView<char8>;
+    using narrow_view = BasicStringView<nchar>;
 
     using value_type = base_view::value_type;
     using size_type = base_view::size_type;
@@ -57,7 +58,7 @@ public:
     static constexpr size_type npos = static_cast<size_type>(-1);
 
 private:
-    base_view view_;  // Underlying BasicStringView for UTF-16 data
+    base_view view_;  // Underlying BasicStringView for UTF-8 data
 
 public:
     // Default constructor creates an empty StringView
@@ -67,26 +68,26 @@ public:
     constexpr StringView(const StringView& other) = default;
     constexpr StringView& operator=(const StringView& other) = default;
 
-    // Constructor that takes an Utf16StringView
+    // Constructor that takes an Utf8StringView
     constexpr StringView(base_view view) noexcept
         : view_(view.data(), view.size()) {}
     
-    // Constructor that takes a pointer to an UTF-16 string data and a size
+    // Constructor that takes a pointer to an UTF-8 string data and a size
     constexpr StringView(const_pointer data, size_type size) noexcept
         : view_(data, size) {}
 
-    // Constructor that takes a null-terminated UTF-16 string
+    // Constructor that takes a null-terminated UTF-8 string
     constexpr StringView(const_pointer data) noexcept
         : view_(data) {}
 
-    // Constructor that takes a Span of UTF-16 characters
+    // Constructor that takes a Span of UTF-8 characters
     constexpr StringView(span_type span) noexcept
         : view_(span.data(), span.size()) {}
 
     // Default destructor
     constexpr ~StringView() = default;
 
-    // Returns a read-only pointer to the string view's content as UTF-16 encoded data.
+    // Returns a read-only pointer to the string view's content as UTF-8 encoded data.
     NEX_NODISCARD constexpr const_pointer data() const noexcept { return view_.data(); }
 
     // Returns the number of characters in the string view.
@@ -164,6 +165,11 @@ public:
 
     // Returns the underlying BasicStringView for interoperability with other APIs.
     NEX_NODISCARD constexpr base_view asBasicView() const noexcept { return view_; }
+
+    // Returns a UTF-8 narrow string view for interoperability with APIs that accept narrow strings.
+    NEX_NODISCARD constexpr narrow_view asNarrowView() const noexcept {
+        return narrow_view(reinterpret_cast<narrow_view::const_pointer>(view_.data()), view_.size());
+    }
 
     // Returns a Span of the string view's content for interoperability with APIs that accept spans.
     NEX_NODISCARD constexpr span_type asSpan() const noexcept { return view_.asSpan(); }

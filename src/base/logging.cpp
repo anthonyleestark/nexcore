@@ -5,6 +5,7 @@
 
 #include "nex/base/casts.h"
 #include "nex/base/charconv.h"
+#include "nex/base/encoding.h"
 #include "src/base/logging_internal.h"
 
 #if NEX_PLATFORM_IS_WINDOWS
@@ -147,7 +148,7 @@ LogString getLastSystemErrorMessage(SystemErrorCode errorCode) noexcept {
     return message;
 #elif NEX_PLATFORM_FAMILY_IS_POSIX
     // TODO: May need to convert from narrow string to UTF-8 string
-    return LogString(safe_strerror(errorCode));
+    return LogString(encoding::narrowToUtf8(safe_strerror(errorCode).asView()));
 #else
     #error Unsupported platform for retrieving system error message.
 #endif

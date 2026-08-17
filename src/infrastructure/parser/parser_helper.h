@@ -29,15 +29,7 @@ NEX_SUBNAMESPACE_BEGIN(parser_helper)
  * or similar UTF-8 encoded strings.
  */
 NEX_INTERNAL NString toUtf8Narrow(StringView value) {
-    const auto result = encoding::utf16ToUtf8(value.asBasicView());
-    if (!result) {
-        // Handle conversion error (e.g., invalid UTF-16 sequence)
-        NEX_ASSERT_MSG(false, "Error: Failed to convert StringView to UTF-8 narrow string");
-        return NString(); // Return an empty string on error
-    } else {
-        auto utf8Narrow = reinterpret_cast<NString::const_pointer>(result->data());
-        return utf8Narrow;
-    }
+    return value.asNarrowView();
 }
 
 /**
@@ -48,8 +40,7 @@ NEX_INTERNAL NString toUtf8Narrow(StringView value) {
  * to NexCore's String for internal use.
  */
 NEX_INTERNAL String fromUtf8Narrow(NStringView value) noexcept {
-    auto utf8String = reinterpret_cast<Utf8StringView::const_pointer>(value.data());
-    return String::fromUtf8(utf8String);
+    return String::fromNarrow(value);
 }
 
 NEX_SUBNAMESPACE_END(parser_helper)

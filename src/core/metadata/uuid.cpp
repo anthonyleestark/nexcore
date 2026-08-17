@@ -151,17 +151,8 @@ Uuid Uuid::generateV7() noexcept {
 
 // Parse a Uuid from a string representation
 Result<Uuid> Uuid::fromString(StringView str) noexcept {
-    // Convert the input string to UTF-8 for validation and parsing
-    auto res = encoding::utf16ToUtf8(str.asBasicView());
-    if (!res.isOk()) {
-        return error(
-            ErrorCode::InvalidFormat, 
-            "Failed to convert input string to UTF-8 for UUID parsing"
-        );
-    }
-
     // Validate the UTF-8 string format (narrow characters) for a UUID (e.g., "123e4567-e89b-12d3-a456-426614174000")
-    NString utf8Narrow = reinterpret_cast<cstring>(res->data());
+    NString utf8Narrow = str.asNarrowView();
     if (utf8Narrow.empty() || !uuids::uuid::is_valid_uuid(utf8Narrow)) {
         return error(
             ErrorCode::InvalidFormat, 
@@ -194,8 +185,7 @@ bool Uuid::isNil() const noexcept {
 // Convert to string
 String Uuid::toString() const {
     // Convert the internal UUID to its string representation using the stduuid library
-    NString utf8 = uuids::to_string<nchar>(impl_->uuid).c_str();
-    return String::fromUtf8(reinterpret_cast<u8cstring>(utf8.cStr()));
+    return String::fromNarrow(uuids::to_string<nchar>(impl_->uuid).c_str());
 }
 
 // Get a hash value for the Uuid (enables use in hash-based containers)

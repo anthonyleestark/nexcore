@@ -38,7 +38,7 @@ bool isValidVersionNumber(StringView numberStr) {
 // Validate pre-release and build metadata identifiers (e.g., "alpha", "beta", "rc.1", "build.1234")
 bool doValidateIdentifier(StringView str, bool allowLeadingZeros) {
     // Check for empty string or empty segments (e.g., "rc..1")
-    if (str.empty() || str.front() == u'.' || str.back() == u'.' || str.find(u"..") != StringView::npos) {
+    if (str.empty() || str.front() == u'.' || str.back() == u'.' || str.find(u8"..") != StringView::npos) {
         return false;
     }
 
@@ -227,18 +227,18 @@ Result<void> Version::validateVersionString(StringView versionStr) noexcept {
 
 // Returns a string representation of the version in the format "major.minor.patch"
 String Version::toString() const {
-    return format::format(u"{}.{}.{}", major, minor, patch);
+    return format::format(u8"{}.{}.{}", major, minor, patch);
 }
 
 // Returns a full string representation of the version, including pre-release or build metadata if applicable
 String Version::toFullString() const {
     String versionStr = toString();
     if (!preRelease.empty()) {
-        versionStr.append(u"-");
+        versionStr.append(u8"-");
         versionStr.append(preRelease.asView());
     }
     if (!buildMetadata.empty()) {
-        versionStr.append(u"+");
+        versionStr.append(u8"+");
         versionStr.append(buildMetadata.asView());
     }
     return versionStr;

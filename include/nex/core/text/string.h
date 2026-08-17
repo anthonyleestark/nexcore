@@ -19,30 +19,16 @@ NEX_NAMESPACE_BEGIN
 
 /**
  * @class String
- * @brief An owning UTF-16 Unicode string class for the NexCore core layer.
- * 
- * @details
- * This class provides a convenient way to store and manipulate Unicode strings.
- * It uses BasicString<char16> as the internal buffer to store string data.
- * 
- * String supports:
- * - Construction from UTF-8 and UTF-16 strings, as well as from StringView
- * - Creation from numbers (integers and floating-point) with specified formatting
- * - Conversion to/from multiple encodings (UTF-8, UTF-16, UTF-32, ANSI, Local)
- * - Comparison and search operations
- * - Compatibility with StringView
- * 
- * @note The internal encoding is UTF-16, which allows for efficient storage of Unicode characters 
- *       while maintaining compatibility with Windows APIs and other UTF-16 based systems.
- * 
- * @see StringView for non-owning string views
  */
 class NEX_API String {
 public:
     using self = String;
     using self_view = StringView;
-    using base_string = BasicString<char16>;
-    using base_view = BasicStringView<char16>;
+    using base_string = BasicString<char8>;
+    using base_view = BasicStringView<char8>;
+
+    using narrow_string = BasicString<nchar>;
+    using narrow_view = self_view::narrow_view;
 
     using value_type = base_string::value_type;
     using size_type = base_string::size_type;
@@ -64,7 +50,7 @@ public:
     static constexpr size_type npos = static_cast<size_type>(-1);
 
 private:
-    buffer_type buffer_;  // Underlying buffer that stores the UTF-16 string data
+    buffer_type buffer_;  // Underlying buffer that stores the UTF-8 string data
 
 public:
     // Default constructor creates an empty string
@@ -78,52 +64,45 @@ public:
     constexpr String(String&& other) noexcept = default;
     constexpr String& operator=(String&& other) noexcept = default;
 
-    // Constructor that takes a string view of UTF-8 and converts it to UTF-16 internally.
-    explicit String(Utf8StringView utf8) { buffer_ = fromUtf8(utf8).buffer_; }
+    // Constructor that takes a string object of UTF-8 and initializes the internal buffer directly.
+    constexpr String(const base_string& utf8) noexcept : buffer_(utf8) {}
 
-    // Constructor that takes a pointer to a UTF-8 string and its length, converting it to UTF-16 internally.
-    explicit String(u8cstring utf8, size_type length) {
-        NEX_ASSERT_MSG(utf8 != nullptr, "Error: Cannot construct String from a null pointer");
-        buffer_ = fromUtf8(Utf8StringView(utf8, length)).buffer_;
-    }
-
-    // Constructor that takes a null-terminated UTF-8 string and converts it to UTF-16 internally.
-    explicit String(u8cstring utf8) {
-        NEX_ASSERT_MSG(utf8 != nullptr, "Error: Cannot construct String from a null pointer");
-        buffer_ = fromUtf8(Utf8StringView(utf8)).buffer_;
-    }
-
-    // Constructor that takes a string object of UTF-16 and initializes the internal buffer directly.
-    constexpr String(const base_string& utf16) noexcept : buffer_(utf16) {}
-
-    // Constructor that takes a string object of UTF-16 and moves it into the internal buffer.
-    constexpr String(base_string&& utf16) noexcept : buffer_(NEX_MOVE(utf16)) {}
-
-    // Constructor that takes a string view of UTF-16 and initializes the internal buffer directly.
-    constexpr String(base_view utf16) noexcept
-        : buffer_(utf16.data(), utf16.size()) {}
-
-    // Constructor that takes a pointer to a UTF-16 string and its length, initializing the internal buffer directly.
-    constexpr String(u16cstring utf16, size_type length) noexcept {
-        NEX_ASSERT_MSG(utf16 != nullptr, "Error: Cannot construct String from a null pointer");
-        buffer_ = buffer_type(utf16, length);
-    }
-
-    // Constructor that takes a null-terminated UTF-16 string and initializes the internal buffer directly.
-    constexpr String(u16cstring utf16) noexcept {
-        NEX_ASSERT_MSG(utf16 != nullptr, "Error: Cannot construct String from a null pointer");
-        buffer_ = buffer_type(utf16);
-    }
+    // Constructor that takes a string object of UTF-8 and moves it into the internal buffer.
+    constexpr String(base_string&& utf8) noexcept : buffer_(NEX_MOVE(utf8)) {}
 
     // Constructor that takes a StringView and initializes the internal buffer directly.
     constexpr String(self_view view) noexcept
         : buffer_(view.data(), view.size()) {}
 
+    // Constructor that takes a string view of UTF-8 and initializes the internal buffer directly.
+    constexpr String(base_view utf8) noexcept
+        : buffer_(utf8.data(), utf8.size()) {}
+
+    // Constructor that takes a pointer to a UTF-8 string and its length, initializing the internal buffer directly.
+    constexpr String(base_view::const_pointer utf8, size_type length) noexcept
+        : buffer_(utf8, length) {}
+
+    // Constructor that takes a null-terminated UTF-8 string and converts it to UTF-8 internally.
+    constexpr String(base_view::const_pointer utf8) noexcept
+        : buffer_(utf8, traits_type::length(utf8)) {}
+
+    // Constructor that takes a string of UTF-16 and converts it to UTF-8 internally.
+    explicit String(const Utf16String& utf16) noexcept { *this = fromUtf16(utf16.asView()); } 
+
+    // Constructor that takes a string view of UTF-16 and converts it to UTF-8 internally.
+    explicit String(Utf16StringView utf16) noexcept { *this = fromUtf16(utf16); }
+
+    // Constructor that takes a null-terminated UTF-16 string and initializes the internal buffer directly.
+    explicit String(u16cstring utf16) noexcept {
+        NEX_ASSERT_MSG(utf16 != nullptr, "Error: Cannot construct String from a null pointer");
+        *this = fromUtf16(utf16);
+    }
+
     // Destructor that cleans up the string data.
     constexpr ~String() noexcept = default;
 
 private:
-    // Creates a String from an ASCII string, converting each character to UTF-16 code unit.
+    // Creates a String from an ASCII string, converting each character to UTF-8 code unit.
     static constexpr self fromAscii(const nchar* ascii, size_type length) {
         NEX_ASSERT_MSG(ascii != nullptr, "Error: Cannot construct String from a null pointer");
         self result;
@@ -172,66 +151,74 @@ public:
     }
 
     // Creates string from a UTF-8 string view data
-    NEX_NODISCARD static self fromUtf8(Utf8StringView utf8) {
-        auto result = encoding::utf8ToUtf16(utf8);
+    NEX_NODISCARD static constexpr self fromUtf8(base_view utf8) { return self(utf8); }
+
+    // Creates string from a UTF-16 string view data
+    NEX_NODISCARD static self fromUtf16(Utf16StringView utf16) {
+        auto result = encoding::utf16ToUtf8(utf16);
         if (result.isOk()) {
-            return fromUtf16(result.value().asView());
+            return fromUtf8(result->asView());
         } else {
-            NEX_ASSERT_MSG(false, "Error: Unable to convert UTF-8 to UTF-16 string");
+            NEX_ASSERT_MSG(false, "Error: Unable to convert UTF-16 to UTF-8 string");
             return self();
         }
     }
 
-    // Creates string from a UTF-16 string view data
-    NEX_NODISCARD static constexpr self fromUtf16(Utf16StringView utf16) { return self(utf16); }
-
     // Creates string from a UTF-32 string view data
     NEX_NODISCARD static self fromUtf32(Utf32StringView utf32) {
-        auto result = encoding::utf32ToUtf16(utf32);
+        auto result = encoding::utf32ToUtf8(utf32);
         if (result.isOk()) {
-            return fromUtf16(result.value().asView());
+            return fromUtf8(result->asView());
         } else {
-            NEX_ASSERT_MSG(false, "Error: Unable to convert UTF-32 to UTF-16 string");
+            NEX_ASSERT_MSG(false, "Error: Unable to convert UTF-32 to UTF-8 string");
             return self();
         }
     }
 
     // Creates string from an ANSI string view data
     NEX_NODISCARD static self fromAnsi(AnsiStringView ansi) {
-        auto result = encoding::ansiToUtf16(ansi);
+        auto result = encoding::ansiToUtf8(ansi);
         if (result.isOk()) {
-            return fromUtf16(result.value().asView());
+            return fromUtf8(result->asView());
         } else {
-            NEX_ASSERT_MSG(false, "Error: Unable to convert ANSI to UTF-16 string");
+            NEX_ASSERT_MSG(false, "Error: Unable to convert ANSI to UTF-8 string");
             return self();
         }
     }
 
     // Creates string from a Local string view data
     NEX_NODISCARD static self fromLocal(LocalStringView local) {
-        auto result = encoding::localToUtf16(local);
+        auto result = encoding::localToUtf8(local);
         if (result.isOk()) {
-            return fromUtf16(result.value().asView());
+            return fromUtf8(result.value().asView());
         } else {
-            NEX_ASSERT_MSG(false, "Error: Unable to convert Local to UTF-16 string");
+            NEX_ASSERT_MSG(false, "Error: Unable to convert Local to UTF-8 string");
             return self();
         }
     }
 
+    // Creates string from a UTF-8 narrow character string view data
+    NEX_NODISCARD static self fromNarrow(narrow_view narrow) noexcept { return self(encoding::narrowToUtf8(narrow)); }
+
     // Converts the string to a UTF-8 string, returning a Result that may contain an error if the conversion fails.
-    NEX_NODISCARD Result<Utf8String> toUtf8() const { return encoding::utf16ToUtf8(buffer_.asView()); }
+    NEX_NODISCARD constexpr Result<Utf8String> toUtf8() const noexcept { return ok(buffer_); }
 
     // Converts the string to a UTF-16 string, returning a Result that may contain an error if the conversion fails.
-    NEX_NODISCARD constexpr Result<Utf16String> toUtf16() const { return ok(buffer_); }
+    NEX_NODISCARD Result<Utf16String> toUtf16() const { return encoding::utf8ToUtf16(buffer_.asView()); }
 
     // Converts the string to a UTF-32 string, returning a Result that may contain an error if the conversion fails.
-    NEX_NODISCARD Result<Utf32String> toUtf32() const { return encoding::utf16ToUtf32(buffer_.asView()); }
+    NEX_NODISCARD Result<Utf32String> toUtf32() const { return encoding::utf8ToUtf32(buffer_.asView()); }
 
     // Converts the string to an ANSI string, returning a Result that may contain an error if the conversion fails.
-    NEX_NODISCARD Result<AnsiString> toAnsi() const { return encoding::utf16ToAnsi(buffer_.asView()); }
+    NEX_NODISCARD Result<AnsiString> toAnsi() const { return encoding::utf8ToAnsi(buffer_.asView()); }
 
     // Converts the string to a Local string, returning a Result that may contain an error if the conversion fails.
-    NEX_NODISCARD Result<LocalString> toLocal() const { return encoding::utf16ToLocal(buffer_.asView()); }
+    NEX_NODISCARD Result<LocalString> toLocal() const { return encoding::utf8ToLocal(buffer_.asView()); }
+
+    // Converts the string to a UTF-8 narrow string, returning a Result that may contain an error if the conversion fails.
+    NEX_NODISCARD constexpr Result<narrow_string> toNarrow() const noexcept {
+        return ok(encoding::utf8ToNarrow(buffer_.asView()));
+    }
 
     // Returns the number of characters in the string, not including the null terminator.
     NEX_NODISCARD constexpr size_type size() const noexcept { return buffer_.size(); }
@@ -316,7 +303,12 @@ public:
     NEX_NODISCARD constexpr self_view asView() const noexcept { return self_view(buffer_.data(), buffer_.size()); }
 
     // Returns a non-owning view of the string's content as a UTF-16 string view.
-    NEX_NODISCARD constexpr base_view asUtf16() const noexcept { return base_view(buffer_.data(), buffer_.size()); }
+    NEX_NODISCARD constexpr base_view asUtf8() const noexcept { return base_view(buffer_.data(), buffer_.size()); }
+
+    // Returns a non-owning view of the string's content as a UTF-8 narrow string view.
+    NEX_NODISCARD constexpr narrow_view asNarrow() const noexcept {
+        return narrow_view(reinterpret_cast<narrow_view::const_pointer>(buffer_.data()), buffer_.size());
+    }
 
     // Assigns the content of another string object to this string, replacing its content.
     constexpr self& assign(const self& other) noexcept { return *this = other; }

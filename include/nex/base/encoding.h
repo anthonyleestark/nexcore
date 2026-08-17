@@ -29,7 +29,9 @@ NEX_NAMESPACE_BEGIN
  */
 NEX_SUBNAMESPACE_BEGIN(encoding)
 
-////// Character classification functions --------------------------------------------------
+// =================================================================================
+// Character Classification Functions
+// =================================================================================
 
 /**
  * @brief Check if a character is a high surrogate character (used in UTF-16 encoding)
@@ -154,7 +156,9 @@ bool isUnicodeDigit(char16 ch) noexcept;
 NEX_NODISCARD NEX_API
 bool isUnicodeAlpha(char16 ch) noexcept;
 
-////// UTF-8 encoding utility functions --------------------------------------------------
+// =================================================================================
+// UTF-8 Encoding Functions and Validation
+// =================================================================================
 
 /**
  * @brief Check if a UTF-8 string contains invalid sequences
@@ -267,7 +271,9 @@ usize encodeUtf8CodePoint(char32 cp, char8* out);
 NEX_NODISCARD NEX_API
 Result<usize> countUtf8CodePoints(Utf8StringView input) noexcept;
 
-////// UTF-16 encoding utility functions --------------------------------------------------
+// =================================================================================
+// UTF-16 Encoding Functions and Validation
+// =================================================================================
 
 /** 
  * @brief Decode a UTF-16 code point
@@ -314,7 +320,9 @@ usize encodeUtf16CodePoint(char32 cp, char16* out);
 NEX_NODISCARD NEX_API
 Result<usize> countUtf16CodePoints(Utf16StringView input) noexcept;
 
-////// UTF-32 encoding utility functions --------------------------------------------------
+// =================================================================================
+// UTF-32 Encoding Functions and Validation
+// =================================================================================
 
 /**
  * @brief Check if a UTF-32 string is valid
@@ -346,7 +354,173 @@ bool isValidUtf32Sequence(Utf32StringView input) noexcept;
 NEX_NODISCARD NEX_API
 Result<usize> countUtf32CodePoints(Utf32StringView input) noexcept;
 
-////// Encoding conversion functions --------------------------------------------------
+// =================================================================================
+// Character Representation Conversion and Reinterpretation Functions
+// =================================================================================
+
+/**
+ * @brief Converts a UTF-8 string view to a narrow string view (reinterpretation)
+ * 
+ * @details
+ * This function reinterprets the underlying data of a UTF-8 string view as a narrow string view.
+ * It does not perform any encoding conversion; it simply treats the same bytes as a different type.
+ * This is useful for scenarios where the data is known to be compatible with both representations.
+ * 
+ * @param utf8 The input UTF-8 string view to reinterpret
+ * @return A narrow string view that shares the same underlying data as the input UTF-8 string view
+ * 
+ * @note
+ * The caller must ensure that the input UTF-8 string view is valid and that the reinterpretation is safe.
+ * This function does not check for encoding validity or perform any transformations.
+ * It is the responsibility of the caller to ensure that the input data is appropriate for reinterpretation
+ * as a narrow string view. Misuse of this function may lead to undefined behavior if the input data is not
+ * compatible with the expected representation.
+ */
+NEX_NODISCARD NEX_API inline constexpr
+NStringView utf8ToNarrow(Utf8StringView utf8) noexcept {
+    return reinterpret_cast<NStringView::const_pointer>(utf8.data());
+}
+
+/**
+ * @brief Converts a narrow string view to a UTF-8 string view (reinterpretation)
+ * 
+ * @details
+ * This function reinterprets the underlying data of a narrow string view as a UTF-8 string view.
+ * It does not perform any encoding conversion; it simply treats the same bytes as a different type.
+ * This is useful for scenarios where the data is known to be compatible with both representations.
+ * 
+ * @param narrow The input narrow string view to reinterpret
+ * @return A UTF-8 string view that shares the same underlying data as the input narrow string view
+ * 
+ * @note
+ * The caller must ensure that the input narrow string view is valid and that the reinterpretation is safe.
+ * This function does not check for encoding validity or perform any transformations.
+ * It is the responsibility of the caller to ensure that the input data is appropriate for reinterpretation
+ * as a UTF-8 string view. Misuse of this function may lead to undefined behavior if the input data is not
+ * compatible with the expected representation.
+ */
+NEX_NODISCARD NEX_API inline constexpr
+Utf8StringView narrowToUtf8(NStringView narrow) noexcept {
+    return reinterpret_cast<Utf8StringView::const_pointer>(narrow.data());
+}
+
+#if NEX_PLATFORM_IS_WINDOWS
+
+    /**
+     * @brief Converts a UTF-16 string view to a wide string view (reinterpretation)
+     * 
+     * @details
+     * This function reinterprets the underlying data of a UTF-16 string view as a wide string view.
+     * It does not perform any encoding conversion; it simply treats the same code units as a different type.
+     * This is useful for scenarios where the data is known to be compatible with both representations.
+     * 
+     * @param utf16 The input UTF-16 string view to reinterpret
+     * @return A wide string view that shares the same underlying data as the input UTF-16 string view
+     * 
+     * @note
+     * The caller must ensure that the input UTF-16 string view is valid and that the reinterpretation is safe.
+     * This function does not check for encoding validity or perform any transformations.
+     * It is the responsibility of the caller to ensure that the input data is appropriate for reinterpretation
+     * as a wide string view. Misuse of this function may lead to undefined behavior if the input data is not
+     * compatible with the expected representation.
+     */
+    NEX_NODISCARD NEX_API inline constexpr
+    WStringView utf16ToWide(Utf16StringView utf16) noexcept {
+        return reinterpret_cast<WStringView::const_pointer>(utf16.data());
+    }
+
+    /**
+     * @brief Converts a wide string view to a UTF-16 string view (reinterpretation)
+     * 
+     * @details
+     * This function reinterprets the underlying data of a wide string view as a UTF-16 string view.
+     * It does not perform any encoding conversion; it simply treats the same code units as a different type.
+     * This is useful for scenarios where the data is known to be compatible with both representations.
+     * 
+     * @param wide The input wide string view to reinterpret
+     * @return A UTF-16 string view that shares the same underlying data as the input wide string view
+     * 
+     * @note
+     * The caller must ensure that the input wide string view is valid and that the reinterpretation is safe.
+     * This function does not check for encoding validity or perform any transformations.
+     * It is the responsibility of the caller to ensure that the input data is appropriate for reinterpretation
+     * as a UTF-16 string view. Misuse of this function may lead to undefined behavior if the input data is not
+     * compatible with the expected representation.
+     */
+    NEX_NODISCARD NEX_API inline constexpr
+    Utf16StringView wideToUtf16(WStringView wide) noexcept {
+        return reinterpret_cast<Utf16StringView::const_pointer>(wide.data());
+    }
+
+#elif NEX_PLATFORM_FAMILY_IS_POSIX
+
+    /**
+     * @brief Converts a UTF-32 string view to a wide string view (reinterpretation)
+     * 
+     * @details
+     * This function reinterprets the underlying data of a UTF-32 string view as a wide string view.
+     * It does not perform any encoding conversion; it simply treats the same code units as a different type.
+     * This is useful for scenarios where the data is known to be compatible with both representations.
+     * 
+     * @param utf32 The input UTF-32 string view to reinterpret
+     * @return A wide string view that shares the same underlying data as the input UTF-32 string view
+     * 
+     * @note
+     * The caller must ensure that the input UTF-32 string view is valid and that the reinterpretation is safe.
+     * This function does not check for encoding validity or perform any transformations.
+     * It is the responsibility of the caller to ensure that the input data is appropriate for reinterpretation
+     * as a wide string view. Misuse of this function may lead to undefined behavior if the input data is not
+     * compatible with the expected representation.
+     */
+    NEX_NODISCARD NEX_API inline constexpr
+    WStringView utf32ToWide(Utf32StringView utf32) noexcept {
+        return reinterpret_cast<WStringView::const_pointer>(utf32.data());
+    }
+
+    /**
+     * @brief Converts a wide string view to a UTF-32 string view (reinterpretation)
+     * 
+     * @details
+     * This function reinterprets the underlying data of a wide string view as a UTF-32 string view.
+     * It does not perform any encoding conversion; it simply treats the same code units as a different type.
+     * This is useful for scenarios where the data is known to be compatible with both representations.
+     * 
+     * @param wide The input wide string view to reinterpret
+     * @return A UTF-32 string view that shares the same underlying data as the input wide string view
+     * 
+     * @note
+     * The caller must ensure that the input wide string view is valid and that the reinterpretation is safe.
+     * This function does not check for encoding validity or perform any transformations.
+     * It is the responsibility of the caller to ensure that the input data is appropriate for reinterpretation
+     * as a UTF-32 string view. Misuse of this function may lead to undefined behavior if the input data is not
+     * compatible with the expected representation.
+     */
+    NEX_NODISCARD NEX_API inline constexpr
+    Utf32StringView wideToUtf32(WStringView wide) noexcept {
+        return reinterpret_cast<Utf32StringView::const_pointer>(wide.data());
+    }
+
+#endif
+
+// =================================================================================
+// Encoding Conversion Functions and Utilities
+// =================================================================================
+
+/**
+ * @brief Convert ANSI string to UTF-8 string
+ * @param ansi The input ANSI string to convert
+ * @return Result containing the converted UTF-8 string if successful, or an error if the conversion fails
+ */
+NEX_NODISCARD NEX_API
+Result<Utf8String> ansiToUtf8(AnsiStringView ansi);
+
+/**
+ * @brief Convert UTF-8 string to ANSI string
+ * @param utf8 The input UTF-8 string to convert
+ * @return Result containing the converted ANSI string if successful, or an error if the conversion fails
+ */
+NEX_NODISCARD NEX_API
+Result<AnsiString> utf8ToAnsi(Utf8StringView utf8);
 
 /**
  * @brief Convert ANSI string to UTF-16 string
@@ -364,6 +538,22 @@ Result<Utf16String> ansiToUtf16(AnsiStringView ansi);
  */
 NEX_NODISCARD NEX_API
 Result<AnsiString> utf16ToAnsi(Utf16StringView utf16);
+
+/**
+ * @brief Convert local string to UTF-8 string
+ * @param local The input local string to convert
+ * @return Result containing the converted UTF-8 string if successful, or an error if the conversion fails
+ */
+NEX_NODISCARD NEX_API
+Result<Utf8String> localToUtf8(LocalStringView local);
+
+/**
+ * @brief Convert UTF-8 string to local string
+ * @param utf8 The input UTF-8 string to convert
+ * @return Result containing the converted local string if successful, or an error if the conversion fails
+ */
+NEX_NODISCARD NEX_API
+Result<LocalString> utf8ToLocal(Utf8StringView utf8);
 
 /**
  * @brief Convert local string to UTF-16 string
@@ -397,6 +587,22 @@ Result<Utf16String> utf8ToUtf16(Utf8StringView utf8);
  */
 NEX_NODISCARD NEX_API
 Result<Utf8String> utf16ToUtf8(Utf16StringView utf16);
+
+/**
+ * @brief Convert UTF-32 string to UTF-8 string
+ * @param utf32 The input UTF-32 string to convert
+ * @return Result containing the converted UTF-8 string if successful, or an error if the conversion fails
+ */
+NEX_NODISCARD NEX_API
+Result<Utf8String> utf32ToUtf8(Utf32StringView utf32);
+
+/**
+ * @brief Convert UTF-8 string to UTF-32 string
+ * @param utf8 The input UTF-8 string to convert
+ * @return Result containing the converted UTF-32 string if successful, or an error if the conversion fails
+ */
+NEX_NODISCARD NEX_API
+Result<Utf32String> utf8ToUtf32(Utf8StringView utf8);
 
 /**
  * @brief Convert UTF-32 string to UTF-16 string

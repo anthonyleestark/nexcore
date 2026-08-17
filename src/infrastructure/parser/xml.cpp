@@ -6,7 +6,6 @@
 #include "nex/base/casts.h"
 #include "nex/base/encoding.h"
 #include "nex/infrastructure/parser/xml.h"
-#include "src/infrastructure/parser/parser_helper.h"
 
 #include <pugixml.hpp>
 
@@ -37,14 +36,14 @@ bool XmlAttribute::isValid() const noexcept {
 String XmlAttribute::name() const {
     if (!isValid()) return String();
     cstring name = impl_->attr.name();
-    return name ? parser_helper::fromUtf8Narrow(name) : String();
+    return name ? String::fromNarrow(name) : String();
 }
 
 // Get the value of the attribute as a String
 String XmlAttribute::value() const {
     if (!isValid()) return String();
     cstring value = impl_->attr.value();
-    return value ? parser_helper::fromUtf8Narrow(value) : String();
+    return value ? String::fromNarrow(value) : String();
 }
 
 // Get the value of the attribute as an integer, with a default if conversion fails
@@ -90,14 +89,14 @@ bool XmlNode::isValid() const noexcept {
 String XmlNode::name() const {
     if (!isValid()) return String();
     cstring name = impl_->node.name();
-    return name ? parser_helper::fromUtf8Narrow(name) : String();
+    return name ? String::fromNarrow(name) : String();
 }
 
 // Get the text content of the node as a String
 String XmlNode::text() const {
     if (!isValid()) return String();
     cstring text = impl_->node.text().as_string();
-    return text ? parser_helper::fromUtf8Narrow(text) : String();
+    return text ? String::fromNarrow(text) : String();
 }
 
 // Get the first child node regardless of name
@@ -121,7 +120,7 @@ XmlNode XmlNode::child(StringView name) const {
     if (!isValid()) return out;
     
     // Convert parameter to UTF-8 string (std::string)
-    NString utf8 = parser_helper::toUtf8Narrow(name);
+    const NString utf8 = name.asNarrow();
     if (utf8.empty()) return out;
 
     // Get the child node with the specified name using pugixml
@@ -145,7 +144,7 @@ bool XmlNode::hasChild(StringView name) const {
     if (!isValid()) return false;
 
     // Convert parameter to UTF-8 string (std::string)
-    NString utf8 = parser_helper::toUtf8Narrow(name);
+    const NString utf8 = name.asNarrow();
     if (utf8.empty()) return false;
 
     // Check for child node with the specified name using pugixml
@@ -158,7 +157,7 @@ Vec<XmlNode> XmlNode::children(StringView name) const {
     if (!isValid()) return list;
     
     // Convert parameter to UTF-8 string (std::string)
-    NString utf8 = parser_helper::toUtf8Narrow(name);
+    const NString utf8 = name.asNarrow();
     if (utf8.empty()) return list;
 
     // Iterate over all child nodes with the specified name using pugixml
@@ -180,7 +179,7 @@ XmlAttribute XmlNode::attribute(StringView name) const {
     if (!isValid()) return attr;
     
     // Convert parameter to UTF-8 string (std::string)
-    NString utf8 = parser_helper::toUtf8Narrow(name);
+    const NString utf8 = name.asNarrow();
     if (utf8.empty()) return attr;
 
     // Get the attribute with the specified name using pugixml
@@ -215,7 +214,7 @@ NEX_DEFINE_DEFAULT_DTOR(XmlDocument);
 // Load XML from file
 Result<void> XmlDocument::loadFromFile(StringView path) {
     // Convert StringView to UTF-8 std::string
-    NString utf8 = parser_helper::toUtf8Narrow(path);
+    const NString utf8 = path.asNarrow();
     if (utf8.empty()) {
         return error(
             ErrorCode::DeserializationFailed,
@@ -238,7 +237,7 @@ Result<void> XmlDocument::loadFromFile(StringView path) {
 // Load XML from string
 Result<void> XmlDocument::loadFromString(const StringView content) {
     // Convert StringView to UTF-8 std::string
-    NString utf8 = parser_helper::toUtf8Narrow(content);
+    const NString utf8 = content.asNarrow();
     if (utf8.empty()) {
         return error(
             ErrorCode::DeserializationFailed,

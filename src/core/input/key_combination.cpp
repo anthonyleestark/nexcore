@@ -131,7 +131,7 @@ Result<NEX_PREPEND_SUBNAMESPACE(input, KeyCombination)>
 parseFromUtf8String(Utf8StringView text) {
     using NEX_PREPEND_SUBNAMESPACE(input, KeyCombination);
 
-    const NStringView trimmed = trimAscii(reinterpret_cast<cstring>(text.data())).asView();
+    const NStringView trimmed = trimAscii(encoding::utf8ToNarrow(text)).asView();
     if (trimmed.empty()) {
         return ok(KeyCombination::none());
     }

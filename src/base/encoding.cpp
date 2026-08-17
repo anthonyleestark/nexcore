@@ -456,14 +456,151 @@ Result<usize> encoding::countUtf32CodePoints(Utf32StringView input) noexcept {
 // Converts an ANSI string to a UTF-8 string
 Result<Utf8String> encoding::ansiToUtf8(AnsiStringView ansi) {
 #if NEX_PLATFORM_IS_WINDOWS
+    // Windows-specific implementation using MultiByteToWideChar / WideCharToMultiByte
+
+    int32 len = safeStaticCastInt(ansi.size());
+    if (len < 0) {
+        return error(
+            ErrorCode::InvalidFormat, "Input string is too large"
+        );
+    }
+
+    int32 utf16Size = MultiByteToWideChar(CP_ACP, 0, ansi.data(), len, nullptr, 0);
+    if (utf16Size <= 0) {
+        return error(
+            ErrorCode::OperationFailed,
+            "Failed to calculate required buffer size for ANSI to UTF-16 conversion"
+        );
+    }
+
+    Utf16String utf16(utf16Size, '\0');
+    if (
+        MultiByteToWideChar(CP_ACP, 0, ansi.data(), len, reinterpret_cast<wchar*>(utf16.data()), utf16Size) <= 0
+    ) {
+        return error(
+            ErrorCode::OperationFailed, "Failed to convert ANSI to UTF-16"
+        );
+    }
+
+    int32 utf8Size = 
+        WideCharToMultiByte(
+            CP_UTF8, 0, reinterpret_cast<LPCWCH>(utf16.data()), 
+            utf16Size, nullptr, 0, nullptr, nullptr
+        );
+    if (utf8Size <= 0) {
+        return error(
+            ErrorCode::OperationFailed,
+            "Failed to calculate required buffer size for UTF-16 to UTF-8 conversion"
+        );
+    }
+
+    Utf8String utf8(utf8Size, '\0');
+    if (
+        WideCharToMultiByte(
+            CP_UTF8, 0, reinterpret_cast<LPCWCH>(utf16.data())
+            utf16Size, reinterpret_cast<char*>(utf8.data()), utf8Size, nullptr, nullptr) <= 0
+        ) {
+        return error(
+            ErrorCode::OperationFailed, "Failed to convert UTF-16 to UTF-8"
+        );
+    }
+
+    return ok(NEX_MOVE(utf8));
 #else
+    // On POSIX platforms, NexCore treats ANSI strings as UTF-8 by convention.
+    // AnsiString uses nchar (char), while Utf8String uses char8,
+    // so bridge the representation explicitly before conversion.
+    Utf8String utf8;
+    utf8.reserve(ansi.size());
+
+    for (usize i = 0; i < ansi.size(); ++i) {
+        utf8.pushBack(static_cast<char8>(ansi[i]));
+    }
+
+    return ok(NEX_MOVE(utf8));
 #endif
 }
 
 // Converts a UTF-8 string to an ANSI string
 Result<AnsiString> encoding::utf8ToAnsi(Utf8StringView utf8) {
 #if NEX_PLATFORM_IS_WINDOWS
+    // Windows-specific implementation using MultiByteToWideChar / WideCharToMultiByte
+
+    int32 len = safeStaticCastInt(utf8.size());
+    if (len < 0) {
+        return error(
+            ErrorCode::InvalidFormat, "Input string is too large"
+        );
+    }
+
+    // Step 1: UTF-8 (CP_UTF8) -> UTF-16
+    int32 utf16Size =
+        MultiByteToWideChar(
+            CP_UTF8, 0, reinterpret_cast<cstring>(utf8.data()), len, nullptr, 0
+        );
+    if (utf16Size <= 0) {
+        return error(
+            ErrorCode::OperationFailed,
+            "Failed to calculate required buffer size for UTF-8 to UTF-16 conversion"
+        );
+    }
+
+    Utf16String utf16(utf16Size, '\0');
+    if (
+        MultiByteToWideChar(
+            CP_UTF8, 0, reinterpret_cast<const char*>(utf8.data()),
+            len, reinterpret_cast<wchar*>(utf16.data()), utf16Size) <= 0
+    ) {
+        return error(
+            ErrorCode::OperationFailed, "Failed to convert UTF-8 to UTF-16"
+        );
+    }
+
+    // Step 2: UTF-16 -> ANSI (CP_ACP)
+    int32 ansiSize =
+        WideCharToMultiByte(
+            CP_ACP, 0, reinterpret_cast<LPCWCH>(utf16.data()),
+            utf16Size, nullptr, 0, nullptr, nullptr
+        );
+    if (ansiSize <= 0) {
+        return error(
+            ErrorCode::OperationFailed,
+            "Failed to calculate required buffer size for UTF-16 to ANSI conversion"
+        );
+    }
+
+    BOOL usedDefaultChar = FALSE;
+    AnsiString ansi(ansiSize, '\0');
+    if (
+        WideCharToMultiByte(
+            CP_ACP, 0, reinterpret_cast<LPCWCH>(utf16.data()),
+            utf16Size, ansi.data(), ansiSize, nullptr, &usedDefaultChar) <= 0
+    ) {
+        return error(
+            ErrorCode::OperationFailed, "Failed to convert UTF-16 to ANSI"
+        );
+    }
+
+    if (usedDefaultChar) {
+        // The conversion used a default character, which means some characters could not be represented in ANSI
+        return error(
+            ErrorCode::OperationFailed,
+            "Some characters could not be represented in ANSI encoding"
+        );
+    }
+
+    return ok(NEX_MOVE(ansi));
 #else
+    // On POSIX platforms, NexCore treats ANSI strings as UTF-8 by convention.
+    // So bridge the representation from char8 -> nchar (char) explicitly.
+    AnsiString ansi;
+    ansi.reserve(utf8.size());
+
+    for (usize i = 0; i < utf8.size(); ++i) {
+        ansi.pushBack(static_cast<nchar>(utf8[i]));
+    }
+
+    return ok(NEX_MOVE(ansi));
 #endif
 }
 
@@ -573,14 +710,96 @@ Result<AnsiString> encoding::utf16ToAnsi(Utf16StringView utf16) {
 // Converts a local string to a UTF-8 string
 Result<Utf8String> encoding::localToUtf8(LocalStringView local) {
 #if NEX_PLATFORM_IS_WINDOWS
+    // Windows-specific implementation using WideCharToMultiByte
+
+    int32 len = safeStaticCastInt(local.size());
+    if (len < 0) {
+        return error(
+            ErrorCode::InvalidFormat, "Input string is too large"
+        );
+    }
+
+    // Direct conversion: UTF-16 (wchar) -> UTF-8 (char8) via CP_UTF8
+    int32 requiredSize = WideCharToMultiByte(
+        CP_UTF8, 0,
+        reinterpret_cast<LPCWCH>(local.data()), len,
+        nullptr, 0,
+        nullptr, nullptr
+    );
+
+    if (requiredSize <= 0) {
+        return error(
+            ErrorCode::OperationFailed,
+            "Failed to calculate required buffer size for UTF-16 to UTF-8 conversion"
+        );
+    }
+
+    Utf8String utf8(requiredSize, '\0');
+    int32 converted = WideCharToMultiByte(
+        CP_UTF8, 0,
+        reinterpret_cast<LPCWCH>(local.data()), len,
+        reinterpret_cast<char*>(utf8.data()), requiredSize,
+        nullptr, nullptr
+    );
+
+    if (converted <= 0) {
+        return error(
+            ErrorCode::OperationFailed, "Failed to convert UTF-16 to UTF-8"
+        );
+    }
+
+    return ok(NEX_MOVE(utf8));
 #else
+    // On POSIX, local encoding is also UTF-8, so we can directly convert to Utf8String
+    Utf8String utf8(local);
+    return ok(NEX_MOVE(utf8));
 #endif
 }
 
 // Converts a UTF-8 string to a local string
 Result<LocalString> encoding::utf8ToLocal(Utf8StringView utf8) {
 #if NEX_PLATFORM_IS_WINDOWS
+    // Windows-specific implementation using MultiByteToWideChar
+
+    int32 len = safeStaticCastInt(utf8.size());
+    if (len < 0) {
+        return error(
+            ErrorCode::InvalidFormat, "Input string is too large"
+        );
+    }
+
+    // Direct conversion: UTF-8 (char8) -> UTF-16 (wchar) via CP_UTF8
+    int32 requiredSize = MultiByteToWideChar(
+        CP_UTF8, 0,
+        reinterpret_cast<const char*>(utf8.data()), len,
+        nullptr, 0
+    );
+
+    if (requiredSize <= 0) {
+        return error(
+            ErrorCode::OperationFailed,
+            "Failed to calculate required buffer size for UTF-8 to UTF-16 conversion"
+        );
+    }
+
+    LocalString local(requiredSize, L'\0');
+    int32 converted = MultiByteToWideChar(
+        CP_UTF8, 0,
+        reinterpret_cast<const char*>(utf8.data()), len,
+        reinterpret_cast<wchar*>(local.data()), requiredSize
+    );
+
+    if (converted <= 0) {
+        return error(
+            ErrorCode::OperationFailed, "Failed to convert UTF-8 to UTF-16"
+        );
+    }
+
+    return ok(NEX_MOVE(local));
 #else
+    // On POSIX, local encoding is also UTF-8, so we can directly convert to LocalString
+    LocalString local(utf8);
+    return ok(NEX_MOVE(local));
 #endif
 }
 
@@ -747,10 +966,59 @@ Result<Utf8String> encoding::utf16ToUtf8(Utf16StringView utf16) {
 
 // Converts a UTF-32 string to a UTF-8 string
 Result<Utf8String> encoding::utf32ToUtf8(Utf32StringView utf32) {
+    Utf8String result;
+
+    // Reserve enough space to avoid multiple reallocations,
+    // worst case: all characters are 4-byte code points, which would require 4 bytes each
+    result.reserve(utf32.size() * 4);
+
+    for (char32 cp : utf32) {
+        if (!isValidCodePoint(cp)) {
+            // Found an invalid code point, return an error result
+            return error(
+                ErrorCode::InvalidFormat, "Invalid Unicode code point in input" 
+            );
+        }
+
+        char8 u8buf[4];
+        usize u8len = encodeUtf8CodePoint(cp, u8buf);
+        if (u8len == 0) {
+            // Failed to encode a UTF-8 code point, return an error result
+            return error(
+                ErrorCode::InvalidFormat, "Failed to encode UTF-8" 
+            );
+        }
+
+        result.append(reinterpret_cast<u8cstring>(u8buf), u8len);
+    }
+
+    // Successfully converted UTF-32 to UTF-8, return the result
+    return ok(NEX_MOVE(result));
 }
 
 // Converts a UTF-8 string to a UTF-32 string
 Result<Utf32String> encoding::utf8ToUtf32(Utf8StringView utf8) {
+    Utf32String result;
+    result.reserve(utf8.size()); // Reserve enough space to avoid multiple reallocations
+
+    u8cstring ptr = utf8.data();
+    u8cstring end = ptr + utf8.size();
+
+    while (ptr < end) {
+        usize advance = 0;
+        auto decodeRes = decodeUtf8CodePoint(Utf8StringView(ptr, end - ptr), advance);
+
+        if (!decodeRes.isOk()) { 
+            // Failed to decode a UTF-8 code point, return an error result
+            return error(decodeRes.error());
+        }
+
+        result.pushBack(decodeRes.value());
+        ptr += advance;
+    }
+
+    // Successfully converted UTF-8 to UTF-32, return the result
+    return ok(NEX_MOVE(result));
 }
 
 // Converts a UTF-32 string to a UTF-16 string

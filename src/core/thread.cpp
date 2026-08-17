@@ -5,6 +5,7 @@
 
 #include "nex/base/encoding.h"
 #include "nex/base/invoke.h"
+#include "nex/base/assert_crash.h"
 #include "nex/core/text/string.h"
 #include "nex/core/thread.h"
 
@@ -60,24 +61,12 @@ void Thread::Impl::applyThreadName() {
 #elif NEX_PLATFORM_IS_MAC
     // macOS: Use pthread_setname_np
     if (!name.empty()) {
-        auto nameUtf8Res = encoding::utf16ToUtf8(name.asUtf16());
-        if (!nameUtf8Res) {
-            // Failed to convert name to UTF-8; log or handle error if needed
-            return;
-        }
-        auto nameUtf8 = nameUtf8Res.value();
-        pthread_setname_np(reinterpret_cast<cstring>(nameUtf8.cStr()));
+        pthread_setname_np(name.asNarrow().data());
     }
 #elif NEX_PLATFORM_IS_LINUX
     // Linux: Use pthread_setname_np
     if (!name.empty()) {
-        auto nameUtf8Res = encoding::utf16ToUtf8(name.asUtf16());
-        if (!nameUtf8Res) {
-            // Failed to convert name to UTF-8; log or handle error if needed
-            return;
-        }
-        auto nameUtf8 = nameUtf8Res.value();
-        pthread_setname_np(pthread_self(), reinterpret_cast<cstring>(nameUtf8.cStr()));
+        pthread_setname_np(pthread_self(), name.asNarrow().data());
     }
 #endif
 }

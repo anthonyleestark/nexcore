@@ -152,7 +152,7 @@ Uuid Uuid::generateV7() noexcept {
 // Parse a Uuid from a string representation
 Result<Uuid> Uuid::fromString(StringView str) noexcept {
     // Validate the UTF-8 string format (narrow characters) for a UUID (e.g., "123e4567-e89b-12d3-a456-426614174000")
-    NString utf8Narrow = str.asNarrowView();
+    const NString utf8Narrow = str.asNarrow();
     if (utf8Narrow.empty() || !uuids::uuid::is_valid_uuid(utf8Narrow)) {
         return error(
             ErrorCode::InvalidFormat, 

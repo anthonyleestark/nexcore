@@ -10,7 +10,6 @@
 #include "nex/base/casts.h"
 #include "nex/base/encoding.h"
 #include "nex/infrastructure/parser/json.h"
-#include "src/infrastructure/parser/parser_helper.h"
 
 // Include nlohmann/json
 #include <nlohmann/json.hpp>
@@ -82,7 +81,7 @@ NEX_DEFINE_DEFAULT_DTOR(Json);
 // Load JSON from file
 Result<void> Json::loadFromFile(StringView filePath) {
     // Convert file path to UTF-8 string
-    const NString path = parser_helper::toUtf8Narrow(filePath);
+    const NString path = filePath.asNarrow();
     if (path.empty()) {
         return error(
             ErrorCode::InvalidArgument, "Invalid file path"
@@ -169,7 +168,7 @@ Result<void> Json::loadFromFile(StringView filePath) {
 // Load JSON from string
 Result<void> Json::loadFromString(StringView jsonString) {
     // Convert JSON string to UTF-8 std::string
-    const NString text = parser_helper::toUtf8Narrow(jsonString);
+    const NString text = jsonString.asNarrow();
     if (text.empty()) {
         return error(
             ErrorCode::InvalidArgument, "Invalid argument"
@@ -244,7 +243,7 @@ const Json::NodeHandle* Json::navigatePath(StringView keyPath) const {
     }
 
     // Convert key path to UTF-8 string and navigate the JSON structure
-    const NString path = parser_helper::toUtf8Narrow(keyPath);
+    const NString path = keyPath.asNarrow();
     const nlohmann::json* node = navigatePathImpl(impl_->json, path);
     if (!node) {
         impl_->nodeHandle.reset();
@@ -271,7 +270,7 @@ String Json::getString(StringView keyPath, StringView defaultValue /* = StringVi
     }
 
     // Convert the JSON string to String and return
-    return parser_helper::fromUtf8Narrow(node->get<NEX_STD string>().c_str());
+    return String::fromNarrow(node->get<NEX_STD string>().c_str());
 }
 
 // Get integer value by key path
@@ -361,7 +360,7 @@ bool Json::tryGetString(StringView keyPath, String& value) const {
     if (!node || !node->is_string()) return false;
 
     // Convert the JSON string to String and set the output parameter
-    value = parser_helper::fromUtf8Narrow(node->get<NEX_STD string>().c_str());
+    value = String::fromNarrow(node->get<NEX_STD string>().c_str());
     return true;
 }
 
@@ -490,7 +489,7 @@ bool Json::tryGetStringAt(StringView keyPath, usize index, String& value) const 
     if (!elem.is_string()) return false;
 
     // Convert the JSON string to String and set the output parameter
-    value = parser_helper::fromUtf8Narrow(elem.get<NEX_STD string>().c_str());
+    value = String::fromNarrow(elem.get<NEX_STD string>().c_str());
     return true;
 }
 
@@ -521,11 +520,11 @@ String Json::toString(bool pretty /* = false */) const {
 
     // Convert JSON to string with optional pretty-printing
     if (pretty) {
-        return parser_helper::fromUtf8Narrow(impl_->json.dump(2).c_str());
+        return String::fromNarrow(impl_->json.dump(2).c_str());
     }
 
     // Compact JSON string
-    return parser_helper::fromUtf8Narrow(impl_->json.dump().c_str());
+    return String::fromNarrow(impl_->json.dump().c_str());
 }
 
 NEX_LAYER_NAMESPACE_END(parser)

@@ -167,7 +167,7 @@ public:
     NEX_NODISCARD constexpr base_view asBasicView() const noexcept { return view_; }
 
     // Returns a UTF-8 narrow string view for interoperability with APIs that accept narrow strings.
-    NEX_NODISCARD constexpr narrow_view asNarrowView() const noexcept {
+    NEX_NODISCARD constexpr narrow_view asNarrow() const noexcept {
         return narrow_view(reinterpret_cast<narrow_view::const_pointer>(view_.data()), view_.size());
     }
 

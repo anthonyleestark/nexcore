@@ -25,7 +25,7 @@ public:
     using self = String;
     using self_view = StringView;
     using base_string = BasicString<char8>;
-    using base_view = BasicStringView<char8>;
+    using base_view = self_view::base_view;
 
     using narrow_string = BasicString<nchar>;
     using narrow_view = self_view::narrow_view;
@@ -114,7 +114,7 @@ private:
     }
 
 public:
-    // Creates string from a signed integer with specified base (default is 10)
+    // Creates string from a signed integer with specified base (default is 10).
     NEX_NODISCARD static constexpr self fromInt(int64 value, int32 base = BASE_DECIMAL) {
         nchar buffer[65]; // Enough to hold the largest 64-bit integer in binary plus null terminator
         const usize length = charconv::formatInteger(buffer, sizeof(buffer), value, base);
@@ -126,7 +126,7 @@ public:
         }
     }
 
-    // Creates string from an unsigned integer with specified base (default is 10)
+    // Creates string from an unsigned integer with specified base (default is 10).
     NEX_NODISCARD static constexpr self fromUInt(uint64 value, int32 base = BASE_DECIMAL) {
         nchar buffer[65]; // Enough to hold the largest 64-bit unsigned integer in binary plus null terminator
         const usize length = charconv::formatUnsigned(buffer, sizeof(buffer), value, base);
@@ -138,7 +138,7 @@ public:
         }
     }
 
-    // Creates string from a floating-point number
+    // Creates string from a floating-point number.
     NEX_NODISCARD static self fromFloat(float64 value, nchar format = 'g', int32 precision = DEFAULT_FLOAT_PRECISION) {
         nchar buffer[128]; // Buffer to hold the formatted floating-point number
         const usize length = charconv::formatFloating(buffer, sizeof(buffer), value, precision);
@@ -150,10 +150,10 @@ public:
         }
     }
 
-    // Creates string from a UTF-8 string view data
+    // Creates string from a UTF-8 string view data.
     NEX_NODISCARD static constexpr self fromUtf8(base_view utf8) { return self(utf8); }
 
-    // Creates string from a UTF-16 string view data
+    // Creates string from a UTF-16 string view data.
     NEX_NODISCARD static self fromUtf16(Utf16StringView utf16) {
         auto result = encoding::utf16ToUtf8(utf16);
         if (result.isOk()) {
@@ -164,7 +164,7 @@ public:
         }
     }
 
-    // Creates string from a UTF-32 string view data
+    // Creates string from a UTF-32 string view data.
     NEX_NODISCARD static self fromUtf32(Utf32StringView utf32) {
         auto result = encoding::utf32ToUtf8(utf32);
         if (result.isOk()) {
@@ -175,7 +175,7 @@ public:
         }
     }
 
-    // Creates string from an ANSI string view data
+    // Creates string from an ANSI string view data.
     NEX_NODISCARD static self fromAnsi(AnsiStringView ansi) {
         auto result = encoding::ansiToUtf8(ansi);
         if (result.isOk()) {
@@ -186,7 +186,7 @@ public:
         }
     }
 
-    // Creates string from a Local string view data
+    // Creates string from a Local string view data.
     NEX_NODISCARD static self fromLocal(LocalStringView local) {
         auto result = encoding::localToUtf8(local);
         if (result.isOk()) {
@@ -197,7 +197,7 @@ public:
         }
     }
 
-    // Creates string from a UTF-8 narrow character string view data
+    // Creates string from a UTF-8 narrow character string view data.
     NEX_NODISCARD static self fromNarrow(narrow_view narrow) noexcept { return self(encoding::narrowToUtf8(narrow)); }
 
     // Converts the string to a UTF-8 string, returning a Result that may contain an error if the conversion fails.
@@ -217,7 +217,7 @@ public:
 
     // Converts the string to a UTF-8 narrow string, returning a Result that may contain an error if the conversion fails.
     NEX_NODISCARD constexpr Result<narrow_string> toNarrow() const noexcept {
-        return ok(encoding::utf8ToNarrow(buffer_.asView()));
+        return ok(NEX_MOVE(narrow_string(encoding::utf8ToNarrow(buffer_.asView()))));
     }
 
     // Returns the number of characters in the string, not including the null terminator.
@@ -309,6 +309,18 @@ public:
     NEX_NODISCARD constexpr narrow_view asNarrow() const noexcept {
         return narrow_view(reinterpret_cast<narrow_view::const_pointer>(buffer_.data()), buffer_.size());
     }
+
+    // Assigns content from a string view to the string, replacing its content.
+    constexpr self& operator=(self_view view) { assign(view); return *this; }
+
+    // Assign a null-terminated character sequence to the string, replacing its content.
+    constexpr self& operator=(const_pointer ptr) { buffer_ = ptr; return *this; }
+
+    // Assign a specified number of characters from a character sequence to the string, replacing its content.
+    constexpr self& operator=(char_type ch) { buffer_ = ch; return *this; }
+
+    // Assigns content from an InitList of characters to the string, replacing its content.
+    constexpr self& operator=(InitList<char_type> initList) { buffer_ = initList; return *this; }
 
     // Assigns the content of another string object to this string, replacing its content.
     constexpr self& assign(const self& other) noexcept { return *this = other; }
@@ -522,33 +534,68 @@ public:
     }
 
     // Finds the first occurrence of a substring, starting from a given position.
-    constexpr size_type find(self_view substring, size_type pos = 0) const {
+    NEX_NODISCARD constexpr size_type find(self_view substring, size_type pos = 0) const {
         return this->asView().find(substring, pos);
     }
 
     // Finds the first occurrence of a character, starting from a given position.
-    constexpr size_type find(value_type ch, size_type pos = 0) const {
+    NEX_NODISCARD constexpr size_type find(value_type ch, size_type pos = 0) const {
         return this->asView().find(ch, pos);
     }
 
     // Finds the last occurrence of a substring, starting from a given position.
-    constexpr size_type rfind(self_view substring, size_type pos = npos) const {
+    NEX_NODISCARD constexpr size_type rfind(self_view substring, size_type pos = npos) const {
         return this->asView().rfind(substring, pos);
     }
 
     // Finds the last occurrence of a character, starting from a given position.
-    constexpr size_type rfind(value_type ch, size_type pos = npos) const {
+    NEX_NODISCARD constexpr size_type rfind(value_type ch, size_type pos = npos) const {
         return this->asView().rfind(ch, pos);
     }
 
     // Determines whether the string contains the specified substring.
-    constexpr bool contains(self_view substring) const {
+    NEX_NODISCARD constexpr bool contains(self_view substring) const {
         return this->asView().contains(substring);
     }
 
     // Determines whether the string contains the specified character.
-    constexpr bool contains(value_type ch) const {
+    NEX_NODISCARD constexpr bool contains(value_type ch) const {
         return this->asView().contains(ch);
+    }
+
+    // Concatenates a string view with a string object and returns the result.
+    NEX_NODISCARD friend constexpr self operator+(self_view view, const self& str) {
+        return view + str;
+    }
+
+    // Concatenates a string view with a null-terminated character sequence and returns the result.
+    NEX_NODISCARD friend constexpr self operator+(self_view view, const_pointer str) {
+        return view + self(str);
+    }
+
+    // Concatenates a string view with a single character and returns the result.
+    NEX_NODISCARD friend constexpr self operator+(self_view view, char_type ch) {
+        return base_string(view.data(), view.size()) + ch;
+    }
+
+    // Concatenates a null-terminated character sequence with a BasicString object and returns the result.
+    NEX_NODISCARD friend constexpr self operator+(const_pointer str, const self& other) {
+        return self(str) + other;
+    }
+
+    // Concatenates a null-terminated character sequence with a string view and returns the result.
+    NEX_NODISCARD friend constexpr self operator+(const_pointer str, self_view view) {
+        return self(str) + view;
+    }
+
+    // Concatenates a single character with a string object and returns the result.
+    NEX_NODISCARD friend constexpr self operator+(char_type ch, const self& other) {
+        return ch + base_string(other.data(), other.size());
+    }
+
+    // Concatenates a single character with a string view and returns the result.
+    NEX_NODISCARD friend constexpr self operator+(char_type ch, self_view view) {
+        return ch + base_string(view.data(), view.size());
     }
 };
 

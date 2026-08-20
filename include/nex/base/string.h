@@ -619,7 +619,7 @@ public:
     }
 
     // Creates a string by copying content from a BasicStringView.
-    NEX_HIDDEN_FROM_ABI constexpr BasicString(self_view view) {
+    NEX_HIDDEN_FROM_ABI constexpr explicit BasicString(self_view view) {
         storage_.assign(view.data(), view.size());
     }
 
@@ -742,44 +742,44 @@ public:
         return self_view(storage_.data(), storage_.size());
     }
 
+    // Assigns content from a BasicStringView to the string, replacing its content.
+    NEX_HIDDEN_FROM_ABI constexpr self& operator=(self_view view) {
+        storage_.assign(view.data(), view.size());
+        return *this;
+    }
+
     // Assign a null-terminated character sequence to the string, replacing its content.
-    NEX_HIDDEN_FROM_ABI constexpr BasicString& operator=(const_pointer str) {
+    NEX_HIDDEN_FROM_ABI constexpr self& operator=(const_pointer str) {
         NEX_ASSERT_MSG(str != nullptr, "Error: Cannot assign BasicString from a null pointer");
         storage_.assign(str, traits_type::length(str));
         return *this;
     }
 
     // Assign a specified number of characters from a character sequence to the string, replacing its content.
-    NEX_HIDDEN_FROM_ABI constexpr BasicString& operator=(char_type ch) {
+    NEX_HIDDEN_FROM_ABI constexpr self& operator=(char_type ch) {
         storage_.assign(1, ch);
         return *this;
     }
 
-    // Assigns content from a BasicStringView to the string, replacing its content.
-    NEX_HIDDEN_FROM_ABI constexpr BasicString& operator=(self_view view) {
-        storage_.assign(view.data(), view.size());
-        return *this;
-    }
-
     // Assigns content from an InitList of characters to the string, replacing its content.
-    NEX_HIDDEN_FROM_ABI constexpr BasicString& operator=(InitList<char_type> initList) {
+    NEX_HIDDEN_FROM_ABI constexpr self& operator=(InitList<char_type> initList) {
         storage_.assign(initList.begin(), initList.size());
         return *this;
     }
 
     // Assigns the content of another BasicString object to this string, replacing its content.
-    NEX_HIDDEN_FROM_ABI constexpr BasicString& assign(const self& other) {
+    NEX_HIDDEN_FROM_ABI constexpr self& assign(const self& other) {
         return *this = other;
     }
 
     // Moves the content of another BasicString object to this string, replacing its content.
-    NEX_HIDDEN_FROM_ABI constexpr BasicString& assign(self&& other) noexcept {
+    NEX_HIDDEN_FROM_ABI constexpr self& assign(self&& other) noexcept {
         *this = NEX_MOVE(other);
         return *this;
     }
 
     // Assigns a substring of another BasicString object to this string, replacing its content.
-    NEX_HIDDEN_FROM_ABI constexpr BasicString& assign(
+    NEX_HIDDEN_FROM_ABI constexpr self& assign(
         const self& other, size_type position, size_type count = npos
     ) {
         NEX_ASSERT_MSG(position <= other.size(), "Error: Assign position is out of bounds");
@@ -790,33 +790,33 @@ public:
     }
 
     // Replaces the string's content with exactly count characters from source.
-    NEX_HIDDEN_FROM_ABI constexpr BasicString& assign(const_pointer source, size_type count) {
+    NEX_HIDDEN_FROM_ABI constexpr self& assign(const_pointer source, size_type count) {
         NEX_ASSERT_MSG(source != nullptr, "Error: Cannot assign BasicString from a null pointer");
         storage_.assign(source, count);
         return *this;
     }
 
     // Replaces the string's content with a null-terminated character sequence.
-    NEX_HIDDEN_FROM_ABI constexpr BasicString& assign(const_pointer source) {
+    NEX_HIDDEN_FROM_ABI constexpr self& assign(const_pointer source) {
         NEX_ASSERT_MSG(source != nullptr, "Error: Cannot assign BasicString from a null pointer");
         storage_.assign(source, traits_type::length(source));
         return *this;
     }
 
     // Replaces the string's content with a BasicStringView, copying its content.
-    NEX_HIDDEN_FROM_ABI constexpr BasicString& assign(self_view view) {
+    NEX_HIDDEN_FROM_ABI constexpr self& assign(self_view view) {
         storage_.assign(view.data(), view.size());
         return *this;
     }
 
     // Replaces the string's content with count copies of character.
-    NEX_HIDDEN_FROM_ABI constexpr BasicString& assign(size_type count, char_type ch) {
+    NEX_HIDDEN_FROM_ABI constexpr self& assign(size_type count, char_type ch) {
         storage_.assign(count, ch);
         return *this;
     }
 
     // Assigns content from an InitList of characters to the string, replacing its content.
-    NEX_HIDDEN_FROM_ABI constexpr BasicString& assign(InitList<char_type> initList) {
+    NEX_HIDDEN_FROM_ABI constexpr self& assign(InitList<char_type> initList) {
         storage_.assign(initList.begin(), initList.size());
         return *this;
     }
@@ -1064,6 +1064,58 @@ public:
     // Compares this string with a null-terminated character sequence for lexicographical ordering.
     NEX_NODISCARD NEX_HIDDEN_FROM_ABI constexpr bool operator>=(const_pointer str) const noexcept {
         return this->asView() >= str;
+    }
+
+    // Concatenates a BasicStringView with a BasicString object and returns the result.
+    NEX_NODISCARD NEX_HIDDEN_FROM_ABI friend constexpr self operator+(self_view view, const self& str) {
+        self result(view);
+        result.append(str.data(), str.size());
+        return result;
+    }
+
+    // Concatenates a BasicStringView with a null-terminated character sequence and returns the result.
+    NEX_NODISCARD NEX_HIDDEN_FROM_ABI friend constexpr self operator+(self_view view, const_pointer str) {
+        NEX_ASSERT_MSG(str != nullptr, "Error: String source must not be null");
+        self result(view);
+        result.append(str, traits_type::length(str));
+        return result;
+    }
+
+    // Concatenates a BasicStringView with a single character and returns the result.
+    NEX_NODISCARD NEX_HIDDEN_FROM_ABI friend constexpr self operator+(self_view view, char_type ch) {
+        self result(view);
+        result.append(ch);
+        return result;
+    }
+
+    // Concatenates a null-terminated character sequence with a BasicString object and returns the result.
+    NEX_NODISCARD NEX_HIDDEN_FROM_ABI friend constexpr self operator+(const_pointer str, const self& other) {
+        NEX_ASSERT_MSG(str != nullptr, "Error: String source must not be null");
+        self result(str);
+        result.append(other.data(), other.size());
+        return result;
+    }
+
+    // Concatenates a null-terminated character sequence with a BasicStringView and returns the result.
+    NEX_NODISCARD NEX_HIDDEN_FROM_ABI friend constexpr self operator+(const_pointer str, self_view view) {
+        NEX_ASSERT_MSG(str != nullptr, "Error: String source must not be null");
+        self result(str);
+        result.append(view.data(), view.size());
+        return result;
+    }
+
+    // Concatenates a single character with a BasicString object and returns the result.
+    NEX_NODISCARD NEX_HIDDEN_FROM_ABI friend constexpr self operator+(char_type ch, const self& other) {
+        self result(1, ch);
+        result.append(other.data(), other.size());
+        return result;
+    }
+
+    // Concatenates a single character with a BasicStringView and returns the result.
+    NEX_NODISCARD NEX_HIDDEN_FROM_ABI friend constexpr self operator+(char_type ch, self_view view) {
+        self result(1, ch);
+        result.append(view.data(), view.size());
+        return result;
     }
 };
 

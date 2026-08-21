@@ -18,8 +18,6 @@
 
 #include <concepts>
 #include <type_traits>
-#include <functional>
-#include <iterator>
 #include <ranges>
 
 #include "nex/base/macros.h"
@@ -78,6 +76,34 @@ concept CommonReferenceWith = meta::CommonReferenceWith<Type1, Type2>;
 template <typename Type1, typename Type2>
 concept CommonWith = meta::CommonWith<Type1, Type2>;
 
+/// Checks whether Type can be referenced (i.e., is referenceable).
+template <typename Type>
+concept Referenceable = meta::Referenceable<Type>;
+
+/// Checks whether Type can be dereferenced.
+template <typename Type>
+concept Dereferenceable = requires(Type&& value) {
+    *NEX_FORWARD<Type>(value);
+};
+
+/// Checks whether Type can be used as a boolean value (i.e., is convertible to bool).
+template <typename Type>
+concept BooleanTestable =
+    meta::BooleanTestableImpl<Type> &&
+    requires(Type&& t) {
+        { !NEX_FORWARD<Type>(t) } -> meta::BooleanTestableImpl;
+    };
+
+/// Checks whether two values of Type1 and Type2 can be compared for equality.
+template <typename Type1, typename Type2>
+concept WeaklyEqualityComparableWith =
+    requires(meta::RemoveCvrefT<Type1> a, meta::RemoveCvrefT<Type2> b) {
+        { a == b } -> BooleanTestable;
+        { a != b } -> BooleanTestable;
+        { b == a } -> BooleanTestable;
+        { b != a } -> BooleanTestable;
+    };
+
 /// Checks whether an lvalue of To can be assigned from From.
 template <typename To, typename From>
 concept AssignableFrom =
@@ -103,19 +129,50 @@ concept SwappableWith = NEX_STD swappable_with<Type1, Type2>;
 
 /// Checks whether two values of Type can be compared for equality.
 template <typename Type>
-concept EqualityComparable = NEX_STD equality_comparable<Type>;
+concept EqualityComparable = WeaklyEqualityComparableWith<Type, Type>;
 
 /// Checks whether Type1 and Type2 can be compared for equality with each other.
 template <typename Type1, typename Type2>
-concept EqualityComparableWith = NEX_STD equality_comparable_with<Type1, Type2>;
+concept EqualityComparableWith =
+    EqualityComparable<Type1> && EqualityComparable<Type2> &&
+    CommonReferenceWith<
+        const meta::RemoveReferenceT<Type1>&,
+        const meta::RemoveReferenceT<Type2>&> &&
+    EqualityComparable<
+        CommonReferenceT<
+            const meta::RemoveReferenceT<Type1>&,
+            const meta::RemoveReferenceT<Type2>&>> &&
+    WeaklyEqualityComparableWith<Type1, Type2>;
+
+template <typename Type1, typename Type2>
+concept PartlyOrderedWith =
+    requires(meta::RemoveCvrefT<Type1> a, meta::RemoveCvrefT<Type2> b) {
+        { a < b } -> BooleanTestable;
+        { a > b } -> BooleanTestable;
+        { a <= b } -> BooleanTestable;
+        { a >= b } -> BooleanTestable;
+        { b < a } -> BooleanTestable;
+        { b > a } -> BooleanTestable;
+        { b <= a } -> BooleanTestable;
+        { b >= a } -> BooleanTestable;
+    };
 
 /// Checks whether Type has total ordering operators.
 template <typename Type>
-concept TotallyOrdered = NEX_STD totally_ordered<Type>;
+concept TotallyOrdered =
+    EqualityComparable<Type> &&
+    PartlyOrderedWith<Type, Type>;
 
 /// Checks whether Type1 and Type2 are totally ordered with each other.
 template <typename Type1, typename Type2>
-concept TotallyOrderedWith = NEX_STD totally_ordered_with<Type1, Type2>;
+concept TotallyOrderedWith =
+    TotallyOrdered<Type1> && TotallyOrdered<Type2> &&
+    EqualityComparableWith<Type1, Type2> &&
+    TotallyOrdered<
+        CommonReferenceT<
+            const meta::RemoveReferenceT<Type1>&,
+            const meta::RemoveReferenceT<Type2>&>> &&
+    PartlyOrderedWith<Type1, Type2>;
 
 // ============================================================================
 // Concepts for object properties, lifetime, and operations
@@ -143,7 +200,11 @@ concept CopyConstructible = meta::CopyConstructible<Type>;
 
 /// Checks whether Type can be moved, assigned, and swapped.
 template <typename Type>
-concept Movable = meta::IsObjectV<Type> && MoveConstructible<Type> && AssignableFrom<Type&, Type> && Swappable<Type>;
+concept Movable =
+    meta::IsObjectV<Type> &&
+    MoveConstructible<Type> &&
+    AssignableFrom<Type&, Type> &&
+    Swappable<Type>;
 
 /// Checks whether Type is movable and copyable.
 template <typename Type>
@@ -231,62 +292,6 @@ template <typename Fn, typename Type1, typename Type2>
 concept StrictWeakOrder = Relation<Fn, Type1, Type2>;
 
 // ============================================================================
-// Concepts for iterators, ranges, and containers
-// ============================================================================
-
-/// Checks whether Type supports weak increment operations.
-template <typename Type>
-concept WeaklyIncrementable = NEX_STD weakly_incrementable<Type>;
-
-/// Checks whether Type supports regular increment operations.
-template <typename Type>
-concept Incrementable = NEX_STD incrementable<Type>;
-
-/// Checks whether Type is an input or output iterator.
-template <typename Type>
-concept InputOrOutputIterator = NEX_STD input_or_output_iterator<Type>;
-
-/// Checks whether Sentinel can terminate iteration for Iterator.
-template <typename Sentinel, typename Iterator>
-concept SentinelFor = NEX_STD sentinel_for<Sentinel, Iterator>;
-
-/// Checks whether Sentinel can terminate and measure distance for Iterator.
-template <typename Sentinel, typename Iterator>
-concept SizedSentinelFor = NEX_STD sized_sentinel_for<Sentinel, Iterator>;
-
-/// Checks whether Type is an input iterator.
-template <typename Type>
-concept InputIterator = NEX_STD input_iterator<Type>;
-
-/// Checks whether Type can write Value through iterator assignment.
-template <typename Type, typename Value>
-concept OutputIterator = NEX_STD output_iterator<Type, Value>;
-
-/// Checks whether Type is a forward iterator.
-template <typename Type>
-concept ForwardIterator = NEX_STD forward_iterator<Type>;
-
-/// Checks whether Type is a bidirectional iterator.
-template <typename Type>
-concept BidirectionalIterator = NEX_STD bidirectional_iterator<Type>;
-
-/// Checks whether Type is a random-access iterator.
-template <typename Type>
-concept RandomAccessIterator = NEX_STD random_access_iterator<Type>;
-
-/// Checks whether Type is a contiguous iterator.
-template <typename Type>
-concept ContiguousIterator = NEX_STD contiguous_iterator<Type>;
-
-/// Checks whether Type can be read through indirection.
-template <typename Type>
-concept IndirectlyReadable = NEX_STD indirectly_readable<Type>;
-
-/// Checks whether Value can be written through Out.
-template <typename Out, typename Value>
-concept IndirectlyWritable = NEX_STD indirectly_writable<Out, Value>;
-
-// ============================================================================
 // Concepts for ranges and range properties
 // ============================================================================
 
@@ -366,12 +371,6 @@ concept Enum = meta::IsEnumV<meta::RemoveCvrefT<Type>>;
 /// Checks whether Type is class-like.
 template <typename Type>
 concept Class = meta::IsClassV<meta::RemoveCvrefT<Type>>;
-
-/// Checks whether Type can be dereferenced.
-template <typename Type>
-concept Dereferenceable = requires(Type&& value) {
-    *NEX_FORWARD<Type>(value);
-};
 
 /// Checks whether Type behaves like a raw or smart pointer.
 template <typename Type>

@@ -778,35 +778,4 @@ using FunctionArg = typename FunctionTraits<Fn>::template Arg<N>;
 template <typename Fn>
 inline constexpr usize FunctionArgCount = FunctionTraits<Fn>::argCount;
 
-/// Extracts information about an iterator type, such as its value type, reference type, pointer type, 
-/// difference type, and iterator category.
-template <typename Ip>
-struct IteratorTraits {
-    using value_type = typename NEX_STD iterator_traits<Ip>::value_type;
-    using reference = typename NEX_STD iterator_traits<Ip>::reference;
-    using pointer = typename NEX_STD iterator_traits<Ip>::pointer;
-    using difference_type = typename NEX_STD iterator_traits<Ip>::difference_type;
-    using iterator_category = typename NEX_STD iterator_traits<Ip>::iterator_category;
-};
-
-/// Represents the value type of an iterator Ip.
-template <typename Ip>
-using IteratorValueType = typename IteratorTraits<Ip>::value_type;
-
-/// Represents the reference type of an iterator Ip.
-template <typename Ip>
-using IteratorReference = typename IteratorTraits<Ip>::reference;
-
-/// Represents the pointer type of an iterator Ip.
-template <typename Ip>
-using IteratorPointer = typename IteratorTraits<Ip>::pointer;
-
-/// Represents the difference type of an iterator Ip.
-template <typename Ip>
-using IteratorDifferenceType = typename IteratorTraits<Ip>::difference_type;
-
-/// Represents the iterator category of an iterator Ip.
-template <typename Ip>
-using IteratorCategory = typename IteratorTraits<Ip>::iterator_category;
-
 NEX_NAMESPACE_END

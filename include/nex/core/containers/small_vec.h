@@ -13,7 +13,7 @@
 #include "nex/base/assert_crash.h"
 #include "nex/base/buffer.h"
 #include "nex/base/init.h"
-#include "nex/base/traits.h"
+#include "nex/base/type_traits.h"
 #include "nex/base/iterator.h"
 #include "nex/base/span.h"
 #include "nex/core/containers/vector.h"

@@ -8,7 +8,7 @@
 #include "nex/base/macros.h"
 #include "nex/base/types.h"
 #include "nex/base/casts.h"
-#include "nex/base/traits.h"
+#include "nex/base/type_traits.h"
 #include "nex/base/wrappers.h"
 
 NEX_NAMESPACE_BEGIN

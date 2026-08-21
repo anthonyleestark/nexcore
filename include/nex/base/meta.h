@@ -1626,6 +1626,13 @@ struct CommonReference<T1, T2, V, Rest...> : CommonReference<CommonReferenceT<T1
 template <class...>
 struct CommonReference {};
 
+// Determine whether a type is referenceable (i.e., can be used as a reference)
+template <class Type, class = void>
+inline const bool IsReferenceableV = false;
+
+template <class Type>
+inline const bool IsReferenceableV<Type, VoidT<Type&>> = true;
+
 // =================================================================================
 // Compiler intrinsic concepts implementation
 // =================================================================================
@@ -1730,6 +1737,38 @@ concept CommonWith =
         CommonReferenceT<
             AddLvalueReferenceT<const Tp>,
             AddLvalueReferenceT<const Up>>>;
+
+// Checks whether Type can be used as a reference (i.e., is referenceable).
+template <class Type>
+concept Referenceable = IsReferenceableV<Type>;
+
+// Checks whether Type can be used as a boolean value (i.e., is convertible to bool).
+template <class Type>
+concept BooleanTestableImpl = ConvertibleTo<Type, bool>;
+
+// Checks whether Type has a member type named `value_type`.
+template <class Type>
+concept HasMemberValueType = requires { typename Type::value_type; };
+
+// Checks whether Type has a member type named `size_type`.
+template <class Type>
+concept HasMemberSizeType = requires { typename Type::size_type; };
+
+// Checks whether Type has a member type named `difference_type`.
+template <class Type>
+concept HasMemberDifferenceType = requires { typename Type::difference_type; };
+
+// Checks whether Type has a member type named `pointer`.
+template <class Type>
+concept HasMemberPointerType = requires { typename Type::pointer; };
+
+// Checks whether Type has a member type named `reference`.
+template <class Type>
+concept HasMemberReferenceType = requires { typename Type::reference; };
+
+// Checks whether Type has a member type named `element_type`.
+template <class Type>
+concept HasMemberElementType = requires { typename Type::element_type; };
 
 // =================================================================================
 // Internal utilities for compile-time logic processing to support metaprogramming

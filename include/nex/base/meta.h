@@ -1463,6 +1463,12 @@ using MakeSignedT = typename MakeSigned<Type>::type;
 template <class Type>
 using MakeUnsignedT = typename MakeUnsigned<Type>::type;
 
+// Convert a signed integer value to its corresponding unsigned integer type
+template <class Type>
+NEX_HIDDEN_FROM_ABI constexpr MakeUnsignedT<Type> toUnsignedLike(Type value) noexcept {
+    return static_cast<MakeUnsignedT<Type>>(value);
+}
+
 // =================================================================================
 // C++20 CommonReference implementation (ISO Standard Compliant)
 // =================================================================================
@@ -1657,6 +1663,10 @@ concept FloatingPoint = IsFloatingPointV<Type>;
 template <typename Type>
 concept Arithmetic = IsArithmeticV<Type>;
 
+// Checks whether Type is a class, union, or enumeration type.
+template <typename Type>
+concept ClassOrEnum = IsClassV<Type> || IsUnionV<Type> || IsEnumV<Type>;
+
 // Checks whether Type is an object type (i.e., not a function, reference, or void).
 template <typename Type>
 concept ObjectType = IsObjectV<Type>;
@@ -1666,6 +1676,10 @@ template <typename Type1, typename Type2>
 concept SameAs =
     IsSameV<Type1, Type2> &&
     IsSameV<Type2, Type1>;
+
+// Checks whether Type is an integral type but not a boolean type.
+template <typename Type>
+concept IntegerLike = Integral<Type> && !SameAs<Type, bool>;
 
 // Checks whether Derived publicly and unambiguously derives from Base.
 template <typename Derived, typename Base>

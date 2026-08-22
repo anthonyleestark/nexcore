@@ -38,6 +38,10 @@ NEX_NAMESPACE_BEGIN
     #pragma warning(disable: 5240)  // 'nodiscard': attribute is ignored in this syntactic position
 #endif
 
+// Static casting to the decayed type of an expression.
+#define NEX_AUTO_CAST(expr) \
+    static_cast<meta::DecayT<decltype((expr))>>(expr)
+
 /**
  * @brief Forwards an lvalue argument as either an lvalue or an rvalue reference 
  *        depending on the template parameter Type.

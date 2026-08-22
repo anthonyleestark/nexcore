@@ -100,6 +100,18 @@ NEX_NAMESPACE_BEGIN
 template <typename ElementType>
 using InitList = NEX_STD initializer_list<ElementType>;
 
+// Traits that determines whether Type is an InitList, false by default.
+template <class>
+inline constexpr bool IsInitListV = false;
+
+// Specialization of IsInitListV for InitList types, which sets the trait to true.
+template <class ElementType>
+inline constexpr bool IsInitListV<InitList<ElementType>> = true;
+
+// Concept that checks whether Type is an InitList.
+template <class Type>
+concept InitListType = IsInitListV<meta::RemoveCvrefT<Type>>;
+
 // Overload of begin() for InitList
 template <class ElementType>
 inline NEX_HIDDEN_FROM_ABI constexpr 

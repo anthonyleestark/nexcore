@@ -5,10 +5,12 @@
 
 #pragma once
 
-#include "nex/base/macros.h"
+#include "nex/base/namespace.h"
+#include "nex/base/attributes.h"
+#include "nex/base/meta.h"
 #include "nex/base/types.h"
 #include "nex/base/init.h"
-#include "nex/base/concepts.h"
+#include "nex/base/type_concepts.h"
 #include "nex/base/type_traits.h"
 #include "nex/base/iterator_traits.h"
 
@@ -95,10 +97,6 @@ concept RandomAccessIterator =
         { iter[n] };
         { iter - iter } -> SameAs<typename IteratorTraits<Type>::difference_type>;
     };
-
-/// Checks whether Type is a contiguous iterator.
-template <typename Type>
-concept ContiguousIterator = NEX_STD contiguous_iterator<Type>;
 
 /// Checks whether Sentinel can terminate iteration for Iterator.
 template <typename Sentinel, typename Iter>

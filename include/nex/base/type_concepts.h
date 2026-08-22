@@ -6,21 +6,20 @@
 #pragma once
 
 /**
- * @file  concepts.h
- * @brief Common C++20 concepts used across the Nex-ecosystem.
+ * @file  type_concepts.h
+ * @brief A collection of type concepts and utilities for working with types in C++.
  *
  * @details
- * This header provides Nex-named aliases for standard library concepts and a
- * small set of project-specific convenience concepts. Prefer these aliases in
- * public Nex APIs when they improve readability or avoid exposing `std::`
- * directly in declarations.
+ * This header provides a collection of type concepts and utilities that simplify the use of standard
+ * C++ type concepts. It includes aliases for common type concepts, as well as additional utilities for
+ * working with types in a more concise and readable manner. The concepts defined in this header can be
+ * used to perform compile-time checks on types, manipulate types, and enable or disable template
+ * instantiations based on type properties.
  */
 
 #include <concepts>
-#include <type_traits>
-#include <ranges>
 
-#include "nex/base/macros.h"
+#include "nex/base/namespace.h"
 #include "nex/base/meta.h"
 #include "nex/base/types.h"
 #include "nex/base/casts.h"
@@ -32,61 +31,61 @@ NEX_NAMESPACE_BEGIN
 // Concepts for type properties and relationships
 // ============================================================================
 
-/// Checks whether Type is an integral type.
+// Determines whether Type is an integral type.
 template <typename Type>
 concept Integral = meta::Integral<Type>;
 
-/// Checks whether Type is a signed integral type.
+// Determines whether Type is a signed integral type.
 template <typename Type>
 concept SignedIntegral = meta::SignedIntegral<Type>;
 
-/// Checks whether Type is an unsigned integral type.
+// Determines whether Type is an unsigned integral type.
 template <typename Type>
 concept UnsignedIntegral = meta::UnsignedIntegral<Type>;
 
-/// Checks whether Type is a floating-point type.
+// Determines whether Type is a floating-point type.
 template <typename Type>
 concept FloatingPoint = meta::FloatingPoint<Type>;
 
-/// Checks whether Type is either integral or floating-point.
+// Determines whether Type is either integral or floating-point.
 template <typename Type>
 concept Arithmetic = meta::Arithmetic<Type>;
 
-/// Checks whether Type is an object type (i.e., not a function, reference, or void).
+// Determines whether Type is an object type (i.e., not a function, reference, or void).
 template <typename Type>
 concept ObjectType = meta::ObjectType<Type>;
 
-/// Checks whether two types are the same type.
+// Determines whether two types are the same type.
 template <typename Type1, typename Type2>
 concept SameAs = meta::SameAs<Type1, Type2>;
 
-/// Checks whether Derived publicly and unambiguously derives from Base.
+// Determines whether Derived publicly and unambiguously derives from Base.
 template <typename Derived, typename Base>
 concept DerivedFrom = meta::DerivedFrom<Derived, Base>;
 
-/// Checks whether From is implicitly convertible to To.
+// Determines whether From is implicitly convertible to To.
 template <typename From, typename To>
 concept ConvertibleTo = meta::ConvertibleTo<From, To>;
 
-/// Checks whether two types share a common reference type.
+// Determines whether two types share a common reference type.
 template <typename Type1, typename Type2>
 concept CommonReferenceWith = meta::CommonReferenceWith<Type1, Type2>;
 
-/// Checks whether two types share a common value type and compatible references.
+// Determines whether two types share a common value type and compatible references.
 template <typename Type1, typename Type2>
 concept CommonWith = meta::CommonWith<Type1, Type2>;
 
-/// Checks whether Type can be referenced (i.e., is referenceable).
+// Determines whether Type can be referenced (i.e., is referenceable).
 template <typename Type>
 concept Referenceable = meta::Referenceable<Type>;
 
-/// Checks whether Type can be dereferenced.
+// Determines whether Type can be dereferenced.
 template <typename Type>
 concept Dereferenceable = requires(Type&& value) {
     *NEX_FORWARD<Type>(value);
 };
 
-/// Checks whether Type can be used as a boolean value (i.e., is convertible to bool).
+// Determines whether Type can be used as a boolean value (i.e., is convertible to bool).
 template <typename Type>
 concept BooleanTestable =
     meta::BooleanTestableImpl<Type> &&
@@ -94,7 +93,7 @@ concept BooleanTestable =
         { !NEX_FORWARD<Type>(t) } -> meta::BooleanTestableImpl;
     };
 
-/// Checks whether two values of Type1 and Type2 can be compared for equality.
+// Determines whether two values of Type1 and Type2 can be compared for equality.
 template <typename Type1, typename Type2>
 concept WeaklyEqualityComparableWith =
     requires(meta::RemoveCvrefT<Type1> a, meta::RemoveCvrefT<Type2> b) {
@@ -104,7 +103,7 @@ concept WeaklyEqualityComparableWith =
         { b != a } -> BooleanTestable;
     };
 
-/// Checks whether an lvalue of To can be assigned from From.
+// Determines whether an lvalue of To can be assigned from From.
 template <typename To, typename From>
 concept AssignableFrom =
     meta::IsLvalueReferenceV<To> &&
@@ -115,11 +114,11 @@ concept AssignableFrom =
         { lhs = NEX_FORWARD<From>(rhs) } -> SameAs<To>;
     };
 
-/// Checks whether Type can be swapped with another Type.
+// Determines whether Type can be swapped with another Type.
 template <typename Type>
 concept Swappable = NEX_STD swappable<Type>;
 
-/// Checks whether Type1 and Type2 can be swapped with each other.
+// Determines whether Type1 and Type2 can be swapped with each other.
 template <typename Type1, typename Type2>
 concept SwappableWith = NEX_STD swappable_with<Type1, Type2>;
 
@@ -127,11 +126,11 @@ concept SwappableWith = NEX_STD swappable_with<Type1, Type2>;
 // Concepts for comparison and ordering
 // ============================================================================
 
-/// Checks whether two values of Type can be compared for equality.
+// Determines whether two values of Type can be compared for equality.
 template <typename Type>
 concept EqualityComparable = WeaklyEqualityComparableWith<Type, Type>;
 
-/// Checks whether Type1 and Type2 can be compared for equality with each other.
+// Determines whether Type1 and Type2 can be compared for equality with each other.
 template <typename Type1, typename Type2>
 concept EqualityComparableWith =
     EqualityComparable<Type1> && EqualityComparable<Type2> &&
@@ -139,7 +138,7 @@ concept EqualityComparableWith =
         const meta::RemoveReferenceT<Type1>&,
         const meta::RemoveReferenceT<Type2>&> &&
     EqualityComparable<
-        CommonReferenceT<
+        meta::CommonReferenceT<
             const meta::RemoveReferenceT<Type1>&,
             const meta::RemoveReferenceT<Type2>&>> &&
     WeaklyEqualityComparableWith<Type1, Type2>;
@@ -157,19 +156,19 @@ concept PartlyOrderedWith =
         { b >= a } -> BooleanTestable;
     };
 
-/// Checks whether Type has total ordering operators.
+// Determines whether Type has total ordering operators.
 template <typename Type>
 concept TotallyOrdered =
     EqualityComparable<Type> &&
     PartlyOrderedWith<Type, Type>;
 
-/// Checks whether Type1 and Type2 are totally ordered with each other.
+// Determines whether Type1 and Type2 are totally ordered with each other.
 template <typename Type1, typename Type2>
 concept TotallyOrderedWith =
     TotallyOrdered<Type1> && TotallyOrdered<Type2> &&
     EqualityComparableWith<Type1, Type2> &&
     TotallyOrdered<
-        CommonReferenceT<
+        meta::CommonReferenceT<
             const meta::RemoveReferenceT<Type1>&,
             const meta::RemoveReferenceT<Type2>&>> &&
     PartlyOrderedWith<Type1, Type2>;
@@ -178,27 +177,27 @@ concept TotallyOrderedWith =
 // Concepts for object properties, lifetime, and operations
 // ============================================================================
 
-/// Checks whether Type can be destroyed.
+// Determines whether Type can be destroyed.
 template <typename Type>
 concept Destructible = meta::Destructible<Type>;
 
-/// Checks whether Type can be constructed from Args.
+// Determines whether Type can be constructed from Args.
 template <typename Type, typename... Args>
 concept ConstructibleFrom = meta::ConstructibleFrom<Type, Args...>;
 
-/// Checks whether Type can be default-initialized.
+// Determines whether Type can be default-initialized.
 template <typename Type>
 concept DefaultInitializable = meta::DefaultInitializable<Type>;
 
-/// Checks whether Type can be move-constructed.
+// Determines whether Type can be move-constructed.
 template <typename Type>
 concept MoveConstructible = meta::MoveConstructible<Type>;
 
-/// Checks whether Type can be copy-constructed.
+// Determines whether Type can be copy-constructed.
 template <typename Type>
 concept CopyConstructible = meta::CopyConstructible<Type>;
 
-/// Checks whether Type can be moved, assigned, and swapped.
+// Determines whether Type can be moved, assigned, and swapped.
 template <typename Type>
 concept Movable =
     meta::IsObjectV<Type> &&
@@ -206,7 +205,7 @@ concept Movable =
     AssignableFrom<Type&, Type> &&
     Swappable<Type>;
 
-/// Checks whether Type is movable and copyable.
+// Determines whether Type is movable and copyable.
 template <typename Type>
 concept Copyable =
     CopyConstructible<Type> &&
@@ -215,23 +214,23 @@ concept Copyable =
     AssignableFrom<Type&, const Type&> &&
     AssignableFrom<Type&, const Type>;
 
-/// Checks whether Type is copyable and default-initializable.
+// Determines whether Type is copyable and default-initializable.
 template <typename Type>
 concept Semiregular =
     Copyable<Type> &&
     DefaultInitializable<Type>;
 
-/// Checks whether Type behaves like a regular value type.
+// Determines whether Type behaves like a regular value type.
 template <typename Type>
 concept Regular = Semiregular<Type> && EqualityComparable<Type>;
 
-/// Checks whether the decayed type is copy constructible and move constructible.
+// Determines whether the decayed type is copy constructible and move constructible.
 template <typename Type>
 concept DecayCopyable =
     CopyConstructible<meta::DecayT<Type>> &&
     MoveConstructible<meta::DecayT<Type>>;
 
-/// Alias kept for existing code that uses RegularValue.
+// Alias kept for existing code that uses RegularValue.
 template <typename Type>
 concept RegularValue = Regular<Type>;
 
@@ -239,140 +238,75 @@ concept RegularValue = Regular<Type>;
 // Concepts for invocability and predicates
 // ============================================================================
 
-/// Checks whether Fn can be invoked with Args.
+// Determines whether Fn can be invoked with Args.
 template <class Fn, class... Args>
 concept Invocable = requires(Fn&& fn, Args&&... args) {
     invoke(NEX_FORWARD<Fn>(fn), NEX_FORWARD<Args>(args)...); // not required to be equality preserving
 };
 
-/// Checks whether Fn can be invoked with Args without modifying observable state.
+// Determines whether Fn can be invoked with Args without modifying observable state.
 template <class Fn, class... Args>
 concept RegularInvocable = Invocable<Fn, Args...>;
 
-/// Checks whether Fn can be invoked with Args and returns exactly Return.
+// Determines whether Fn can be invoked with Args and returns exactly Return.
 template <typename Fn, typename Return, typename... Args>
 concept CallableReturns =
     Invocable<Fn, Args...> &&
     SameAs<InvokeResultT<Fn, Args...>, Return>;
 
-/// Checks whether Fn can be invoked with Args and returns a type convertible to Return.
+// Determines whether Fn can be invoked with Args and returns a type convertible to Return.
 template <typename Fn, typename Return, typename... Args>
 concept CallableConvertibleTo =
     Invocable<Fn, Args...> &&
     ConvertibleTo<InvokeResultT<Fn, Args...>, Return>;
 
-/// Helper concept to determine if a type is boolean testable (i.e., can be used in a boolean context).
+// Helper concept to determine if a type is boolean testable (i.e., can be used in a boolean context).
 template <class Type>
 concept BooleanTestableImpl = ConvertibleTo<Type, bool>;
 
-/// Helper concept to determine if a type is boolean testable (i.e., can be used in a boolean context).
+// Helper concept to determine if a type is boolean testable (i.e., can be used in a boolean context).
 template <class Type>
 concept BooleanTestable = BooleanTestableImpl<Type> && requires(Type&& t) {
     { !NEX_FORWARD<Type>(t) } -> BooleanTestableImpl;
 };
 
-/// Checks whether Fn can be used as a predicate for Args.
+// Determines whether Fn can be used as a predicate for Args.
 template <typename Fn, typename... Args>
 concept Predicate =
     RegularInvocable<Fn, Args...> &&
     BooleanTestable<InvokeResultT<Fn, Args...>>;
 
-/// Checks whether Fn is a binary relation over the supplied argument types.
+// Determines whether Fn is a binary relation over the supplied argument types.
 template <typename Fn, typename Type1, typename Type2>
 concept Relation =
     Predicate<Fn, Type1, Type1> && Predicate<Fn, Type2, Type2> &&
     Predicate<Fn, Type1, Type2> && Predicate<Fn, Type2, Type1>;
 
-/// Checks whether Fn is an equivalence relation over the supplied argument types.
+// Determines whether Fn is an equivalence relation over the supplied argument types.
 template <typename Fn, typename Type1, typename Type2>
 concept EquivalenceRelation = Relation<Fn, Type1, Type2>;
 
-/// Checks whether Fn imposes a strict weak ordering over the supplied argument types.
+// Determines whether Fn imposes a strict weak ordering over the supplied argument types.
 template <typename Fn, typename Type1, typename Type2>
 concept StrictWeakOrder = Relation<Fn, Type1, Type2>;
-
-// ============================================================================
-// Concepts for ranges and range properties
-// ============================================================================
-
-/// Checks whether Type is a standard range.
-template <typename Type>
-concept RangeLike = NEX_STD ranges::range<Type>;
-
-/// Checks whether Type is a borrowed range.
-template <typename Type>
-concept BorrowedRange = NEX_STD ranges::borrowed_range<Type>;
-
-/// Checks whether Type is a sized range.
-template <typename Type>
-concept SizedRange = NEX_STD ranges::sized_range<Type>;
-
-/// Checks whether Type is a view.
-template <typename Type>
-concept View = NEX_STD ranges::view<Type>;
-
-/// Checks whether Type is an input range.
-template <typename Type>
-concept InputRange = NEX_STD ranges::input_range<Type>;
-
-/// Checks whether Type is an output range for Value.
-template <typename Type, typename Value>
-concept OutputRange = NEX_STD ranges::output_range<Type, Value>;
-
-/// Checks whether Type is a forward range.
-template <typename Type>
-concept ForwardRange = NEX_STD ranges::forward_range<Type>;
-
-/// Checks whether Type is a bidirectional range.
-template <typename Type>
-concept BidirectionalRange = NEX_STD ranges::bidirectional_range<Type>;
-
-/// Checks whether Type is a random-access range.
-template <typename Type>
-concept RandomAccessRange = NEX_STD ranges::random_access_range<Type>;
-
-/// Checks whether Type is a contiguous range.
-template <typename Type>
-concept ContiguousRange = NEX_STD ranges::contiguous_range<Type>;
-
-/// Checks whether Type can be iterated with standard begin/end.
-template <typename Type>
-concept Iterable = RangeLike<Type>;
-
-/// Checks whether Type exposes begin/end, size, and a value_type.
-template <typename Type>
-concept ContainerLike =
-    RangeLike<Type> &&
-    requires(Type& value) {
-        typename meta::RemoveCvrefT<Type>::value_type;
-        { value.size() } -> ConvertibleTo<usize>;
-    };
-
-/// Checks whether Type is iterable and supports subscript access by usize.
-template <typename Type>
-concept Indexable =
-    RangeLike<Type> &&
-    requires(Type& value, usize index) {
-        value[index];
-    };
 
 // ============================================================================
 // Concepts for type properties and relationships (NexCore-specific)
 // ============================================================================
 
-/// Checks whether Type is a raw pointer.
+// Determines whether Type is a raw pointer.
 template <typename Type>
 concept RawPointer = meta::IsPointerV<meta::RemoveCvrefT<Type>>;
 
-/// Checks whether Type is an enum.
+// Determines whether Type is an enum.
 template <typename Type>
 concept Enum = meta::IsEnumV<meta::RemoveCvrefT<Type>>;
 
-/// Checks whether Type is class-like.
+// Determines whether Type is class-like.
 template <typename Type>
 concept Class = meta::IsClassV<meta::RemoveCvrefT<Type>>;
 
-/// Checks whether Type behaves like a raw or smart pointer.
+// Determines whether Type behaves like a raw or smart pointer.
 template <typename Type>
 concept PointerLike =
     Dereferenceable<Type> && (
@@ -382,10 +316,18 @@ concept PointerLike =
         }
     );
 
-/// Checks whether Type can be hashed by std::hash.
+// Determines whether Type can be hashed by std::hash.
 template <typename Type>
 concept Hashable = requires(const meta::RemoveCvrefT<Type>& value) {
     { NEX_STD hash<meta::RemoveCvrefT<Type>>{}(value) } -> ConvertibleTo<usize>;
 };
+
+// Determines whether Type is an indexable range, which means it supports random access
+// to elements using the subscript operator [].
+template <typename Type>
+concept Indexable =
+    requires(Type& value, usize index) {
+        value[index];
+    };
 
 NEX_NAMESPACE_END

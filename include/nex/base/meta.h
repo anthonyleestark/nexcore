@@ -1469,6 +1469,21 @@ NEX_HIDDEN_FROM_ABI constexpr MakeUnsignedT<Type> toUnsignedLike(Type value) noe
     return static_cast<MakeUnsignedT<Type>>(value);
 }
 
+// Internal implementation of the DetectedOrT utility template 
+template <class Default, class Void, template <class...> class Type, class... Args>
+struct NEX_HIDDEN_FROM_ABI DetectorImpl {
+    using type NEX_NODEBUG = Default;
+};
+
+template <class Default, template <class...> class Type, class... Args>
+struct NEX_HIDDEN_FROM_ABI DetectorImpl<Default, VoidT<Type<Args...> >, Type, Args...> {
+    using type NEX_NODEBUG = Type<Args...>;
+};
+
+// A utility template that can be used to detect whether a type is valid for a given template
+template <class Default, template <class...> class Type, class... _Args>
+using DetectedOrT NEX_NODEBUG = typename DetectorImpl<Default, void, Type, Args...>::type;
+
 // =================================================================================
 // C++20 CommonReference implementation (ISO Standard Compliant)
 // =================================================================================

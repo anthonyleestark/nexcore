@@ -122,12 +122,12 @@ struct NEX_HIDDEN_FROM_ABI IteratorTraitsMemberPointer<Iter> {
 
 // Traits that provides the member type `reference` for an iterator
 template <Dereferenceable Iter>
-using IterReferenceImpl = decltype(*meta::declval<Iter&>());
+using IterReferenceT = decltype(*meta::declval<Iter&>());
 
 // Primary template for IteratorTraitsMemberReference.
 template <class Iter>
 struct NEX_HIDDEN_FROM_ABI IteratorTraitsMemberReference {
-    using type NEX_NODEBUG = IterReferenceImpl<Iter>;
+    using type NEX_NODEBUG = IterReferenceT<Iter>;
 };
 
 // Specialization of IteratorTraitsMemberReference for types that have a member type named `reference`.

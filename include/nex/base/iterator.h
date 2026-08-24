@@ -17,9 +17,124 @@
 
 NEX_NAMESPACE_BEGIN
 
-// ============================================================================
+// =================================================================================
+// Ranges utility for moving iterators [ranges::iterMove()]
+// =================================================================================
+
+NEX_SUBNAMESPACE_BEGIN(ranges)
+
+NEX_SUBNAMESPACE_BEGIN(_iter_move)
+
+void iterMove() = delete;
+
+// Determines whether Type supports unqualified iterMove operations.
+template <class Type>
+concept UnqualifiedIterMove =
+    meta::ClassOrEnum<RemoveCvrefT<Type>> &&
+    requires(Type&& t) {
+        iterMove(NEX_MOVE<Type>(t));
+    };
+
+// Determines whether Type supports move dereference operations.
+template <class Type>
+concept MoveDeref =
+    !UnqualifiedIterMove<Type> &&
+    requires(Type&& t) {
+        *t;
+        requires(IsLvalueReferenceV<decltype(*t)>);
+    };
+
+// Determines whether Type supports just dereference operations.
+template <class Type>
+concept JustDeref =
+    !UnqualifiedIterMove<Type> &&
+    !MoveDeref<Type> &&
+    requires(Type&& t) {
+        *t;
+        requires(!IsLvalueReferenceV<decltype(*t)>);
+    };
+
+struct Fn {
+    /**
+     * @brief Returns the result of moving the value pointed to by the given iterator.
+     * @tparam Iter The type of the iterator.
+     * @param i The iterator to move the value from.
+     * @return The result of moving the value pointed to by the iterator.
+     * @note
+     * This function attempts to move the value pointed to by the given iterator `i`.
+     * It checks if the iterator supports unqualified `iterMove` operations, in which case
+     * it calls `iterMove` directly.
+     */
+    template <class Iter>
+        requires UnqualifiedIterMove<Iter>
+    NEX_NODISCARD NEX_HIDDEN_FROM_ABI constexpr decltype(auto) operator()(Iter&& i) const
+        noexcept(noexcept(iterMove(NEX_FORWARD<Iter>(i)))) {
+        return iterMove(NEX_FORWARD<Iter>(i));
+    }
+
+    /**
+     * @brief Returns the result of moving the value pointed to by the given iterator.
+     * @tparam Iter The type of the iterator.
+     * @param i The iterator to move the value from.
+     * @return The result of moving the value pointed to by the iterator.
+     * @note
+     * This function attempts to move the value pointed to by the given iterator `i`.
+     * It checks if the iterator supports move dereference operations and moves
+     * the value using `NEX_MOVE`.
+     */
+    template <class Iter>
+        requires MoveDeref<Iter>
+    NEX_NODISCARD NEX_HIDDEN_FROM_ABI constexpr auto operator()(Iter&& i) const
+        noexcept(noexcept(NEX_MOVE(*NEX_FORWARD<Iter>(i)))) -> decltype(NEX_MOVE(*NEX_FORWARD<Iter>(i))) {
+        return NEX_MOVE(*NEX_FORWARD<Iter>(i));
+    }
+
+    /**
+     * @brief Returns the result of dereferencing the given iterator.
+     * @tparam Iter The type of the iterator.
+     * @param i The iterator to dereference.
+     * @return The result of dereferencing the iterator.
+     * @note
+     * This function attempts to dereference the given iterator `i`.
+     * It checks if the iterator supports just dereference operations and returns
+     * the result of dereferencing it.
+     */
+    template <class Iter>
+        requires JustDeref<Iter>
+    NEX_NODISCARD NEX_HIDDEN_FROM_ABI constexpr auto operator()(Iter&& i) const
+        noexcept(noexcept(*NEX_FORWARD<Iter>(i))) -> decltype(*NEX_FORWARD<Iter>(i)) {
+        return *NEX_FORWARD<Iter>(i);
+    }
+};
+
+NEX_SUBNAMESPACE_END(_iter_move)
+
+/**
+ * @brief Returns the result of moving the value pointed to by the given iterator.
+ * @tparam Iter The type of the iterator.
+ * @param i The iterator to move the value from.
+ * @return The result of moving the value pointed to by the iterator.
+ * @note
+ * This function attempts to move the value pointed to by the given iterator `i`.
+ * It checks if the iterator supports unqualified `iterMove` operations, in which case
+ * it calls `iterMove` directly. If not, it checks if the iterator supports move dereference
+ * operations and moves the value using `NEX_MOVE`. If neither of these conditions is met,
+ * it falls back to just dereferencing the iterator and returning the result.
+ */
+inline constexpr auto iterMove = _iter_move::Fn{};
+
+NEX_SUBNAMESPACE_END(ranges)
+
+// Represents the rvalue reference type obtained by moving the value pointed to by an iterator.
+template <Dereferenceable Type>
+    requires requires(Type& t) {
+        { ranges::iterMove(t) } -> Referenceable;
+    }
+using IterRvalueReferenceT = decltype(ranges::iterMove(declval<Type&>()));
+
+// =================================================================================
 // Concepts for iterators, ranges, and containers
-// ============================================================================
+// =================================================================================
 
 // Determines whether Type supports weak increment operations.
 template <typename Type>
@@ -41,13 +156,64 @@ concept Incrementable =
         { iter++ } -> SameAs<Type>;
     };
 
-// Determines whether Type can be read through indirection.
-template <typename Type>
-concept IndirectlyReadable = NEX_STD indirectly_readable<Type>;
+// Implementation detail for IndirectlyReadable concept.
+template <class In>
+concept IndirectlyReadableImpl =
+    requires(const In i) {
+        typename IteratorValueType<In>;
+        typename IterReferenceT<In>;
+        typename IterRvalueReferenceT<In>;
+        { *i } -> SameAs<IterReferenceT<In>>;
+        { ranges::iterMove(i) } -> SameAs<IterRvalueReferenceT<In>>;
+    } &&
+    CommonReferenceWith<IterReferenceT<In>&&, IteratorValueType<In>&> &&
+    CommonReferenceWith<IterReferenceT<In>&&, IterRvalueReferenceT<In>&&> &&
+    CommonReferenceWith<IterRvalueReferenceT<In>&&, const IteratorValueType<In>&>;
 
-// Determines whether Value can be written through Out.
-template <typename Out, typename Value>
-concept IndirectlyWritable = NEX_STD indirectly_writable<Out, Value>;
+// Determines whether Type can be read through indirection.
+template <class In>
+concept IndirectlyReadable = IndirectlyReadableImpl<RemoveCvrefT<In>>;
+
+// Determines whether Type can be written through Out.
+template <class Out, class Type>
+concept IndirectlyWritable = requires(Out&& out, Type&& value) {
+    *out                                          = NEX_FORWARD<Type>(value); // not required to be equality-preserving
+    *NEX_FORWARD<Out>(out)                        = NEX_FORWARD<Type>(value); // not required to be equality-preserving
+    const_cast<const IterReferenceT<Out>&&>(*out) = NEX_FORWARD<Type>(value); // not required to be equality-preserving
+    const_cast<const IterReferenceT<Out>&&>(*NEX_FORWARD<Out>(out)) =
+        NEX_FORWARD<Type>(value); // not required to be equality-preserving
+};
+
+// Determines whether the type In can be moved to the type Out through indirection.
+template <class In, class Out>
+concept IndirectlyMovable =
+    IndirectlyReadable<In> &&
+    IndirectlyWritable<Out, IterRvalueReferenceT<In>>;
+
+// Determines whether the type In can be moved and stored to the type Out through indirection.
+template <class In, class Out>
+concept IndirectlyMovableStorable =
+    IndirectlyMovable<In, Out> &&
+    IndirectlyWritable<Out, IteratorValueType<In>> &&
+    Movable<IteratorValueType<In>> &&
+    ConstructibleFrom<IteratorValueType<In>, IterRvalueReferenceT<In>> &&
+    AssignableFrom<IteratorValueType<In>&, IterRvalueReferenceT<In>>;
+
+// Determines whether the type In can be copied to the type Out through indirection.
+template <class In, class Out>
+concept IndirectlyCopyable = IndirectlyReadable<In> && IndirectlyWritable<Out, IterReferenceT<In>>;
+
+// Determines whether the type In can be copied and stored to the type Out through indirection.
+template <class In, class Out>
+concept IndirectlyCopyableStorable =
+    IndirectlyCopyable<In, Out> &&
+    IndirectlyWritable<Out, IteratorValueType<In>&> &&
+    IndirectlyWritable<Out, const IteratorValueType<In>&> &&
+    IndirectlyWritable<Out, IteratorValueType<In>&&> &&
+    IndirectlyWritable<Out, const IteratorValueType<In>&&> &&
+    Copyable<IteratorValueType<In>> &&
+    ConstructibleFrom<IteratorValueType<In>, IterReferenceT<In>> &&
+    AssignableFrom<IteratorValueType<In>&, IterReferenceT<In>>;
 
 // Determines whether Type is an input or output iterator.
 template <typename Iter>
@@ -116,18 +282,151 @@ concept SentinelFor =
     Iterator<Iter> &&
     WeaklyEqualityComparableWith<Sentinel, Iter>;
 
+// Determines whether SizedSentinelFor is disabled for the given types.
+// By default, it is disabled for all types, but it can be specialized
+// for specific types to enable SizedSentinelFor.
+template <class, class>
+inline constexpr bool DisableSizedSentinelFor = false;
+
 // Determines whether Sentinel can terminate and measure distance for Iterator.
 template <typename Sentinel, typename Iter>
 concept SizedSentinelFor =
     SentinelFor<Sentinel, Iter> &&
+    !DisableSizedSentinelFor<RemoveCvT<Sentinel>, RemoveCvT<Iter>> &&
     requires(const Iter& iterator, const Sentinel& sentinel) {
         { sentinel - iterator } -> SameAs<typename IteratorTraits<Iter>::difference_type>;
         { iterator - sentinel } -> SameAs<typename IteratorTraits<Iter>::difference_type>;
     };
 
-// ============================================================================
+// =================================================================================
+// Ranges utility for swapping iterators [ranges::iterSwap()]
+// =================================================================================
+
+NEX_SUBNAMESPACE_BEGIN(ranges)
+
+NEX_SUBNAMESPACE_BEGIN(_iter_swap)
+
+template <class Iter1, class Iter2>
+void iterSwap(Iter1, Iter2) = delete;
+
+// Determines whether Iter1 and Iter2 support unqualified iterSwap operations.
+template <class Iter1, class Iter2>
+concept UnqualifiedIterSwap =
+    (meta::ClassOrEnum<RemoveCvrefT<Iter1>> || meta::ClassOrEnum<RemoveCvrefT<Iter2>>) &&
+    requires(Iter1&& x, Iter2&& y) {
+        iterSwap(NEX_FORWARD<Iter1>(x), NEX_FORWARD<Iter2>(y));
+    };
+
+// Determines whether Iter1 and Iter2 are readable and swappable through indirection.
+template <class Iter1, class Iter2>
+concept ReadableSwappable =
+    IndirectlyReadable<Iter1> && IndirectlyReadable<Iter2> &&
+    SwappableWith<IterReferenceT<Iter1>, IterReferenceT<Iter2>>;
+
+struct Fn {
+    /**
+     * @brief Swaps the values pointed to by the given iterators.
+     * @tparam Iter1 The type of the first iterator.
+     * @tparam Iter2 The type of the second iterator.
+     * @param x The first iterator.
+     * @param y The second iterator.
+     * @note
+     * This function attempts to swap the values pointed to by the given iterators `x` and `y`.
+     * It checks if the iterators support unqualified `iterSwap` operations, in which case
+     * it calls `iterSwap` directly. If not, it checks if the iterators are readable and swappable
+     * through indirection, in which case it swaps the values using `ranges::swap`. If neither of
+     * these conditions is met, it falls back to moving and storing the values through indirection.
+     */
+    template <class Iter1, class Iter2>
+        requires UnqualifiedIterSwap<Iter1, Iter2>
+    NEX_HIDDEN_FROM_ABI constexpr void operator()(Iter1&& x, Iter2&& y) const
+        noexcept(noexcept(iterSwap(NEX_FORWARD<Iter1>(x), NEX_FORWARD<Iter2>(y)))) {
+        (void)iterSwap(NEX_FORWARD<Iter1>(x), NEX_FORWARD<Iter2>(y));
+    }
+
+    /**
+     * @brief Swaps the values pointed to by the given iterators.
+     * @tparam Iter1 The type of the first iterator.
+     * @tparam Iter2 The type of the second iterator.
+     * @param x The first iterator.
+     * @param y The second iterator.
+     * @note
+     * This function attempts to swap the values pointed to by the given iterators `x` and `y`.
+     * It checks if the iterators are readable and swappable through indirection, in which case
+     * it swaps the values using `ranges::swap`. If not, it falls back to moving and storing
+     * the values through indirection.
+     */
+    template <class Iter1, class Iter2>
+        requires(!UnqualifiedIterSwap<Iter1, Iter2>) && ReadableSwappable<Iter1, Iter2>
+    NEX_HIDDEN_FROM_ABI constexpr void operator()(Iter1&& x, Iter2&& y) const
+        noexcept(noexcept(ranges::swap(*NEX_FORWARD<Iter1>(x), *NEX_FORWARD<Iter2>(y)))) {
+        ranges::swap(*NEX_FORWARD<Iter1>(x), *NEX_FORWARD<Iter2>(y));
+    }
+
+    /**
+     * @brief Swaps the values pointed to by the given iterators.
+     * @tparam Iter1 The type of the first iterator.
+     * @tparam Iter2 The type of the second iterator.
+     * @param x The first iterator.
+     * @param y The second iterator.
+     * @note
+     * This function attempts to swap the values pointed to by the given iterators `x` and `y`.
+     * It checks if the iterators can be moved and stored through indirection, in which case
+     * it moves and stores the values to perform the swap. If not, it falls back to moving
+     * and storing the values through indirection.
+     */
+    template <class Iter1, class Iter2>
+        requires(!UnqualifiedIterSwap<Iter1, Iter2> &&
+                 !ReadableSwappable<Iter1, Iter2>) &&
+                 IndirectlyMovableStorable<Iter1, Iter2> &&
+                 IndirectlyMovableStorable<Iter2, Iter1>
+    NEX_HIDDEN_FROM_ABI constexpr void operator()(Iter1&& x, Iter2&& y) const
+        noexcept(noexcept(IterValueOf<Iter2>(ranges::iterMove(y))) &&
+                 noexcept(*y = ranges::iterMove(x)) &&
+                 noexcept(*NEX_FORWARD<Iter1>(x) = declval<IterValueOf<Iter2>>())) {
+        IterValueOf<Iter2> old(ranges::iterMove(y));
+        *y                     = ranges::iterMove(x);
+        *NEX_FORWARD<Iter1>(x) = NEX_MOVE(old);
+    }
+};
+
+NEX_SUBNAMESPACE_END(_iter_swap)
+
+/**
+ * @brief Swaps the values pointed to by the given iterators.
+ * @tparam Iter1 The type of the first iterator.
+ * @tparam Iter2 The type of the second iterator.
+ * @param x The first iterator.
+ * @param y The second iterator.
+ * @note
+ * This function attempts to swap the values pointed to by the given iterators `x` and `y`.
+ * It checks if the iterators support unqualified `iterSwap` operations, in which case
+ * it calls `iterSwap` directly. If not, it checks if the iterators are readable and swappable
+ * through indirection, in which case it swaps the values using `ranges::swap`. If neither of
+ * these conditions is met, it falls back to moving and storing the values through indirection.
+ */
+inline constexpr auto iterSwap = _iter_swap::Fn{};
+
+NEX_SUBNAMESPACE_END(ranges)
+
+// =================================================================================
+// Iterator-swapping concept
+// =================================================================================
+
+template <class Iter1, class Iter2 = Iter1>
+concept IndirectlySwappable =
+    IndirectlyReadable<Iter1> &&
+    IndirectlyReadable<Iter2> &&
+    requires(const Iter1 iter1, const Iter2 iter2) {
+        ranges::iterSwap(iter1, iter1);
+        ranges::iterSwap(iter2, iter2);
+        ranges::iterSwap(iter1, iter2);
+        ranges::iterSwap(iter2, iter1);
+    };
+
+// =================================================================================
 // Container-specific iterators
-// ============================================================================
+// =================================================================================
 
 // An iterator type that provides mutable access to the elements of a container type.
 template<typename Container>
@@ -137,9 +436,9 @@ using IterOf = typename Container::iterator;
 template<typename Container>
 using ConstIterOf = typename Container::const_iterator;
 
-// ============================================================================
+// =================================================================================
 // Iterator trait aliases
-// ============================================================================
+// =================================================================================
 
 // Represents the iterator traits type for iterator Iter.
 template <typename Iter>
@@ -161,9 +460,9 @@ using IterPtrOf = IteratorPointerType<Iter>;
 template <typename Iter>
 using IterDiffOf = IteratorDifferenceType<Iter>;
 
-// ===========================================================================
-// Range and iterator utilities
-// ===========================================================================
+// =================================================================================
+// Iterator utility functions
+// =================================================================================
 
 /**
  * @brief Returns an iterator to the beginning of an array of a specified size.
@@ -265,7 +564,7 @@ auto cend(const Container& cont) noexcept(noexcept(end(cont))) -> decltype(end(c
  */
 template <InputIterator InputIter>
 NEX_HIDDEN_FROM_ABI constexpr
-void advanceImpl(InputIter& it, typename IteratorTraits<InputIter>::difference_type n) {
+void advanceImpl(InputIter& it, IteratorDifferenceType<InputIter> n) {
     for (; n > 0; --n) {
         ++it;  // Advance the iterator forward by incrementing it.
     }
@@ -279,7 +578,7 @@ void advanceImpl(InputIter& it, typename IteratorTraits<InputIter>::difference_t
  */
 template <BidirectionalIterator BiDirIter>
 NEX_HIDDEN_FROM_ABI constexpr
-void advanceImpl(BiDirIter& it, typename IteratorTraits<BiDirIter>::difference_type n) {
+void advanceImpl(BiDirIter& it, IteratorDifferenceType<BiDirIter> n) {
     if (n >= 0) {
         for (; n > 0; --n) {
             ++it;  // Advance the iterator forward by incrementing it.
@@ -299,7 +598,7 @@ void advanceImpl(BiDirIter& it, typename IteratorTraits<BiDirIter>::difference_t
  */
 template <RandomAccessIterator RandIter>
 NEX_HIDDEN_FROM_ABI constexpr
-void advanceImpl(RandIter& it, typename IteratorTraits<RandIter>::difference_type n) {
+void advanceImpl(RandIter& it, IteratorDifferenceType<RandIter> n) {
     it += n;  // Advance the iterator by adding the difference `n` to it.
 }
 

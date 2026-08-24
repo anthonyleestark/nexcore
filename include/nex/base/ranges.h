@@ -10,10 +10,11 @@
 #include "nex/base/meta.h"
 #include "nex/base/types.h"
 #include "nex/base/casts.h"
+#include "nex/base/utility.h"
 #include "nex/base/type_concepts.h"
 #include "nex/base/iterator.h"
+#include "nex/base/pointer_traits.h"
 #include "nex/base/init.h"
-#include "nex/base/utility.h"
 #include "nex/base/assert_crash.h"
 
 NEX_NAMESPACE_BEGIN
@@ -807,85 +808,9 @@ concept ContainerLike =
         { value.size() } -> ConvertibleTo<usize>;
     };
 
-NEX_SUBNAMESPACE_END(ranges)
-
 // =================================================================================
 // Range advance utilities [ranges::advance()]
 // =================================================================================
-
-/**
- * @brief Advances an input iterator by a specified number of steps.
- * @tparam InputIter The type of the input iterator.
- * @param it The input iterator to advance.
- * @param n The number of steps to advance the iterator.
- */
-template <InputIterator InputIter>
-NEX_HIDDEN_FROM_ABI constexpr
-void advanceImpl(InputIter& it, typename IteratorTraits<InputIter>::difference_type n) {
-    for (; n > 0; --n) {
-        ++it;  // Advance the iterator forward by incrementing it.
-    }
-}
-
-/**
- * @brief Advances a bidirectional iterator by a specified number of steps.
- * @tparam BiDirIter The type of the bidirectional iterator.
- * @param it The bidirectional iterator to advance.
- * @param n The number of steps to advance the iterator. Can be negative for backward movement.
- */
-template <BidirectionalIterator BiDirIter>
-NEX_HIDDEN_FROM_ABI constexpr
-void advanceImpl(BiDirIter& it, typename IteratorTraits<BiDirIter>::difference_type n) {
-    if (n >= 0) {
-        for (; n > 0; --n) {
-            ++it;  // Advance the iterator forward by incrementing it.
-        }
-    } else {
-        for (; n < 0; ++n) {
-            --it;  // Move the iterator backward by decrementing it.
-        }
-    }
-}
-
-/**
- * @brief Advances a random access iterator by a specified number of steps.
- * @tparam RandIter The type of the random access iterator.
- * @param it The random access iterator to advance.
- * @param n The number of steps to advance the iterator. Can be negative for backward movement.
- */
-template <RandomAccessIterator RandIter>
-NEX_HIDDEN_FROM_ABI constexpr
-void advanceImpl(RandIter& it, typename IteratorTraits<RandIter>::difference_type n) {
-    it += n;  // Advance the iterator by adding the difference `n` to it.
-}
-
-
-/**
- * @brief Advances an iterator by a specified number of steps.
- * @tparam InputIter The type of the input iterator.
- * @tparam Distance The type of the distance to advance the iterator.
- * @param it The iterator to advance.
- * @param origN The number of steps to advance the iterator. Can be negative for bidirectional iterators.
- * @note 
- * This function advances the given iterator `it` by `origN` steps. If `origN` is positive, the iterator is advanced forward;
- * if `origN` is negative and the iterator is bidirectional, it is moved backward. The function ensures that the advancement
- * respects the capabilities of the iterator type.
- */
-template <
-    class InputIter,
-    class Distance,
-    class IntegralDistance = decltype(convertToIntegral(meta::declval<Distance>()))
-> requires(Integral<IntegralDistance>)
-NEX_HIDDEN_FROM_ABI constexpr void advance(InputIter& it, Distance origN) {
-    using Difference = typename IteratorTraits<InputIter>::difference_type;
-    Difference n = static_cast<Difference>(convertToIntegral(origN));
-    if constexpr (!BidirectionalIterator<InputIter>) {
-        NEX_ASSERT_MSG(n >= 0, "Error: Can only pass a negative `n` with a BidirectionalIterator.");
-    }
-    advanceImpl(it, n);
-}
-
-NEX_SUBNAMESPACE_BEGIN(ranges)
 
 struct AdvanceImpl {
 private:
@@ -1034,26 +959,9 @@ public:
  */
 inline constexpr auto advance = AdvanceImpl{};
 
-NEX_SUBNAMESPACE_END(ranges)
-
 // =================================================================================
 // Range prev utilities [ranges::prev()]
 // =================================================================================
-
-template <InputIterator InputIter>
-NEX_NODISCARD NEX_HIDDEN_FROM_ABI inline constexpr
-InputIter prev(InputIter it, IteratorDifferenceType<InputIter> n) {
-    advance(it, -n);
-    return it;
-}
-
-template <InputIterator InputIter>
-NEX_NODISCARD NEX_HIDDEN_FROM_ABI constexpr InputIter prev(InputIter it) {
-    static_assert(BidirectionalIterator<InputIter>, "Error: `prev(it)` requires a BidirectionalIterator.");
-    return prev(NEX_MOVE(it), 1);
-}
-
-NEX_SUBNAMESPACE_BEGIN(ranges)
 
 struct PrevImpl {
     /**
@@ -1106,20 +1014,9 @@ struct PrevImpl {
  */
 inline constexpr auto prev = PrevImpl{};
 
-NEX_SUBNAMESPACE_END(ranges)
-
 // =================================================================================
 // Range next utilities [ranges::next()]
 // =================================================================================
-
-template <InputIterator InputIter>
-NEX_NODISCARD NEX_HIDDEN_FROM_ABI inline constexpr
-InputIter next(InputIter it, IteratorDifferenceType<InputIter> n = 1) {
-    advance(it, n);
-    return it;
-}
-
-NEX_SUBNAMESPACE_BEGIN(ranges)
 
 struct NextImpl {
     /**
@@ -1187,14 +1084,16 @@ struct NextImpl {
  */
 inline constexpr auto next = NextImpl{};
 
-NEX_SUBNAMESPACE_END(ranges)
-
 // =================================================================================
 // View interface definitions
 // =================================================================================
 
-NEX_SUBNAMESPACE_BEGIN(ranges)
-
+/**
+ * @brief A CRTP base class that provides a common interface for view-like objects.
+ * @tparam Derived The derived view class that inherits from this interface.
+ * @note This class is intended to be used as a base class for view types, providing
+ *       common functionality and interface for derived classes.
+ */
 template <class Derived>
     requires(meta::IsClassV<Derived> && SameAs<Derived, meta::RemoveCvT<Derived>>)
 class ViewInterface {

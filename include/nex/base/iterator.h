@@ -9,10 +9,11 @@
 #include "nex/base/attributes.h"
 #include "nex/base/meta.h"
 #include "nex/base/types.h"
-#include "nex/base/init.h"
+#include "nex/base/utility.h"
 #include "nex/base/type_concepts.h"
 #include "nex/base/type_traits.h"
 #include "nex/base/iterator_traits.h"
+#include "nex/base/pointer_traits.h"
 
 NEX_NAMESPACE_BEGIN
 
@@ -140,78 +141,230 @@ using ConstIterOf = typename Container::const_iterator;
 // Iterator trait aliases
 // ============================================================================
 
-// The iterator traits type for iterator It.
-template <typename It>
-using IterTraitsOf = IteratorTraits<It>;
+// Represents the iterator traits type for iterator Iter.
+template <typename Iter>
+using IterTraitsOf = IteratorTraits<Iter>;
 
-// The value type produced by dereferencing iterator It.
-template <typename It>
-using IterValueOf = IteratorValueType<It>;
+// Represents the value type produced by dereferencing iterator Iter.
+template <typename Iter>
+using IterValueOf = IteratorValueType<Iter>;
 
-// The reference type returned by dereferencing iterator It.
-template <typename It>
-using IterRefOf = IteratorReferenceType<It>;
+// Represents the reference type returned by dereferencing iterator Iter.
+template <typename Iter>
+using IterRefOf = IteratorReferenceType<Iter>;
 
-// The pointer type associated with iterator It.
-template <typename It>
-using IterPtrOf = IteratorPointerType<It>;
+// Represents the pointer type associated with iterator Iter.
+template <typename Iter>
+using IterPtrOf = IteratorPointerType<Iter>;
 
-// The difference type associated with iterator It.
-template <typename It>
-using IterDiffOf = IteratorDifferenceType<It>;
+// Represents the difference type associated with iterator Iter.
+template <typename Iter>
+using IterDiffOf = IteratorDifferenceType<Iter>;
 
 // ===========================================================================
-// Iterator utilities
+// Range and iterator utilities
 // ===========================================================================
 
-// Returns an iterator to the beginning of an array of a specified size.
+/**
+ * @brief Returns an iterator to the beginning of an array of a specified size.
+ * @tparam Type The type of the array elements.
+ * @tparam Capacity The size of the array.
+ * @param array The array to get the beginning iterator for.
+ * @return An iterator to the beginning of the array.
+ */
 template <class Type, usize Capacity>
 NEX_NODISCARD constexpr Type* begin(Type (&array)[Capacity]) noexcept {
     return array;
 }
 
-// Returns an iterator to the end of an array of a specified size.
+/**
+ * @brief Returns an iterator to the end of an array of a specified size.
+ * @tparam Type The type of the array elements.
+ * @tparam Capacity The size of the array.
+ * @param array The array to get the end iterator for.
+ * @return An iterator to one past the last element of the array.
+ */
 template <class Type, usize Capacity>
 NEX_NODISCARD constexpr Type* end(Type (&array)[Capacity]) noexcept {
     return array + Capacity;
 }
 
-// Returns an iterator to the beginning of a container or range.
+/**
+ * @brief Returns an iterator to the beginning of a container or range.
+ * @tparam Container The type of the container or range.
+ * @param cont The container or range to get the beginning iterator for.
+ * @return An iterator to the beginning of the container or range.
+ */
 template <typename Container>
 NEX_NODISCARD constexpr auto begin(Container& cont) -> decltype(cont.begin()) {
     return cont.begin();
 }
 
-// Returns a const iterator to the beginning of a container or range.
+/**
+ * @brief Returns a const iterator to the beginning of a container or range.
+ * @tparam Container The type of the container or range.
+ * @param cont The container or range to get the beginning iterator for.
+ * @return A const iterator to the beginning of the container or range.
+ */
 template <typename Container>
 NEX_NODISCARD constexpr auto begin(const Container& cont) -> decltype(cont.begin()) {
     return cont.begin();
 }
 
-// Returns an iterator to the end of a container or range.
+/**
+ * @brief Returns an iterator to the end of a container or range.
+ * @tparam Container The type of the container or range.
+ * @param cont The container or range to get the end iterator for.
+ * @return An iterator to one past the last element of the container or range.
+ */
 template <typename Container>
 NEX_NODISCARD constexpr auto end(Container& cont) -> decltype(cont.end()) {
     return cont.end();
 }
 
-// Returns a const iterator to the end of a container or range.
+/**
+ * @brief Returns a const iterator to the end of a container or range.
+ * @tparam Container The type of the container or range.
+ * @param cont The container or range to get the end iterator for.
+ * @return A const iterator to one past the last element of the container or range.
+ */
 template <typename Container>
 NEX_NODISCARD constexpr auto end(const Container& cont) -> decltype(cont.end()) {
     return cont.end();
 }
 
-// Return a const iterator to the beginning of a container or range.
+/**
+ * @brief Returns a const iterator to the beginning of a container or range.
+ * @tparam Container The type of the container or range.
+ * @param cont The container or range to get the beginning iterator for.
+ * @return A const iterator to the beginning of the container or range.
+ */
 template <typename Container>
 NEX_NODISCARD constexpr 
 auto cbegin(const Container& cont) noexcept(noexcept(begin(cont))) -> decltype(begin(cont)) {
     return begin(cont);
 }
 
-// Return a const iterator to the end of a container or range.
+/**
+ * @brief Returns a const iterator to the end of a container or range.
+ * @tparam Container The type of the container or range.
+ * @param cont The container or range to get the end iterator for.
+ * @return A const iterator to one past the last element of the container or range.
+ */
 template <typename Container>
 NEX_NODISCARD constexpr 
 auto cend(const Container& cont) noexcept(noexcept(end(cont))) -> decltype(end(cont)) {
     return end(cont);
+}
+
+/**
+ * @brief Advances an input iterator by a specified number of steps.
+ * @tparam InputIter The type of the input iterator.
+ * @param it The input iterator to advance.
+ * @param n The number of steps to advance the iterator.
+ */
+template <InputIterator InputIter>
+NEX_HIDDEN_FROM_ABI constexpr
+void advanceImpl(InputIter& it, typename IteratorTraits<InputIter>::difference_type n) {
+    for (; n > 0; --n) {
+        ++it;  // Advance the iterator forward by incrementing it.
+    }
+}
+
+/**
+ * @brief Advances a bidirectional iterator by a specified number of steps.
+ * @tparam BiDirIter The type of the bidirectional iterator.
+ * @param it The bidirectional iterator to advance.
+ * @param n The number of steps to advance the iterator. Can be negative for backward movement.
+ */
+template <BidirectionalIterator BiDirIter>
+NEX_HIDDEN_FROM_ABI constexpr
+void advanceImpl(BiDirIter& it, typename IteratorTraits<BiDirIter>::difference_type n) {
+    if (n >= 0) {
+        for (; n > 0; --n) {
+            ++it;  // Advance the iterator forward by incrementing it.
+        }
+    } else {
+        for (; n < 0; ++n) {
+            --it;  // Move the iterator backward by decrementing it.
+        }
+    }
+}
+
+/**
+ * @brief Advances a random access iterator by a specified number of steps.
+ * @tparam RandIter The type of the random access iterator.
+ * @param it The random access iterator to advance.
+ * @param n The number of steps to advance the iterator. Can be negative for backward movement.
+ */
+template <RandomAccessIterator RandIter>
+NEX_HIDDEN_FROM_ABI constexpr
+void advanceImpl(RandIter& it, typename IteratorTraits<RandIter>::difference_type n) {
+    it += n;  // Advance the iterator by adding the difference `n` to it.
+}
+
+
+/**
+ * @brief Advances an iterator by a specified number of steps.
+ * @tparam InputIter The type of the input iterator.
+ * @tparam Distance The type of the distance to advance the iterator.
+ * @param it The iterator to advance.
+ * @param origN The number of steps to advance the iterator. Can be negative for bidirectional iterators.
+ * @note 
+ * This function advances the given iterator `it` by `origN` steps. If `origN` is positive, the iterator is advanced forward;
+ * if `origN` is negative and the iterator is bidirectional, it is moved backward. The function ensures that the advancement
+ * respects the capabilities of the iterator type.
+ */
+template <
+    class InputIter,
+    class Distance,
+    class IntegralDistance = decltype(convertToIntegral(meta::declval<Distance>()))
+> requires(Integral<IntegralDistance>)
+NEX_HIDDEN_FROM_ABI constexpr void advance(InputIter& it, Distance origN) {
+    using Difference = IteratorDifferenceType<InputIter>;
+    Difference n = static_cast<Difference>(convertToIntegral(origN));
+    if constexpr (!BidirectionalIterator<InputIter>) {
+        NEX_ASSERT_MSG(n >= 0, "Error: Can only pass a negative `n` with a BidirectionalIterator.");
+    }
+    advanceImpl(it, n);
+}
+
+/**
+ * @brief Returns the previous iterator by decrementing the given bidirectional iterator by `n` steps.
+ * @tparam Iter The type of the bidirectional iterator.
+ * @param it The bidirectional iterator to decrement.
+ * @param n The number of steps to decrement the iterator.
+ * @return The previous iterator obtained by decrementing `it` by `n` steps.
+ */
+template <BidirectionalIterator Iter>
+NEX_NODISCARD NEX_HIDDEN_FROM_ABI inline constexpr
+Iter prev(Iter it, IteratorDifferenceType<Iter> n) {
+    advance(it, -n);
+    return it;
+}
+
+/**
+ * @brief Returns the previous iterator by decrementing the given bidirectional iterator by one step.
+ * @tparam Iter The type of the bidirectional iterator.
+ * @param it The bidirectional iterator to decrement.
+ * @return The previous iterator obtained by decrementing `it` by one step.
+ */
+template <BidirectionalIterator Iter>
+NEX_NODISCARD NEX_HIDDEN_FROM_ABI constexpr Iter prev(Iter it) {
+    return prev(NEX_MOVE(it), 1);
+}
+
+/**
+ * @brief Returns the next iterator by incrementing the given input iterator.
+ * @tparam InputIter The type of the input iterator.
+ * @param it The input iterator to increment.
+ * @return The next iterator obtained by incrementing `it`.
+ */
+template <InputIterator InputIter>
+NEX_NODISCARD NEX_HIDDEN_FROM_ABI inline constexpr
+InputIter next(InputIter it, IteratorDifferenceType<InputIter> n = 1) {
+    advance(it, n);
+    return it;
 }
 
 NEX_NAMESPACE_END

@@ -24,6 +24,7 @@
 #include "nex/base/types.h"
 #include "nex/base/casts.h"
 #include "nex/base/invoke.h"
+#include "nex/base/utility.h"
 
 NEX_NAMESPACE_BEGIN
 

@@ -24,6 +24,7 @@
 #include "nex/base/meta.h"
 #include "nex/base/casts.h"
 #include "nex/base/invoke.h"
+#include "nex/base/utility.h"
 #include "nex/base/type_concepts.h"
 
 NEX_NAMESPACE_BEGIN
@@ -694,12 +695,5 @@ using MemberRvalueReference = decltype(meta::declval<Type&&>().*MemberPtr);
 /// Checks whether Type is callable with specific argument types.
 template <typename Type, typename... Args>
 inline constexpr bool IsCallable = Invocable<Type, Args...>;
-
-/// Checks whether Type is iterable (i.e., has begin() and end() functions).
-template <typename Type, typename = void>
-struct IsIterable : BoolConstant<Iterable<Type>> {};
-
-template <typename Type>
-inline constexpr bool IsIterableV = IsIterable<Type>::value;
 
 NEX_NAMESPACE_END

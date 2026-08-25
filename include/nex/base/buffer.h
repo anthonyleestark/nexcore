@@ -10,6 +10,7 @@
 #include "nex/base/types.h"
 #include "nex/base/casts.h"
 #include "nex/base/limits.h"
+#include "nex/base/utility.h"
 #include "nex/base/block.h"
 #include "nex/base/growth.h"
 #include "nex/base/memory.h"

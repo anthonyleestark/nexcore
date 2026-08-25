@@ -66,6 +66,14 @@ struct AlwaysFalse {
 template <typename ...Args>
 inline constexpr bool AlwaysFalseV = AlwaysFalse<Args...>::value;
 
+// Helper struct NAT (Not A Type) to represent a type that cannot be instantiated.
+struct NEX_HIDDEN_FROM_ABI NAT {
+    NAT()                      = delete;
+    NAT(const NAT&)            = delete;
+    NAT& operator=(const NAT&) = delete;
+    ~NAT()                     = delete;
+};
+
 // EnableIf implementation for SFINAE
 template <bool BoolCond, class Type = void>
 struct EnableIf {};     // no member "type" when !BoolCond

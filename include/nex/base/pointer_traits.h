@@ -64,14 +64,6 @@ struct PointerTraitsRebind<Type1, Type2, meta::VoidT<typename Type1::template re
 template <class Pointer>
 using PointerDifferenceTypeMember = typename Pointer::difference_type;
 
-// Helper struct NAT (Not A Type) to represent a type that cannot be instantiated.
-struct NEX_HIDDEN_FROM_ABI NAT {
-    NAT()                      = delete;
-    NAT(const NAT&)            = delete;
-    NAT& operator=(const NAT&) = delete;
-    ~NAT()                     = delete;
-};
-
 // Primary template for PointerTraitsImpl (implementation detail).
 template <class Pointer, class = void>
 struct PointerTraitsImpl {};
@@ -89,7 +81,7 @@ struct PointerTraitsImpl<Pointer, meta::VoidT<typename PointerTraitsElementType<
 public:
     // Returns a pointer to the given reference, using the pointer's `pointer_to` member function.
     NEX_HIDDEN_FROM_ABI constexpr static pointer
-    pointerTo(meta::ConditionalT<meta::IsVoidV<element_type>, NAT, element_type>& r) {
+    pointerTo(meta::ConditionalT<meta::IsVoidV<element_type>, meta::NAT, element_type>& r) {
         return pointer::pointerTo(r);
     }
 };
@@ -112,7 +104,7 @@ struct PointerTraits<Type*> {
 public:
     // Returns the address of the given reference.
     NEX_HIDDEN_FROM_ABI constexpr static pointer
-    pointerTo(meta::ConditionalT<meta::IsVoidV<element_type>, NAT, element_type>& r) {
+    pointerTo(meta::ConditionalT<meta::IsVoidV<element_type>, meta::NAT, element_type>& r) {
         return NEX_ADDRESS_OF(r);
     }
 };

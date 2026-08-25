@@ -121,21 +121,6 @@ moveIfNoexcept(Type& arg) noexcept {
 }
 
 /**
- * @brief Swaps the values of two objects using move semantics, with noexcept guarantees if the type supports it.
- * @tparam Type The type of the objects being swapped.
- * @param a The first object.
- * @param b The second object.
- */
-template <class Type>
-NEX_MSVC_INTRINSIC NEX_ALWAYS_INLINE constexpr
-void swap(Type& left, Type& right) 
-noexcept(meta::IsNothrowMoveConstructibleV<Type> && meta::IsNothrowMoveAssignableV<Type>) {
-    Type temp = moveCast(left);
-    left = moveCast(right);
-    right = moveCast(temp);
-}
-
-/**
  * @brief Reinterprets the bits of a source value as a destination type.
  * @note Safe alternative to reinterpret_cast or memcpy for bit-blitting. 
  *       Requires types to be trivially copyable and of identical size.
@@ -320,10 +305,6 @@ Derived* safeDowncast(Base* base) noexcept {
 // otherwise falls back to a const lvalue reference
 #define NEX_MOVE_IF_NOEXCEPT \
     NEX_PREPEND_NAMESPACE(moveIfNoexcept)
-
-// Swaps two objects using move semantics, with noexcept guarantees if the type supports it
-#define NEX_SWAP \
-    NEX_PREPEND_NAMESPACE(swap)
 
 // Reinterprets the bits of a source value as a destination type, 
 // with safety checks for trivial copyability and size

@@ -8,6 +8,7 @@
 #include "nex/base/namespace.h"
 #include "nex/base/types.h"
 #include "nex/base/limits.h"
+#include "nex/base/utility.h"
 #include "nex/base/assert_crash.h"
 #include "nex/base/buffer.h"
 #include "nex/base/init.h"
@@ -32,7 +33,7 @@ NEX_NAMESPACE_BEGIN
  */
 template <
     typename ElementType,
-    usize Capacity = 8
+    usize Capacity = DefaultArrayCapacity
 > requires (Capacity > 0)
 class NEX_API Array {
 public:

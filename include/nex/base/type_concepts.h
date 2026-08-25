@@ -96,22 +96,25 @@ concept BooleanTestable =
 
 // Determines whether an lvalue of To can be assigned from From.
 template <typename To, typename From>
-concept AssignableFrom =
-    meta::IsLvalueReferenceV<To> &&
-    CommonReferenceWith<
-        const meta::RemoveReferenceT<To>&,
-        const meta::RemoveReferenceT<From>&> &&
-    requires(To lhs, From&& rhs) {
-        { lhs = NEX_FORWARD<From>(rhs) } -> SameAs<To>;
-    };
+concept AssignableFrom = _AssignableFrom<To, From>;
 
 // Determines whether Type can be swapped with another Type.
 template <typename Type>
-concept Swappable = NEX_STD swappable<Type>;
+concept Swappable =
+    requires(Type& a, Type& b) {
+        ranges::swap(a, b);
+    };
 
 // Determines whether Type1 and Type2 can be swapped with each other.
 template <typename Type1, typename Type2>
-concept SwappableWith = NEX_STD swappable_with<Type1, Type2>;
+concept SwappableWith =
+    CommonReferenceWith<Type1, Type2> &&
+    requires(Type1&& x, Type2&& y) {
+        ranges::swap(NEX_FORWARD<Type1>(x), NEX_FORWARD<Type1>(x));
+        ranges::swap(NEX_FORWARD<Type2>(y), NEX_FORWARD<Type2>(y));
+        ranges::swap(NEX_FORWARD<Type1>(x), NEX_FORWARD<Type2>(y));
+        ranges::swap(NEX_FORWARD<Type2>(y), NEX_FORWARD<Type1>(x));
+    };
 
 // ============================================================================
 // Concepts for comparison and ordering

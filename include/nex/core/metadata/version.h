@@ -5,10 +5,9 @@
 
 #pragma once
 
-#include <compare>
-
 #include "nex/base/macros.h"
 #include "nex/base/types.h"
+#include "nex/base/ordering.h"
 #include "nex/base/string.h"
 #include "nex/base/result.h"
 #include "nex/core/text/string.h"
@@ -90,10 +89,10 @@ struct NEX_API Version {
     }
 
     // Strongly-ordered comparison operator for version comparison
-    constexpr NEX_STD strong_ordering operator<=>(const Version& other) const noexcept {
-        if (auto cmp = major <=> other.major; cmp != 0) return cmp;
-        if (auto cmp = minor <=> other.minor; cmp != 0) return cmp;
-        return patch <=> other.patch;
+    constexpr StrongOrdering operator<=>(const Version& other) const noexcept {
+        if (auto cmp = StrongOrdering::compare(major, other.major); cmp != 0) return cmp;
+        if (auto cmp = StrongOrdering::compare(minor, other.minor); cmp != 0) return cmp;
+        return StrongOrdering::compare(patch, other.patch);
     }
 
     ////// Factory method --------------------------------------------------

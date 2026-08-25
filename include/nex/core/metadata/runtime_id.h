@@ -11,8 +11,9 @@
 #include "nex/base/meta.h"
 #include "nex/base/types.h"
 #include "nex/base/limits.h"
+#include "nex/base/ordering.h"
 #include "nex/base/primitives.h"
-#include "nex/base/string.h"
+#include "nex/core/text/string.h"
 
 NEX_NAMESPACE_BEGIN
 
@@ -152,10 +153,10 @@ public:
     /**
      * @brief Strong ordering comparison operator for RuntimeId instances.
      * @param other The other RuntimeId to compare with.
-     * @return A strong_ordering value indicating the relative order of the two RuntimeId instances.
+     * @return A StrongOrdering value indicating the relative order of the two RuntimeId instances.
      */
-    constexpr NEX_STD strong_ordering operator<=>(const RuntimeId& other) const noexcept {
-        return value_ <=> other.value_;
+    constexpr StrongOrdering operator<=>(const RuntimeId& other) const noexcept {
+        return StrongOrdering::compare(value_, other.value_);
     }
 
 private:

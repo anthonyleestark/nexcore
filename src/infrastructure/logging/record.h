@@ -9,6 +9,7 @@
 #include "nex/base/meta.h"
 #include "nex/base/types.h"
 #include "nex/base/limits.h"
+#include "nex/base/ordering.h"
 #include "nex/base/result.h"
 #include "nex/base/primitives.h"
 #include "nex/base/logging.h"
@@ -139,8 +140,8 @@ public:
     }
     
     // Strong ordering comparison operator for SequenceNumber instances.
-    constexpr NEX_STD strong_ordering operator<=>(const SequenceNumber& other) const noexcept {
-        return value_ <=> other.value_;
+    constexpr StrongOrdering operator<=>(const SequenceNumber& other) const noexcept {
+        return StrongOrdering::compare(value_, other.value_);
     }
 
 private:

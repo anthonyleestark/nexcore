@@ -398,6 +398,23 @@
 #endif  // NEX_CONSTEXPR23
 
 /**
+ * @def NEX_CLANG_ENABLE_IF(...)
+ * @brief Wraps Clang's `__enable_if__` attribute for value-based overload resolution at compile time.
+ * 
+ * @details
+ * Evaluates constant expression argument values (e.g., `value == 0`) to enable or disable function overloads.
+ * Expands to `__attribute__((__enable_if__(...)))` on Clang, and to nothing on other compilers.
+ */
+#if NEX_HAS_ATTRIBUTE(__enable_if__)
+    // Expands to `__attribute__((__enable_if__(condition, "message")))` on Clang,
+    // which allows for conditional compilation based on a boolean expression.
+    #define NEX_CLANG_ENABLE_IF(...) __attribute__((__enable_if__(__VA_ARGS__)))
+#else
+    // Expands to nothing on compilers that do not support the `__enable_if__` attribute.
+    #define NEX_CLANG_ENABLE_IF(...)
+#endif  // NEX_HAS_ATTRIBUTE(__enable_if__)
+
+/**
  * @def NEX_MSVC_INTRINSIC
  * @brief Marks a function as an intrinsic when compiling with MSVC
  * 

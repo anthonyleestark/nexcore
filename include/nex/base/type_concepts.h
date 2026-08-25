@@ -94,16 +94,6 @@ concept BooleanTestable =
         { !NEX_FORWARD<Type>(t) } -> meta::BooleanTestableImpl;
     };
 
-// Determines whether two values of Type1 and Type2 can be compared for equality.
-template <typename Type1, typename Type2>
-concept WeaklyEqualityComparableWith =
-    requires(meta::RemoveCvrefT<Type1> a, meta::RemoveCvrefT<Type2> b) {
-        { a == b } -> BooleanTestable;
-        { a != b } -> BooleanTestable;
-        { b == a } -> BooleanTestable;
-        { b != a } -> BooleanTestable;
-    };
-
 // Determines whether an lvalue of To can be assigned from From.
 template <typename To, typename From>
 concept AssignableFrom =
@@ -127,6 +117,16 @@ concept SwappableWith = NEX_STD swappable_with<Type1, Type2>;
 // Concepts for comparison and ordering
 // ============================================================================
 
+// Determines whether two values of Type1 and Type2 can be compared for equality.
+template <typename Type1, typename Type2>
+concept WeaklyEqualityComparableWith =
+    requires(meta::RemoveCvrefT<Type1> a, meta::RemoveCvrefT<Type2> b) {
+        { a == b } -> BooleanTestable;
+        { a != b } -> BooleanTestable;
+        { b == a } -> BooleanTestable;
+        { b != a } -> BooleanTestable;
+    };
+
 // Determines whether two values of Type can be compared for equality.
 template <typename Type>
 concept EqualityComparable = WeaklyEqualityComparableWith<Type, Type>;
@@ -144,6 +144,29 @@ concept EqualityComparableWith =
             const meta::RemoveReferenceT<Type2>&>> &&
     WeaklyEqualityComparableWith<Type1, Type2>;
 
+// Determines whether two values of Type1 and Type2 can be compared for less-than ordering.
+template <class Type1, class Type2>
+concept LessThanComparable =
+    requires(
+        const meta::RemoveCvrefT<Type1>& lhs,
+        const meta::RemoveCvrefT<Type2>& rhs)
+    {
+        { lhs < rhs } -> BooleanTestable;
+        { rhs < lhs } -> BooleanTestable;
+    };
+
+// Determines whether two values of Type1 and Type2 can be compared for greater-than ordering.
+template <class Type1, class Type2>
+concept GreaterThanComparable =
+    requires(
+        const meta::RemoveCvrefT<Type1>& lhs,
+        const meta::RemoveCvrefT<Type2>& rhs)
+    {
+        { lhs > rhs } -> BooleanTestable;
+        { rhs > lhs } -> BooleanTestable;
+    };
+
+// Determines whether two values of Type1 and Type2 can be compared for partial ordering.
 template <typename Type1, typename Type2>
 concept PartlyOrderedWith =
     requires(meta::RemoveCvrefT<Type1> a, meta::RemoveCvrefT<Type2> b) {
@@ -260,16 +283,6 @@ template <typename Fn, typename Return, typename... Args>
 concept CallableConvertibleTo =
     Invocable<Fn, Args...> &&
     ConvertibleTo<InvokeResultT<Fn, Args...>, Return>;
-
-// Helper concept to determine if a type is boolean testable (i.e., can be used in a boolean context).
-template <class Type>
-concept BooleanTestableImpl = ConvertibleTo<Type, bool>;
-
-// Helper concept to determine if a type is boolean testable (i.e., can be used in a boolean context).
-template <class Type>
-concept BooleanTestable = BooleanTestableImpl<Type> && requires(Type&& t) {
-    { !NEX_FORWARD<Type>(t) } -> BooleanTestableImpl;
-};
 
 // Determines whether Fn can be used as a predicate for Args.
 template <typename Fn, typename... Args>

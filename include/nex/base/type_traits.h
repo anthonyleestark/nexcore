@@ -17,9 +17,6 @@
  * instantiations based on type properties.
  */
 
-#include <iterator>
-#include <utility>
-
 #include "nex/base/macros.h"
 #include "nex/base/meta.h"
 #include "nex/base/casts.h"

@@ -7,6 +7,7 @@
 
 #include "nex/base/macros.h"
 #include "nex/base/types.h"
+#include "nex/base/ordering.h"
 #include "nex/base/string.h"
 #include "nex/base/result.h"
 #include "nex/base/wrappers.h"
@@ -100,7 +101,7 @@ public:
     bool operator!=(const Uuid& other) const noexcept = default;
 
     // Strong ordering comparison operator (enables use in ordered containers and comparisons)
-    NEX_STD strong_ordering operator<=>(const Uuid& other) const noexcept = default;
+    StrongOrdering operator<=>(const Uuid& other) const noexcept = default;
 
 private:
     // Hidden implementation using the Pimpl idiom to avoid exposing internal details 

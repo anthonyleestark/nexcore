@@ -8,6 +8,7 @@
 #include "nex/base/compiler.h"
 #include "nex/base/export.h"
 #include "nex/base/namespace.h"
+#include "nex/base/attributes.h"
 #include "nex/base/meta.h"
 #include "nex/base/casts.h"
 #include "nex/base/reference.h"
@@ -129,7 +130,7 @@ NEX_HIDDEN_FROM_ABI constexpr auto InvokeFallback(Func&& fn, Args&&... args)
 
         if constexpr (meta::IsMemberFunctionPointerV<DecayedFunc>) {
             // Branch A: Member function pointer
-            return []<typename MemFunc, typename Type1, typename... Rest>(MemFunc&& mf, Type1&& type1, Rest&&... rest) 
+            return []<typename MemFunc, typename Type1, typename... Rest>(MemFunc&& mf, Type1&& type1, Rest&&... rest)
                 -> decltype(auto) {
                 if constexpr (meta::IsBaseOfV<typename meta::MemberPointerTraits<DecayedFunc>::ClassType, DecayedFirst>) {
                     return (NEX_FORWARD<Type1>(type1).*mf)(NEX_FORWARD<Rest>(rest)...);
@@ -176,7 +177,7 @@ NEX_DETAIL_NAMESPACE_END
 
 // Internal implementation of InvokeResult using the fallback mechanism.
 template <class... Args>
-using InvokeResultImpl = detail::InvokeResultFallback<void, Args...>;
+using InvokeResultImpl = NEX_DETAIL InvokeResultFallback<void, Args...>;
 
 // Alias template for easier usage of InvokeResultImpl
 template <class... Args>
@@ -185,8 +186,8 @@ using InvokeResultTImpl = typename InvokeResultImpl<Args...>::type;
 // Internal implementation of the invoke operation using the fallback mechanism.
 template <class... Args>
 NEX_HIDDEN_FROM_ABI constexpr InvokeResultTImpl<Args...> _invokeImpl(Args&&... args) 
-    noexcept(noexcept(detail::InvokeFallback(NEX_FORWARD<Args>(args)...))) {
-    return detail::InvokeFallback(NEX_FORWARD<Args>(args)...);
+    noexcept(noexcept(NEX_DETAIL InvokeFallback(NEX_FORWARD<Args>(args)...))) {
+    return NEX_DETAIL InvokeFallback(NEX_FORWARD<Args>(args)...);
 }
 
 // Internal implementation of IsInvocable using the fallback mechanism.
@@ -220,7 +221,8 @@ inline const bool _IsNothrowInvocableImpl = false;
 
 // Specialization of _IsNothrowInvocableImpl for the case where the invocation is valid.
 template <class... Args>
-inline const bool _IsNothrowInvocableImpl<true, Args...> = noexcept(detail::InvokeFallback(meta::declval<Args>()...));
+inline const bool _IsNothrowInvocableImpl<true, Args...> =
+    noexcept(NEX_DETAIL InvokeFallback(meta::declval<Args>()...));
 
 // Internal implementation of IsNothrowInvocableV using the fallback mechanism.
 template <class... Args>
@@ -238,7 +240,8 @@ inline const bool _IsNothrowInvocableRImpl<true, Ret, Args...> =
 
 // Internal implementation of IsNothrowInvocableRV using the fallback mechanism.
 template <class Ret, class... Args>
-inline const bool _IsNothrowInvocableRV = _IsNothrowInvocableRImpl<_IsNothrowInvocableV<Args...>, Ret, Args...>;
+inline const bool _IsNothrowInvocableRV =
+    _IsNothrowInvocableRImpl<_IsNothrowInvocableV<Args...>, Ret, Args...>;
 
 #endif // ^^!NEX_HAS_BUILTIN(__builtin_invoke)
 
@@ -326,11 +329,23 @@ using InvokeResultT = InvokeResultTImpl<Func, Args...>;
 // Public function for invoking a callable with the given arguments (invoke)
 // =================================================================================
 
+/**
+ * @brief Invokes a callable object with the given arguments.
+ * @tparam Func The type of the callable object.
+ * @tparam Args The types of the arguments to pass to the callable.
+ * @param fn The callable object to invoke.
+ * @param args The arguments to pass to the callable.
+ * @return The result of invoking the callable with the given arguments.
+ */
 template <class Func, class... Args>
 NEX_HIDDEN_FROM_ABI constexpr 
 InvokeResultT<Func, Args...> invoke(Func&& fn, Args&&... args) 
     noexcept(IsNothrowInvocableV<Func, Args...>) {
     return _invokeImpl(NEX_FORWARD<Func>(fn), NEX_FORWARD<Args>(args)...);
 }
+
+// Invokes a callable object with the given arguments.
+#define NEX_INVOKE(fn, ...) \
+    NEX_PREPEND_NAMESPACE(invoke(NEX_FORWARD<decltype(fn)>(fn) __VA_OPT__(,) __VA_ARGS__))
 
 NEX_NAMESPACE_END

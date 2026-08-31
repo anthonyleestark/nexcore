@@ -8,6 +8,7 @@
 #include "nex/base/macros.h"
 #include "nex/base/types.h"
 #include "nex/base/iterator.h"
+#include "nex/base/reverse_iterator.h"
 #include "nex/base/assert_crash.h"
 #include "nex/base/string_view.h"
 

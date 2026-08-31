@@ -361,7 +361,7 @@ public:
             source = mutableData() + sourceIndex;
         }
 
-        NEX_COPY_RANGE(mutableData() + size_, source, source + count);
+        NEX_UNINITIALIZED_COPY_RANGE(mutableData() + size_, source, source + count);
         size_ += count;
         writeTerminator();
     }
@@ -435,7 +435,7 @@ public:
             (removable - removed + 1)
         );
         if (count > 0) {
-            NEX_COPY_RANGE(mutableData() + position, source, source + count);
+            NEX_UNINITIALIZED_COPY_RANGE(mutableData() + position, source, source + count);
         }
         size_ = newSize;
         writeTerminator();

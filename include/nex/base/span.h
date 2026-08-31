@@ -9,6 +9,7 @@
 #include "nex/base/meta.h"
 #include "nex/base/types.h"
 #include "nex/base/iterator.h"
+#include "nex/base/reverse_iterator.h"
 
 NEX_NAMESPACE_BEGIN
 

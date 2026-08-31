@@ -255,14 +255,14 @@ concept RandomAccessIterator =
     BidirectionalIterator<Type> &&
     requires(
         Type iter,
-        typename IteratorTraits<Type>::difference_type n) {
+        IteratorDifferenceType<Type> n) {
         { iter += n } -> SameAs<Type&>;
         { iter -= n } -> SameAs<Type&>;
         { iter + n } -> SameAs<Type>;
         { n + iter } -> SameAs<Type>;
         { iter - n } -> SameAs<Type>;
         { iter[n] };
-        { iter - iter } -> SameAs<typename IteratorTraits<Type>::difference_type>;
+        { iter - iter } -> SameAs<IteratorDifferenceType<Type>>;
     };
 
 // Determines whether Type is a contiguous iterator.
@@ -294,8 +294,8 @@ concept SizedSentinelFor =
     SentinelFor<Sentinel, Iter> &&
     !DisableSizedSentinelFor<RemoveCvT<Sentinel>, RemoveCvT<Iter>> &&
     requires(const Iter& iterator, const Sentinel& sentinel) {
-        { sentinel - iterator } -> SameAs<typename IteratorTraits<Iter>::difference_type>;
-        { iterator - sentinel } -> SameAs<typename IteratorTraits<Iter>::difference_type>;
+        { sentinel - iterator } -> SameAs<IteratorDifferenceType<Iter>>;
+        { iterator - sentinel } -> SameAs<IteratorDifferenceType<Iter>>;
     };
 
 // =================================================================================
@@ -428,11 +428,11 @@ concept IndirectlySwappable =
 // Container-specific iterators
 // =================================================================================
 
-// An iterator type that provides mutable access to the elements of a container type.
+// Traits to extract the iterator type from a container type.
 template<typename Container>
 using IterOf = typename Container::iterator;
 
-// An iterator type that provides const access to the elements of a container type.
+// Traits to extract the const iterator type from a container type.
 template<typename Container>
 using ConstIterOf = typename Container::const_iterator;
 

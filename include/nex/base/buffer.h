@@ -83,7 +83,7 @@ private:
         requires (meta::IsConvertibleV<OtherValue, value_type> && OtherCapacity <= Capacity)
     NEX_HIDDEN_FROM_ABI constexpr void copyFrom(const FixedBuffer<OtherValue, OtherCapacity>& other) {
         if (canFit(other.size_)) {
-            NEX_COPY_RANGE(data(), other.data(), other.data() + other.size_);
+            NEX_UNINITIALIZED_COPY_RANGE(data(), other.data(), other.data() + other.size_);
             size_ = other.size_;
         }
     }
@@ -102,7 +102,7 @@ private:
                 // Copy common elements and construct new elements
                 pointer_type commonEnd = other.data() + size_;
                 NEX_ASSIGN_RANGE(data(), other.data(), commonEnd);
-                NEX_COPY_RANGE(data() + size_, commonEnd, other.data() + other.size_);
+                NEX_UNINITIALIZED_COPY_RANGE(data() + size_, commonEnd, other.data() + other.size_);
             }
             size_ = other.size_;
         }
@@ -244,7 +244,7 @@ public:
         NEX_ASSERT(src != nullptr || count == 0);
         if (src == nullptr || count == 0) return;
         if (canFit(size_ + count)) {
-            NEX_COPY_RANGE(data() + size_, src, src + count);
+            NEX_UNINITIALIZED_COPY_RANGE(data() + size_, src, src + count);
             size_ += count;
         }
     }
@@ -387,7 +387,7 @@ private:
     // Used in the copy constructor, when the current buffer is uninitialized.
     NEX_HIDDEN_FROM_ABI constexpr void copyFrom(const DynamicBuffer& other) {
         reserve(other.size_);
-        NEX_COPY_RANGE(data_, other.data_, other.data_ + other.size_);
+        NEX_UNINITIALIZED_COPY_RANGE(data_, other.data_, other.data_ + other.size_);
         size_ = other.size_;
     }
 
@@ -398,7 +398,7 @@ private:
             // Not enough capacity, need to allocate new storage
             reset();
             reserve(other.size_);
-            NEX_COPY_RANGE(data_, other.data_, other.data_ + other.size_);
+            NEX_UNINITIALIZED_COPY_RANGE(data_, other.data_, other.data_ + other.size_);
         } else if (other.size_ <= size_) {
             // Copy common elements and destroy remaining part
             NEX_ASSIGN_RANGE(data_, other.data_, other.data_ + other.size_);
@@ -407,7 +407,7 @@ private:
             // Copy common elements and construct new elements
             pointer_type commonEnd = other.data_ + size_;
             NEX_ASSIGN_RANGE(data_, other.data_, commonEnd);
-            NEX_COPY_RANGE(data_ + size_, commonEnd, other.data_ + other.size_);
+            NEX_UNINITIALIZED_COPY_RANGE(data_ + size_, commonEnd, other.data_ + other.size_);
         }
         size_ = other.size_;
     }
@@ -603,7 +603,7 @@ public:
         if (size_ + count > capacity_) {
             grow(size_ + count);
         }
-        NEX_COPY_RANGE(data_ + size_, src, src + count);
+        NEX_UNINITIALIZED_COPY_RANGE(data_ + size_, src, src + count);
         size_ += count;
     }
 
@@ -775,7 +775,7 @@ private:
     // Used in the copy constructor, when the current buffer is uninitialized.
     NEX_HIDDEN_FROM_ABI constexpr void copyFrom(const SmallBuffer& other) {
         reserve(other.size_);
-        NEX_COPY_RANGE(data_, other.data_, other.data_ + other.size_);
+        NEX_UNINITIALIZED_COPY_RANGE(data_, other.data_, other.data_ + other.size_);
         size_ = other.size_;
     }
 
@@ -786,7 +786,7 @@ private:
             // Not enough capacity, need to allocate new storage
             reset();
             reserve(other.size_);
-            NEX_COPY_RANGE(data_, other.data_, other.data_ + other.size_);
+            NEX_UNINITIALIZED_COPY_RANGE(data_, other.data_, other.data_ + other.size_);
         } else if (other.size_ <= size_) {
             // Copy common elements and destroy remaining part
             NEX_ASSIGN_RANGE(data_, other.data_, other.data_ + other.size_);
@@ -795,7 +795,7 @@ private:
             // Copy common elements and construct new elements
             pointer_type commonEnd = other.data_ + size_;
             NEX_ASSIGN_RANGE(data_, other.data_, commonEnd);
-            NEX_COPY_RANGE(data_ + size_, commonEnd, other.data_ + other.size_);
+            NEX_UNINITIALIZED_COPY_RANGE(data_ + size_, commonEnd, other.data_ + other.size_);
         }
         size_ = other.size_;
     }
@@ -1009,7 +1009,7 @@ public:
         NEX_ASSERT(src != nullptr || count == 0);
         if (src == nullptr || count == 0) return;
         reserve(size_ + count);
-        NEX_COPY_RANGE(data_ + size_, src, src + count);
+        NEX_UNINITIALIZED_COPY_RANGE(data_ + size_, src, src + count);
         size_ += count;
     }
 

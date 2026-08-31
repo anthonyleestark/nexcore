@@ -13,6 +13,7 @@
 #include "nex/base/init.h"
 #include "nex/base/type_traits.h"
 #include "nex/base/iterator.h"
+#include "nex/base/reverse_iterator.h"
 #include "nex/base/span.h"
 #include "nex/core/containers/array.h"
 

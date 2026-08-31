@@ -195,6 +195,14 @@ using RevIterPointerType = typename ReverseIterator<Iter>::pointer;
 template <class Iter>
 using RevIterReferenceType = typename ReverseIterator<Iter>::reference;
 
+// Traits to extract the reverse iterator type from a container type.
+template <class Container>
+using RevIterOf = typename Container::reverse_iterator;
+
+// Traits to extract the const reverse iterator type from a container type.
+template <class Container>
+using ConstRevIterOf = typename Container::const_reverse_iterator;
+
 /**
  * @brief Compares two reverse iterators for equality.
  * @tparam Iter1 The type of the first reverse iterator.

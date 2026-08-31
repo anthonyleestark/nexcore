@@ -19,6 +19,22 @@ NEX_NAMESPACE_BEGIN
 
 /**
  * @class String
+ * @brief An owning UTF-8 Unicode string class for the NexCore core layer.
+ * 
+ * @details
+ * String is designed to manage UTF-8 encoded Unicode strings, providing a convenient and efficient way
+ * to handle text data in the NexCore core layer. It encapsulates a `BasicString<char8>` buffer that stores
+ * the string data and offers various constructors for creating strings from different sources, including
+ * UTF-8, UTF-16, and ASCII strings. The class also provides static methods for creating strings from integer
+ * values with specified bases.
+ * 
+ * @note
+ * String is intended for use in applications that require Unicode support and efficient string manipulation.
+ * It is compatible with the `StringView` class, allowing for easy conversion between owning and non-owning
+ * string representations.
+ * 
+ * @see StringView for an non-owning view of UTF-8 strings.
+ * @see BasicString for a more general owning string implementation.
  */
 class NEX_API String {
 public:
@@ -45,6 +61,8 @@ public:
 
     using iterator = base_string::iterator;
     using const_iterator = self_view::const_iterator;
+    using reverse_iterator = base_string::reverse_iterator;
+    using const_reverse_iterator = self_view::const_reverse_iterator;
 
     // Representing an invalid position in the string or "not found" for find operations
     static constexpr size_type npos = static_cast<size_type>(-1);
@@ -274,6 +292,24 @@ public:
 
     // Returns an immutable const iterator to one past the last character in the string.
     NEX_NODISCARD constexpr const_iterator cend() const noexcept { return buffer_.cend(); }
+
+    // Returns a mutable reverse iterator to the last character in the string.
+    NEX_NODISCARD constexpr reverse_iterator rbegin() noexcept { return buffer_.rbegin(); }
+
+    // Returns an immutable const reverse iterator to the last character in the string.
+    NEX_NODISCARD constexpr const_reverse_iterator rbegin() const noexcept { return buffer_.rbegin(); }
+
+    // Returns a mutable reverse iterator to one before the first character in the string.
+    NEX_NODISCARD constexpr reverse_iterator rend() noexcept { return buffer_.rend(); }
+
+    // Returns an immutable const reverse iterator to one before the first character in the string.
+    NEX_NODISCARD constexpr const_reverse_iterator rend() const noexcept { return buffer_.rend(); }
+
+    // Returns an immutable const reverse iterator to the last character in the string.
+    NEX_NODISCARD constexpr const_reverse_iterator crbegin() const noexcept { return buffer_.crbegin(); }
+
+    // Returns an immutable const reverse iterator to one before the first character in the string.
+    NEX_NODISCARD constexpr const_reverse_iterator crend() const noexcept { return buffer_.crend(); }
 
     // Returns the character at position with bounds checking.
     NEX_NODISCARD constexpr reference at(size_type pos) noexcept { return buffer_.at(pos); }

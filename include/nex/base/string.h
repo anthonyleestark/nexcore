@@ -15,6 +15,8 @@
 #include "nex/base/algorithm.h"
 #include "nex/base/assert_crash.h"
 #include "nex/base/char_traits.h"
+#include "nex/base/iterator.h"
+#include "nex/base/reverse_iterator.h"
 #include "nex/base/string_view.h"
 
 NEX_NAMESPACE_BEGIN
@@ -563,6 +565,8 @@ public:
 
     using iterator = pointer;
     using const_iterator = self_view::const_iterator;
+    using reverse_iterator = ReverseIterator<iterator>;
+    using const_reverse_iterator = self_view::const_reverse_iterator;
 
     // The underlying storage type that manages the character sequence.
     using storage_type = BasicStringStorage<CharType, InlineCapacity, Growth>;
@@ -695,6 +699,32 @@ public:
     // Returns an immutable const iterator to one past the last character in the string.
     NEX_NODISCARD NEX_HIDDEN_FROM_ABI constexpr const_iterator cend() const noexcept {
         return storage_.data() + storage_.size();
+    }
+
+    // Returns a mutable reverse iterator to the last character in the string.
+    NEX_NODISCARD NEX_HIDDEN_FROM_ABI constexpr reverse_iterator rbegin() noexcept { return reverse_iterator(end()); }
+
+    // Returns an immutable const reverse iterator to the last character in the string.
+    NEX_NODISCARD NEX_HIDDEN_FROM_ABI constexpr const_reverse_iterator rbegin() const noexcept {
+        return const_reverse_iterator(end());
+    }
+
+    // Returns a mutable reverse iterator to one before the first character in the string.
+    NEX_NODISCARD NEX_HIDDEN_FROM_ABI constexpr reverse_iterator rend() noexcept { return reverse_iterator(begin()); }
+
+    // Returns an immutable const reverse iterator to one before the first character in the string.
+    NEX_NODISCARD NEX_HIDDEN_FROM_ABI constexpr const_reverse_iterator rend() const noexcept {
+        return const_reverse_iterator(begin());
+    }
+
+    // Returns an immutable const reverse iterator to the last character in the string.
+    NEX_NODISCARD NEX_HIDDEN_FROM_ABI constexpr const_reverse_iterator crbegin() const noexcept {
+        return const_reverse_iterator(end());
+    }
+
+    // Returns an immutable const reverse iterator to one before the first character in the string.
+    NEX_NODISCARD NEX_HIDDEN_FROM_ABI constexpr const_reverse_iterator crend() const noexcept {
+        return const_reverse_iterator(begin());
     }
 
     // Returns the character at position with bounds checking.

@@ -44,11 +44,17 @@ public:
     using const_reference = const value_type&;
     using pointer = value_type*;
     using const_pointer = const value_type*;
+
     using iterator = pointer;
     using const_iterator = const_pointer;
     using reverse_iterator = ReverseIterator<iterator>;
     using const_reverse_iterator = ReverseIterator<const_iterator>;
+
     using buffer_type = DynamicBuffer<value_type, Growth>;
+    using self = Vec<ElementType, Growth>;
+
+    using span_type = Span<value_type>;
+    using const_span_type = Span<const value_type>;
 
 private:
     // The underlying buffer that manages storage and element lifetime.
@@ -88,12 +94,12 @@ public:
     }
 
     // Constructs a Vec from a Span of values.
-    constexpr Vec(Span<value_type> span) {
+    constexpr Vec(span_type span) {
         assign(span.begin(), span.end());
     }
 
     // Constructs a Vec from a Span of const values.
-    constexpr Vec(Span<const value_type> span) {
+    constexpr Vec(const_span_type span) {
         assign(span.begin(), span.end());
     }
 
@@ -162,34 +168,22 @@ public:
     constexpr const_iterator cend() const noexcept { return cbegin() + size(); }
 
     // Returns a reverse iterator to the beginning of the reversed Vec.
-    constexpr reverse_iterator rbegin() noexcept {
-        return reverse_iterator(end());
-    }
+    constexpr reverse_iterator rbegin() noexcept { return reverse_iterator(end()); }
 
     // Returns a const reverse iterator to the beginning of the reversed Vec.
-    constexpr const_reverse_iterator rbegin() const noexcept {
-        return const_reverse_iterator(end());
-    }
+    constexpr const_reverse_iterator rbegin() const noexcept { return const_reverse_iterator(end()); }
 
     // Returns a const reverse iterator to the beginning of the reversed Vec.
-    constexpr const_reverse_iterator crbegin() const noexcept {
-        return const_reverse_iterator(cend());
-    }
+    constexpr const_reverse_iterator crbegin() const noexcept { return const_reverse_iterator(cend()); }
 
     // Returns a reverse iterator to the end of the reversed Vec.
-    constexpr reverse_iterator rend() noexcept {
-        return reverse_iterator(begin());
-    }
+    constexpr reverse_iterator rend() noexcept { return reverse_iterator(begin()); }
 
     // Returns a const reverse iterator to the end of the reversed Vec.
-    constexpr const_reverse_iterator rend() const noexcept {
-        return const_reverse_iterator(begin());
-    }
+    constexpr const_reverse_iterator rend() const noexcept { return const_reverse_iterator(begin()); }
 
     // Returns a const reverse iterator to the end of the reversed Vec.
-    constexpr const_reverse_iterator crend() const noexcept {
-        return const_reverse_iterator(cbegin());
-    }
+    constexpr const_reverse_iterator crend() const noexcept { return const_reverse_iterator(cbegin()); }
 
     // Returns a reference to the element at the specified position, with bounds checking.
     constexpr reference at(size_type pos) {
@@ -291,12 +285,12 @@ public:
     }
 
     // Appends a Span to the end of this Vec.
-    constexpr void append(const Span<value_type>& span) {
+    constexpr void append(const span_type& span) {
         append(span.begin(), span.end());
     }
 
     // Appends a Span of const values to the end of this Vec.
-    constexpr void append(const Span<const value_type>& span) {
+    constexpr void append(const const_span_type& span) {
         append(span.begin(), span.end());
     }
 
@@ -483,13 +477,13 @@ public:
     }
 
     // Converts the Vec to a span, providing a view of the elements without copying.
-    constexpr Span<value_type> asSpan() noexcept {
-        return Span<value_type>(data(), size());
+    constexpr span_type asSpan() noexcept {
+        return span_type(data(), size());
     }
 
     // Converts the Vec to a const span, providing a view of the elements without copying.
-    constexpr Span<const value_type> asSpan() const noexcept {
-        return Span<const value_type>(data(), size());
+    constexpr const_span_type asSpan() const noexcept {
+        return const_span_type(data(), size());
     }
 
     // Comparison operators for Vec, allowing lexicographical comparison of elements.

@@ -45,11 +45,17 @@ public:
     using const_reference = const value_type&;
     using pointer = value_type*;
     using const_pointer = const value_type*;
+
     using iterator = pointer;
     using const_iterator = const_pointer;
     using reverse_iterator = ReverseIterator<iterator>;
     using const_reverse_iterator = ReverseIterator<const_iterator>;
+
     using buffer_type = FixedBuffer<value_type, Capacity>;
+    using self = Array<ElementType, Capacity>;
+
+    using span_type = Span<value_type>;
+    using const_span_type = Span<const value_type>;
 
 private:
     // The underlying buffer that manages storage and element lifetime.
@@ -83,13 +89,13 @@ public:
     }
 
     // Constructs an Array from a Span of values.
-    constexpr Array(Span<value_type> span) {
+    constexpr Array(span_type span) {
         NEX_ASSERT_MSG(span.size() <= Capacity, "Error: Span exceeds array capacity");
         buffer_.append(span.begin(), span.end());
     }
 
     // Constructs an Array from a Span of const values.
-    constexpr Array(Span<const value_type> span) {
+    constexpr Array(const_span_type span) {
         NEX_ASSERT_MSG(span.size() <= Capacity, "Error: Span exceeds array capacity");
         buffer_.append(span.begin(), span.end());
     }
@@ -162,34 +168,22 @@ public:
     constexpr const_iterator cend() const noexcept { return cbegin() + size(); }
 
     // Returns a reverse iterator to the beginning of the reversed Array.
-    constexpr reverse_iterator rbegin() noexcept {
-        return reverse_iterator(end());
-    }
+    constexpr reverse_iterator rbegin() noexcept { return reverse_iterator(end()); }
 
     // Returns a const reverse iterator to the beginning of the reversed Array.
-    constexpr const_reverse_iterator rbegin() const noexcept {
-        return const_reverse_iterator(end());
-    }
+    constexpr const_reverse_iterator rbegin() const noexcept { return const_reverse_iterator(end()); }
 
     // Returns a const reverse iterator to the beginning of the reversed Array.
-    constexpr const_reverse_iterator crbegin() const noexcept {
-        return const_reverse_iterator(cend());
-    }
+    constexpr const_reverse_iterator crbegin() const noexcept { return const_reverse_iterator(cend()); }
 
     // Returns a reverse iterator to the end of the reversed Array.
-    constexpr reverse_iterator rend() noexcept {
-        return reverse_iterator(begin());
-    }
+    constexpr reverse_iterator rend() noexcept { return reverse_iterator(begin()); }
 
     // Returns a const reverse iterator to the end of the reversed Array.
-    constexpr const_reverse_iterator rend() const noexcept {
-        return const_reverse_iterator(begin());
-    }
+    constexpr const_reverse_iterator rend() const noexcept { return const_reverse_iterator(begin()); }
 
     // Returns a const reverse iterator to the end of the reversed Array.
-    constexpr const_reverse_iterator crend() const noexcept {
-        return const_reverse_iterator(cbegin());
-    }
+    constexpr const_reverse_iterator crend() const noexcept { return const_reverse_iterator(cbegin()); }
 
     // Returns a reference to the element at the specified position, with bounds checking.
     NEX_NODISCARD constexpr reference at(size_type pos) {
@@ -243,13 +237,13 @@ public:
     NEX_NODISCARD constexpr size_type maxSize() const noexcept { return buffer_type::maxSize(); }
 
     // Converts the Array to a span, providing a view of the elements without copying.
-    NEX_NODISCARD constexpr Span<value_type> asSpan() noexcept {
-        return Span<value_type>(data(), size());
+    NEX_NODISCARD constexpr span_type asSpan() noexcept {
+        return span_type(data(), size());
     }
 
     // Converts the Array to a const span, providing a view of the elements without copying.
-    NEX_NODISCARD constexpr Span<const value_type> asSpan() const noexcept {
-        return Span<const value_type>(data(), size());
+    NEX_NODISCARD constexpr const_span_type asSpan() const noexcept {
+        return const_span_type(data(), size());
     }
 
     // Comparison operators for Array, allowing lexicographical comparison of elements.

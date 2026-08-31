@@ -13,6 +13,8 @@
 #include "nex/base/assert_crash.h"
 #include "nex/base/char_traits.h"
 #include "nex/base/span.h"
+#include "nex/base/iterator.h"
+#include "nex/base/reverse_iterator.h"
 
 NEX_NAMESPACE_BEGIN
 
@@ -47,6 +49,8 @@ public:
 
     using const_iterator = const_pointer;
     using iterator = const_iterator;
+    using const_reverse_iterator = ReverseIterator<const_iterator>;
+    using reverse_iterator = const_reverse_iterator;
 
     // Represents an invalid position in the string view.
     static constexpr size_type npos = static_cast<size_type>(-1);
@@ -109,6 +113,22 @@ public:
     // Returns a const iterator to the end of the string view.
     NEX_NODISCARD NEX_HIDDEN_FROM_ABI constexpr const_iterator cend() const noexcept {
         return const_iterator(data_ + size_);
+    }
+
+    // Returns a const reverse iterator to the beginning of the reversed string view.
+    NEX_NODISCARD NEX_HIDDEN_FROM_ABI constexpr const_reverse_iterator rbegin() const noexcept { return crbegin(); }
+
+    // Returns a const reverse iterator to the end of the reversed string view.
+    NEX_NODISCARD NEX_HIDDEN_FROM_ABI constexpr const_reverse_iterator rend() const noexcept { return crend(); }
+
+    // Returns a const reverse iterator to the beginning of the reversed string view.
+    NEX_NODISCARD NEX_HIDDEN_FROM_ABI constexpr const_reverse_iterator crbegin() const noexcept {
+        return const_reverse_iterator(cend());
+    }
+
+    // Returns a const reverse iterator to the end of the reversed string view.
+    NEX_NODISCARD NEX_HIDDEN_FROM_ABI constexpr const_reverse_iterator crend() const noexcept {
+        return const_reverse_iterator(cbegin());
     }
 
     // Returns the character at position without bounds checking.

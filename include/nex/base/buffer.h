@@ -14,7 +14,6 @@
 #include "nex/base/block.h"
 #include "nex/base/growth.h"
 #include "nex/base/memory.h"
-#include "nex/base/algorithm.h"
 
 NEX_NAMESPACE_BEGIN
 
@@ -83,7 +82,17 @@ private:
         requires (meta::IsConvertibleV<OtherValue, value_type> && OtherCapacity <= Capacity)
     NEX_HIDDEN_FROM_ABI constexpr void copyFrom(const FixedBuffer<OtherValue, OtherCapacity>& other) {
         if (canFit(other.size_)) {
-            NEX_UNINITIALIZED_COPY_RANGE(data(), other.data(), other.data() + other.size_);
+            if constexpr (meta::IsSameV<OtherValue, value_type>) {
+                NEX_UNINITIALIZED_COPY_RANGE(
+                    PointerRange<value_type>(data(), other.size_),
+                    PointerRange<const OtherValue>(other.data(), other.size_)
+                );
+            } else {
+                for (size_type i = 0; i < other.size_; ++i) {
+                    NEX_CONSTRUCT_AT(data() + i, other.data()[i]);
+                }
+
+            }
             size_ = other.size_;
         }
     }
@@ -94,15 +103,37 @@ private:
         requires (meta::IsConvertibleV<OtherValue, value_type> && OtherCapacity <= Capacity)
     NEX_HIDDEN_FROM_ABI constexpr void copyAssignFrom(const FixedBuffer<OtherValue, OtherCapacity>& other) {
         if (canFit(other.size_)) {
-            if (other.size_ <= size_) {
+            if constexpr (!meta::IsSameV<OtherValue, value_type>) {
+                size_type commonSize = other.size_ < size_ ? other.size_ : size_;
+                for (size_type i = 0; i < commonSize; ++i) {
+                    data()[i] = other.data()[i];
+                }
+                for (size_type i = commonSize; i < other.size_; ++i) {
+                    NEX_CONSTRUCT_AT(data() + i, other.data()[i]);
+                }
+                if (other.size_ < size_) {
+                    NEX_DESTROY_RANGE(PointerRange<value_type>(data() + other.size_, size_ - other.size_));
+                }
+            } else if (other.size_ <= size_) {
                 // Copy common elements and destroy remaining part
-                NEX_ASSIGN_RANGE(data(), other.data(), other.data() + other.size_);
-                NEX_DESTROY_RANGE(data() + other.size_, data() + size_);
+                NEX_ASSIGN_RANGE(
+                    PointerRange<value_type>(data(), other.size_),
+                    PointerRange<const OtherValue>(other.data(), other.size_ )
+                );
+                NEX_DESTROY_RANGE(
+                    PointerRange<value_type>(data() + other.size_, size_ - other.size_)
+                );
             } else {
                 // Copy common elements and construct new elements
                 pointer_type commonEnd = other.data() + size_;
-                NEX_ASSIGN_RANGE(data(), other.data(), commonEnd);
-                NEX_UNINITIALIZED_COPY_RANGE(data() + size_, commonEnd, other.data() + other.size_);
+                NEX_ASSIGN_RANGE(
+                    PointerRange<value_type>(data(), size_),
+                    PointerRange<const OtherValue>(other.data(), size_)
+                );
+                NEX_UNINITIALIZED_COPY_RANGE(
+                    PointerRange<value_type>(data() + size_, other.size_ - size_),
+                    PointerRange<const OtherValue>(commonEnd, other.size_ - size_)
+                );
             }
             size_ = other.size_;
         }
@@ -114,7 +145,17 @@ private:
     NEX_HIDDEN_FROM_ABI constexpr void moveFrom(FixedBuffer<OtherValue, OtherCapacity>&& other)
         noexcept(meta::IsNothrowMoveConstructibleV<value_type> && meta::IsNothrowDestructibleV<value_type>) {
         if (canFit(other.size_)) {
-            NEX_RELOCATE_RANGE(data(), other.data(), other.data() + other.size_);
+            if constexpr (meta::IsSameV<OtherValue, value_type>) {
+                NEX_RELOCATE_RANGE(
+                    PointerRange<value_type>(data(), other.size_),
+                    PointerRange<value_type>(other.data(), other.size_)
+                );
+            } else {
+                for (size_type i = 0; i < other.size_; ++i) {
+                    NEX_CONSTRUCT_AT(data() + i, NEX_MOVE(other.data()[i]));
+                }
+                NEX_DESTROY_RANGE(PointerRange<OtherValue>(other.data(), other.size_));
+            }
             size_ = other.size_;
             other.size_ = 0; // Reset the size of the moved-from buffer
         }
@@ -189,12 +230,12 @@ public:
         if (canFit(count)) {
             if (count < size_) {
                 // Destroy excess elements
-                NEX_DESTROY_RANGE(data() + count, data() + size_);
+                NEX_DESTROY_RANGE(PointerRange<value_type>(data() + count, size_ - count));
             } else if (count > size_) {
                 // Default-construct new elements
-                for (size_type i = size_; i < count; ++i) {
-                    NEX_CONSTRUCT_AT(data() + i);
-                }
+                NEX_VALUE_INITIALIZE_RANGE(
+                    PointerRange<value_type>(data() + size_, count - size_)
+                );
             }
             size_ = count;
         }
@@ -210,12 +251,13 @@ public:
         if (canFit(count)) {
             if (count < size_) {
                 // Destroy excess elements
-                NEX_DESTROY_RANGE(data() + count, data() + size_);
+                NEX_DESTROY_RANGE(PointerRange<value_type>(data() + count, size_ - count));
             } else if (count > size_) {
                 // Construct new elements with the given value
-                for (size_type i = size_; i < count; ++i) {
-                    NEX_CONSTRUCT_AT(data() + i, value);
-                }
+                NEX_UNINITIALIZED_FILL_RANGE(
+                    PointerRange<value_type>(data() + size_, count - size_),
+                    value
+                );
             }
             size_ = count;
         }
@@ -225,7 +267,7 @@ public:
     NEX_HIDDEN_FROM_ABI constexpr void clear()
         noexcept(meta::IsNothrowDestructibleV<value_type>) {
         if (size_ == 0) return;
-        NEX_DESTROY_RANGE(data(), data() + size_);
+        NEX_DESTROY_RANGE(PointerRange<value_type>(data(), size_));
         size_ = 0;
     }
 
@@ -244,7 +286,10 @@ public:
         NEX_ASSERT(src != nullptr || count == 0);
         if (src == nullptr || count == 0) return;
         if (canFit(size_ + count)) {
-            NEX_UNINITIALIZED_COPY_RANGE(data() + size_, src, src + count);
+            NEX_UNINITIALIZED_COPY_RANGE(
+                PointerRange<value_type>(data() + size_, count),
+                PointerRange<const OtherValue>(src, count)
+            );
             size_ += count;
         }
     }
@@ -290,8 +335,16 @@ public:
         NEX_ASSERT(index < size_ && count > 0 && index + count <= size_);
         pointer_type start = data() + index;
         pointer_type end = start + count;
-        NEX_DESTROY_RANGE(start, end);
-        NEX_RELOCATE_RANGE(start, end, start);
+        size_type remaining = size_ - (index + count);
+        size_type constructCount = remaining < count ? remaining : count;
+        NEX_DESTROY_RANGE(PointerRange<value_type>(start, count));
+        for (size_type i = 0; i < constructCount; ++i) {
+            NEX_CONSTRUCT_AT(start + i, NEX_MOVE(end[i]));
+        }
+        for (size_type i = constructCount; i < remaining; ++i) {
+            start[i] = NEX_MOVE(end[i]);
+        }
+        NEX_DESTROY_RANGE(PointerRange<value_type>(data() + size_ - constructCount, constructCount));
         size_ -= count;
     }
 
@@ -387,7 +440,10 @@ private:
     // Used in the copy constructor, when the current buffer is uninitialized.
     NEX_HIDDEN_FROM_ABI constexpr void copyFrom(const DynamicBuffer& other) {
         reserve(other.size_);
-        NEX_UNINITIALIZED_COPY_RANGE(data_, other.data_, other.data_ + other.size_);
+        NEX_UNINITIALIZED_COPY_RANGE(
+            PointerRange<value_type>(data_, other.size_),
+            PointerRange<const value_type>(other.data_, other.size_)
+        );
         size_ = other.size_;
     }
 
@@ -398,16 +454,28 @@ private:
             // Not enough capacity, need to allocate new storage
             reset();
             reserve(other.size_);
-            NEX_UNINITIALIZED_COPY_RANGE(data_, other.data_, other.data_ + other.size_);
+            NEX_UNINITIALIZED_COPY_RANGE(
+                PointerRange<value_type>(data_, other.size_),
+                PointerRange<const value_type>(other.data_, other.size_)
+            );
         } else if (other.size_ <= size_) {
             // Copy common elements and destroy remaining part
-            NEX_ASSIGN_RANGE(data_, other.data_, other.data_ + other.size_);
-            NEX_DESTROY_RANGE(data_ + other.size_, data_ + size_);
+            NEX_ASSIGN_RANGE(
+                PointerRange<value_type>(data_, other.size_),
+                PointerRange<const value_type>(other.data_, other.size_)
+            );
+            NEX_DESTROY_RANGE(PointerRange<value_type>(data_ + other.size_, size_ - other.size_));
         } else {
             // Copy common elements and construct new elements
             pointer_type commonEnd = other.data_ + size_;
-            NEX_ASSIGN_RANGE(data_, other.data_, commonEnd);
-            NEX_UNINITIALIZED_COPY_RANGE(data_ + size_, commonEnd, other.data_ + other.size_);
+            NEX_ASSIGN_RANGE(
+                PointerRange<value_type>(data_, size_),
+                PointerRange<const value_type>(other.data_, size_)
+            );
+            NEX_UNINITIALIZED_COPY_RANGE(
+                PointerRange<value_type>(data_ + size_, other.size_ - size_),
+                PointerRange<const value_type>(commonEnd, other.size_ - size_)
+            );
         }
         size_ = other.size_;
     }
@@ -428,7 +496,10 @@ private:
     NEX_HIDDEN_FROM_ABI constexpr void relocateTo(pointer_type newData) noexcept(false) {
         if (size_ > 0) {
             try {
-                NEX_RELOCATE_RANGE(newData, data_, data_ + size_);
+                NEX_RELOCATE_RANGE(
+                    PointerRange<value_type>(newData, size_),
+                    PointerRange<value_type>(data_, size_)
+                );
             } catch (...) {
                 deallocate(newData);
                 throw;
@@ -537,7 +608,7 @@ public:
         }
         if (count < size_) {
             // Destroy excess elements
-            NEX_DESTROY_RANGE(data_ + count, data_ + size_);
+            NEX_DESTROY_RANGE(PointerRange<value_type>(data_ + count, size_ - count));
         } else if (count > size_) {
             // Default-construct new elements
             for (size_type i = size_; i < count; ++i) {
@@ -554,7 +625,7 @@ public:
     NEX_HIDDEN_FROM_ABI constexpr void resize(size_type count, const OtherValue& value) noexcept(false) {
         if (count < size_) {
             // Destroy excess elements
-            NEX_DESTROY_RANGE(data_ + count, data_ + size_);
+            NEX_DESTROY_RANGE(PointerRange<value_type>(data_ + count, size_ - count));
         } else if (count > size_) {
             reserve(count);
             // Construct new elements with the given value
@@ -581,7 +652,7 @@ public:
     // Clears the buffer, destroying all elements and resetting the size to zero.
     NEX_HIDDEN_FROM_ABI constexpr void clear() noexcept(meta::IsNothrowDestructibleV<value_type>) {
         if (size_ == 0) return;
-        NEX_DESTROY_RANGE(data_, data_ + size_);
+        NEX_DESTROY_RANGE(PointerRange<value_type>(data_, size_));
         size_ = 0;
     }
 
@@ -603,7 +674,10 @@ public:
         if (size_ + count > capacity_) {
             grow(size_ + count);
         }
-        NEX_UNINITIALIZED_COPY_RANGE(data_ + size_, src, src + count);
+        NEX_UNINITIALIZED_COPY_RANGE(
+            PointerRange<value_type>(data_ + size_, count),
+            PointerRange<const OtherValue>(src, count)
+        );
         size_ += count;
     }
 
@@ -647,12 +721,22 @@ public:
     // Removes elements from the buffer starting at index and spanning count elements,
     // shifting subsequent elements down.
     NEX_HIDDEN_FROM_ABI constexpr void remove(size_type index, size_type count = 1)
-        noexcept(meta::IsNothrowDestructibleV<value_type>) {
+        noexcept(meta::IsNothrowMoveConstructibleV<value_type> &&
+                 meta::IsNothrowMoveAssignableV<value_type> &&
+                 meta::IsNothrowDestructibleV<value_type>) {
         NEX_ASSERT(index < size_ && count > 0 && index + count <= size_);
         pointer_type start = data_ + index;
         pointer_type end = start + count;
-        NEX_DESTROY_RANGE(start, end);
-        NEX_RELOCATE_RANGE(start, end, start);
+        size_type remaining = size_ - (index + count);
+        size_type constructCount = remaining < count ? remaining : count;
+        NEX_DESTROY_RANGE(PointerRange<value_type>(start, count));
+        for (size_type i = 0; i < constructCount; ++i) {
+            NEX_CONSTRUCT_AT(start + i, NEX_MOVE(end[i]));
+        }
+        for (size_type i = constructCount; i < remaining; ++i) {
+            start[i] = NEX_MOVE(end[i]);
+        }
+        NEX_DESTROY_RANGE(PointerRange<value_type>(data_ + size_ - constructCount, constructCount));
         size_ -= count;
     }
 
@@ -775,7 +859,10 @@ private:
     // Used in the copy constructor, when the current buffer is uninitialized.
     NEX_HIDDEN_FROM_ABI constexpr void copyFrom(const SmallBuffer& other) {
         reserve(other.size_);
-        NEX_UNINITIALIZED_COPY_RANGE(data_, other.data_, other.data_ + other.size_);
+        NEX_UNINITIALIZED_COPY_RANGE(
+            PointerRange<value_type>(data_, other.size_),
+            PointerRange<const value_type>(other.data_, other.size_)
+        );
         size_ = other.size_;
     }
 
@@ -786,16 +873,30 @@ private:
             // Not enough capacity, need to allocate new storage
             reset();
             reserve(other.size_);
-            NEX_UNINITIALIZED_COPY_RANGE(data_, other.data_, other.data_ + other.size_);
+            NEX_UNINITIALIZED_COPY_RANGE(
+                PointerRange<value_type>(data_, other.size_),
+                PointerRange<const value_type>(other.data_, other.size_)
+            );
         } else if (other.size_ <= size_) {
             // Copy common elements and destroy remaining part
-            NEX_ASSIGN_RANGE(data_, other.data_, other.data_ + other.size_);
-            NEX_DESTROY_RANGE(data_ + other.size_, data_ + size_);
+            NEX_ASSIGN_RANGE(
+                PointerRange<value_type>(data_, other.size_),
+                PointerRange<const value_type>(other.data_, other.size_)
+            );
+            NEX_DESTROY_RANGE(
+                PointerRange<value_type>(data_ + other.size_, size_ - other.size_)
+            );
         } else {
             // Copy common elements and construct new elements
             pointer_type commonEnd = other.data_ + size_;
-            NEX_ASSIGN_RANGE(data_, other.data_, commonEnd);
-            NEX_UNINITIALIZED_COPY_RANGE(data_ + size_, commonEnd, other.data_ + other.size_);
+            NEX_ASSIGN_RANGE(
+                PointerRange<value_type>(data_, size_),
+                PointerRange<const value_type>(other.data_, size_)
+            );
+            NEX_UNINITIALIZED_COPY_RANGE(
+                PointerRange<value_type>(data_ + size_, other.size_ - size_),
+                PointerRange<const value_type>(other.data_ + size_, other.size_ - size_)
+            );
         }
         size_ = other.size_;
     }
@@ -805,7 +906,10 @@ private:
         noexcept(meta::IsNothrowMoveConstructibleV<value_type> && meta::IsNothrowDestructibleV<value_type>) {
         if (other.isInline()) {
             // Cannot steal the inline buffer -> move elements individually
-            NEX_RELOCATE_RANGE(data_, other.data_, other.data_ + other.size_);
+            NEX_RELOCATE_RANGE(
+                PointerRange<value_type>(data_, other.size_),
+                PointerRange<value_type>(other.data_, other.size_)
+            );
             size_ = other.size_;
             other.size_ = 0;
         } else {
@@ -824,7 +928,10 @@ private:
     NEX_HIDDEN_FROM_ABI constexpr void relocateTo(pointer_type newData) noexcept(false) {
         if (size_ > 0) {
             try {
-                NEX_RELOCATE_RANGE(newData, data_, data_ + size_);
+                NEX_RELOCATE_RANGE(
+                    PointerRange<value_type>(newData, size_),
+                    PointerRange<value_type>(data_, size_)
+                );
             } catch (...) {
                 deallocate(newData);
                 throw;
@@ -904,7 +1011,7 @@ public:
     // Destructor: destroys all elements and releases heap memory if used.
     NEX_HIDDEN_FROM_ABI constexpr ~SmallBuffer() 
         noexcept(meta::IsNothrowDestructibleV<value_type>) {
-        NEX_DESTROY_RANGE(data_, data_ + size_);
+        NEX_DESTROY_RANGE(PointerRange<value_type>(data_, size_));
         if (!isInline()) deallocate(data_);
     }
 
@@ -934,7 +1041,7 @@ public:
     NEX_HIDDEN_FROM_ABI constexpr void resize(size_type count) {
         if (count < size_) {
             // Destroy excess elements
-            NEX_DESTROY_RANGE(data_ + count, data_ + size_);
+            NEX_DESTROY_RANGE(PointerRange<value_type>(data_ + count, size_ - count));
         } else if (count > size_) {
             reserve(count);
             // Default-construct new elements
@@ -951,7 +1058,7 @@ public:
         requires(meta::IsConvertibleV<OtherValue, value_type>) {
         if (count < size_) {
             // Destroy excess elements
-            NEX_DESTROY_RANGE(data_ + count, data_ + size_);
+            NEX_DESTROY_RANGE(PointerRange<value_type>(data_ + count, size_ - count));
         } else if (count > size_) {
             reserve(count);
             // Construct new elements with the given value
@@ -987,7 +1094,7 @@ public:
     // Clears the buffer, destroying all elements and resetting the size to zero.
     NEX_HIDDEN_FROM_ABI constexpr void clear() noexcept {
         if (size_ == 0) return;
-        NEX_DESTROY_RANGE(data_, data_ + size_);
+        NEX_DESTROY_RANGE(PointerRange<value_type>(data_, size_));
         size_ = 0;
     }
 
@@ -1009,7 +1116,10 @@ public:
         NEX_ASSERT(src != nullptr || count == 0);
         if (src == nullptr || count == 0) return;
         reserve(size_ + count);
-        NEX_UNINITIALIZED_COPY_RANGE(data_ + size_, src, src + count);
+        NEX_UNINITIALIZED_COPY_RANGE(
+            PointerRange<value_type>(data_ + size_, count),
+            PointerRange<const OtherValue>(src, count)
+        );
         size_ += count;
     }
 
@@ -1052,8 +1162,16 @@ public:
         NEX_ASSERT(index < size_ && count > 0 && index + count <= size_);
         pointer_type start = data_ + index;
         pointer_type end = start + count;
-        NEX_DESTROY_RANGE(start, end);
-        NEX_RELOCATE_RANGE(start, end, start);
+        size_type remaining = size_ - (index + count);
+        size_type constructCount = remaining < count ? remaining : count;
+        NEX_DESTROY_RANGE(PointerRange<value_type>(start, count));
+        for (size_type i = 0; i < constructCount; ++i) {
+            NEX_CONSTRUCT_AT(start + i, NEX_MOVE(end[i]));
+        }
+        for (size_type i = constructCount; i < remaining; ++i) {
+            start[i] = NEX_MOVE(end[i]);
+        }
+        NEX_DESTROY_RANGE(PointerRange<value_type>(data_ + size_ - constructCount, constructCount));
         size_ -= count;
     }
 

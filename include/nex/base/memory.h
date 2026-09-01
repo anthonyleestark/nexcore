@@ -18,6 +18,9 @@
 #include "nex/base/types.h"
 #include "nex/base/casts.h"
 #include "nex/base/endian.h"
+#include "nex/base/range.h"
+#include "nex/base/invoke.h"
+#include "nex/base/assert_crash.h"
 
 #if NEX_COMPILER_IS_MSVC
     // Forward declare _mm_prefetch to avoid including <intrin.h>
@@ -1147,173 +1150,365 @@ void prefetch(const_void_ptr ptr) noexcept {
     NEX_PREPEND_NAMESPACE(containerOf)
 
 // =================================================================================
-// Memory manipulation for ranges of objects
+// Memory manipulation for pointer ranges and uninitialized storage
 // =================================================================================
 
 /**
- * @brief Assign elements from a pointer range [first, last) to initialized storage at dest
- * @tparam ValueType The type of the elements to be assigned.
- * @param dest Pointer to the destination where elements will be assigned.
- * @param first Pointer to the first element in the source range.
- * @param last Pointer to one past the last element in the source range.
+ * @class _MemoryRangeConstructionGuard
+ * @brief A guard class that manages the construction of a range of objects in memory.
+ *        It ensures that if an exception is thrown during construction, the already constructed
+ *        objects are properly destroyed to prevent memory leaks.
+ * @tparam ValueType The type of the objects being constructed.
+ * @tparam SizeType The type used for the count of objects (default is usize).
  */
-template <typename ValueType>
-constexpr void assign(ValueType* dest, const ValueType* first, const ValueType* last) noexcept
-    requires(meta::IsTriviallyCopyableV<ValueType>) {
-    NEX_MEMCPY(dest, first, (last - first));
+template <class ValueType, class SizeType = usize>
+class NEX_HIDDEN_FROM_ABI _MemoryRangeConstructionGuard {
+    ValueType* first_;  // Pointer to the first element in the range being constructed.
+    SizeType count_;    // Count of successfully constructed elements in the range.
+public:
+    // Constructor that initializes the guard with a pointer to the first element.
+    NEX_HIDDEN_FROM_ABI constexpr _MemoryRangeConstructionGuard(ValueType* first) noexcept
+        : first_(first), count_(static_cast<SizeType>(0)) {}
+
+    // Destructor that destroys the constructed elements if the guard is still active.
+    NEX_HIDDEN_FROM_ABI ~_MemoryRangeConstructionGuard() noexcept;
+
+    // Increment the count of constructed elements,
+    // indicating that one more element has been successfully constructed.
+    NEX_HIDDEN_FROM_ABI constexpr void increment() noexcept { ++count_; }
+
+    // Releases the guard, preventing it from destroying the constructed elements.
+    NEX_HIDDEN_FROM_ABI constexpr void release() noexcept { count_ = static_cast<SizeType>(0); }
+};
+
+/**
+ * @brief Assigns elements from a given pointer range to initialized storage at dest
+ * @tparam ValueType The type of the elements to be assigned.
+ * @param dest Pointer range representing the destination where elements will be assigned.
+ * @param src Pointer range representing the source elements to be assigned.
+ * @note This overload is optimized for trivially copyable types and uses `memcpy` for efficient copying.
+ */
+template <class ValueType>
+    requires(meta::IsTriviallyCopyableV<ValueType>)
+constexpr void assign(PointerRange<ValueType> dest, PointerRange<const ValueType> src) noexcept {
+    NEX_ASSERT_MSG(dest.length() == src.length(), "Source and destination ranges must have the same length.");
+    NEX_MEMCPY(dest.start(), src.start(), src.length());
 }
 
 /**
- * @brief Assign elements from [first, last) to initialized storage at dest
+ * @brief Assigns elements from a given pointer range to initialized storage at dest
  * @tparam ValueType The type of the elements to be assigned.
- * @param dest Pointer to the destination where elements will be assigned.
- * @param first Pointer to the first element in the source range.
- * @param last Pointer to one past the last element in the source range.
+ * @param dest Pointer range representing the destination where elements will be assigned.
+ * @param src Pointer range representing the source elements to be assigned.
+ * @note This overload is used for non-trivially copyable types and performs element-wise assignment.
  */
-template <typename ValueType>
-constexpr void assign(ValueType* dest, const ValueType* first, const ValueType* last)
+template <class ValueType>
+constexpr void assign(PointerRange<ValueType> dest, PointerRange<const ValueType> src)
     noexcept(meta::IsNothrowCopyAssignableV<ValueType>) {
-    ValueType* current = dest;
-    for (; first != last; ++first, ++current) {
-        *current = *first;
+    NEX_ASSERT_MSG(dest.length() == src.length(), "Source and destination ranges must have the same length.");
+    ValueType* current = dest.start();
+    for (const ValueType* it = src.start(); it != src.end(); ++it, ++current) {
+        *current = *it;
     }
 }
 
-// Assign elements from [first, last) to initialized storage at dest
-#define NEX_ASSIGN_RANGE(dest, first, last) \
-    NEX_PREPEND_NAMESPACE(assign(dest, first, last))
+// Assigns elements from a given pointer range to initialized storage at dest.
+#define NEX_ASSIGN_RANGE(dest, src) \
+    NEX_PREPEND_NAMESPACE(assign(dest, src))
 
 /**
- * @brief Fill a range of memory with a specified value.
- * @tparam ValueType The type of the elements to be filled.
- * @tparam SizeType The type used for the count of elements.
- * @param dest Pointer to the destination where elements will be filled.
- * @param count The number of elements to fill.
- * @param value The value to fill the elements with.
- */
-template <typename ValueType, typename SizeType = usize>
-constexpr void fillN(ValueType* dest, SizeType count, const ValueType& value) noexcept
-    requires(meta::IsTriviallyCopyAssignableV<ValueType>) {
-    NEX_MEMSET(dest, value, count * sizeof(ValueType));
-}
-
-/**
- * @brief Fill a range of memory with a specified value.
- * @tparam ValueType The type of the elements to be filled.
- * @tparam SizeType The type used for the count of elements.
- * @param dest Pointer to the destination where elements will be filled.
- * @param count The number of elements to fill.
- * @param value The value to fill the elements with.
- */
-template <typename ValueType, typename SizeType = usize>
-constexpr void fillN(ValueType* dest, SizeType count, const ValueType& value)
-    noexcept(meta::IsNothrowCopyAssignableV<ValueType>) {
-    for (SizeType i = 0; i < count; ++i) {
-        dest[i] = value;
-    }
-}
-
-// Fill a range of memory with a specified value.
-#define NEX_FILL_RANGE(dest, count, value) \
-    NEX_PREPEND_NAMESPACE(fillN(dest, count, value))
-
-/**
- * @brief Copy elements from [first, last) to uninitialized storage at dest
+ * @brief Copy-constructs elements from a given pointer range to uninitialized storage at dest.
  * @tparam ValueType The type of the elements to be copied.
- * @param dest Pointer to the destination where elements will be copied.
- * @param first Pointer to the first element in the source range.
- * @param last Pointer to one past the last element in the source range.
+ * @param dest Pointer range representing the destination where elements will be copied.
+ * @param src Pointer range representing the source elements to be copied.
+ * @note This overload is optimized for trivially copy constructible types and uses `memcpy` for efficient copying.
  */
-template <typename ValueType>
-constexpr void uninitializedCopy(ValueType* dest, const ValueType* first, const ValueType* last) noexcept
-    requires(meta::IsTriviallyCopyConstructibleV<ValueType>) {
-    NEX_MEMCPY(dest, first, (last - first));
+template <class ValueType>
+    requires(meta::IsTriviallyCopyConstructibleV<ValueType>)
+constexpr void uninitializedCopy(PointerRange<ValueType> dest, PointerRange<const ValueType> src) noexcept {
+    NEX_ASSERT_MSG(dest.length() == src.length(), "Source and destination ranges must have the same length.");
+    NEX_MEMCPY(dest.start(), src.start(), src.length());
 }
 
 /**
- * @brief Copy elements from [first, last) to uninitialized storage at dest
+ * @brief Copy-constructs elements from a given pointer range to uninitialized storage at dest.
  * @tparam ValueType The type of the elements to be copied.
- * @param dest Pointer to the destination where elements will be copied.
- * @param first Pointer to the first element in the source range.
- * @param last Pointer to one past the last element in the source range.
+ * @param dest Pointer range representing the destination where elements will be copied.
+ * @param src Pointer range representing the source elements to be copied.
+ * @note This overload is used for non-trivially copy constructible types and performs element-wise construction.
  */
-template <typename ValueType>
-constexpr void uninitializedCopy(ValueType* dest, const ValueType* first, const ValueType* last)
+template <class ValueType>
+constexpr void uninitializedCopy(PointerRange<ValueType> dest, PointerRange<const ValueType> src)
     noexcept(meta::IsNothrowCopyConstructibleV<ValueType>) {
-    ValueType* current = dest;
-    for (; first != last; ++first, ++current) {
-        NEX_CONSTRUCT_AT(current, *first);
+    NEX_ASSERT_MSG(dest.length() == src.length(), "Source and destination ranges must have the same length.");
+    ValueType* current = dest.start();
+    _MemoryRangeConstructionGuard<ValueType> guard(current);
+    for (const ValueType* it = src.start(); it != src.end(); ++it, ++current) {
+        NEX_CONSTRUCT_AT(current, *it);
+        guard.increment();
     }
+    guard.release();
 }
 
-// Copy elements from [first, last) to uninitialized storage at dest
-#define NEX_UNINITIALIZED_COPY_RANGE(dest, first, last) \
-    NEX_PREPEND_NAMESPACE(uninitializedCopy(dest, first, last))
+// Copy-constructs elements from a given pointer range to uninitialized storage at dest
+#define NEX_UNINITIALIZED_COPY_RANGE(dest, src) \
+    NEX_PREPEND_NAMESPACE(uninitializedCopy(dest, src))
 
 /**
- * @brief Relocate elements from [first, last) to uninitialized storage at dest
- * @tparam ValueType The type of the elements to be relocated.
- * @param dest Pointer to the destination where elements will be relocated.
- * @param first Pointer to the first element in the source range.
- * @param last Pointer to one past the last element in the source range.
+ * @brief Move-constructs elements from a given pointer range to uninitialized storage at dest.
+ * @tparam ValueType The type of the elements to be moved.
+ * @param dest Pointer range representing the destination where elements will be moved.
+ * @param src Pointer range representing the source elements to be moved.
+ * @note This overload is optimized for trivially move constructible types and uses `memmove` for
+ *       efficiently move-constructing.
  */
-template <typename ValueType>
-constexpr void relocate(ValueType* dest, ValueType* first, ValueType* last) noexcept
-    requires(meta::IsTriviallyMoveConstructibleV<ValueType>) {
-    NEX_MEMMOVE(dest, first, (last - first));
+template <class ValueType>
+    requires(meta::IsTriviallyMoveConstructibleV<ValueType>)
+constexpr void uninitializedMove(PointerRange<ValueType> dest, PointerRange<ValueType> src) noexcept {
+    NEX_ASSERT_MSG(dest.length() == src.length(), "Source and destination ranges must have the same length.");
+    NEX_MEMMOVE(dest.start(), src.start(), src.length());
 }
 
 /**
- * @brief Relocate elements from [first, last) to uninitialized storage at dest
- * @tparam ValueType The type of the elements to be relocated.
- * @param dest Pointer to the destination where elements will be relocated.
- * @param first Pointer to the first element in the source range.
- * @param last Pointer to one past the last element in the source range.
+ * @brief Move-constructs elements from a given pointer range to uninitialized storage at dest.
+ * @tparam ValueType The type of the elements to be moved.
+ * @param dest Pointer range representing the destination where elements will be moved.
+ * @param src Pointer range representing the source elements to be moved.
+ * @note This overload is used for non-trivially move constructible types and performs element-wise
+ *       construction using move semantics.
  */
-template <typename ValueType>
-constexpr void relocate(ValueType* dest, ValueType* first, ValueType* last) 
+template <class ValueType>
+constexpr void uninitializedMove(PointerRange<ValueType> dest, PointerRange<ValueType> src)
+    noexcept(meta::IsNothrowMoveConstructibleV<ValueType>) {
+    NEX_ASSERT_MSG(dest.length() == src.length(), "Source and destination ranges must have the same length.");
+    ValueType* current = dest.start();
+    ValueType* begin = src.start();
+    _MemoryRangeConstructionGuard<ValueType> guard(current);
+    for (; begin != src.end(); ++begin, ++current) {
+        NEX_CONSTRUCT_AT(current, NEX_MOVE(*begin));
+        guard.increment();
+    }
+    guard.release();
+}
+
+// Move-constructs elements from a given pointer range to uninitialized storage at dest.
+#define NEX_UNINITIALIZED_MOVE_RANGE(dest, src) \
+    NEX_PREPEND_NAMESPACE(uninitializedMove(dest, src))
+
+/**
+ * @brief Fills a given range of uninitialized memory with a specified value.
+ * @tparam ValueType The type of the elements to be filled.
+ * @param dest Pointer range representing the destination where elements will be filled.
+ * @param value The value to fill the elements with.
+ * @note This function constructs each element in the range with the provided value, ensuring that
+ *       the memory is properly initialized.
+ */
+template <class ValueType>
+constexpr void uninitializedFill(PointerRange<ValueType> dest, const ValueType& value)
+    noexcept(meta::IsNothrowCopyConstructibleV<ValueType>) {
+    _MemoryRangeConstructionGuard<ValueType> guard(dest.start());
+    for (ValueType* it = dest.start(); it != dest.end(); ++it) {
+        NEX_CONSTRUCT_AT(it, value);
+        guard.increment();
+    }
+    guard.release();
+}
+
+// Fills a given range of uninitialized memory with a specified value.
+#define NEX_UNINITIALIZED_FILL_RANGE(dest, value) \
+    NEX_PREPEND_NAMESPACE(uninitializedFill(dest, value))
+
+/**
+ * @brief Constructs elements in a given range of uninitialized memory using the provided arguments.
+ * @tparam ValueType The type of the elements to be constructed.
+ * @tparam Args The types of the arguments to be forwarded to the constructor.
+ * @param dest Pointer range representing the destination where elements will be constructed.
+ * @param args The arguments to be forwarded to the constructor of ValueType.
+ * @note This function uses perfect forwarding to construct each element in the range with the provided arguments.
+ */
+template <class ValueType, class... Args>
+    requires(meta::IsConstructibleV<ValueType, Args...>)
+constexpr void emplaceConstruct(PointerRange<ValueType> dest, Args&&... args)
+    noexcept(meta::IsNothrowConstructibleV<ValueType, Args...>) {
+    _MemoryRangeConstructionGuard<ValueType> guard(dest.start());
+    for (ValueType* it = dest.start(); it != dest.end(); ++it) {
+        NEX_CONSTRUCT_AT(it, NEX_FORWARD<Args>(args)...);
+        guard.increment();
+    }
+    guard.release();
+}
+
+// Constructs elements in a given range of uninitialized memory using the provided arguments.
+#define NEX_EMPLACE_CONSTRUCT_RANGE(dest, ...) \
+    NEX_PREPEND_NAMESPACE(emplaceConstruct(dest __VA_OPT__(,) __VA_ARGS__))
+
+/**
+ * @brief Initializes elements in a given range of uninitialized memory to their default/zero state.
+ * @tparam ValueType The type of the elements to be value-initialized.
+ * @param dest Pointer range representing the destination where elements will be value-initialized.
+ * @note This function requires that ValueType is default-constructible and will invoke the value-initialization
+ *       for each element in the specified range.
+ */
+template <class ValueType>
+    requires(meta::IsDefaultConstructibleV<ValueType>)
+constexpr void valueInitialize(PointerRange<ValueType> dest)
+    noexcept(meta::IsNothrowDefaultConstructibleV<ValueType>) {
+    _MemoryRangeConstructionGuard<ValueType> guard(dest.start());
+    for (ValueType* it = dest.start(); it != dest.end(); ++it) {
+        NEX_CONSTRUCT_AT(it, ValueType{});
+        guard.increment();
+    }
+    guard.release();
+}
+
+// Initializes elements in a given range of uninitialized memory to their default/zero state.
+#define NEX_VALUE_INITIALIZE_RANGE(dest) \
+    NEX_PREPEND_NAMESPACE(valueInitialize(dest))
+
+/**
+ * @brief Constructs elements in a given range of uninitialized memory using a generator function.
+ * @tparam ValueType The type of the elements to be constructed.
+ * @tparam Generator A callable type that generates values for construction.
+ * @param dest Pointer range representing the destination where elements will be constructed.
+ * @param gen A generator function that produces values to be used for constructing each element.
+ * @note This function invokes the generator for each element in the range, allowing for custom construction logic.
+ */
+template <class ValueType, class Generator>
+    requires(Invocable<Generator> && meta::IsConstructibleV<ValueType, InvokeResultT<Generator> >)
+constexpr void generateConstruct(PointerRange<ValueType> dest, Generator&& gen)
+    noexcept(
+        noexcept(IsNothrowInvocableV<Generator>) &&
+        meta::IsNothrowConstructibleV<ValueType, InvokeResultT<Generator>>
+    ) {
+    _MemoryRangeConstructionGuard<ValueType> guard(dest.start());
+    for (ValueType* it = dest.start(); it != dest.end(); ++it) {
+        NEX_CONSTRUCT_AT(it, NEX_INVOKE(gen));
+        guard.increment();
+    }
+    guard.release();
+}
+
+// Generates and constructs elements in a given range of uninitialized memory using a generator function.
+#define NEX_GENERATE_CONSTRUCT_RANGE(dest, gen) \
+    NEX_PREPEND_NAMESPACE(generateConstruct(dest, gen))
+
+/**
+ * @brief Relocates elements from a given pointer range to uninitialized storage at dest.
+ * @tparam ValueType The type of the elements to be relocated.
+ * @param dest Pointer range representing the destination where elements will be relocated.
+ * @param src Pointer range representing the source elements to be relocated.
+ * @note This overload is optimized for trivially move constructible types and uses `memmove` for efficient relocation.
+ */
+template <class ValueType>
+    requires(meta::IsTriviallyMoveConstructibleV<ValueType>)
+constexpr void relocate(PointerRange<ValueType> dest, PointerRange<ValueType> src) noexcept {
+    NEX_ASSERT_MSG(dest.length() == src.length(), "Source and destination ranges must have the same length.");
+    NEX_MEMMOVE(dest.start(), src.start(), src.length());
+}
+
+/**
+ * @brief Relocates elements from a given pointer range to uninitialized storage at dest.
+ * @tparam ValueType The type of the elements to be relocated.
+ * @param dest Pointer range representing the destination where elements will be relocated.
+ * @param src Pointer range representing the source elements to be relocated.
+ * @note This overload is used for non-trivially move constructible types and performs element-wise
+ *       construction using move semantics, followed by destruction of the source elements.
+ *       If an exception is thrown during the relocation process, the source remains alive.
+ */
+template <class ValueType>
+constexpr void relocate(PointerRange<ValueType> dest, PointerRange<ValueType> src)
     noexcept(meta::IsNothrowMoveConstructibleV<ValueType> && meta::IsNothrowDestructibleV<ValueType>) {
-    ValueType* current = dest;
-    ValueType* begin = first;
-    for (; first != last; ++first, ++current) {
-        NEX_CONSTRUCT_AT(current, NEX_MOVE(*first));
+    NEX_ASSERT_MSG(dest.length() == src.length(), "Source and destination ranges must have the same length.");
+    ValueType* current = dest.start();
+    ValueType* begin = src.start();
+    _MemoryRangeConstructionGuard<ValueType> guard(current);
+    for (; begin != src.end(); ++begin, ++current) {
+        NEX_CONSTRUCT_AT(current, NEX_MOVE(*begin));
+        guard.increment();
     }
-    destroy(begin, last);
+    guard.release();
+    destroy(src);
 }
 
-// Relocate elements from [first, last) to uninitialized storage at dest
-#define NEX_RELOCATE_RANGE(dest, first, last) \
-    NEX_PREPEND_NAMESPACE(relocate(dest, first, last))
+// Relocates elements from a given pointer range to uninitialized storage at dest.
+#define NEX_RELOCATE_RANGE(dest, src) \
+    NEX_PREPEND_NAMESPACE(relocate(dest, src))
 
 /**
- * @brief Destroy elements in range [first, last)
+ * @brief Destroys elements in a given pointer range.
  * @tparam ValueType The type of the elements to be destroyed.
- * @param first Pointer to the first element in the range.
- * @param last Pointer to one past the last element in the range.
+ * @param range The pointer range of elements to be destroyed.
+ * @note This overload is optimized for trivially destructible types and performs no operation,
+ *       as such types do not require explicit destruction.
  */
-template <typename ValueType>
-constexpr void destroy(ValueType* first, ValueType* last) noexcept
-    requires(meta::IsTriviallyDestructibleV<ValueType>) {
+template <class ValueType>
+    requires(meta::IsTriviallyDestructibleV<ValueType>)
+constexpr void destroy(PointerRange<ValueType> range) noexcept {
     // No-op for trivially destructible types
 }
 
 /**
- * @brief Destroy elements in range [first, last)
+ * @brief Destroys elements in a given pointer range.
  * @tparam ValueType The type of the elements to be destroyed.
- * @param first Pointer to the first element in the range.
- * @param last Pointer to one past the last element in the range.
+ * @param range The pointer range of elements to be destroyed.
+ * @note This overload is used for non-trivially destructible types and invokes the destructor
+ *       for each element in the range.
  */
-template <typename ValueType>
-constexpr void destroy(ValueType* first, ValueType* last)
-    noexcept(meta::IsNothrowDestructibleV<ValueType>)
-    requires(!meta::IsTriviallyDestructibleV<ValueType>) {
-    for (; first != last; ++first) {
+template <class ValueType>
+    requires(!meta::IsTriviallyDestructibleV<ValueType>)
+constexpr void destroy(PointerRange<ValueType> range)
+    noexcept(meta::IsNothrowDestructibleV<ValueType>) {
+    for (ValueType* first = range.start(); first != range.end(); ++first) {
         first->~ValueType();
     }
 }
 
-// Destroy elements in range [first, last)
-#define NEX_DESTROY_RANGE(first, last) \
-    NEX_PREPEND_NAMESPACE(destroy(first, last))
+// Destroys elements in a given pointer range.
+#define NEX_DESTROY_RANGE(range) \
+    NEX_PREPEND_NAMESPACE(destroy(range))
+
+/**
+ * @brief Sets the object representation of each element to all-zero bytes.
+ * @tparam ValueType The type of the elements in the pointer range.
+ * @param range The pointer range whose memory will be set to zero.
+ * @note This function is optimized for trivially copy-assignable or arithmetic types and
+ *       uses `memset` for efficient zeroing of memory. It is marked as `noexcept` to indicate
+ *       that it does not throw exceptions.
+ */
+template <class ValueType>
+    requires(
+        !meta::IsConstV<ValueType> &&
+        (meta::IsTriviallyCopyAssignableV<ValueType> || 
+        meta::IsArithmeticV<ValueType>)
+    )
+constexpr void zeroMemory(PointerRange<ValueType> range) noexcept {
+    NEX_MEMSET(range.start(), 0, range.length() * sizeof(ValueType));
+}
+
+// Sets the object representation of each element to all-zero bytes.
+#define NEX_ZERO_MEMORY(range) \
+    NEX_PREPEND_NAMESPACE(zeroMemory(range))
+
+/**
+ * @brief Destructor for the _MemoryRangeConstructionGuard class.
+ *        It destroys the constructed elements if the guard is still active.
+ * @tparam ValueType The type of the objects being constructed.
+ * @tparam SizeType The type used for the count of objects (default is usize).
+ * @note
+ * This destructor is marked as `noexcept` to indicate that it does not throw exceptions.
+ * It ensures that if an exception is thrown during the construction of a range of objects,
+ * the already constructed objects are properly destroyed to prevent memory leaks.
+ * After destroying the constructed elements, it releases the guard to prevent double destruction.
+ * The C++ exception handling mechanism itself will continue to propagate the exception after
+ * this destructor is called, so it is safe to perform cleanup here.
+ */
+template <class ValueType, class SizeType>
+NEX_HIDDEN_FROM_ABI constexpr
+_MemoryRangeConstructionGuard<ValueType, SizeType>::~_MemoryRangeConstructionGuard() noexcept {
+    if (first_) {
+        NEX_DESTROY_RANGE(PointerRange<ValueType>(first_, count_));
+        release();  // Release the guard to prevent double destruction
+    }
+}
 
 NEX_NAMESPACE_END

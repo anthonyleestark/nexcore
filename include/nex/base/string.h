@@ -145,7 +145,10 @@ private:
         pointer const newData = allocate(newCapacity);
 
         // Relocate the terminator as well as the content.
-        NEX_RELOCATE_RANGE(newData, oldData, oldData + size_ + 1);
+        NEX_RELOCATE_RANGE(
+            PointerRange<value_type>(newData, size_ + 1),
+            PointerRange<value_type>(oldData, size_ + 1)
+        );
         if (!wasShort) {
             deallocate(storage_.longData);
         }
@@ -161,7 +164,10 @@ private:
             "Error: Heap storage cannot be moved into inline storage");
 
         pointer const oldData = storage_.longData;
-        NEX_RELOCATE_RANGE(storage_.shortData, oldData, oldData + size_ + 1);
+        NEX_RELOCATE_RANGE(
+            PointerRange<value_type>(storage_.shortData, size_ + 1),
+            PointerRange<value_type>(oldData, size_ + 1)
+        );
         deallocate(oldData);
         capacity_ = inlineCapacity;
         isShort_ = true;
@@ -199,14 +205,20 @@ private:
     // Copies another storage object's content and terminator into this object.
     NEX_HIDDEN_FROM_ABI constexpr void copyFrom(const BasicStringStorage& other) {
         reserve(other.size_);
-        NEX_ASSIGN_RANGE(mutableData(), other.mutableData(), other.mutableData() + other.size_ + 1);
+        NEX_ASSIGN_RANGE(
+            PointerRange<value_type>(mutableData(), other.size_ + 1),
+            PointerRange<const value_type>(other.mutableData(), other.size_ + 1)
+        );
         size_ = other.size_;
     }
 
     // Moves inline data or takes ownership of another object's heap allocation.
     NEX_HIDDEN_FROM_ABI constexpr void moveFrom(BasicStringStorage&& other) noexcept {
         if (other.isShort_) {
-            NEX_ASSIGN_RANGE(shortData(), other.shortData(), other.shortData() + other.size_ + 1);
+            NEX_ASSIGN_RANGE(
+                PointerRange<value_type>(shortData(), other.size_ + 1),
+                PointerRange<const value_type>(other.shortData(), other.size_ + 1)
+            );
             size_ = other.size_;
             other.clear();
             return;
@@ -310,7 +322,7 @@ public:
     NEX_HIDDEN_FROM_ABI constexpr void resize(size_type newSize, value_type value) {
         if (newSize > size_) {
             reserve(newSize);
-            // NEX_FILL_RANGE is byte-wise and cannot preserve a non-zero
+            // NEX_UNINITIALIZED_FILL_RANGE is byte-wise and cannot preserve a non-zero
             // char16/char32 value, so fill character elements directly.
             for (size_type index = size_; index < newSize; ++index) {
                 mutableData()[index] = value;
@@ -338,7 +350,10 @@ public:
         }
 
         reserve(count);
-        NEX_ASSIGN_RANGE(mutableData(), source, source + count);
+        NEX_ASSIGN_RANGE(
+            PointerRange<value_type>(mutableData(), count),
+            PointerRange<const value_type>(source, count)
+        );
         size_ = count;
         writeTerminator();
     }
@@ -363,7 +378,10 @@ public:
             source = mutableData() + sourceIndex;
         }
 
-        NEX_UNINITIALIZED_COPY_RANGE(mutableData() + size_, source, source + count);
+        NEX_UNINITIALIZED_COPY_RANGE(
+            PointerRange<value_type>(mutableData() + size_, count),
+            PointerRange<const value_type>(source, count)
+        );
         size_ += count;
         writeTerminator();
     }
@@ -437,7 +455,10 @@ public:
             (removable - removed + 1)
         );
         if (count > 0) {
-            NEX_UNINITIALIZED_COPY_RANGE(mutableData() + position, source, source + count);
+            NEX_ASSIGN_RANGE(
+                PointerRange<value_type>(mutableData() + position, count),
+                PointerRange<const value_type>(source, count)
+            );
         }
         size_ = newSize;
         writeTerminator();

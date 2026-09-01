@@ -5,7 +5,9 @@
 
 #pragma once
 
-#include "nex/base/macros.h"
+#include "nex/base/namespace.h"
+#include "nex/base/attributes.h"
+#include "nex/base/export.h"
 #include "nex/base/meta.h"
 #include "nex/base/types.h"
 
@@ -44,14 +46,10 @@ public:
         : start_(start), length_(length) {}
 
     // Get the size of the range, which is the number of elements it covers
-    NEX_NODISCARD constexpr size_type size() const noexcept {
-        return length_;
-    }
+    NEX_NODISCARD constexpr size_type size() const noexcept { return length_; }
 
     // Get the length of the range, which is the number of elements it covers
-    NEX_NODISCARD constexpr size_type length() const noexcept {
-        return length_;
-    }
+    NEX_NODISCARD constexpr size_type length() const noexcept { return length_; }
 
     // Determine if the range is empty (length is zero)
     NEX_NODISCARD constexpr bool empty() const noexcept 
@@ -63,14 +61,10 @@ public:
     }
 
     // Get the starting offset of the range
-    NEX_NODISCARD constexpr value_type start() const noexcept {
-        return start_;
-    }
+    NEX_NODISCARD constexpr value_type start() const noexcept { return start_; }
 
     // Get the end offset of the range (exclusive)
-    NEX_NODISCARD constexpr value_type end() const noexcept {
-        return start() + length();
-    }
+    NEX_NODISCARD constexpr value_type end() const noexcept { return start() + length(); }
 
     // Determine if the range contains a specific value
     template <typename TargetType>
@@ -98,7 +92,7 @@ public:
 
     // Determine if the range intersects with another range
     template <typename OtherValueType, typename OtherSizeType>
-    NEX_NODISCARD constexpr bool intersects(const Range<OtherValueType, OtherSizeType>& other) const noexcept 
+    NEX_NODISCARD constexpr bool intersects(const Range<OtherValueType, OtherSizeType>& other) const noexcept
         requires 
             requires(value_type thisStart, OtherValueType otherEnd) {
                 { thisStart < otherEnd } -> meta::ConvertibleTo<bool>;
@@ -111,7 +105,7 @@ public:
 
     // Get the intersection of the range with another range
     template <typename OtherValueType, typename OtherSizeType>
-    NEX_NODISCARD constexpr Range intersection(const Range<OtherValueType, OtherSizeType>& other) const noexcept 
+    NEX_NODISCARD constexpr Range intersection(const Range<OtherValueType, OtherSizeType>& other) const noexcept
         requires 
             requires(value_type thisStart, OtherValueType otherStart) {
                 { thisStart > otherStart } -> meta::ConvertibleTo<bool>;
@@ -131,7 +125,7 @@ public:
 
     // Equality operator for comparing two ranges of different types
     template <typename OtherValueType, typename OtherSizeType>
-    constexpr bool operator==(const Range<OtherValueType, OtherSizeType>& other) const noexcept 
+    constexpr bool operator==(const Range<OtherValueType, OtherSizeType>& other) const noexcept
         requires 
             requires(value_type thisStart, OtherValueType otherStart) {
                 { thisStart == otherStart } -> meta::ConvertibleTo<bool>;

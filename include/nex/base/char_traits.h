@@ -164,7 +164,7 @@ struct CharTraits<nchar> {
 
     static NEX_HIDDEN_FROM_ABI constexpr
     char_type* assign(char_type* str, usize count, char_type fillChar) noexcept {
-        NEX_FILL_RANGE(str, count, fillChar);
+        fillN(str, count, fillChar);
         return str;
     }
 };
@@ -203,7 +203,7 @@ struct NEX_INTERNAL CharTraitsBase {
 
     NEX_HIDDEN_FROM_ABI static constexpr
     char_type* assign(char_type* str, usize count, char_type fillChar) noexcept {
-        NEX_FILL_RANGE(str, count, fillChar);
+        fillN(str, count, fillChar);
         return str;
     }
 };

@@ -11,6 +11,7 @@
 #include "nex/base/meta.h"
 #include "nex/base/casts.h"
 #include "nex/base/memory.h"
+#include "nex/base/fwd.h"
 
 NEX_NAMESPACE_BEGIN
 

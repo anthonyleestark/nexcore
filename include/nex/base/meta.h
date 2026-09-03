@@ -1807,6 +1807,10 @@ concept HasMemberReferenceType = requires { typename Type::reference; };
 template <class Type>
 concept HasMemberElementType = requires { typename Type::element_type; };
 
+// Checks whether Type1 and Type2 are not the same type (ignoring cv-qualifiers and references).
+template <class Type1, class Type2>
+concept DifferentFrom = !SameAs<RemoveCvrefT<Type1>, RemoveCvrefT<Type2>>;
+
 // =================================================================================
 // Internal utilities for compile-time logic processing to support metaprogramming
 // =================================================================================

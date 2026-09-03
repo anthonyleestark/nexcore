@@ -8,7 +8,7 @@
 #include "nex/base/namespace.h"
 #include "nex/base/types.h"
 #include "nex/base/limits.h"
-#include "nex/base/utility.h"
+#include "nex/base/fwd.h"
 #include "nex/base/assert_crash.h"
 #include "nex/base/buffer.h"
 #include "nex/base/init.h"

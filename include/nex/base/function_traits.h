@@ -5,12 +5,11 @@
 
 #pragma once
 
-#include <tuple>
-
 #include "nex/base/macros.h"
 #include "nex/base/meta.h"
 #include "nex/base/casts.h"
 #include "nex/base/invoke.h"
+#include "nex/base/fwd.h"
 
 NEX_NAMESPACE_BEGIN
 
@@ -27,7 +26,7 @@ struct FunctionTraits<R(Args...)> {
     static constexpr usize argCount = sizeof...(Args);
 
     template <usize N>
-    using Arg = NEX_STD tuple_element_t<N, NEX_STD tuple<Args...>>;
+    using Arg = TupleElementT<N, Tuple<Args...>>;
 };
 
 /// A specialization of FunctionTraits for function pointer types, 

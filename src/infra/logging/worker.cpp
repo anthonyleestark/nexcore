@@ -5,7 +5,7 @@
 
 #include "nex/core/text/format.h"
 #include "nex/core/chrono/chrono_base.h"
-#include "src/infrastructure/logging/worker.h"
+#include "src/infra/logging/worker.h"
 
 NEX_LAYER_NAMESPACE_BEGIN(logging)
 

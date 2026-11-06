@@ -7,8 +7,8 @@
 #include "nex/base/logging.h"
 #include "nex/base/assert_crash.h"
 #include "src/base/logging_internal.h"
-#include "src/infrastructure/logging/record.h"
-#include "src/infrastructure/logging/queue.h"
+#include "src/infra/logging/record.h"
+#include "src/infra/logging/queue.h"
 
 #if NEX_PLATFORM_IS_WINDOWS
     #include "windows.h"

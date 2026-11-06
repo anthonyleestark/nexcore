@@ -11,8 +11,8 @@
 #include "nex/base/logging.h"
 #include "nex/base/wrappers.h"  // For using Variant
 #include "nex/core/adapters/queue.h"
-#include "nex/infrastructure/logging/config.h"
-#include "src/infrastructure/logging/record.h"
+#include "nex/infra/logging/config.h"
+#include "src/infra/logging/record.h"
 
 NEX_LAYER_NAMESPACE_BEGIN(logging)
 

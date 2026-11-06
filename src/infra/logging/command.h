@@ -10,7 +10,7 @@
 #include "nex/base/logging.h"
 #include "nex/base/coordinators.h"
 #include "nex/base/wrappers.h"
-#include "src/infrastructure/logging/record.h"
+#include "src/infra/logging/record.h"
 
 NEX_LAYER_NAMESPACE_BEGIN(logging)
 

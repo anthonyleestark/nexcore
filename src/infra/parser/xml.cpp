@@ -5,7 +5,7 @@
 
 #include "nex/base/casts.h"
 #include "nex/base/encoding.h"
-#include "nex/infrastructure/parser/xml.h"
+#include "nex/infra/parser/xml.h"
 
 #include <pugixml.hpp>
 

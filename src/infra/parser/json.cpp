@@ -9,7 +9,7 @@
 
 #include "nex/base/casts.h"
 #include "nex/base/encoding.h"
-#include "nex/infrastructure/parser/json.h"
+#include "nex/infra/parser/json.h"
 
 // Include nlohmann/json
 #include <nlohmann/json.hpp>

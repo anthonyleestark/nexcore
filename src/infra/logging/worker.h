@@ -10,8 +10,8 @@
 #include "nex/base/logging.h"
 #include "nex/base/wrappers.h"  // For using SharedPtr & Atomic
 #include "nex/core/thread.h"
-#include "src/infrastructure/logging/record.h"
-#include "src/infrastructure/logging/queue.h"
+#include "src/infra/logging/record.h"
+#include "src/infra/logging/queue.h"
 
 NEX_LAYER_NAMESPACE_BEGIN(logging)
 

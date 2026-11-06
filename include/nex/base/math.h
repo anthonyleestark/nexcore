@@ -12,6 +12,7 @@
 #include "nex/base/limits.h"
 #include "nex/base/memory.h"
 #include "nex/base/invoke.h"
+#include "nex/base/fwd.h"
 #include "nex/base/utility.h"
 #include "nex/base/type_concepts.h"
 #include "nex/base/iterator.h"

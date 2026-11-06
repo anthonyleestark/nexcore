@@ -7,7 +7,6 @@
 
 #include "nex/base/namespace.h"
 #include "nex/base/attributes.h"
-#include "nex/base/meta.h"
 #include "nex/base/types.h"
 
 NEX_NAMESPACE_BEGIN
@@ -270,5 +269,15 @@ TupleElementT<Index, Tuple<Types...>>&& get(Tuple<Types...>&&) noexcept;
 template <usize Index, class... Types>
 NEX_HIDDEN_FROM_ABI constexpr
 const TupleElementT<Index, Tuple<Types...>>&& get(const Tuple<Types...>&&) noexcept;
+
+// =================================================================================
+// Forward declarations for string-related types.
+// =================================================================================
+
+// Forward declaration of the String class.
+class String;
+
+// Forward declaration of the StringView class.
+class StringView;
 
 NEX_NAMESPACE_END

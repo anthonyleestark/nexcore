@@ -7,6 +7,7 @@
 
 #include "nex/base/macros.h"
 #include "nex/base/types.h"
+#include "nex/base/fwd.h"
 #include "nex/base/iterator.h"
 #include "nex/base/reverse_iterator.h"
 #include "nex/base/assert_crash.h"
@@ -27,7 +28,7 @@ NEX_NAMESPACE_BEGIN
  * StringView is designed to work with UTF-8 encoded strings, making it suitable for
  * applications that require Unicode support while maintaining compatibility with existing APIs.
  * 
- * @see String class for an owning UTF-16 string implementation.
+ * @see String class for an owning UTF-8 string implementation.
  * @see BasicStringView for a more general non-owning view of character sequences.
  */
 class NEX_API StringView {

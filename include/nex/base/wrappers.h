@@ -28,12 +28,8 @@
  * @see https://en.cppreference.com/w/cpp/memory/shared_ptr for more information on std::shared_ptr.
  * @see https://en.cppreference.com/w/cpp/memory/unique_ptr for more information on std::unique_ptr.
  * @see https://en.cppreference.com/w/cpp/memory/weak_ptr for more information on std::weak_ptr.
- * @see https://en.cppreference.com/w/cpp/utility/pair for more information on std::pair.
- * @see https://en.cppreference.com/w/cpp/utility/tuple for more information on std::tuple.
  * @see https://en.cppreference.com/w/cpp/utility/any for more information on std::any.
  * @see https://en.cppreference.com/w/cpp/utility/variant for more information on std::variant.
- * @see https://en.cppreference.com/w/cpp/utility/expected for more information on std::expected.
- * @see https://en.cppreference.com/w/cpp/utility/expected/unexpected for more information on std::unexpected.
  * @see https://en.cppreference.com/w/cpp/types/type_index for more information on std::type_index.
  * @see https://en.cppreference.com/w/cpp/types/type_info for more information on std::type_info.
  * @see https://en.cppreference.com/w/cpp/utility/functional for more information on std::function.
@@ -45,13 +41,8 @@
 
 #include <optional>
 #include <memory>
-#include <utility>
 #include <any>
 #include <variant>
-
-#if NEX_HAS_CXX23
-    #include <expected>
-#endif // NEX_HAS_CXX23
 
 #include <typeinfo>
 #include <typeindex>
@@ -60,7 +51,7 @@
 
 #include "nex/base/namespace.h"
 #include "nex/base/types.h"
-#include "nex/base/string.h"
+#include "nex/base/fwd.h"
 
 NEX_NAMESPACE_BEGIN
 
@@ -123,24 +114,6 @@ template <typename Type>
 using ObserverPtr = Type*;
 
 /**
- * @brief A wrapper for a pair of values.
- * @details 
- * Provides a simple structure to hold two related values together. 
- * Commonly used for returning multiple values from a function or representing key-value pairs in maps.
- */
-template <typename Type1, typename Type2>
-using Pair = NEX_STD pair<Type1, Type2>;
-
-/**
- * @brief A wrapper for a fixed-size collection of heterogeneous values.
- * @details 
- * Similar to Pair but can hold any number of values of different types. 
- * Use this for grouping related data together without defining a custom struct.
- */
-template <typename... Args>
-using Tuple = NEX_STD tuple<Args...>;
-
-/**
  * @brief Type-erased container for any CopyConstructible type.
  * @details 
  * A flexible container that can hold a single value of any type at runtime. 
@@ -157,31 +130,6 @@ using Any = NEX_STD any;
  */
 template <typename... Args>
 using Variant = NEX_STD variant<Args...>;
-
-/**
- * @brief A wrapper for expected values or errors.
- * @details 
- * Represents a value that may either contain a valid result (ValueType) or an error (ErrorType). 
- * Use this for functions that can fail, providing a clear way to handle success and error cases without exceptions.
- * @note This is a C++23 feature, so ensure your compiler supports it or use Result instead.
- * @see Result class in nex/base/result.h for a similar pattern that does not require C++23 support.
- */
-#if NEX_HAS_CXX23
-    template <typename ValueType, typename ErrorType>
-    using Expected = NEX_STD expected<ValueType, ErrorType>;
-#endif // NEX_HAS_CXX23
-
-/**
- * @brief A wrapper for unexpected error values.
- * @details 
- * Represents an error state without a valid value. 
- * Use this in conjunction with Expected to represent failure cases explicitly.
- * @note This is a C++23 feature, so ensure your compiler supports it or use Result instead.
- */
-#if NEX_HAS_CXX23
-    template <typename ErrorType>
-    using Unexpected = NEX_STD unexpected<ErrorType>;
-#endif // NEX_HAS_CXX23
 
 /**
  * @brief Metadata representing a type at runtime.

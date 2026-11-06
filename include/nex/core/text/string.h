@@ -8,6 +8,7 @@
 #include "nex/base/macros.h"
 #include "nex/base/types.h"
 #include "nex/base/casts.h"
+#include "nex/base/fwd.h"
 #include "nex/base/string.h"
 #include "nex/base/result.h"
 #include "nex/base/assert_crash.h"

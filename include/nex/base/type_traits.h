@@ -635,6 +635,20 @@ template <typename Type>
 inline constexpr bool IsDefaultConstructibleV = IsDefaultConstructible<Type>::value;
 
 /**
+ * @brief Determines whether the specified type can be default constructed implicitly.
+ * @tparam Type The specified type to check.
+ */
+template <typename Type>
+using IsImplicitlyDefaultConstructible = meta::IsImplicitlyDefaultConstructible<Type>;
+
+/**
+ * @brief Variable template that is true when the specified type can be default constructed implicitly.
+ * @tparam Type The specified type to check.
+ */
+template <typename Type>
+inline constexpr bool IsImplicitlyDefaultConstructibleV = IsImplicitlyDefaultConstructible<Type>::value;
+
+/**
  * @brief Determines whether the specified type can be trivially default constructed.
  * @tparam Type The specified type to check.
  */
@@ -667,28 +681,42 @@ inline constexpr bool IsNothrowDefaultConstructibleV = IsNothrowDefaultConstruct
  * @tparam Type The specified type to check.
  */
 template <typename Type>
-using IsCopyable = meta::IsCopyConstructible<Type>;
+using IsCopyConstructible = meta::IsCopyConstructible<Type>;
 
 /**
  * @brief Variable template that is true when the specified type is copy constructible.
  * @tparam Type The specified type to check.
  */
 template <typename Type>
-inline constexpr bool IsCopyableV = IsCopyable<Type>::value;
+inline constexpr bool IsCopyConstructibleV = IsCopyConstructible<Type>::value;
+
+/**
+ * @brief Determines whether the specified type is copy constructible.
+ * @tparam Type The specified type to check.
+ */
+template <typename Type>
+using IsCopyable = IsCopyConstructible<Type>;
+
+/**
+ * @brief Variable template that is true when the specified type is copy constructible.
+ * @tparam Type The specified type to check.
+ */
+template <typename Type>
+inline constexpr bool IsCopyableV = IsCopyConstructible<Type>::value;
 
 /**
  * @brief Determines whether the specified type has a trivial copy constructor.
  * @tparam Type The specified type to check.
  */
 template <typename Type>
-using IsTriviallyCopyableConstructible = meta::IsTriviallyCopyConstructible<Type>;
+using IsTriviallyCopyConstructible = meta::IsTriviallyCopyConstructible<Type>;
 
 /**
  * @brief Variable template that is true when Type has a trivial copy constructor.
  * @tparam Type The specified type to check.
  */
 template <typename Type>
-inline constexpr bool IsTriviallyCopyableConstructibleV = IsTriviallyCopyableConstructible<Type>::value;
+inline constexpr bool IsTriviallyCopyConstructibleV = IsTriviallyCopyConstructible<Type>::value;
 
 /**
  * @brief Determines whether the specified type is copy constructible without throwing.
@@ -737,14 +765,14 @@ inline constexpr bool IsMovableV = IsMoveConstructibleV<Type>;
  * @tparam Type The specified type to check.
  */
 template <typename Type>
-using IsTriviallyMovableConstructible = meta::IsTriviallyMoveConstructible<Type>;
+using IsTriviallyMoveConstructible = meta::IsTriviallyMoveConstructible<Type>;
 
 /**
  * @brief Variable template that is true when Type has a trivial move constructor.
  * @tparam Type The specified type to check.
  */
 template <typename Type>
-inline constexpr bool IsTriviallyMovableConstructibleV = IsTriviallyMovableConstructible<Type>::value;
+inline constexpr bool IsTriviallyMoveConstructibleV = IsTriviallyMoveConstructible<Type>::value;
 
 /**
  * @brief Determines whether the specified type is move constructible without throwing.
@@ -1467,6 +1495,14 @@ inline constexpr bool NegationV = Negation<Trait>::value;
  */
 template <bool Condition, typename Type = void>
 using EnableIf = meta::EnableIfT<Condition, Type>;
+
+/**
+ * @brief Trait that provides the type if the condition is true, otherwise substitution failure occurs.
+ * @tparam Condition The boolean condition to evaluate.
+ * @tparam Type The type to enable if the condition is true (default is void).
+ */
+template <bool Condition, typename Type = void>
+using EnableIfT = meta::EnableIfT<Condition, Type>;
 
 /**
  * @brief Enables a template only if the specified type is a numeric type (arithmetic type).

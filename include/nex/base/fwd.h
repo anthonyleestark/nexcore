@@ -222,6 +222,11 @@ struct Tuple;
 template <class>
 struct TupleSize;
 
+// Forward declaration of the TupleTypes struct template,
+// which provides the types of the elements in a Tuple.
+template <class... Types>
+struct TupleTypes;
+
 /**
  * @brief Retrieves a reference to the element at the specified index in a Tuple.
  * @tparam Index The index of the element to retrieve.

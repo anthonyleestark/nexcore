@@ -24,6 +24,7 @@
 #include "nex/base/attributes.h"
 #include "nex/base/namespace.h"
 #include "nex/base/meta.h"
+#include "nex/base/empty_types.h"
 
 NEX_NAMESPACE_BEGIN
 
@@ -846,55 +847,5 @@ using wcstr         = wcstring;                 // Null-terminated wide string (
 #define NEX_U16CSTR_C(x)     (u16 ## x)         // Null-terminated UTF-16 string literal
 #define NEX_U32CSTR_C(x)     (u32 ## x)         // Null-terminated UTF-32 string literal
 #define NEX_WCSTR_C(x)       (L ## x)           // Null-terminated wide string literal
-
-// =================================================================================
-// Empty structs / tag types for various purposes
-// =================================================================================
-
-// Representing a "monostate" or "unit" type
-struct monostate {};
-
-NEX_HIDDEN_FROM_ABI NEX_ALWAYS_INLINE constexpr 
-bool operator==(monostate, monostate) noexcept { return true; }
-
-NEX_HIDDEN_FROM_ABI NEX_ALWAYS_INLINE constexpr 
-bool operator!=(monostate, monostate) noexcept { return false; }
-
-NEX_HIDDEN_FROM_ABI NEX_ALWAYS_INLINE constexpr 
-bool operator<(monostate, monostate) noexcept { return false; }
-
-NEX_HIDDEN_FROM_ABI NEX_ALWAYS_INLINE constexpr 
-bool operator>(monostate, monostate) noexcept { return false; }
-
-NEX_HIDDEN_FROM_ABI NEX_ALWAYS_INLINE constexpr 
-bool operator<=(monostate, monostate) noexcept { return true; }
-
-NEX_HIDDEN_FROM_ABI NEX_ALWAYS_INLINE constexpr 
-bool operator>=(monostate, monostate) noexcept { return true; }
-
-// In-place construction tag type 
-// (for specifying in-place construction without additional data)
-struct in_place_tag {
-    explicit in_place_tag() = default;
-};
-inline constexpr in_place_tag in_place{};
-
-// In-place construction tag type for a specific type 
-// (for specifying in-place construction with type information)
-template <class Type>
-struct in_place_type : in_place_tag {
-    explicit in_place_type() = default;
-};
-
-// In-place construction tag type for a specific index 
-// (for specifying in-place construction with index information)
-template <sizetype Index>
-struct in_place_index : in_place_tag {
-    explicit in_place_index() = default;
-};
-
-// Represents an unexpected value or error state
-struct unexpect_type {};
-inline constexpr unexpect_type unexpect{};
 
 NEX_NAMESPACE_END

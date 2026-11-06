@@ -31,6 +31,8 @@
 #include "nex/base/compiler.h"
 #include "nex/base/build.h"
 #include "nex/base/namespace.h"
+#include "nex/base/attributes.h"
+#include "nex/base/meta.h"
 #include "nex/base/types.h"
 
 #if defined(NEX_NO_STL)
@@ -89,6 +91,7 @@ private:
 NEX_STD_END
 
 #else
+    // Include the standard initializer_list if the custom implementation is not used.
     #include <initializer_list>
 #endif
 
@@ -96,34 +99,73 @@ NEX_NAMESPACE_BEGIN
 
 /**
  * @brief A list of elements that can be used to initialize containers or other objects.
+ * @tparam ElementType The type of elements in the initializer list.
  */
 template <typename ElementType>
 using InitList = NEX_STD initializer_list<ElementType>;
 
-// Traits that determines whether Type is an InitList, false by default.
+// Determines whether a type is an InitList, false by default.
 template <class>
-inline constexpr bool IsInitListV = false;
+inline NEX_HIDDEN_FROM_ABI constexpr bool IsInitListV = false;
 
 // Specialization of IsInitListV for InitList types, which sets the trait to true.
 template <class ElementType>
-inline constexpr bool IsInitListV<InitList<ElementType>> = true;
+inline NEX_HIDDEN_FROM_ABI constexpr bool IsInitListV<InitList<ElementType>> = true;
 
-// Concept that checks whether Type is an InitList.
+// Trait structure that determines whether a type is an InitList.
+template <class ElementType>
+struct NEX_HIDDEN_FROM_ABI IsInitList : meta::BoolConstant<IsInitListV<ElementType>> {};
+
+// Concept that determines whether a type is an InitList.
 template <class Type>
 concept InitListType = IsInitListV<meta::RemoveCvrefT<Type>>;
 
-// Overload of begin() for InitList
+/**
+ * @brief Returns an iterator to the first element of the initializer list.
+ * @tparam ElementType The type of elements in the initializer list.
+ * @param ilist The specific initializer list.
+ * @return An iterator to the first element of the initializer list.
+ */
 template <class ElementType>
 inline NEX_HIDDEN_FROM_ABI constexpr 
 auto begin(InitList<ElementType> ilist) noexcept -> decltype(ilist.begin()) {
     return ilist.begin();
 }
 
-// Overload of end() for InitList
+/**
+ * @brief Returns an iterator to one past the last element of the initializer list.
+ * @tparam ElementType The type of elements in the initializer list.
+ * @param ilist The specific initializer list.
+ * @return An iterator to one past the last element of the initializer list.
+ */
 template <class ElementType>
 inline NEX_HIDDEN_FROM_ABI constexpr 
 auto end(InitList<ElementType> ilist) noexcept -> decltype(ilist.end()) {
     return ilist.end();
+}
+
+/**
+ * @brief Returns the number of elements in the initializer list.
+ * @tparam ElementType The type of elements in the initializer list.
+ * @param ilist The specific initializer list.
+ * @return The number of elements in the initializer list.
+ */
+template <class ElementType>
+inline NEX_HIDDEN_FROM_ABI constexpr
+auto size(InitList<ElementType> ilist) noexcept -> decltype(ilist.size()) {
+    return ilist.size();
+}
+
+/**
+ * @brief Determines whether the initializer list is empty.
+ * @tparam ElementType The type of elements in the initializer list.
+ * @param ilist The specific initializer list.
+ * @return True if the initializer list is empty, false otherwise.
+ */
+template <class ElementType>
+inline NEX_HIDDEN_FROM_ABI constexpr
+auto empty(InitList<ElementType> ilist) noexcept -> decltype(ilist.size() == 0) {
+    return ilist.size() == 0;
 }
 
 NEX_NAMESPACE_END

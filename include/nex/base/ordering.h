@@ -473,6 +473,28 @@ inline constexpr StrongOrdering StrongOrdering::Equivalent(OrderingResult::Equiv
 // Represents a result where the left operand is greater than the right operand.
 inline constexpr StrongOrdering StrongOrdering::Greater(OrderingResult::Greater);
 
+/**
+ * @brief Three-way comparison operator for types that are less-than comparable.
+ * 
+ * @tparam Type1 The type of the left-hand side operand.
+ * @tparam Type2 The type of the right-hand side operand.
+ * @param lhs The left-hand side operand.
+ * @param rhs The right-hand side operand.
+ * @return A StrongOrdering value indicating the relative order of the two operands.
+ * 
+ * @note
+ * This operator requires that the two types are less-than comparable.
+ * It uses the `<` operator to determine the ordering.
+ * The operator is marked `noexcept` if the comparison operations are also `noexcept`.
+ */
+template <class Type1, class Type2>
+    requires (LessThanComparable<Type1, Type2>)
+NEX_HIDDEN_FROM_ABI inline constexpr
+StrongOrdering operator<=>(Type1&& lhs, Type2&& rhs) noexcept(noexcept(lhs < rhs) && noexcept(rhs < lhs)) {
+    return (lhs < rhs) ? StrongOrdering::Less
+                       : ((rhs < lhs) ? StrongOrdering::Greater : StrongOrdering::Equal);
+}
+
 // Determines if a type is one of the comparison category types (PartialOrdering, WeakOrdering, StrongOrdering).
 template <class Type>
 concept ComparisonCategory =

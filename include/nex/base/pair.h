@@ -7,9 +7,12 @@
 
 #include "nex/base/namespace.h"
 #include "nex/base/attributes.h"
+#include "nex/base/export.h"
 #include "nex/base/meta.h"
 #include "nex/base/types.h"
 #include "nex/base/fwd.h"
+#include "nex/base/casts.h"
+#include "nex/base/utility.h"
 #include "nex/base/type_concepts.h"
 #include "nex/base/type_traits.h"
 
@@ -31,7 +34,7 @@ NEX_NAMESPACE_BEGIN
  * @see Tuple for a more general-purpose container that can hold an arbitrary number of values.
  */
 template <class First, class Second>
-struct Pair {
+struct NEX_API Pair {
     using first_type = First;
     using second_type = Second;
 
@@ -44,77 +47,77 @@ struct Pair {
     // Default constructor initializes both elements using their default constructors.
     NEX_HIDDEN_FROM_ABI constexpr Pair()
         noexcept(
-            meta::IsNothrowDefaultConstructibleV<first_type> &&
-            meta::IsNothrowDefaultConstructibleV<second_type>
+            IsNothrowDefaultConstructibleV<first_type> &&
+            IsNothrowDefaultConstructibleV<second_type>
         ) : first(), second() {}
 
     // Constructor that initializes the first and second elements with the provided values.
     NEX_HIDDEN_FROM_ABI constexpr Pair(const first_type& a, const second_type& b)
         noexcept(
-            meta::IsNothrowCopyConstructibleV<first_type> &&
-            meta::IsNothrowCopyConstructibleV<second_type>
+            IsNothrowCopyConstructibleV<first_type> &&
+            IsNothrowCopyConstructibleV<second_type>
         ) : first(a), second(b) {}
 
     // Constructor that initializes the first and second elements with the provided values of potentially
     // different types, if they are constructible to the respective member types.
     template <class Type1, class Type2>
-        requires (meta::IsConstructibleV<first_type, Type1> && meta::IsConstructibleV<second_type, Type2>)
+        requires (IsConstructibleV<first_type, Type1> && IsConstructibleV<second_type, Type2>)
     NEX_HIDDEN_FROM_ABI constexpr Pair(Type1&& a, Type2&& b)
         noexcept(
-            meta::IsNothrowConstructibleV<first_type, Type1> &&
-            meta::IsNothrowConstructibleV<second_type, Type2>
+            IsNothrowConstructibleV<first_type, Type1> &&
+            IsNothrowConstructibleV<second_type, Type2>
         ) : first(NEX_FORWARD<Type1>(a)), second(NEX_FORWARD<Type2>(b)) {}
 
     // Copy constructor that allows constructing a Pair from another Pair with potentially different
     // element types, if they are constructible to the respective member types.
     template <class Type1, class Type2>
-        requires (meta::IsConstructibleV<first_type, Type1> && meta::IsConstructibleV<second_type, Type2>)
+        requires (IsConstructibleV<first_type, Type1> && IsConstructibleV<second_type, Type2>)
     NEX_HIDDEN_FROM_ABI constexpr Pair(Pair<Type1, Type2>& other)
         noexcept(
-            meta::IsNothrowConstructibleV<first_type, Type1&> &&
-            meta::IsNothrowConstructibleV<second_type, Type2&>
+            IsNothrowConstructibleV<first_type, Type1&> &&
+            IsNothrowConstructibleV<second_type, Type2&>
         ) : first(other.first), second(other.second) {}
 
     // Copy constructor that allows constructing a Pair from another Pair with potentially different
     // element types, if they are constructible to the respective member types.
     template <class Type1, class Type2>
-        requires (meta::IsConstructibleV<first_type, Type1> && meta::IsConstructibleV<second_type, Type2>)
+        requires (IsConstructibleV<first_type, Type1> && IsConstructibleV<second_type, Type2>)
     NEX_HIDDEN_FROM_ABI constexpr Pair(const Pair<Type1, Type2>& other)
         noexcept(
-            meta::IsNothrowConstructibleV<first_type, const Type1&> &&
-            meta::IsNothrowConstructibleV<second_type, const Type2&>
+            IsNothrowConstructibleV<first_type, const Type1&> &&
+            IsNothrowConstructibleV<second_type, const Type2&>
         ) : first(other.first), second(other.second) {}
 
     // Move constructor that allows constructing a Pair from another Pair with potentially different
     // element types, if they are constructible to the respective member types.
     template <class Type1, class Type2>
-        requires (meta::IsConstructibleV<first_type, Type1> && meta::IsConstructibleV<second_type, Type2>)
+        requires (IsConstructibleV<first_type, Type1> && IsConstructibleV<second_type, Type2>)
     NEX_HIDDEN_FROM_ABI constexpr Pair(Pair<Type1, Type2>&& other)
         noexcept(
-            meta::IsNothrowConstructibleV<first_type, Type1&&> &&
-            meta::IsNothrowConstructibleV<second_type, Type2&&>
+            IsNothrowConstructibleV<first_type, Type1&&> &&
+            IsNothrowConstructibleV<second_type, Type2&&>
         ) : first(NEX_FORWARD<Type1>(other.first)), second(NEX_FORWARD<Type2>(other.second)) {}
 
     // Move constructor that allows constructing a Pair from another Pair with potentially different
     // element types, if they are constructible to the respective member types.
     template <class Type1, class Type2>
-        requires (meta::IsConstructibleV<first_type, Type1> && meta::IsConstructibleV<second_type, Type2>)
+        requires (IsConstructibleV<first_type, Type1> && IsConstructibleV<second_type, Type2>)
     NEX_HIDDEN_FROM_ABI constexpr Pair(const Pair<Type1, Type2>&& other)
         noexcept(
-            meta::IsNothrowConstructibleV<first_type, const Type1&&> &&
-            meta::IsNothrowConstructibleV<second_type, const Type2&&>
+            IsNothrowConstructibleV<first_type, const Type1&&> &&
+            IsNothrowConstructibleV<second_type, const Type2&&>
         ) : first(NEX_MOVE(other.first)), second(NEX_MOVE(other.second)) {}
 
     // Copy assignment operator that allows assigning from another Pair if the element types are copy assignable.
     NEX_HIDDEN_FROM_ABI constexpr Pair& operator=(
-        meta::ConditionalT<
-            meta::IsCopyAssignableV<first_type> && meta::IsCopyAssignableV<second_type>,
+        ConditionalT<
+            IsCopyAssignableV<first_type> && IsCopyAssignableV<second_type>,
             Pair&,
             meta::NAT
         > const& other
     ) noexcept(
-        meta::IsNothrowCopyAssignableV<first_type> &&
-        meta::IsNothrowCopyAssignableV<second_type>
+        IsNothrowCopyAssignableV<first_type> &&
+        IsNothrowCopyAssignableV<second_type>
     ) {
         first  = other.first;
         second = other.second;
@@ -123,14 +126,14 @@ struct Pair {
 
     // Move assignment operator that allows assigning from another Pair if the element types are move assignable.
     NEX_HIDDEN_FROM_ABI constexpr Pair& operator=(
-        meta::ConditionalT<
-            meta::IsMoveAssignableV<first_type> && meta::IsMoveAssignableV<second_type>,
+        ConditionalT<
+            IsMoveAssignableV<first_type> && IsMoveAssignableV<second_type>,
             Pair&,
             meta::NAT
         >&& other
     ) noexcept(
-        meta::IsNothrowMoveAssignableV<first_type> &&
-        meta::IsNothrowMoveAssignableV<second_type>
+        IsNothrowMoveAssignableV<first_type> &&
+        IsNothrowMoveAssignableV<second_type>
     ) {
         first  = NEX_FORWARD<first_type>(other.first);
         second = NEX_FORWARD<second_type>(other.second);
@@ -140,11 +143,11 @@ struct Pair {
     // Copy assignment operator that allows assigning from another Pair with potentially different
     // element types, if they are assignable to the respective member types.
     template <class Type1, class Type2>
-        requires (meta::IsAssignableV<first_type&, Type1> && meta::IsAssignableV<second_type&, Type2>)
+        requires (IsAssignableV<first_type&, Type1> && IsAssignableV<second_type&, Type2>)
     NEX_HIDDEN_FROM_ABI constexpr Pair& operator=(const Pair<Type1, Type2>& other)
         noexcept(
-            meta::IsNothrowAssignableV<first_type, const Type1&> &&
-            meta::IsNothrowAssignableV<second_type, const Type2&>
+            IsNothrowAssignableV<first_type, const Type1&> &&
+            IsNothrowAssignableV<second_type, const Type2&>
         ) {
         first  = other.first;
         second = other.second;
@@ -154,11 +157,11 @@ struct Pair {
     // Move assignment operator that allows assigning from another Pair with potentially different
     // element types, if they are assignable to the respective member types.
     template <class Type1, class Type2>
-        requires (meta::IsAssignableV<first_type&, Type1> && meta::IsAssignableV<second_type&, Type2>)
+        requires (IsAssignableV<first_type&, Type1> && IsAssignableV<second_type&, Type2>)
     NEX_HIDDEN_FROM_ABI constexpr Pair& operator=(Pair<Type1, Type2>&& other)
         noexcept(
-            meta::IsNothrowAssignableV<first_type, Type1&&> &&
-            meta::IsNothrowAssignableV<second_type, Type2&&>
+            IsNothrowAssignableV<first_type, Type1&&> &&
+            IsNothrowAssignableV<second_type, Type2&&>
         ) {
         first  = NEX_FORWARD<Type1>(other.first);
         second = NEX_FORWARD<Type2>(other.second);
@@ -169,10 +172,10 @@ struct Pair {
     // returning a const reference to the current Pair. This is useful for const-correctness.
     template <class = void>
     NEX_HIDDEN_FROM_ABI constexpr const Pair& operator=(const Pair& other) const
-        noexcept(meta::IsNothrowCopyAssignableV<const first_type> &&
-                 meta::IsNothrowCopyAssignableV<const second_type>)
-        requires(meta::IsCopyAssignableV<const first_type> &&
-                 meta::IsCopyAssignableV<const second_type>) {
+        noexcept(IsNothrowCopyAssignableV<const first_type> &&
+                 IsNothrowCopyAssignableV<const second_type>)
+        requires(IsCopyAssignableV<const first_type> &&
+                 IsCopyAssignableV<const second_type>) {
         first  = other.first;
         second = other.second;
         return *this;
@@ -182,10 +185,10 @@ struct Pair {
     // returning a const reference to the current Pair. This is useful for const-correctness.
     template <class = void>
     NEX_HIDDEN_FROM_ABI constexpr const Pair& operator=(Pair&& other) const
-        noexcept(meta::IsNothrowAssignableV<const first_type&, first_type> &&
-                 meta::IsNothrowAssignableV<const second_type&, second_type>)
-        requires(meta::IsAssignableV<const first_type&, first_type> &&
-                 meta::IsAssignableV<const second_type&, second_type>) {
+        noexcept(IsNothrowAssignableV<const first_type&, first_type> &&
+                 IsNothrowAssignableV<const second_type&, second_type>)
+        requires(IsAssignableV<const first_type&, first_type> &&
+                 IsAssignableV<const second_type&, second_type>) {
         first  = NEX_FORWARD<first_type>(other.first);
         second = NEX_FORWARD<second_type>(other.second);
         return *this;
@@ -195,8 +198,8 @@ struct Pair {
     // returning a const reference to the current Pair. This is useful for const-correctness.
     template <class Type1, class Type2>
     NEX_HIDDEN_FROM_ABI constexpr const Pair& operator=(const Pair<Type1, Type2>& other) const
-        requires(meta::IsAssignableV<const first_type&, const Type1&> &&
-                 meta::IsAssignableV<const second_type&, const Type2&>) {
+        requires(IsAssignableV<const first_type&, const Type1&> &&
+                 IsAssignableV<const second_type&, const Type2&>) {
         first  = other.first;
         second = other.second;
         return *this;
@@ -206,8 +209,8 @@ struct Pair {
     // returning a const reference to the current Pair. This is useful for const-correctness.
     template <class Type1, class Type2>
     NEX_HIDDEN_FROM_ABI constexpr const Pair& operator=(Pair<Type1, Type2>&& other) const
-        requires(meta::IsAssignableV<const first_type&, Type1> &&
-                 meta::IsAssignableV<const second_type&, Type2>) {
+        requires(IsAssignableV<const first_type&, Type1> &&
+                 IsAssignableV<const second_type&, Type2>) {
         first  = NEX_FORWARD<Type1>(other.first);
         second = NEX_FORWARD<Type2>(other.second);
         return *this;
@@ -385,8 +388,8 @@ NEX_HIDDEN_FROM_ABI inline constexpr void swap(Pair<First, Second>& lhs, Pair<Fi
 template <class Type1, class Type2>
 NEX_HIDDEN_FROM_ABI constexpr auto makePair(Type1&& first, Type2&& second)
     noexcept(
-        meta::IsNothrowConstructibleV<UnwrapRefDecayT<Type1>, Type1&&> &&
-        meta::IsNothrowConstructibleV<UnwrapRefDecayT<Type2>, Type2&&>
+        IsNothrowConstructibleV<UnwrapRefDecayT<Type1>, Type1&&> &&
+        IsNothrowConstructibleV<UnwrapRefDecayT<Type2>, Type2&&>
     ) -> Pair<UnwrapRefDecayT<Type1>, UnwrapRefDecayT<Type2>>
 {
     return Pair<UnwrapRefDecayT<Type1>, UnwrapRefDecayT<Type2>>(
@@ -398,25 +401,30 @@ NEX_HIDDEN_FROM_ABI constexpr auto makePair(Type1&& first, Type2&& second)
 // Specialization of TupleElement for Pair, allowing access to the first and second elements by index.
 // The index must be 0 or 1, corresponding to the first and second elements of the Pair.
 template <usize Index, class First, class Second>
-struct TupleElement<Index, Pair<First, Second>> {
+struct NEX_HIDDEN_FROM_ABI TupleElement<Index, Pair<First, Second>> {
     static_assert(Index < 2, "Error: Index out of bounds for Pair");
-    using type NEX_NODEBUG = meta::ConditionalT<Index == 0, First, Second>;
+    using type NEX_NODEBUG = ConditionalT<Index == 0, First, Second>;
 };
 
-// Primary template for GetPairHelper, which is specialized for Index 0 and 1
-// to retrieve the first and second elements of a Pair.
+/**
+ * @struct GetPairHelper
+ * @brief Helper struct template for retrieving elements from a Pair by index.
+ *        Specialized for Index 0 and 1 to access the first and second elements, respectively.
+ * @tparam Index The index of the element to retrieve from the Pair. Must be 0 or 1.
+ */
 template <usize Index>
-struct NEX_HIDDEN_FROM_ABI GetPairHelper {
+struct NEX_INTERNAL GetPairHelper {
     static_assert(Index < 2, "Error: Index out of bounds for Pair");
 };
 
 /**
+ * @struct GetPairHelper<0>
  * @brief Specialization of GetPairHelper for Index 0, which retrieves the first element of a Pair.
  * @tparam First The type of the first element in the Pair.
  * @tparam Second The type of the second element in the Pair.
  */
 template <>
-struct NEX_HIDDEN_FROM_ABI GetPairHelper<0> {
+struct NEX_INTERNAL GetPairHelper<0> {
     template <class First, class Second>
     static constexpr First& get(Pair<First, Second>& pair) noexcept {
         return pair.first;
@@ -439,12 +447,13 @@ struct NEX_HIDDEN_FROM_ABI GetPairHelper<0> {
 };
 
 /**
+ * @struct GetPairHelper<1>
  * @brief Specialization of GetPairHelper for Index 1, which retrieves the second element of a Pair.
  * @tparam First The type of the first element in the Pair.
  * @tparam Second The type of the second element in the Pair.
  */
 template <>
-struct NEX_HIDDEN_FROM_ABI GetPairHelper<1> {
+struct NEX_INTERNAL GetPairHelper<1> {
     template <class First, class Second>
     static constexpr Second& get(Pair<First, Second>& pair) noexcept {
         return pair.second;
@@ -478,7 +487,7 @@ struct NEX_HIDDEN_FROM_ABI GetPairHelper<1> {
  */
 template <usize Index, class First, class Second>
     requires (Index < 2)
-NEX_HIDDEN_FROM_ABI constexpr
+NEX_NODISCARD NEX_HIDDEN_FROM_ABI constexpr
 TupleElementT<Index, Pair<First, Second>>& get(Pair<First, Second>& pair) noexcept {
     return GetPairHelper<Index>::get(pair);
 }
@@ -495,7 +504,7 @@ TupleElementT<Index, Pair<First, Second>>& get(Pair<First, Second>& pair) noexce
  */
 template <usize Index, class First, class Second>
     requires (Index < 2)
-NEX_HIDDEN_FROM_ABI constexpr
+NEX_NODISCARD NEX_HIDDEN_FROM_ABI constexpr
 const TupleElementT<Index, Pair<First, Second>>& get(const Pair<First, Second>& pair) noexcept {
     return GetPairHelper<Index>::get(pair);
 }
@@ -512,7 +521,7 @@ const TupleElementT<Index, Pair<First, Second>>& get(const Pair<First, Second>& 
  */
 template <usize Index, class First, class Second>
     requires (Index < 2)
-NEX_HIDDEN_FROM_ABI constexpr
+NEX_NODISCARD NEX_HIDDEN_FROM_ABI constexpr
 TupleElementT<Index, Pair<First, Second>>&& get(Pair<First, Second>&& pair) noexcept {
     return GetPairHelper<Index>::get(NEX_MOVE(pair));
 }
@@ -529,7 +538,7 @@ TupleElementT<Index, Pair<First, Second>>&& get(Pair<First, Second>&& pair) noex
  */
 template <usize Index, class First, class Second>
     requires (Index < 2)
-NEX_HIDDEN_FROM_ABI constexpr
+NEX_NODISCARD NEX_HIDDEN_FROM_ABI constexpr
 const TupleElementT<Index, Pair<First, Second>>&& get(const Pair<First, Second>&& pair) noexcept {
     return GetPairHelper<Index>::get(NEX_MOVE(pair));
 }
@@ -542,7 +551,7 @@ const TupleElementT<Index, Pair<First, Second>>&& get(const Pair<First, Second>&
  * @return A reference to the first element of the Pair.
  */
 template <class Type1, class Type2>
-NEX_HIDDEN_FROM_ABI inline constexpr Type1& get(Pair<Type1, Type2>& pair) noexcept {
+NEX_NODISCARD NEX_HIDDEN_FROM_ABI inline constexpr Type1& get(Pair<Type1, Type2>& pair) noexcept {
     return pair.first;
 }
 
@@ -554,7 +563,7 @@ NEX_HIDDEN_FROM_ABI inline constexpr Type1& get(Pair<Type1, Type2>& pair) noexce
  * @return A const reference to the first element of the Pair.
  */
 template <class Type1, class Type2>
-NEX_HIDDEN_FROM_ABI inline constexpr const Type1& get(const Pair<Type1, Type2>& pair) noexcept {
+NEX_NODISCARD NEX_HIDDEN_FROM_ABI inline constexpr const Type1& get(const Pair<Type1, Type2>& pair) noexcept {
     return pair.first;
 }
 
@@ -566,7 +575,7 @@ NEX_HIDDEN_FROM_ABI inline constexpr const Type1& get(const Pair<Type1, Type2>& 
  * @return An rvalue reference to the first element of the Pair.
  */
 template <class Type1, class Type2>
-NEX_HIDDEN_FROM_ABI inline constexpr Type1&& get(Pair<Type1, Type2>&& pair) noexcept {
+NEX_NODISCARD NEX_HIDDEN_FROM_ABI inline constexpr Type1&& get(Pair<Type1, Type2>&& pair) noexcept {
     return NEX_FORWARD<Type1>(pair.first);
 }
 
@@ -578,7 +587,7 @@ NEX_HIDDEN_FROM_ABI inline constexpr Type1&& get(Pair<Type1, Type2>&& pair) noex
  * @return A const rvalue reference to the first element of the Pair.
  */
 template <class Type1, class Type2>
-NEX_HIDDEN_FROM_ABI inline constexpr const Type1&& get(const Pair<Type1, Type2>&& pair) noexcept {
+NEX_NODISCARD NEX_HIDDEN_FROM_ABI inline constexpr const Type1&& get(const Pair<Type1, Type2>&& pair) noexcept {
     return NEX_FORWARD<const Type1>(pair.first);
 }
 
@@ -590,7 +599,7 @@ NEX_HIDDEN_FROM_ABI inline constexpr const Type1&& get(const Pair<Type1, Type2>&
  * @return A reference to the second element of the Pair.
  */
 template <class Type2, class Type1>
-NEX_HIDDEN_FROM_ABI inline constexpr Type2& get(Pair<Type1, Type2>& pair) noexcept {
+NEX_NODISCARD NEX_HIDDEN_FROM_ABI inline constexpr Type2& get(Pair<Type1, Type2>& pair) noexcept {
     return pair.second;
 }
 
@@ -602,7 +611,7 @@ NEX_HIDDEN_FROM_ABI inline constexpr Type2& get(Pair<Type1, Type2>& pair) noexce
  * @return A const reference to the second element of the Pair.
  */
 template <class Type2, class Type1>
-NEX_HIDDEN_FROM_ABI inline constexpr const Type2& get(const Pair<Type1, Type2>& pair) noexcept {
+NEX_NODISCARD NEX_HIDDEN_FROM_ABI inline constexpr const Type2& get(const Pair<Type1, Type2>& pair) noexcept {
     return pair.second;
 }
 
@@ -614,7 +623,7 @@ NEX_HIDDEN_FROM_ABI inline constexpr const Type2& get(const Pair<Type1, Type2>& 
  * @return An rvalue reference to the second element of the Pair.
  */
 template <class Type2, class Type1>
-NEX_HIDDEN_FROM_ABI inline constexpr Type2&& get(Pair<Type1, Type2>&& pair) noexcept {
+NEX_NODISCARD NEX_HIDDEN_FROM_ABI inline constexpr Type2&& get(Pair<Type1, Type2>&& pair) noexcept {
     return NEX_FORWARD<Type2>(pair.second);
 }
 
@@ -626,7 +635,7 @@ NEX_HIDDEN_FROM_ABI inline constexpr Type2&& get(Pair<Type1, Type2>&& pair) noex
  * @return A const rvalue reference to the second element of the Pair.
  */
 template <class Type2, class Type1>
-NEX_HIDDEN_FROM_ABI inline constexpr const Type2&& get(const Pair<Type1, Type2>&& pair) noexcept {
+NEX_NODISCARD NEX_HIDDEN_FROM_ABI inline constexpr const Type2&& get(const Pair<Type1, Type2>&& pair) noexcept {
     return NEX_FORWARD<const Type2>(pair.second);
 }
 

@@ -17,8 +17,6 @@
  * instantiations based on type properties.
  */
 
-#include <concepts>
-
 #include "nex/base/namespace.h"
 #include "nex/base/meta.h"
 #include "nex/base/types.h"
@@ -539,7 +537,7 @@ concept PointerLike =
  */
 template <typename Type>
 concept Hashable = requires(const meta::RemoveCvrefT<Type>& value) {
-    { NEX_STD hash<meta::RemoveCvrefT<Type>>{}(value) } -> ConvertibleTo<usize>;
+    { Hash<meta::RemoveCvrefT<Type>>{}(value) } -> ConvertibleTo<usize>;
 };
 
 /**

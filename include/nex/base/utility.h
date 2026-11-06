@@ -399,4 +399,80 @@ inline constexpr auto swap = _swap::Fn{};
 
 NEX_SUBNAMESPACE_END(ranges)
 
+// =================================================================================
+// Integer sequence generation and related utilities
+// =================================================================================
+
+/**
+ * @brief Represents a compile-time sequence of integers of a specified type.
+ * @tparam Type The integral type of the sequence.
+ * @tparam Values The integer values in the sequence.
+ * @note This struct is used to generate sequences of integers at compile time, which can be useful
+ *       for template metaprogramming and other compile-time computations.
+ */
+template <class Type, Type... Values>
+struct IntegerSequence {
+    using value_type = Type;
+    static_assert(meta::IsIntegralV<Type>, "Error: IntegerSequence can only be instantiated with integral types.");
+    static constexpr usize size() noexcept { return sizeof...(Values); }
+};
+
+/**
+ * @brief Represents a compile-time sequence of indices (usize) for a given set of values.
+ * @tparam Values The index values in the sequence.
+ * @note This struct is a specialization of IntegerSequence for usize, which is commonly used
+ *       for indexing and other compile-time computations involving sizes and indices.
+ */
+template <usize... Values>
+using IndexSequence = IntegerSequence<usize, Values...>;
+
+/**
+ * @brief Generates a compile-time sequence of integers of a specified type and size.
+ * @tparam Type The integral type of the sequence.
+ * @tparam Size The number of integers in the sequence.
+ * @note This utility generates a sequence of integers from 0 to Size - 1, which can be useful
+ *       for template metaprogramming and other compile-time computations.
+ */
+#if NEX_HAS_BUILTIN(__make_integer_seq)
+    template <class Type, Type Size>
+    using MakeIntegerSequence = __make_integer_seq<IntegerSequence, Type, Size>;
+
+#elif NEX_HAS_BUILTIN(__integer_pack)
+    template <class Type, Type SequenceSize>
+    using MakeIntegerSequence = IntegerSequence<Type, __integer_pack(SequenceSize)...>;
+#else
+    #error "No known way to get an integer pack from the compiler"
+#endif
+
+/**
+ * @brief Generates a compile-time sequence of indices (usize) for a given size.
+ * @tparam Size The number of indices in the sequence.
+ * @note This utility generates a sequence of indices from 0 to Size - 1, which can be useful
+ *       for template metaprogramming and other compile-time computations involving sizes and indices.
+ */
+template <usize Size>
+using MakeIndexSequence = MakeIntegerSequence<usize, Size>;
+
+/**
+ * @brief Generates a compile-time sequence of indices (usize) for a given set of types.
+ * @tparam Types The types for which to generate the index sequence.
+ * @note This utility generates a sequence of indices from 0 to sizeof...(Types) - 1, which can be useful
+ *       for template metaprogramming and other compile-time computations involving sizes and indices.
+ */
+template <class... Types>
+using IndexSequenceFor = MakeIndexSequence<sizeof...(Types)>;
+
+/**
+ * @brief Applies a function to each index in a compile-time index sequence.
+ * @tparam Indices The indices in the sequence.
+ * @tparam Func The function to apply to each index.
+ * @param func The function object to apply to each index.
+ * @note This utility allows for applying a function to each index in a compile-time index sequence,
+ *       which can be useful for template metaprogramming and other compile-time computations.
+ */
+template <usize... Indices, class Func>
+NEX_HIDDEN_FROM_ABI constexpr void forEachIndexSequence(IndexSequence<Indices...>, Func func) {
+    (func.template operator()<Indices>(), ...);
+}
+
 NEX_NAMESPACE_END

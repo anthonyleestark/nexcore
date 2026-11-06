@@ -74,6 +74,25 @@ struct NEX_HIDDEN_FROM_ABI NAT {
     ~NAT()                     = delete;
 };
 
+template <bool>
+struct IfImpl;
+
+template <>
+struct IfImpl<true> {
+    template <class Then, class Else>
+    using Select NEX_NODEBUG = Then;
+};
+
+template <>
+struct IfImpl<false> {
+    template <class Then, class Else>
+    using Select NEX_NODEBUG = Else;
+};
+
+// If is a compile-time conditional type selector, choosing between Then and Else based on Condition.
+template <bool Condition, class Then, class Else>
+using If NEX_NODEBUG = typename IfImpl<Condition>::template Select<Then, Else>;
+
 // EnableIf implementation for SFINAE
 template <bool BoolCond, class Type = void>
 struct EnableIf {};     // no member "type" when !BoolCond
@@ -113,35 +132,6 @@ struct Conditional<false, Type1, Type2> {
 template <bool Test, class Type1, class Type2>
 using ConditionalT = typename Conditional<Test, Type1, Type2>::type;
 
-// Performs a compile-time logical AND operation on a pack of type traits, 
-// evaluating to true if all traits are true, and false otherwise.
-template <class...>
-struct Conjunction : TrueType {};
-
-template <class Arg>
-struct Conjunction<Arg> : Arg {};
-
-template <class Arg1, class... Args>
-struct Conjunction<Arg1, Args...> 
-    : ConditionalT<!bool(Arg1::value), Arg1, Conjunction<Args...>> {};
-
-// Performs a compile-time logical OR operation on a pack of type traits,
-// evaluating to true if at least one trait is true, and false otherwise.
-template <class...>
-struct Disjunction : FalseType {};
-
-template <class Arg>
-struct Disjunction<Arg> : Arg {};
-
-template <class Arg1, class... Args>
-struct Disjunction<Arg1, Args...> 
-    : ConditionalT<bool(Arg1::value), Arg1, Disjunction<Args...>> {};
-
-// Performs a compile-time logical NOT operation on a type trait,
-// evaluating to true if the trait is false, and false if the trait is true.
-template <class Pred>
-struct Negation : BoolConstant<!bool(Pred::value)> {};
-
 // Determine whether arguments are the same type
 #if NEX_HAS_BUILTIN(__is_same)
     template <class Type1, class Type2>
@@ -156,6 +146,107 @@ struct Negation : BoolConstant<!bool(Pred::value)> {};
 // Determine whether arguments are the same type
 template <class Type1, class Type2>
 struct IsSame : BoolConstant<IsSameV<Type1, Type2>> {};
+
+// Determines whether two types are not the same.
+template <class Type1, class Type2>
+struct IsNotSame : BoolConstant<!IsSameV<Type1, Type2>> {};
+
+template <class Type1, class Type2>
+inline constexpr bool IsNotSameV = !IsSameV<Type1, Type2>;
+
+template <class...>
+using ExpandToTrue NEX_NODEBUG = TrueType;
+
+template <class... Predicate>
+NEX_HIDDEN_FROM_ABI ExpandToTrue<EnableIfT<Predicate::value>...> AndHelper(int);
+
+template <class...>
+NEX_HIDDEN_FROM_ABI FalseType AndHelper(...);
+
+/**
+ * @note
+ * And always performs lazy evaluation of its arguments.
+ * However, `And<Predicate...>` itself will evaluate its result immediately (without having to be instantiated)
+ * since it is an alias, unlike `Conjunction<Predicates...>`, which is a struct.
+ */
+template <class... Predicate>
+using And NEX_NODEBUG = decltype(AndHelper<Predicate...>(0));
+
+template <class... Predicate>
+inline constexpr bool AndV = And<Predicate...>::value;
+
+template <bool... Predicates>
+struct AllTrueDummy;
+
+// Determines whether all boolean predicates are true at compile-time
+template <bool... Predicate>
+inline constexpr bool AllTrueV = IsSameV<AllTrueDummy<Predicate...>, AllTrueDummy<((void)Predicate, true)...>>;
+
+template <bool... Predicate>
+struct AllTrue : BoolConstant<AllTrueV<Predicate...>> {};
+
+// Performs a compile-time logical AND operation on a pack of type traits, 
+// evaluating to true if all traits are true, and false otherwise.
+template <class...>
+struct Conjunction : TrueType {};
+
+template <class Arg>
+struct Conjunction<Arg> : Arg {};
+
+template <class Arg1, class... Args>
+struct Conjunction<Arg1, Args...> 
+    : ConditionalT<!bool(Arg1::value), Arg1, Conjunction<Args...>> {};
+
+template <bool>
+struct OrImpl;
+
+template <>
+struct OrImpl<true> {
+  template <class Res, class First, class... Rest>
+  using Result NEX_NODEBUG =
+      typename OrImpl<!bool(First::value) && sizeof...(Rest) != 0>::template Result<First, Rest...>;
+};
+
+template <>
+struct OrImpl<false> {
+  template <class Res, class...>
+  using Result NEX_NODEBUG = Res;
+};
+
+/**
+ * @note
+ * Or always performs lazy evaluation of its arguments.
+ * However, `Or<Predicate...>` itself will evaluate its result immediately (without having to be instantiated)
+ * since it is an alias, unlike `Disjunction<Predicates...>`, which is a struct.
+ */
+template <class... Predicate>
+using Or NEX_NODEBUG = typename OrImpl<sizeof...(Predicate) != 0>::template Result<FalseType, Predicate...>;
+
+// Performs a compile-time logical OR operation on a pack of type traits,
+// evaluating to true if at least one trait is true, and false otherwise.
+template <class...>
+struct Disjunction : FalseType {};
+
+template <class Arg>
+struct Disjunction<Arg> : Arg {};
+
+template <class Arg1, class... Args>
+struct Disjunction<Arg1, Args...> 
+    : ConditionalT<bool(Arg1::value), Arg1, Disjunction<Args...>> {};
+
+template <class Predicate>
+struct Not : BoolConstant<!bool(Predicate::value)> {};
+
+template <class Predicate>
+inline constexpr bool NotV = Not<Predicate>::value;
+
+// Performs a compile-time logical NOT operation on a type trait,
+// evaluating to true if the trait is false, and false if the trait is true.
+template <class Predicate>
+struct Negation : Not<Predicate> {};
+
+template <class Predicate>
+constexpr bool NegationV = Negation<Predicate>::value;
 
 // Determine whether a type is a specialization of a class template
 template <class Type, template <class...> class Template>
@@ -756,96 +847,6 @@ struct IsBaseOf : BoolConstant<__is_base_of(Base, Derived)> {};
 template <class Base, class Derived>
 constexpr bool IsBaseOfV = IsBaseOf<Base, Derived>::value;
 
-// Copy const-qualifier from one type to another
-template <class From, class To>
-struct CopyConst {
-    using type = To;
-};
-
-template <class From, class To>
-struct CopyConst<const From, To> {
-    using type = const To;
-};
-
-template <class From, class To>
-using CopyConstT = typename CopyConst<From, To>::type;
-
-// Copy volatile-qualifier from one type to another
-template <class From, class To>
-struct CopyVolatile {
-    using type = To;
-};
-
-template <class From, class To>
-struct CopyVolatile<volatile From, To> {
-    using type = volatile To;
-};
-
-template <class From, class To>
-using CopyVolatileT = typename CopyVolatile<From, To>::type;
-
-// Copy cv-qualifiers from one type to another
-template <class From, class To>
-struct CopyCv {
-    using type = To;
-};
-
-template <class From, class To>
-struct CopyCv<const From, To> {
-    using type = const To;
-};
-
-template <class From, class To>
-struct CopyCv<volatile From, To> {
-    using type = volatile To;
-};
-
-template <class From, class To>
-struct CopyCv<const volatile From, To> {
-    using type = const volatile To;
-};
-
-template <class From, class To>
-using CopyCvT = typename CopyCv<From, To>::type;
-
-// Copy reference from one type to another
-template <class From, class To>
-struct CopyReference {
-    using type = To;
-};
-
-template <class From, class To>
-struct CopyReference<From&, To> {
-    using type = To&;
-};
-
-template <class From, class To>
-struct CopyReference<From&&, To> {
-    using type = To&&;
-};
-
-template <class From, class To>
-using CopyReferenceT = typename CopyReference<From, To>::type;
-
-// Copy reference and cv-qualifiers from one type to another
-template <class From, class To>
-struct CopyCvref {
-    using type = typename CopyCv<From, To>::type;
-};
-
-template <class From, class To>
-struct CopyCvref<From&, To> {
-    using type = typename CopyCv<From, To>::type&;
-};
-
-template <class From, class To>
-struct CopyCvref<From&&, To> {
-    using type = typename CopyCv<From, To>::type&&;
-};
-
-template <class From, class To>
-using CopyCvrefT = typename CopyCvref<From, To>::type;
-
 // Retrieve the underlying type of an enumeration type
 template <class Type, bool = IsEnumV<Type>>
 struct UnderlyingType {
@@ -877,81 +878,100 @@ using VoidT = void;
 // Add pointer (pointer type cannot be formed)
 template <class Type, class = void>
 struct NEX_HIDDEN_FROM_ABI AddPointerImpl {
-    using type = Type;
+    using type NEX_NODEBUG = Type;
 };
 
 template <class Type>
 struct NEX_HIDDEN_FROM_ABI AddPointerImpl<Type, VoidT<RemoveReferenceT<Type>*>> {
-    using type = RemoveReferenceT<Type>*;
+    using type NEX_NODEBUG = RemoveReferenceT<Type>*;
 };
 
 template <class Type>
 struct AddPointer {
-    using type = typename AddPointerImpl<Type>::type;
+    using type NEX_NODEBUG = typename AddPointerImpl<Type>::type;
 };
 
 template <class Type>
-using AddPointerT = typename AddPointerImpl<Type>::type;
+using AddPointerT NEX_NODEBUG = typename AddPointerImpl<Type>::type;
 
 // Add top-level const qualifier to a type
 template <class Type>
 struct AddConst {
-    using type = const Type;
+    using type NEX_NODEBUG = const Type;
 };
 
 template <class Type>
-using AddConstT = typename AddConst<Type>::type;
+using AddConstT NEX_NODEBUG = typename AddConst<Type>::type;
 
 // Add top-level volatile qualifier to a type
 template <class Type>
 struct AddVolatile {
-    using type = volatile Type;
+    using type NEX_NODEBUG = volatile Type;
 };
 
 // Add top-level volatile qualifier to a type
 template <class Type>
-using AddVolatileT = typename AddVolatile<Type>::type;
+using AddVolatileT NEX_NODEBUG = typename AddVolatile<Type>::type;
 
 // Add top-level const and volatile qualifiers to a type
 template <class Type>
 struct AddCv {
-    using type = const volatile Type;
+    using type NEX_NODEBUG = const volatile Type;
 };
 
 template <class Type>
-using AddCvT = typename AddCv<Type>::type;
+using AddCvT NEX_NODEBUG = typename AddCv<Type>::type;
 
-// Add reference to a type (non-referenceable type)
-template <class Type, class = void>
-struct NEX_HIDDEN_FROM_ABI AddReferenceImpl {
-    using Lvalue = Type;
-    using Rvalue = Type;
-};
+#if NEX_HAS_BUILTIN(__add_lvalue_reference) && NEX_HAS_BUILTIN(__add_rvalue_reference)
+    // Add an lvalue reference to a type
+    template <class Type>
+    struct AddLvalueReference {
+        using type NEX_NODEBUG = __add_lvalue_reference(Type);
+    };
 
-// Add reference to a type (referenceable type)
-template <class Type>
-struct NEX_HIDDEN_FROM_ABI AddReferenceImpl<Type, VoidT<Type&>> {
-    using Lvalue = Type&;
-    using Rvalue = Type&&;
-};
+    template <class Type>
+    using AddLvalueReferenceT NEX_NODEBUG = typename AddLvalueReference<Type>::type;
 
-// Add an lvalue reference to a type
-template <class Type>
-struct AddLvalueReference {
-    using type = typename AddReferenceImpl<Type>::Lvalue;
-};
+    // Add an rvalue reference to a type
+    template <class Type>
+    struct AddRvalueReference {
+        using type NEX_NODEBUG = __add_rvalue_reference(Type);
+    };
+    template <class Type>
+    using AddRvalueReferenceT NEX_NODEBUG = typename AddRvalueReference<Type>::type;
+#else  // No builtin support, fall back to manual implementation
+    // Add reference to a type (non-referenceable type)
+    template <class Type, class = void>
+    struct NEX_HIDDEN_FROM_ABI AddReferenceImpl {
+        using Lvalue NEX_NODEBUG = Type;
+        using Rvalue NEX_NODEBUG = Type;
+    };
 
-template <class Type>
-using AddLvalueReferenceT = typename AddReferenceImpl<Type>::Lvalue;
+    // Add reference to a type (referenceable type)
+    template <class Type>
+    struct NEX_HIDDEN_FROM_ABI AddReferenceImpl<Type, VoidT<Type&>> {
+        using Lvalue NEX_NODEBUG = Type&;
+        using Rvalue NEX_NODEBUG = Type&&;
+    };
 
-// Add an rvalue reference to a type
-template <class Type>
-struct AddRvalueReference {
-    using type = typename AddReferenceImpl<Type>::Rvalue;
-};
+    // Add an lvalue reference to a type
+    template <class Type>
+    struct AddLvalueReference {
+        using type NEX_NODEBUG = typename AddReferenceImpl<Type>::Lvalue;
+    };
 
-template <class Type>
-using AddRvalueReferenceT = typename AddReferenceImpl<Type>::Rvalue;
+    template <class Type>
+    using AddLvalueReferenceT NEX_NODEBUG = typename AddLvalueReference<Type>::type;
+
+    // Add an rvalue reference to a type
+    template <class Type>
+    struct AddRvalueReference {
+        using type NEX_NODEBUG = typename AddReferenceImpl<Type>::Rvalue;
+    };
+
+    template <class Type>
+    using AddRvalueReferenceT NEX_NODEBUG = typename AddRvalueReference<Type>::type;
+#endif
 
 // A utility function that can be used in unevaluated contexts 
 // to obtain a value of a specified type without needing to construct it.
@@ -960,6 +980,96 @@ AddRvalueReferenceT<Type> declval() noexcept {
     static_assert(IsSameV<Type, void> && !IsSameV<Type, void>, 
         "Error: declval not allowed in an evaluated context");
 }
+
+// Copy const-qualifier from one type to another
+template <class From, class To>
+struct CopyConst {
+    using type NEX_NODEBUG = To;
+};
+
+template <class From, class To>
+struct CopyConst<const From, To> {
+    using type NEX_NODEBUG = const To;
+};
+
+template <class From, class To>
+using CopyConstT NEX_NODEBUG = typename CopyConst<From, To>::type;
+
+// Copy volatile-qualifier from one type to another
+template <class From, class To>
+struct CopyVolatile {
+    using type NEX_NODEBUG = To;
+};
+
+template <class From, class To>
+struct CopyVolatile<volatile From, To> {
+    using type NEX_NODEBUG = volatile To;
+};
+
+template <class From, class To>
+using CopyVolatileT NEX_NODEBUG = typename CopyVolatile<From, To>::type;
+
+// Copy cv-qualifiers from one type to another
+template <class From, class To>
+struct CopyCv {
+    using type NEX_NODEBUG = To;
+};
+
+template <class From, class To>
+struct CopyCv<const From, To> {
+    using type NEX_NODEBUG = const To;
+};
+
+template <class From, class To>
+struct CopyCv<volatile From, To> {
+    using type NEX_NODEBUG = volatile To;
+};
+
+template <class From, class To>
+struct CopyCv<const volatile From, To> {
+    using type NEX_NODEBUG = const volatile To;
+};
+
+template <class From, class To>
+using CopyCvT NEX_NODEBUG = typename CopyCv<From, To>::type;
+
+// Copy reference from one type to another
+template <class From, class To>
+struct CopyReference {
+    using type NEX_NODEBUG = To;
+};
+
+template <class From, class To>
+struct CopyReference<From&, To> {
+    using type NEX_NODEBUG = AddLvalueReferenceT<To>;
+};
+
+template <class From, class To>
+struct CopyReference<From&&, To> {
+    using type NEX_NODEBUG = AddRvalueReferenceT<To>;
+};
+
+template <class From, class To>
+using CopyReferenceT NEX_NODEBUG = typename CopyReference<From, To>::type;
+
+// Copy reference and cv-qualifiers from one type to another
+template <class From, class To>
+struct CopyCvref {
+    using type NEX_NODEBUG = CopyCvT<From, To>;
+};
+
+template <class From, class To>
+struct CopyCvref<From&, To> {
+    using type NEX_NODEBUG = AddLvalueReferenceT<CopyCvT<From, To>>;
+};
+
+template <class From, class To>
+struct CopyCvref<From&&, To> {
+    using type NEX_NODEBUG = AddRvalueReferenceT<CopyCvT<From, To>>;
+};
+
+template <class From, class To>
+using CopyCvrefT NEX_NODEBUG = typename CopyCvref<From, To>::type;
 
 // Determine whether Type is a function type 
 // (i.e., a type that can be called with a function call syntax, excluding reference types and void types)
@@ -1114,19 +1224,34 @@ struct IsDefaultConstructible : BoolConstant<__is_constructible(Type)> {};
 template <class Type>
 constexpr bool IsDefaultConstructibleV = IsDefaultConstructible<Type>::value;
 
-// Determine whether Type can be copy-initialized with {}
-template <class Type, class = void>
-struct NEX_HIDDEN_FROM_ABI IsImplicitlyDefaultConstructibleImpl : FalseType {};
-
-// Helper function to test whether Type can be copy-initialized with {}
+// Helper function to test whether Type can be implicitly default constructed
 template <class Type>
-NEX_HIDDEN_FROM_ABI void ImplicitlyDefaultConstructImpl(const Type&);
+NEX_HIDDEN_FROM_ABI void TestImplicitDefaultConstructible(Type);
+
+// Implementation detail for IsImplicitlyDefaultConstructible
+template <class Type, class = void, class = typename IsDefaultConstructible<Type>::type>
+struct IsImplicitlyDefaultConstructibleImpl : FalseType {};
 
 template <class Type>
-struct NEX_HIDDEN_FROM_ABI IsImplicitlyDefaultConstructibleImpl<
-    Type, 
-    VoidT<decltype(ImplicitlyDefaultConstructImpl<Type>({}))>
-    > : TrueType {};
+struct IsImplicitlyDefaultConstructibleImpl<
+    Type,
+    decltype(TestImplicitDefaultConstructible<Type const&>({})),
+    TrueType
+> : TrueType {};
+
+template <class Type>
+struct IsImplicitlyDefaultConstructibleImpl<
+    Type,
+    decltype(TestImplicitDefaultConstructible<Type const&>({})),
+    FalseType
+> : FalseType {};
+
+// Determines whether Type can be implicitly default constructed
+template <class Type>
+struct IsImplicitlyDefaultConstructible : IsImplicitlyDefaultConstructibleImpl<Type> {};
+
+template <class Type>
+constexpr bool IsImplicitlyDefaultConstructibleV = IsImplicitlyDefaultConstructible<Type>::value;
 
 // Determine whether Type can be direct-initialized from an rvalue Type
 template <class Type>
@@ -1329,6 +1454,35 @@ struct IsNothrowDestructible : BoolConstant<__is_nothrow_destructible(Type)> {};
 template <class Type>
 constexpr bool IsNothrowDestructibleV = IsNothrowDestructible<Type>::value;
 
+// Determine whether a reference of type To can be constructed from a temporary of type From
+// (i.e., whether it binds to a temporary)
+#if NEX_HAS_BUILTIN(__reference_constructs_from_temporary)
+    template <class To, class From>
+    constexpr bool ReferenceConstructsFromTemporaryV = __reference_constructs_from_temporary(To, From);
+#elif NEX_HAS_BUILTIN(__reference_binds_to_temporary)
+    template <class To, class From>
+    constexpr bool ReferenceConstructsFromTemporaryV = __reference_binds_to_temporary(To, From);
+#else  // No builtin support, assume false
+    template <class To, class From>
+    constexpr bool ReferenceConstructsFromTemporaryV = false;
+#endif
+
+template <class To, class From>
+struct ReferenceConstructsFromTemporary : BoolConstant<ReferenceConstructsFromTemporaryV<To, From>> {};
+
+// Determine whether a reference of type To can be constructed from a temporary of type From via conversion
+// (i.e., whether it binds to a temporary through a conversion)
+#if NEX_HAS_BUILTIN(__reference_converts_from_temporary)
+    template <class To, class From>
+    constexpr bool ReferenceConvertsFromTemporaryV = __reference_converts_from_temporary(To, From);
+#else  // No builtin support, assume false
+    template <class To, class From>
+    constexpr bool ReferenceConvertsFromTemporaryV = false;
+#endif
+
+template <class To, class From>
+struct ReferenceConvertsFromTemporary : BoolConstant<ReferenceConvertsFromTemporaryV<To, From>> {};
+
 // Determine whether Type can be replaced with another type (i.e., whether it is trivially copyable)
 template <class Type, class = void>
 struct IsReplaceable : IsTriviallyCopyable<Type> {};
@@ -1343,7 +1497,7 @@ constexpr bool IsReplaceableV = IsReplaceable<Type>::value;
 #if NEX_HAS_BUILTIN(__decay)
     template <class Type>
     using Decay = __decay(Type);
-#else
+#else  // No builtin support, fall back to manual implementation
     template <class Type>
     struct Decay {
         using Type1 = RemoveReferenceT<Type>;

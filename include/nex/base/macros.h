@@ -13,10 +13,47 @@
 #include "nex/base/export.h"
 #include "nex/base/namespace.h"
 
+// =================================================================================
+// Define macros for compilation and preprocessor utilities
+// =================================================================================
+
+#define NEX_STRINGIFY_IMPL(x)       #x
+#define NEX_CONCAT_IMPL(a, b)       a##b
+#define NEX_EXPAND(x)               x
+
+// Stringify a macro argument
+#define NEX_STRINGIFY(x) \
+    NEX_STRINGIFY_IMPL(x)
+
+// Concatenate two macro arguments into a single token
+#define NEX_CONCAT(a, b) \
+    NEX_CONCAT_IMPL(a, b)
+
+// Concatenate three macro arguments into a single token
+#define NEX_CONCAT3(a, b, c) \
+    NEX_CONCAT(NEX_CONCAT(a, b), c)
+
+// Concatenate four macro arguments into a single token
+#define NEX_CONCAT4(a, b, c, d) \
+    NEX_CONCAT(NEX_CONCAT3(a, b, c), d)
+
+#define NEX_MAKE_UNIQUE_NAME_IMPL(prefix, line) NEX_CONCAT(prefix, line)
+
+// Generates a unique name by concatenating a prefix with the current line number
+#define NEX_MAKE_UNIQUE_NAME(prefix) \
+    NEX_MAKE_UNIQUE_NAME_IMPL(prefix, __LINE__)
+
+#define NEX_VA_ARG_COUNT_IMPL(_1,_2,_3,_4,_5,_6,_7,_8,_9,_10, N, ...) N
+
+// Counts the number of arguments passed to a variadic macro
+#define NEX_VA_ARG_COUNT(...) \
+    NEX_EXPAND(NEX_VA_ARG_COUNT_IMPL(__VA_ARGS__, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1))
+
+// =================================================================================
+// Defines macros for default and deleted copy and move semantics for classes
+// =================================================================================
+
 /**
- * @section Copy and Move Semantics Macros
- * @brief   Defines macros for default and deleted copy and move constructors and assignment operators for classes.
- * 
  * @details
  * This section defines macros for default and deleted copy and move constructors and assignment operators for classes.
  * The macros can be used to easily specify the copy and move semantics of a class, either by defaulting them or by 
@@ -89,16 +126,9 @@
     NEX_DISALLOW_COPY(TypeName) \
     NEX_DISALLOW_MOVE(TypeName)
 
-/**
- * @section Destructor Macros
- * @brief Defines macros for virtual default and deleted destructors for classes.
- * 
- * @details
- * This section defines macros for virtual default and deleted destructors for classes.
- * The macros can be used to easily specify the destructor semantics of a class, either by defaulting it or by deleting it.
- * The macros can be used in the class declaration to specify the destructor semantics, and they can also be used in the 
- * class definition to provide the default implementation.
- */
+// =================================================================================
+// Defines macros for virtual default and deleted destructors for classes
+// =================================================================================
 
 // Default destructor for a class
 #define NEX_DEFAULT_DTOR(TypeName) \
@@ -120,6 +150,10 @@
 #define NEX_OVERRIDE_DEFAULT_DTOR(TypeName) \
     ~TypeName() override = default;
 
+// Override deleted destructor for a class
+#define NEX_OVERRIDE_DELETE_DTOR(TypeName) \
+    ~TypeName() override = delete;
+
 // Default destructor for a class (declaration only)
 #define NEX_DECLARE_DEFAULT_DTOR(TypeName) \
     ~TypeName();
@@ -132,95 +166,26 @@
 #define NEX_DECLARE_OVERRIDE_DTOR(TypeName) \
     ~TypeName() override;
 
+// Override deleted destructor for a class (declaration only)
+#define NEX_DECLARE_OVERRIDE_DELETE_DTOR(TypeName) \
+    ~TypeName() override = delete;
+
 // Default destructor for a class (definition)
 #define NEX_DEFINE_DEFAULT_DTOR(TypeName) \
     TypeName::~TypeName() = default;
 
-/**
- * @section Utility Macros
- * @brief Defines utility macros for common operations such as disallowing copy/move semantics, 
- *        getting the size of an array, and getting the offset of a member within a struct/class.
- * 
- * @details
- * This section defines utility macros for common operations such as getting the size of a statically sized array, 
- * getting the offset of a member within a struct/class, and getting the type of a struct/class member.
- * The macros can be used throughout the codebase to simplify common operations and to improve code 
- * readability and maintainability.
- */
+// Virtual default destructor for a class (definition)
+#define NEX_DEFINE_VIRTUAL_DTOR(TypeName) \
+    TypeName::~TypeName() = default;
 
-// Get the size of a struct/class member
-#define NEX_MEMBER_SIZE(type, member) \
-    sizeof(((type*)0)->member)
+// Override default destructor for a class (definition)
+#define NEX_DEFINE_OVERRIDE_DTOR(TypeName) \
+    TypeName::~TypeName() = default;
 
-// Get the type of a struct/class member
-#define NEX_MEMBER_TYPE(type, member) \
-    decltype(((type*)0)->member)
+// Virtual deleted destructor for a class (definition)
+#define NEX_DEFINE_VIRTUAL_DELETE_DTOR(TypeName) \
+    TypeName::~TypeName() = delete;
 
-// Get the type of a struct/class member as a pointer
-#define NEX_MEMBER_POINTER_TYPE(type, member) \
-    decltype(&((type*)0)->member)
-
-// Get the type of a struct/class member as a reference
-#define NEX_MEMBER_REFERENCE_TYPE(type, member) \
-    decltype(((type*)0)->member)
-
-// Get the type of a struct/class member as a const pointer
-#define NEX_MEMBER_CONST_POINTER_TYPE(type, member) \
-    decltype(&((const type*)0)->member)
-
-// Get the type of a struct/class member as a const reference
-#define NEX_MEMBER_CONST_REFERENCE_TYPE(type, member) \
-    decltype(((const type*)0)->member)
-
-// Get the type of a struct/class member as an rvalue reference
-#define NEX_MEMBER_RVALUE_REFERENCE_TYPE(type, member) \
-    decltype(((type*)0)->member)&&
-
-// Get the type of a struct/class member as a const rvalue reference
-#define NEX_MEMBER_CONST_RVALUE_REFERENCE_TYPE(type, member) \
-    decltype(((const type*)0)->member)&&
-
-// Safe delete of a pointer to an object and set the pointer to nullptr to avoid dangling pointers
-#define NEX_DELETE_OBJECT(objPtr) \
-    do { \
-        if (objPtr) { \
-            delete (objPtr); \
-            (objPtr) = nullptr; \
-        } \
-    } while (0)
-
-// Safe delete of a pointer to an array and set the pointer to nullptr to avoid dangling pointers
-#define NEX_DELETE_ARRAY(arrPtr) \
-    do { \
-        if (arrPtr) { \
-            delete[] (arrPtr); \
-            (arrPtr) = nullptr; \
-        } \
-    } while (0)
-
-// Safe delete of a pointer to a member to delete the containing struct/class
-#define NEX_DELETE_MEMBER(ptr, type, member) \
-    delete NEX_DOWNCAST_MEMBER(ptr, type, member)
-
-// Safe delete of a pointer to a member to delete the containing struct/class and set the pointer to nullptr
-#define NEX_DELETE_MEMBER_AND_NULL(ptr, type, member) \
-    do { \
-        NEX_DELETE_MEMBER(ptr, type, member); \
-        (ptr) = nullptr; \
-    } while (0)
-
-// Safe delete of a pointer to a member to delete the containing struct/class 
-// and set the pointer to nullptr (for arrays)
-#define NEX_DELETE_MEMBER_AND_NULL_ARRAY(ptr, type, member) \
-    do { \
-        delete[] NEX_DOWNCAST_MEMBER(ptr, type, member); \
-        (ptr) = nullptr; \
-    } while (0)
-
-// Safe delete of a pointer to a member to delete the containing struct/class 
-// and set the pointer to nullptr (for single objects)
-#define NEX_DELETE_MEMBER_AND_NULL_SINGLE(ptr, type, member) \
-    do { \
-        delete NEX_DOWNCAST_MEMBER(ptr, type, member); \
-        (ptr) = nullptr; \
-    } while (0)
+// Override deleted destructor for a class (definition)
+#define NEX_DEFINE_OVERRIDE_DELETE_DTOR(TypeName) \
+    TypeName::~TypeName() = delete;

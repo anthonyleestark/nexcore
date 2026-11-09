@@ -38,7 +38,7 @@
     #elif defined(_DEBUG) || defined(DEBUG)
         #define NEX_BUILD_MODE_DEBUG
     // Next priority: check for optimization flags, which are commonly defined in release builds on GCC and Clang
-    #elif (NEX_COMPILER_GCC_COMPATIBLE || NEX_COMPILER_IS_CLANG) && defined(__OPTIMIZE__)
+    #elif (NEX_COMPILER_GCC_COMPATIBLE || NEX_COMPILER_IS_CLANG_BASED) && defined(__OPTIMIZE__)
         #define NEX_BUILD_MODE_RELEASE
     // If we cannot detect the build mode, we can default to release mode, 
     // but this should not happen in a properly configured build environment.

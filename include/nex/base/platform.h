@@ -33,7 +33,9 @@
 #define NEX_PLATFORM_IS_MACOSX         0
 #define NEX_PLATFORM_IS_LINUX          0
 #define NEX_PLATFORM_IS_WINDOWS        0
+
 #define NEX_LIBC_IS_GLIBC              0
+#define NEX_LIBC_IS_UCLIBC             0
 
 /**
  * Below is a list of flags that are defined for each platform family. 
@@ -81,9 +83,11 @@
     #include <unistd.h>
     #if defined(__GLIBC__) && !defined(__UCLIBC__)
         // We really are using glibc, not uClibc pretending to be glibc.
-        #define NEX_LIBC_GLIBC 1
         #undef NEX_LIBC_IS_GLIBC
         #define NEX_LIBC_IS_GLIBC 1
+    #elif defined(__UCLIBC__)
+        #undef NEX_LIBC_IS_UCLIBC
+        #define NEX_LIBC_IS_UCLIBC 1
     #endif
 #elif defined(_WIN32) || defined(_WIN64)
     #define NEX_PLATFORM_WINDOWS 1
@@ -91,6 +95,18 @@
     #define NEX_PLATFORM_IS_WINDOWS 1
 #else
     #error Platform is not supported or not detected.
+#endif
+
+// Detects which libc we're using if we're on Linux.
+#if (defined(NEX_PLATFORM_LINUX) || defined(__AMDGPU__) || defined(__NVPTX__)) && __has_include(<features.h>)
+    #include <features.h>
+    #if NEX_LIBC_IS_GLIBC && defined(__GLIBC_PREREQ)
+        #define NEX_LIBC_GLIBC_PREREQ(major, minor) __GLIBC_PREREQ(major, minor)
+    #else
+        #define NEX_LIBC_GLIBC_PREREQ(major, minor) 0
+    #endif
+#else
+    #define NEX_LIBC_GLIBC_PREREQ(major, minor) 0
 #endif
 
 // ======================================================================================

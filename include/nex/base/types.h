@@ -271,7 +271,7 @@ using uint_fast64   = uint64;               // Fastest minimum 64-bit unsigned i
         using sizetype  = unsigned int;      // Represents sizes of objects in bytes, array lengths, etc.
         using ptrdiff   = int;               // Represents the difference between pointers in terms of array indexing
     #endif  // ^^sizetype/ptrdiff
-    #if NEX_COMPILER_GCC_COMPATIBLE || NEX_COMPILER_IS_CLANG
+    #if NEX_COMPILER_GCC_COMPATIBLE || NEX_COMPILER_IS_CLANG_BASED
         // A POD type with the strictest alignment requirements
         using max_align = __attribute__((__aligned__)) long double;
     #else  // Safe fallback for other compilers

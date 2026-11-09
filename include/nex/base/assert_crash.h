@@ -103,7 +103,7 @@ NEX_NORETURN inline void immediateCrash() {
     // to ensure the program does not continue executing.
     __fastfail(5);  // FAST_FAIL_INVALID_ARG
 
-#elif NEX_COMPILER_GCC_COMPATIBLE || NEX_COMPILER_IS_CLANG || defined(__INTEL_COMPILER)
+#elif NEX_COMPILER_GCC_COMPATIBLE || NEX_COMPILER_IS_CLANG_BASED || defined(__INTEL_COMPILER)
     // GCC / Clang / ICC / AppleClang: trap immediately (illegal instruction)
     __builtin_trap();
 
@@ -119,7 +119,7 @@ NEX_NORETURN inline void immediateCrash() {
     // to terminate the program, which is a critical failure. In that case, 
     // we can call std::abort() as a last resort to ensure the program 
     // does not continue executing in an undefined state.
-#if NEX_COMPILER_GCC_COMPATIBLE || NEX_COMPILER_IS_CLANG
+#if NEX_COMPILER_GCC_COMPATIBLE || NEX_COMPILER_IS_CLANG_BASED
     __builtin_unreachable();
 #endif
 }

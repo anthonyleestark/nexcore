@@ -29,11 +29,11 @@
 // Check for support of compiler built-ins for capturing source location information 
 // (e.g., __builtin_FILE(), __builtin_LINE(), __builtin_FUNCTION()) and define a macro accordingly.
 #if !defined(NEX_HAS_BUILTIN_SOURCE_LOCATION)
-    #if NEX_COMPILER_IS_CLANG || NEX_COMPILER_GCC_COMPATIBLE || NEX_COMPILER_MSVC_COMPATIBLE
+    #if NEX_COMPILER_IS_CLANG_BASED || NEX_COMPILER_GCC_COMPATIBLE || NEX_COMPILER_MSVC_COMPATIBLE
         #define NEX_HAS_BUILTIN_SOURCE_LOCATION 1
     #else  // Compiler does not support __builtin_FILE/LINE/FUNCTION()
         #define NEX_HAS_BUILTIN_SOURCE_LOCATION 0
-    #endif  // NEX_COMPILER_IS_CLANG || NEX_COMPILER_GCC_COMPATIBLE || NEX_COMPILER_MSVC_COMPATIBLE
+    #endif  // NEX_COMPILER_IS_CLANG_BASED || NEX_COMPILER_GCC_COMPATIBLE || NEX_COMPILER_MSVC_COMPATIBLE
 #endif  // !defined(NEX_HAS_BUILTIN_SOURCE_LOCATION)
 
 // User-configurable macro to enable/disable the use of compiler built-ins for capturing source location information.
@@ -85,7 +85,7 @@
 // Source location utility class and macros
 // ================================================================================================
 
-#if NEX_COMPILER_IS_CLANG && NEX_HAS_BUILTIN(__builtin_source_location)
+#if NEX_COMPILER_IS_CLANG_BASED && NEX_HAS_BUILTIN(__builtin_source_location)
     #if defined(NEX_NO_STL)
         NEX_STD_BEGIN
 
@@ -267,7 +267,7 @@ public:
 /** @brief Get the function name for source location */
 #if NEX_USE_BUILTIN_SOURCE_LOCATION
     #if NEX_USE_DETAILED_FUNCTION_SIGNATURE
-        #if NEX_COMPILER_IS_CLANG || NEX_COMPILER_GCC_COMPATIBLE
+        #if NEX_COMPILER_IS_CLANG_BASED || NEX_COMPILER_GCC_COMPATIBLE
             #define NEX_SOURCE_FUNCTION_NAME __builtin_FUNCTION()
         #elif NEX_COMPILER_IS_MSVC
             #define NEX_SOURCE_FUNCTION_NAME __builtin_FUNCSIG()
@@ -297,7 +297,7 @@ public:
     #endif  // !NEX_USE_DETAILED_FUNCTION_SIGNATURE
 #else  // Compiler does not support __builtin_FUNCTION()
     #if NEX_USE_DETAILED_FUNCTION_SIGNATURE
-        #if NEX_COMPILER_IS_CLANG || NEX_COMPILER_GCC_COMPATIBLE
+        #if NEX_COMPILER_IS_CLANG_BASED || NEX_COMPILER_GCC_COMPATIBLE
             #define NEX_SOURCE_FUNCTION_NAME __PRETTY_FUNCTION__
         #elif NEX_COMPILER_IS_MSVC
             #define NEX_SOURCE_FUNCTION_NAME __FUNCSIG__
@@ -323,7 +323,7 @@ public:
 // Source location class implementation
 // ================================================================================================
 
-#if NEX_COMPILER_IS_CLANG && NEX_HAS_BUILTIN(__builtin_source_location)
+#if NEX_COMPILER_IS_CLANG_BASED && NEX_HAS_BUILTIN(__builtin_source_location)
 
 private:
     using BuiltinSourceLocationPtr = decltype(__builtin_source_location());
@@ -376,7 +376,7 @@ public:
     }
 #endif  // !NEX_USE_DETAILED_FUNCTION_SIGNATURE
 
-#else  // ^^NEX_COMPILER_IS_CLANG && NEX_HAS_BUILTIN(__builtin_source_location)
+#else  // ^^NEX_COMPILER_IS_CLANG_BASED && NEX_HAS_BUILTIN(__builtin_source_location)
 
 private:
     /**

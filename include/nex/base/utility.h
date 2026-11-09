@@ -31,6 +31,38 @@ NEX_HIDDEN_FROM_ABI decltype(meta::declval<Type&>()) declval() noexcept {
         "It's likely that your current usage is trying to extract a value from the function.");
 }
 
+/**
+ * @def NEX_HAS_MEMBER
+ * @brief Checks if a struct/class has a specific member.
+ * @param type The type of the struct/class.
+ * @param member The member to check for existence.
+ * @note This macro uses `declval` to check for the member in an unevaluated context.
+ */
+#define NEX_HAS_MEMBER(type, member) \
+    requires { NEX_PREPEND_NAMESPACE(declval)<type&>().member; }
+
+/**
+ * @def NEX_GET_MEMBER_TYPE
+ * @brief Gets the type of a struct/class member.
+ * @param type The type of the struct/class.
+ * @param member The member whose type is to be obtained.
+ * @return The type of the specified member.
+ * @note This macro uses `declval` to obtain the member type in an unevaluated context.
+ */
+#define NEX_GET_MEMBER_TYPE(type, member) \
+    decltype(NEX_PREPEND_NAMESPACE(declval)<type&>().member)
+
+/**
+ * @def NEX_GET_MEMBER_SIZE
+ * @brief Gets the size of a struct/class member.
+ * @param type The type of the struct/class.
+ * @param member The member whose size is to be obtained.
+ * @return The size of the specified member.
+ * @note This macro uses `declval` to obtain the member size in an unevaluated context.
+ */
+#define NEX_GET_MEMBER_SIZE(type, member) \
+    sizeof(NEX_PREPEND_NAMESPACE(declval)<type&>().member)
+
 // =================================================================================
 // Utilities for integral conversion and type manipulation
 // =================================================================================

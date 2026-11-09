@@ -8,7 +8,7 @@
 NEX_NAMESPACE_BEGIN
 
 // Convert error code to string
-cstring errorCodeToString(ErrorCode code) {
+ncstring errorCodeToString(ErrorCode code) {
     switch (code) {
         // No error / success
 
@@ -329,7 +329,7 @@ cstring errorCodeToString(ErrorCode code) {
 }
 
 // Get user-friendly error message
-cstring getUserMessage(ErrorCode code) {
+ncstring getUserMessage(ErrorCode code) {
     // TODO: Implement localized user messages
     return errorCodeToString(code);
 }

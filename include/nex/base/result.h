@@ -29,7 +29,7 @@ NEX_NAMESPACE_BEGIN
  */
 #if !defined(NEX_REPORT_RESULT_INVALID_ACCESS)
     NEX_HIDDEN_FROM_ABI inline 
-    void _resultInvalidAccessHandler(cstring msg) { NEX_FATAL(msg); }
+    void _resultInvalidAccessHandler(ncstring msg) { NEX_FATAL(msg); }
     #define NEX_REPORT_RESULT_INVALID_ACCESS(msg) \
         do { \
             if NEX_CONSTEVAL_CONTEXT { \

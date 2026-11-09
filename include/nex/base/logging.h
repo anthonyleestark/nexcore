@@ -188,7 +188,7 @@ public:
      * @param str Pointer to the character array.
      * @return Reference to the stream instance for operational chaining.
      */
-    LogStream& operator<<(cstring str) noexcept;
+    LogStream& operator<<(ncstring str) noexcept;
 
     /**
      * @brief Appends a non-owning string view string to the stream buffer.
@@ -255,7 +255,7 @@ private:
      * @param length Length of the string data.
      * @return The number of characters successfully appended.
      */
-    usize append(cstring data, usize length) noexcept;
+    usize append(ncstring data, usize length) noexcept;
 };
 
 /**

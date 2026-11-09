@@ -467,7 +467,7 @@ public:
         // Invalid length, return black
         return Color(0, 0, 0, 255);
     }
-    static Color fromHex(cstring hex) {
+    static Color fromHex(ncstring hex) {
         return fromHex(hex ? Utf8String(hex) : Utf8String());
     }
     // Create Color from name (case-insensitive)
@@ -503,7 +503,7 @@ public:
         // If name not found, return black
         return Black();
     }
-    static Color fromName(cstring name) {
+    static Color fromName(ncstring name) {
         return fromName(name ? Utf8String(name) : Utf8String());
     }
 

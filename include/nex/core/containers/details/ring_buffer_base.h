@@ -6,7 +6,7 @@
 #pragma once
 
 #include <iterator>
-#include <cstring>
+#include <ncstring>
 
 #include "nex/base/macros.h"
 #include "nex/base/types.h"

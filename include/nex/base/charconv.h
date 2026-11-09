@@ -44,7 +44,7 @@ usize formatU64Impl(ncptr buffer, usize bufferSize, u64 value, i32 base, bool up
 
     constexpr nchar lowerDigits[] = "0123456789abcdefghijklmnopqrstuvwxyz";
     constexpr nchar upperDigits[] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-    cstring const digits = uppercase ? upperDigits : lowerDigits;
+    ncstring const digits = uppercase ? upperDigits : lowerDigits;
 
     nchar reversed[64];
     usize digitCount = 0;
@@ -83,7 +83,7 @@ usize formatU64Impl(ncptr buffer, usize bufferSize, u64 value, i32 base, bool up
 
         constexpr nchar lowerDigits[] = "0123456789abcdefghijklmnopqrstuvwxyz";
         constexpr nchar upperDigits[] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-        cstring const digits = uppercase ? upperDigits : lowerDigits;
+        ncstring const digits = uppercase ? upperDigits : lowerDigits;
 
         // A 128-bit value requires at most 128 binary digits, plus an optional sign.
         nchar reversed[128];
@@ -285,7 +285,7 @@ usize formatBoolean(ncptr buffer, usize bufferSize, bool value) noexcept {
 
     constexpr nchar trueValue[] = "true";
     constexpr nchar falseValue[] = "false";
-    cstring const text = value ? trueValue : falseValue;
+    ncstring const text = value ? trueValue : falseValue;
     const usize length = value ? 4 : 5;
 
     if (bufferSize <= length) {

@@ -90,7 +90,7 @@ public:
     explicit ByteArray(const NString& str);
 
     // Construct from C-string (treat as binary data)
-    explicit ByteArray(cstring str, size_type len);
+    explicit ByteArray(ncstring str, size_type len);
 
     // Copy constructor
     ByteArray(const ByteArray& other) 

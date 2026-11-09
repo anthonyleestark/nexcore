@@ -92,7 +92,7 @@ inline NEX_HIDDEN_FROM_ABI constexpr usize constexprStrLen(const Type* str) noex
     }
 
 #if NEX_HAS_BUILTIN(__builtin_strlen)
-    return __builtin_strlen(reinterpret_cast<cstring>(str));
+    return __builtin_strlen(reinterpret_cast<ncstring>(str));
 #else
     usize i = 0;
     for (; str[i] != '\0'; ++i)

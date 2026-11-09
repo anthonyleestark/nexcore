@@ -117,12 +117,12 @@ public:
     }
 
     // Returns the error message associated with the exception
-    virtual cstring what() const noexcept { 
+    virtual ncstring what() const noexcept { 
         return data_.what ? data_.what : "Unknown exception"; 
     }
 
     // Returns the error message associated with the exception
-    virtual cstring message() const noexcept { return what(); }
+    virtual ncstring message() const noexcept { return what(); }
 
 private:
     ExceptionData data_;

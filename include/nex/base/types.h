@@ -810,7 +810,7 @@ using cwcptr        = const_wchar_ptr;          // Pointer to const wide charact
 // Null-terminated string pointer types (C-style / zero-terminated)
 // =================================================================================
 
-using cstring       = const_nchar_ptr;          // Null-terminated native narrow string
+using ncstring      = const_nchar_ptr;          // Null-terminated native narrow string
 
 #if NEX_HAS_BUILTIN_CHAR8_T
     using u8cstring = const_char8_ptr;          // Null-terminated UTF-8 string
@@ -824,7 +824,7 @@ using wcstring      = const_wchar_ptr;          // Null-terminated wide string
 // Short aliases for null-terminated string pointer types (Rust-style)
 // =================================================================================
 
-using cstr          = cstring;                  // Null-terminated native narrow string (cstring)
+using ncstr         = ncstring;                 // Null-terminated native narrow string (ncstring)
 
 #if NEX_HAS_BUILTIN_CHAR8_T
     using u8cstr    = u8cstring;                // Null-terminated UTF-8 string (u8cstring)
@@ -838,7 +838,7 @@ using wcstr         = wcstring;                 // Null-terminated wide string (
 // Macro definitions for null-terminated string literal prefixes (C-style)
 // =================================================================================
 
-#define NEX_CSTR_C(x)        (x)                // Null-terminated native narrow string literal
+#define NEX_NCSTR_C(x)        (x)               // Null-terminated native narrow string literal
 
 #if NEX_HAS_BUILTIN_CHAR8_T
     #define NEX_U8CSTR_C(x)  (u8 ## x)          // Null-terminated UTF-8 string literal

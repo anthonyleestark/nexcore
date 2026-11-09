@@ -42,24 +42,24 @@ NEX_NAMESPACE_BEGIN
  * @details
  * Called when a fatal error is triggered. 
  * The handler receives:
- *  - reason: Optional reason for the fatal error (cstring)
- *  - file: Source file where the fatal error occurred (cstring)
+ *  - reason: Optional reason for the fatal error (ncstring)
+ *  - file: Source file where the fatal error occurred (ncstring)
  *  - line: Line number in the source file (int32)
- *  - function: Function name where the fatal error occurred (cstring)
+ *  - function: Function name where the fatal error occurred (ncstring)
  * 
  * @example
  * ```
- * void myFatalHandler(cstring reason, cstring file, int32 line, cstring function) {
+ * void myFatalHandler(ncstring reason, ncstring file, int32 line, ncstring function) {
  *     // Custom fatal handling logic
  * }
  * ::NEX_PREPEND_NAMESPACE(setFatalHandler)(myFatalHandler);
  * ```
  */
 using FatalHandler = void(*)(
-    cstring reason,
-    cstring file,
+    ncstring reason,
+    ncstring file,
     int32 line,
-    cstring function
+    ncstring function
 );
 
 /**
@@ -170,18 +170,18 @@ NEX_NORETURN inline void unreachable() {
  * @details
  * Called when an assertion fails. 
  * The handler receives:
- *  - file: Source file path where assertion failed (cstring)
+ *  - file: Source file path where assertion failed (ncstring)
  *  - line: Line number where assertion failed (int32)
- *  - function: Function name where assertion failed (cstring)
- *  - expression: String representation of the failed expression (cstring)
- *  - message: Optional user-provided message (cstring)
+ *  - function: Function name where assertion failed (ncstring)
+ *  - expression: String representation of the failed expression (ncstring)
+ *  - message: Optional user-provided message (ncstring)
  */
 using AssertHandler = void(*)(
-    cstring file, 
+    ncstring file, 
     int32 line, 
-    cstring function, 
-    cstring expression, 
-    cstring message
+    ncstring function, 
+    ncstring expression, 
+    ncstring message
 );
 
 /**

@@ -536,7 +536,7 @@ Result<AnsiString> encoding::utf8ToAnsi(Utf8StringView utf8) {
     // Step 1: UTF-8 (CP_UTF8) -> UTF-16
     int32 utf16Size =
         MultiByteToWideChar(
-            CP_UTF8, 0, reinterpret_cast<cstring>(utf8.data()), len, nullptr, 0
+            CP_UTF8, 0, reinterpret_cast<ncstring>(utf8.data()), len, nullptr, 0
         );
     if (utf16Size <= 0) {
         return error(

@@ -50,8 +50,8 @@ bool parseUnsignedValue(NStringView text, uint32& value) {
         return false;
     }
 
-    cstring begin = text.data();
-    cstring end = text.data() + text.size();
+    ncstring begin = text.data();
+    ncstring end = text.data() + text.size();
     auto parseResult = NEX_STD from_chars(begin, end, value);
     return parseResult.ec == NEX_STD errc() && parseResult.ptr == end;
 }

@@ -35,14 +35,14 @@ bool XmlAttribute::isValid() const noexcept {
 // Get the name of the attribute as a String
 String XmlAttribute::name() const {
     if (!isValid()) return String();
-    cstring name = impl_->attr.name();
+    ncstring name = impl_->attr.name();
     return name ? String::fromNarrow(name) : String();
 }
 
 // Get the value of the attribute as a String
 String XmlAttribute::value() const {
     if (!isValid()) return String();
-    cstring value = impl_->attr.value();
+    ncstring value = impl_->attr.value();
     return value ? String::fromNarrow(value) : String();
 }
 
@@ -88,14 +88,14 @@ bool XmlNode::isValid() const noexcept {
 // Get the name of the node as a String
 String XmlNode::name() const {
     if (!isValid()) return String();
-    cstring name = impl_->node.name();
+    ncstring name = impl_->node.name();
     return name ? String::fromNarrow(name) : String();
 }
 
 // Get the text content of the node as a String
 String XmlNode::text() const {
     if (!isValid()) return String();
-    cstring text = impl_->node.text().as_string();
+    ncstring text = impl_->node.text().as_string();
     return text ? String::fromNarrow(text) : String();
 }
 
@@ -120,7 +120,7 @@ XmlNode XmlNode::child(StringView name) const {
     if (!isValid()) return out;
     
     // Convert parameter to UTF-8 string (std::string)
-    const NString utf8 = name.asNarrow();
+    const NString utf8(name.asNarrow());
     if (utf8.empty()) return out;
 
     // Get the child node with the specified name using pugixml
@@ -144,7 +144,7 @@ bool XmlNode::hasChild(StringView name) const {
     if (!isValid()) return false;
 
     // Convert parameter to UTF-8 string (std::string)
-    const NString utf8 = name.asNarrow();
+    const NString utf8(name.asNarrow());
     if (utf8.empty()) return false;
 
     // Check for child node with the specified name using pugixml
@@ -157,7 +157,7 @@ Vec<XmlNode> XmlNode::children(StringView name) const {
     if (!isValid()) return list;
     
     // Convert parameter to UTF-8 string (std::string)
-    const NString utf8 = name.asNarrow();
+    const NString utf8(name.asNarrow());
     if (utf8.empty()) return list;
 
     // Iterate over all child nodes with the specified name using pugixml
@@ -179,7 +179,7 @@ XmlAttribute XmlNode::attribute(StringView name) const {
     if (!isValid()) return attr;
     
     // Convert parameter to UTF-8 string (std::string)
-    const NString utf8 = name.asNarrow();
+    const NString utf8(name.asNarrow());
     if (utf8.empty()) return attr;
 
     // Get the attribute with the specified name using pugixml
@@ -214,8 +214,8 @@ NEX_DEFINE_DEFAULT_DTOR(XmlDocument);
 // Load XML from file
 Result<void> XmlDocument::loadFromFile(StringView path) {
     // Convert StringView to UTF-8 std::string
-    const NString utf8 = path.asNarrow();
-    if (utf8.empty()) {
+    const NString utf8Path(path.asNarrow());
+    if (utf8Path.empty()) {
         return error(
             ErrorCode::DeserializationFailed,
             "Failed to convert file path to UTF-8 for XML parsing"
@@ -223,7 +223,7 @@ Result<void> XmlDocument::loadFromFile(StringView path) {
     }
 
     // Load XML from file using pugixml
-    pugi::xml_parse_result pr = impl_->doc.load_file(utf8.cStr());
+    pugi::xml_parse_result pr = impl_->doc.load_file(utf8Path.cStr());
     impl_->loaded = static_cast<bool>(pr);
     if (impl_->loaded) {
         return ok();
@@ -237,8 +237,8 @@ Result<void> XmlDocument::loadFromFile(StringView path) {
 // Load XML from string
 Result<void> XmlDocument::loadFromString(const StringView content) {
     // Convert StringView to UTF-8 std::string
-    const NString utf8 = content.asNarrow();
-    if (utf8.empty()) {
+    const NString utf8Content(content.asNarrow());
+    if (utf8Content.empty()) {
         return error(
             ErrorCode::DeserializationFailed,
             "Failed to convert input string to UTF-8 for XML parsing"
@@ -246,7 +246,7 @@ Result<void> XmlDocument::loadFromString(const StringView content) {
     }
 
     // Load XML from string using pugixml
-    pugi::xml_parse_result pr = impl_->doc.load_string(utf8.cStr());
+    pugi::xml_parse_result pr = impl_->doc.load_string(utf8Content.cStr());
     impl_->loaded = static_cast<bool>(pr);
     if (impl_->loaded) {
         return ok();

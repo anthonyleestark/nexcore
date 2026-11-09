@@ -68,7 +68,7 @@ ByteArray::ByteArray(const NString& str) {
 }
 
 // Construct from C-string (treat as binary data)
-ByteArray::ByteArray(cstring str, size_type len) {
+ByteArray::ByteArray(ncstring str, size_type len) {
     if (str) {
         // If length is not provided, calculate it
         if (len == 0) {
@@ -209,7 +209,7 @@ ByteSpan ByteArray::view() const noexcept {
 
 // Convert to NString (treat as binary data)
 NString ByteArray::toNString() const {
-    return NString(reinterpret_cast<cstring>(buffer_.data()), buffer_.size());
+    return NString(reinterpret_cast<ncstring>(buffer_.data()), buffer_.size());
 }
 
 // Convert to hex string

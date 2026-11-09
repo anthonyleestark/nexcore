@@ -81,8 +81,8 @@ NEX_DEFINE_DEFAULT_DTOR(Json);
 // Load JSON from file
 Result<void> Json::loadFromFile(StringView filePath) {
     // Convert file path to UTF-8 string
-    const NString path = filePath.asNarrow();
-    if (path.empty()) {
+    const NString filePathU8(filePath.asNarrow());
+    if (filePathU8.empty()) {
         return error(
             ErrorCode::InvalidArgument, "Invalid file path"
         );
@@ -90,7 +90,7 @@ Result<void> Json::loadFromFile(StringView filePath) {
 
     // Attempt to open and parse the file
     try {
-        NEX_STD ifstream file(path.cStr());
+        NEX_STD ifstream file(filePathU8.cStr());
         if (!file.is_open()) {
             return error(
                 ErrorCode::FileNotFound, "File not found"
@@ -168,8 +168,8 @@ Result<void> Json::loadFromFile(StringView filePath) {
 // Load JSON from string
 Result<void> Json::loadFromString(StringView jsonString) {
     // Convert JSON string to UTF-8 std::string
-    const NString text = jsonString.asNarrow();
-    if (text.empty()) {
+    const NString jsonStringU8(jsonString.asNarrow());
+    if (jsonStringU8.empty()) {
         return error(
             ErrorCode::InvalidArgument, "Invalid argument"
         );
@@ -177,7 +177,7 @@ Result<void> Json::loadFromString(StringView jsonString) {
 
     // Attempt to parse the JSON string
     try {
-        nlohmann::json j = nlohmann::json::parse(text);
+        nlohmann::json j = nlohmann::json::parse(jsonStringU8);
         impl_->json = NEX_MOVE(j);
         impl_->loaded = true;
         
@@ -243,8 +243,8 @@ const Json::NodeHandle* Json::navigatePath(StringView keyPath) const {
     }
 
     // Convert key path to UTF-8 string and navigate the JSON structure
-    const NString path = keyPath.asNarrow();
-    const nlohmann::json* node = navigatePathImpl(impl_->json, path);
+    const NString pathU8(keyPath.asNarrow());
+    const nlohmann::json* node = navigatePathImpl(impl_->json, pathU8);
     if (!node) {
         impl_->nodeHandle.reset();
         return nullptr;

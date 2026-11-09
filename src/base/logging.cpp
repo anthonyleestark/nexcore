@@ -262,7 +262,7 @@ LogStream& LogStream::operator<<(nchar value) noexcept {
 }
 
 // Appends a null-terminated C-style string to the stream buffer.
-LogStream& LogStream::operator<<(cstring str) noexcept {
+LogStream& LogStream::operator<<(ncstring str) noexcept {
     append(str, strlen(str));
     return *this;
 }
@@ -274,7 +274,7 @@ LogStream& LogStream::operator<<(NStringView view) noexcept {
 }
 
 // Appends raw string data with a specified pointer and length to the stream buffer.
-usize LogStream::append(cstring data, usize length) noexcept {
+usize LogStream::append(ncstring data, usize length) noexcept {
     if (!data) {
         // Use a placeholder to avoid undefined behavior
         data = "<null>";
@@ -283,7 +283,7 @@ usize LogStream::append(cstring data, usize length) noexcept {
     auto nul = NEX_MEMCHR(data, '\0', length);
     if (nul) {
         // Adjust the length to exclude the null terminator
-        length = static_cast<cstring>(nul) - data;
+        length = static_cast<ncstring>(nul) - data;
     }
     if (length == 0) {
         return 0;

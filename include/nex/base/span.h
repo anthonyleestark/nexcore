@@ -8,6 +8,8 @@
 #include "nex/base/macros.h"
 #include "nex/base/meta.h"
 #include "nex/base/types.h"
+#include "nex/base/fwd.h"
+#include "nex/base/ranges.h"
 #include "nex/base/iterator.h"
 #include "nex/base/reverse_iterator.h"
 
@@ -107,10 +109,10 @@ public:
         requires (extent != dynamicExtent && Size == 0)
     NEX_HIDDEN_FROM_ABI constexpr Span() noexcept = default;
 
-    // Constructs a static extent Span from a pointer and size, ensuring the size matches the extent.
+    // Default constructor for dynamic extent Span.
     template <size_type Size = extent>
-        requires (extent != dynamicExtent && Size > 0)
-    NEX_HIDDEN_FROM_ABI constexpr Span(pointer data) noexcept : base::data_{data} {}
+        requires (extent == dynamicExtent)
+    NEX_HIDDEN_FROM_ABI constexpr Span() noexcept = default;
 
     // Constructs a static extent Span from a static bounded array of the specified extent.
     template <size_type Size = extent>
@@ -374,5 +376,53 @@ Span(Span<Type, Extent>&&) -> Span<Type, dynamicExtent>;
 // when constructing a Span from another Span with a potentially different element type and extent.
 template <meta::ObjectType Type, usize Extent>
 Span(const Span<Type, Extent>&&) -> Span<Type, dynamicExtent>;
+
+// Type deduction guide for Span, allowing for automatic deduction of the element type and extent
+// when constructing a Span from an Array.
+template <meta::ObjectType Type, usize Extent>
+Span(Array<Type, Extent>&) -> Span<Type, Extent>;
+
+// Type deduction guide for Span, allowing for automatic deduction of the element type and extent
+// when constructing a Span from a const Array.
+template <meta::ObjectType Type, usize Extent>
+Span(const Array<Type, Extent>&) -> Span<Type, Extent>;
+
+// Type deduction guide for Span, allowing for automatic deduction of the element type
+// when constructing a Span from a contiguous range.
+template <ranges::ContiguousRange Range>
+Span(Range&& range) -> Span<meta::RemoveCvrefT<ranges::RangeValueT<Range>>>;
+
+// Enable BorrowedRange for Span
+template <meta::ObjectType Type, usize Extent>
+inline constexpr bool ranges::EnableBorrowedRange<Span<Type, Extent>> = true;
+
+// Enable View for Span
+template <meta::ObjectType Type, usize Extent>
+inline constexpr bool ranges::EnableView<Span<Type, Extent>> = true;
+
+/**
+ * @brief Returns a Span of bytes representing the given Span.
+ * @tparam Type The type of the elements in the Span.
+ * @tparam Extent The extent of the Span.
+ * @param span The Span to convert to a Span of bytes.
+ * @return A Span of bytes representing the given Span.
+ */
+template <meta::ObjectType Type, usize Extent>
+NEX_NODISCARD NEX_HIDDEN_FROM_ABI auto asBytes(const Span<Type, Extent>& span) noexcept {
+    return span.asBytes();
+}
+
+/**
+ * @brief Returns a Span of writable bytes representing the given Span.
+ * @tparam Type The type of the elements in the Span.
+ * @tparam Extent The extent of the Span.
+ * @param span The Span to convert to a Span of writable bytes.
+ * @return A Span of writable bytes representing the given Span.
+ */
+template <meta::ObjectType Type, usize Extent>
+    requires (!meta::IsConstV<Type>)
+NEX_NODISCARD NEX_HIDDEN_FROM_ABI auto asWritableBytes(const Span<Type, Extent>& span) noexcept {
+    return span.asWritableBytes();
+}
 
 NEX_NAMESPACE_END

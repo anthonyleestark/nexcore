@@ -407,24 +407,6 @@
     #define NEX_HAS_BUILTIN_FLOAT128 0
 #endif  // ^^NEX_HAS_BUILTIN_FLOAT128
 
-#if NEX_COMPILER_IS_MSVC
-    #define NEX_SIZEOF_LONG_DOUBLE 8
-#elif defined(__SIZEOF_LONG_DOUBLE__)
-    // GCC and Clang provide this exact size macro in bytes
-    #define NEX_SIZEOF_LONG_DOUBLE __SIZEOF_LONG_DOUBLE__
-#elif defined(__LDBL_MANT_DIG__)
-    // If the compiler provides the number of mantissa digits, we can calculate the size in bytes
-    #if __LDBL_MANT_DIG__ == 64
-        #define NEX_SIZEOF_LONG_DOUBLE 12 // x86 80-bit extended
-    #elif __LDBL_MANT_DIG__ == 113
-        #define NEX_SIZEOF_LONG_DOUBLE 16 // 128-bit quad
-    #else  // Fallback to standard double
-        #define NEX_SIZEOF_LONG_DOUBLE 8
-    #endif  // ^^__LDBL_MANT_DIG__
-#else  // Last resort fallback
-    #define NEX_SIZEOF_LONG_DOUBLE  sizeof(long double)
-#endif  // ^^NEX_SIZEOF_LONG_DOUBLE
-
 // ================================================================================
 // Extern "C" macros for C++ code that needs to be callable from C
 // =================================================================================
@@ -469,4 +451,4 @@
 #elif defined(__BIG_ENDIAN__) || defined(_BIG_ENDIAN)
     #define NEX_COMPILER_HAS_LITTLE_ENDIAN_MACRO 0
     #define NEX_COMPILER_HAS_BIG_ENDIAN_MACRO 1
-#endif  // ^^Endian detection
+#endif  // ^^Endianness detection

@@ -49,6 +49,7 @@
 
 /**
  * @section arch_detection Processor Architecture Detection
+ * @brief Detect the target CPU architecture at compile time.
  * 
  * @details
  * The following preprocessor conditionals detect the target CPU architecture
@@ -132,6 +133,7 @@
 
 /**
  * @section arch_endianness Endianness Detection
+ * @brief Endianness detection for the target CPU architecture.
  * 
  * @details
  * The following preprocessor conditionals detect the endianness of the target CPU architecture.
@@ -150,3 +152,18 @@
 #else
     #error Unable to detect endianness of the target architecture.
 #endif  // ^^^ Endianness detection
+
+/**
+ * @brief Detect the size of the long double type for x86 architectures.
+ * 
+ * @details
+ * The size of the long double type varies depending on the specific x86 architecture.
+ * For 32-bit x86 and x86_64 with ILP32, the size is typically 12 bytes.
+ * For 64-bit x86_64, the size is typically 16 bytes.
+ * This section defines the macro NEX_ARCH_CPU_LONG_DOUBLE_SIZE accordingly.
+ */
+#if defined(__i386__) || (defined(__x86_64__) && defined(__ILP32__))
+    #define NEX_ARCH_CPU_X86_LONG_DOUBLE_SIZE 12
+#elif defined(__x86_64__)
+    #define NEX_ARCH_CPU_X86_LONG_DOUBLE_SIZE 16
+#endif  // ^^Size of long double for x86 architectures

@@ -414,6 +414,19 @@ static_assert(sizeof(float64) == 8, "Error: float64 must be 8 bytes");
     static_assert(sizeof(float128) == 16, "Error: float128 must be 16 bytes");
 #endif  // ^^NEX_HAS_BUILTIN_FLOAT128
 
+#if NEX_COMPILER_IS_MSVC
+    #define NEX_SIZEOF_LONG_DOUBLE 8
+#elif defined(NEX_ARCH_CPU_X86_LONG_DOUBLE_SIZE)
+    #define NEX_SIZEOF_LONG_DOUBLE NEX_ARCH_CPU_X86_LONG_DOUBLE_SIZE
+#elif defined(__SIZEOF_LONG_DOUBLE__)
+    // GCC and Clang provide this exact size macro in bytes
+    #define NEX_SIZEOF_LONG_DOUBLE __SIZEOF_LONG_DOUBLE__
+#else  // Last resort fallback
+    #define NEX_SIZEOF_LONG_DOUBLE  sizeof(long double)
+#endif  // ^^NEX_SIZEOF_LONG_DOUBLE
+
+static_assert(NEX_SIZEOF_LONG_DOUBLE == sizeof(ldouble), "Error: Size of long double mismatch");
+
 // =================================================================================
 // Short aliases for standard floating-point types (Rust-style)
 // =================================================================================
@@ -603,7 +616,7 @@ using fflags64   = uint64;                  // 64-bit flags (bitfield storage, a
 // Standard pointer types and address types
 // =================================================================================
 
-using null_ptr  = decltype(nullptr);        // Null pointer type
+using null = decltype(nullptr);             // Null pointer type
 enum class byte : uint8 {};                 // Single-byte object-representation type
 
 /**

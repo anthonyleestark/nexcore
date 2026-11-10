@@ -684,6 +684,11 @@ struct IsConst : BoolConstant<IsConstV<Type>> {};
 template <class Type>
 struct IsVolatile : BoolConstant<IsVolatileV<Type>> {};
 
+// Determine whether a type is cv-unqualified (meaning it does not have const
+// or volatile qualifiers) and is not a reference type
+template <class Type>
+inline constexpr bool IsUnqualifiedV = IsSameV<Type, RemoveCvrefT<Type>>;
+
 // Determine whether a type is an array type
 #if NEX_HAS_BUILTIN(__is_array)
     template <class Type>

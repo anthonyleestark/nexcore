@@ -1651,6 +1651,10 @@ struct NEX_HIDDEN_FROM_ABI DetectorImpl<Default, VoidT<Type<Args...> >, Type, Ar
 template <class Default, template <class...> class Type, class... _Args>
 using DetectedOrT NEX_NODEBUG = typename DetectorImpl<Default, void, Type, Args...>::type;
 
+// Forces a type to be dependent in order to defer its evaluation until template instantiation
+template <class Type, bool>
+struct NEX_HIDDEN_FROM_ABI DependentType : public Type {};
+
 // =================================================================================
 // C++20 CommonReference implementation (ISO Standard Compliant)
 // =================================================================================

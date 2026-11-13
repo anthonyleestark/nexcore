@@ -15,8 +15,13 @@
 #include "nex/base/meta.h"
 #include "nex/base/types.h"
 #include "nex/base/casts.h"
+#include "nex/base/pointer_traits.h"
 
 NEX_NAMESPACE_BEGIN
+
+// =================================================================================
+// UsesAllocator implementation and related traits
+// =================================================================================
 
 /**
  * @struct HasAllocatorType
@@ -148,6 +153,77 @@ struct UserAllocConstructImpl {
     void operator()(meta::IntegralConstant<int32, 2>, Type* storage, const Alloc& alloc, Args&&... args) {
         new (storage) Type(NEX_FORWARD<Args>(args)..., alloc);
     }
+};
+
+// =================================================================================
+// Allocator traits implementation
+// =================================================================================
+
+// Trait to detect the pointer type member of a type.
+template <class Type>
+using PointerMemberOf NEX_NODEBUG = typename Type::pointer;
+
+// Trait to detect the pointer type of an allocator, falling back to Type* if not present.
+template <class Type, class Alloc>
+using DetectedPointerT NEX_NODEBUG = meta::DetectedOrT<Type*, PointerMemberOf, meta::RemoveReferenceT<Alloc>>;
+
+// Trait to rebind a pointer type to a different type, using an alias if available.
+template <class Alloc, template <class> class Alias, class Ptr, class Type, class = void>
+struct RebindOrAliasPointer {
+    using type NEX_NODEBUG = typename PointerTraits<Ptr>::template rebind<Type>;
+};
+
+// Specialization of RebindOrAliasPointer when an alias is available.
+template <class Ptr, class Alloc, class Type, template <class> class Alias>
+struct RebindOrAliasPointer<Alloc, Alias, Ptr, Type, meta::VoidT<Alias<Alloc>>> {
+    using type NEX_NODEBUG = Alias<Alloc>;
+};
+
+// Trait to detect the const pointer type member of an allocator.
+template <class Alloc>
+using ConstPointerMemberOf NEX_NODEBUG = typename Alloc::const_pointer;
+
+// Trait to detect the const pointer type of an allocator, falling back to const Type* if not present.
+template <class Type, class Ptr, class Alloc>
+using ConstPointerT NEX_NODEBUG =
+    typename RebindOrAliasPointer<Alloc, ConstPointerMemberOf, Ptr, const Type>::type;
+
+// Trait to detect the void pointer type member of an allocator.
+template <class Alloc>
+using VoidPointerMemberOf NEX_NODEBUG = typename Alloc::void_pointer;
+
+// Trait to detect the void pointer type of an allocator, falling back to void* if not present.
+template <class Ptr, class Alloc>
+using VoidPointerT NEX_NODEBUG =
+    typename RebindOrAliasPointer<Alloc, VoidPointerMemberOf, Ptr, void>::type;
+
+// Trait to detect the const void pointer type member of an allocator.
+template <class Alloc>
+using ConstVoidPointerMemberOf NEX_NODEBUG = typename Alloc::const_void_pointer;
+
+// Trait to detect the const void pointer type of an allocator, falling back to const void* if not present.
+template <class Ptr, class Alloc>
+using ConstVoidPointerT NEX_NODEBUG =
+    typename RebindOrAliasPointer<Alloc, ConstVoidPointerMemberOf, Ptr, const void>::type;
+
+// Trait to detect the size type member of an allocator.
+template <class Type>
+using SizeTypeMemberOf NEX_NODEBUG = typename Type::size_type;
+
+// Trait to detect the size type of an allocator, falling back to the unsigned version of the difference type if not present.
+template <class Alloc, class DiffType>
+using DetectedSizeTypeT NEX_NODEBUG = meta::DetectedOrT<meta::MakeUnsignedT<DiffType>, SizeTypeMemberOf, Alloc>;
+
+// Trait to detect the difference type of an allocator, falling back to the pointer's difference type if not present.
+template <class Alloc, class Ptr, class = void>
+struct AllocatorTraitsDifferenceType {
+    using type NEX_NODEBUG = typename PointerTraits<Ptr>::difference_type;
+};
+
+// Trait to detect the difference type of an allocator, falling back to the pointer's difference type if not present.
+template <class Alloc, class Ptr>
+struct AllocatorTraitsDifferenceType<Alloc, Ptr, meta::VoidT<typename Alloc::difference_type>> {
+    using type NEX_NODEBUG = typename Alloc::difference_type;
 };
 
 NEX_NAMESPACE_END

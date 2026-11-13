@@ -214,6 +214,26 @@
 #endif  // ^^NEX_ALWAYS_INLINE
 
 /**
+ * @def NEX_EXCLUDE_FROM_EXPLICIT_INSTANTIATION
+ * @brief Marks a symbol to be excluded from explicit template instantiation.
+ *
+ * @details
+ * This macro expands to the appropriate compiler-specific attribute to exclude a symbol
+ * from explicit template instantiation.
+ * If the compiler does not support this attribute, it falls back to always inlining the symbol
+ * to approximate the effect.
+ */
+#if NEX_HAS_ATTRIBUTE(exclude_from_explicit_instantiation)
+    #define NEX_EXCLUDE_FROM_EXPLICIT_INSTANTIATION \
+        NEX_GCC_OR_CLANG_ATTRIBUTE(__exclude_from_explicit_instantiation__)
+#else
+    // Try to approximate the effect of exclude_from_explicit_instantiation
+    // (which is that entities are not assumed to be provided by explicit
+    // template instantiations in the dylib) by always inlining those entities.
+    #define NEX_EXCLUDE_FROM_EXPLICIT_INSTANTIATION NEX_ALWAYS_INLINE
+#endif  // ^^NEX_EXCLUDE_FROM_EXPLICIT_INSTANTIATION
+
+/**
  * @def NEX_VISIBILITY
  * @brief Annotates a symbol with a specific visibility for shared libraries.
  * 
@@ -230,10 +250,15 @@
     #define NEX_VISIBILITY(vis)
 #endif  // ^^NEX_VISIBILITY
 
+#if !defined(NEX_HIDDEN)
+    #define NEX_HIDDEN NEX_VISIBILITY(hidden)
+#endif  // ^^NEX_HIDDEN
+
 #if !defined(NEX_HIDDEN_FROM_ABI)
     // Mark a symbol as hidden from the public ABI,
     // which can help reduce symbol collisions and improve load times in shared libraries.
-    #define NEX_HIDDEN_FROM_ABI NEX_VISIBILITY(hidden)
+    #define NEX_HIDDEN_FROM_ABI \
+        NEX_HIDDEN NEX_EXCLUDE_FROM_EXPLICIT_INSTANTIATION
 #endif  // ^^NEX_HIDDEN_FROM_ABI
 
 /**

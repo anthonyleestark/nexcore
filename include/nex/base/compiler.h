@@ -372,6 +372,24 @@
     #define NEX_HAS_KEYWORD(x) __has_keyword(x)
 #endif  // !defined(NEX_HAS_KEYWORD)
 
+/**
+ * @def NEX_HAS_DECLSPEC_ATTRIBUTE
+ * @brief Checks if a declspec attribute is available.
+ *
+ * @details
+ * This macro uses the compiler-specific `__has_declspec_attribute` feature-test operator
+ * to determine if a particular declspec attribute is supported.
+ * It evaluates to 1 if the attribute is available, or 0 otherwise.
+ */
+
+#if !defined(__has_declspec_attribute)
+    #define __has_declspec_attribute(x) 0
+#endif  // !defined(__has_declspec_attribute)
+
+#if !defined(NEX_HAS_DECLSPEC_ATTRIBUTE)
+    #define NEX_HAS_DECLSPEC_ATTRIBUTE(x) __has_declspec_attribute(x)
+#endif  // !defined(NEX_HAS_DECLSPEC_ATTRIBUTE)
+
 // =================================================================================
 // Language/compiler-specific type definitions and feature detection
 // =================================================================================

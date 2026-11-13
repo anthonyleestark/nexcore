@@ -9,7 +9,9 @@
 #include "nex/base/meta.h"
 #include "nex/base/types.h"
 #include "nex/base/fwd.h"
+#include "nex/base/invoke.h"
 #include "nex/base/memory.h"
+#include "nex/base/type_concepts.h"
 #include "nex/base/type_traits.h"
 
 NEX_NAMESPACE_BEGIN
@@ -519,5 +521,54 @@ struct NEX_API Hash<null> {
         return 662607004ull;   // Arbitrary fixed hash value for nullptr
     }
 };
+
+/**
+ * @brief Concept to check if a hasher meets the required hash requirements for a given key type.
+ * @tparam Hasher The hasher type.
+ * @tparam Key The key type.
+ * @details
+ * This concept ensures that the hasher is copy-constructible, move-constructible, invocable
+ * with the key type, and returns a value convertible to usize.
+ */
+template <class Hasher, class Key>
+concept HashRequirements =
+    CopyConstructible<Hasher> &&
+    MoveConstructible<Hasher> &&
+    Invocable<usize, Hasher, Key const&> &&
+    ConvertibleTo<InvokeResultT<Hasher, Key const&>, usize>;
+
+/**
+ * @brief Concept to check if a hasher meets the enabled hash requirements for a given key type.
+ * @tparam Hasher The hasher type.
+ * @tparam Key The key type.
+ * @details
+ * This concept ensures that the hasher meets the basic hash requirements and is also default-initializable.
+ * This concept is useful for determining if a hasher can be used in contexts where default construction
+ * is required, such as in certain container types.
+ */
+template <class Hasher, class Key>
+concept EnabledHash =
+    HashRequirements<Hasher, Key> &&
+    DefaultInitializable<Hasher>;
+
+/**
+ * @brief Concept to check if a key type has an enabled hash.
+ * @tparam Key The key type.
+ * @details
+ * This concept checks if the Hash struct for the given key type meets the enabled hash requirements.
+ * This is typically used to determine if a key type can be safely used in hash-based containers.
+ */
+template <class Key>
+concept HasEnabledHash = EnabledHash<Hash<Key>, Key>;
+
+/**
+ * @brief Concept to check if all given key types have an enabled hash.
+ * @tparam Keys The key types.
+ * @details
+ * This concept checks if each key type in the parameter pack meets the enabled hash requirements.
+ * It is useful for determining if multiple key types can be safely used in hash-based containers.
+ */
+template <class... Keys>
+concept EnabledHashFor = (HasEnabledHash<Keys> && ...);
 
 NEX_NAMESPACE_END

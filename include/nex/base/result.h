@@ -5,6 +5,8 @@
 
 #pragma once
 
+#include "nex/base/namespace.h"
+#include "nex/base/attributes.h"
 #include "nex/base/types.h"
 #include "nex/base/casts.h"
 #include "nex/base/init.h"

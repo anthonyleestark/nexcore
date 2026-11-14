@@ -7,14 +7,8 @@
 
 /**
  * @file   export.h
- * @brief  Define macros for marking symbols for export or import in shared libraries and 
- *         for specifying calling conventions for callback functions.
- * 
- * @details
- * This header defines macros for marking symbols for export or import in shared libraries and 
- * for specifying calling conventions for callback functions. 
- * The NEX_API macro is defined based on the compiler and build configuration, while the NEX_CALLBACK 
- * macro is defined based on the detected platform.
+ * @brief  Define macros for marking symbols for export or import in shared libraries
+ *         and for specifying calling conventions for callback functions.
  */
 
 #include "nex/base/platform.h"
@@ -28,15 +22,15 @@
 /**
  * @details
  * The NEX_API macro is defined based on the compiler and build configuration.
- * - On MSVC, it expands to `__declspec(dllexport)` when building the shared library, and `__declspec(dllimport)` 
+ * - On MSVC, it expands to `__declspec(dllexport)` when building the shared library, and `__declspec(dllimport)`
  *   when using the shared library.
  * - On GCC, it expands to `__attribute__((visibility("default")))` to make symbols visible for export.
- * - If the compiler does not support these attributes, it expands to nothing, allowing the code to compile 
+ * - If the compiler does not support these attributes, it expands to nothing, allowing the code to compile
  *   without any errors.
  */
 
 #if NEX_COMPILER_MSVC_COMPATIBLE
-    // On MSVC, it expands to `__declspec(dllexport)` when building the shared library, 
+    // On MSVC, it expands to `__declspec(dllexport)` when building the shared library,
     // and `__declspec(dllimport)` when using the shared library.
     #if NEX_BUILDING_SHARED
         #define NEX_API NEX_MSVC_DECLSPEC(dllexport)
@@ -44,18 +38,30 @@
         #define NEX_API NEX_MSVC_DECLSPEC(dllimport)
     #endif
 #elif NEX_COMPILER_GCC_COMPATIBLE
-    // On GCC, it expands to `__attribute__((visibility("default")))` 
+    // On GCC, it expands to `__attribute__((visibility("default")))`
     // to make symbols visible for export, only when building the shared library.
     #if NEX_BUILDING_SHARED
         #define NEX_API NEX_VISIBILITY(default)
     #endif
-#endif // NEX_API
+#endif  // ^^NEX_API
 
 #if !defined(NEX_API)
-    // If the compiler does not support these attributes, it expands to nothing, 
+    // If the compiler does not support these attributes, it expands to nothing,
     // allowing the code to compile without any errors.
     #define NEX_API
 #endif  // !defined(NEX_API)
+
+/**
+ * @def NEX_UNEXPORTED
+ * @brief Marks a symbol as not exported from the shared library.
+ */
+#if NEX_COMPILER_IS_MSVC
+    // On MSVC, there is no direct equivalent to hiding symbols, so we define it as empty.
+    #define NEX_UNEXPORTED
+#else
+    // On non-MSVC compilers, we can use the visibility attribute to hide symbols.
+    #define NEX_UNEXPORTED NEX_HIDDEN
+#endif  // ^^NEX_UNEXPORTED
 
 // ======================================================================================
 // Calling Convention Macros
@@ -66,10 +72,10 @@
  * @brief Define a calling convention for callback functions
  * 
  * @details
- * This macro can be used to specify a calling convention for callback functions, which is important for ensuring 
- * compatibility with different platforms and APIs. For example, on Windows, the `__stdcall` calling convention is 
+ * This macro can be used to specify a calling convention for callback functions, which is important for ensuring
+ * compatibility with different platforms and APIs. For example, on Windows, the `__stdcall` calling convention is
  * commonly used for callbacks in the Windows API. On other platforms, the default calling convention is typically used.
- * The NEX_CALLBACK macro expands to the appropriate calling convention based on the detected platform, allowing you 
+ * The NEX_CALLBACK macro expands to the appropriate calling convention based on the detected platform, allowing you
  * to write portable code that can be used across different operating systems and APIs without modification.
  * 
  * Example usage:
@@ -79,14 +85,14 @@
  */
 
 #if NEX_PLATFORM_IS_WINDOWS
-    // On Windows, use __stdcall calling convention for compatibility with Windows API 
+    // On Windows, use __stdcall calling convention for compatibility with Windows API
     // and consistent calling convention across the framework.
     #define NEX_CALLBACK __stdcall
 #else
-    // On non-Windows platforms, the default calling convention is typically used, 
+    // On non-Windows platforms, the default calling convention is typically used,
     // so no special attributes are needed.
     #define NEX_CALLBACK
-#endif  // NEX_PLATFORM_IS_WINDOWS
+#endif  // ^^NEX_CALLBACK
 
 /**
  * @def NEX_CDECL
@@ -101,27 +107,5 @@
         #define NEX_CDECL __cdecl
     #else  // On non-Windows platforms
         #define NEX_CDECL
-    #endif  // NEX_PLATFORM_IS_WINDOWS
-#endif  // !defined(NEX_CDECL)
-
-// ======================================================================================
-// Symbol Modifiers
-// ======================================================================================
-
-/**
- * @def NEX_INTERNAL
- * @brief Mark a symbol as internal (not exported) for shared libraries
- * 
- * @details
- * This macro can be used to mark a symbol as internal, meaning it should not be exported from a shared library.
- * On Windows, there is no direct equivalent, so it expands to nothing. On macOS/Linux (GCC/Clang), it uses
- * the visibility attribute to hide the symbol.
- */
-
-#if NEX_PLATFORM_IS_WINDOWS
-    // On Windows, there is no direct equivalent to marking symbols as internal.
-    #define NEX_INTERNAL
-#else
-    // On macOS/Linux (GCC/Clang), we can use the visibility attribute to hide symbols from being exported.
-    #define NEX_INTERNAL NEX_VISIBILITY(hidden)
-#endif  // NEX_PLATFORM_IS_WINDOWS
+    #endif
+#endif  // ^^NEX_CDECL

@@ -251,15 +251,49 @@
 #endif  // ^^NEX_VISIBILITY
 
 #if !defined(NEX_HIDDEN)
+    // Marks a symbol as hidden from the public API using the visibility attribute.
     #define NEX_HIDDEN NEX_VISIBILITY(hidden)
 #endif  // ^^NEX_HIDDEN
 
 #if !defined(NEX_HIDDEN_FROM_ABI)
-    // Mark a symbol as hidden from the public ABI,
+    // Marks a symbol as hidden from the public ABI,
     // which can help reduce symbol collisions and improve load times in shared libraries.
     #define NEX_HIDDEN_FROM_ABI \
         NEX_HIDDEN NEX_EXCLUDE_FROM_EXPLICIT_INSTANTIATION
 #endif  // ^^NEX_HIDDEN_FROM_ABI
+
+/**
+ * @def NEX_INTERNAL
+ * @brief Marks a symbol as internal and not recommended for public use.
+ *
+ * @details
+ * This macro ensures that the annotated symbol is only used internally and is not recommended for use in public APIs.
+ * It helps prevent accidental usage of internal symbols in public-facing code and can improve encapsulation
+ * and maintainability.
+ *
+ * @note
+ * This macro won't make the symbol completely inaccessible, but it signals that it is intended for internal use only.
+ * Users can still access the symbol if necessary, but it is strongly discouraged and should be done with caution.
+ */
+#if !defined(NEX_INTERNAL)
+    #define NEX_INTERNAL NEX_VISIBILITY(hidden)
+#endif  // ^^NEX_INTERNAL
+
+/**
+ * @def NEX_WEAK_SYMBOL
+ * @brief Marks a symbol as weak, allowing it to be overridden by other definitions.
+ * 
+ * @details
+ * This macro expands to the appropriate compiler-specific attribute to mark a symbol as weak.
+ * Weak symbols can be overridden by other definitions, which is useful for providing default
+ * implementations that can be replaced by user-defined ones.
+ * On compilers that do not support weak symbols, this macro expands to nothing.
+ */
+#if NEX_COMPILER_IS_CLANG_BASED || NEX_COMPILER_GCC_COMPATIBLE
+    #define NEX_WEAK_SYMBOL NEX_GCC_OR_CLANG_ATTRIBUTE(weak)
+#else  // Compiler does not support weak symbols
+    #define NEX_WEAK_SYMBOL
+#endif  // ^^NEX_WEAK_SYMBOL
 
 /**
  * @def NEX_MSVC_FLATTEN
@@ -417,6 +451,21 @@
 #endif  // ^^NEX_ALIGNAS
 
 /**
+ * @def NEX_NOALIAS
+ * @brief Marks a function or pointer as not aliasing any other pointer.
+ * 
+ * @details
+ * This macro expands to the appropriate compiler-specific attribute to indicate that a function or pointer
+ * does not alias any other pointer. This can help the compiler optimize code by assuming that
+ * the memory accessed through this pointer is not accessed through any other pointer.
+ */
+#if NEX_COMPILER_GCC_COMPATIBLE || NEX_COMPILER_CLANG_COMPATIBLE
+    #define NEX_NOALIAS NEX_GCC_OR_CLANG_ATTRIBUTE(__malloc__)
+#else  // Compiler does not support noalias
+    #define NEX_NOALIAS
+#endif  // ^^NEX_NOALIAS
+
+/**
  * @def NEX_CONSTEXPR23
  * @brief Specifies `constexpr` for functions when compiling with C++23 support.
  * 
@@ -447,6 +496,28 @@
 #endif  // ^^NEX_CONSTEXPR23
 
 /**
+ * @def NEX_EXPLICIT23
+ * @brief Specifies `explicit` for constructors when compiling with C++23 support.
+ *
+ * @details
+ * Use this to annotate constructors that should be `explicit` in C++23 but may not be in earlier standards.
+ * This allows the same codebase to take advantage of C++23 features when available without breaking compatibility
+ * with earlier C++ standards.
+ *
+ * @par Example usage:
+ * @code
+ * struct Foo {
+ *     NEX_EXPLICIT23 Foo(int x) {}
+ * };
+ * @endcode
+ */
+#if NEX_HAS_CXX23
+    #define NEX_EXPLICIT23 explicit
+#else  // For C++20 and earlier
+    #define NEX_EXPLICIT23
+#endif  // ^^NEX_EXPLICIT23
+
+/**
  * @def NEX_CLANG_ENABLE_IF(...)
  * @brief Conditionally enables a function overload based on compile-time argument evaluation.
  * 
@@ -471,6 +542,23 @@
     // Expands to nothing on compilers that do not support the `__enable_if__` attribute.
     #define NEX_CLANG_ENABLE_IF(...)
 #endif  // ^^NEX_CLANG_ENABLE_IF(...)
+
+/**
+ * @def NEX_USING_IF_EXISTS
+ * @brief Marks a declaration to be used only if it exists.
+ *
+ * @details
+ * The @c __attribute__((__using_if_exists__)) extension (supported by Clang and GCC) allows you
+ * to indicate that a declaration should only be used if it exists, helping to avoid compilation
+ * errors when dealing with optional or conditionally available entities.
+ *
+ * @note This is a compiler-specific extension and is not available on all compilers.
+ */
+#if NEX_COMPILER_IS_CLANG_BASED || NEX_COMPILER_IS_GCC_COMPATIBLE
+    #define NEX_USING_IF_EXISTS NEX_GCC_OR_CLANG_ATTRIBUTE(__using_if_exists__)
+#else  // Compiler does not support __attribute__((__using_if_exists__))
+    #define NEX_USING_IF_EXISTS
+#endif  // ^^NEX_USING_IF_EXISTS
 
 /**
  * @def NEX_MSVC_INTRINSIC
@@ -521,6 +609,23 @@
 #else  // Compiler does not support [[msvc::known_semantics]]
     #define NEX_MSVC_KNOWN_SEMANTICS
 #endif  // ^^NEX_MSVC_KNOWN_SEMANTICS
+
+/**
+ * @def NEX_DECLSPEC_EMPTY_BASES
+ * @brief Marks a class as having empty base optimization (EBO) when supported by the compiler.
+ *
+ * @details
+ * The @c __declspec(empty_bases) attribute is a Microsoft-specific extension that allows the compiler
+ * to optimize the memory layout of classes with empty base classes, potentially reducing the overall
+ * size of the derived class.
+ *
+ * @note This is a compiler-specific extension and is not available on all compilers.
+ */
+#if NEX_HAS_DECLSPEC_ATTRIBUTE(empty_bases)
+    #define NEX_DECLSPEC_EMPTY_BASES NEX_DECLSPEC_ATTRIBUTE(empty_bases)
+#else  // Compiler does not support __declspec(empty_bases)
+    #define NEX_DECLSPEC_EMPTY_BASES
+#endif  // ^^NEX_DECLSPEC_EMPTY_BASES
 
 /**
  * @def NEX_NO_UNIQUE_ADDRESS

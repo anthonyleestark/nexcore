@@ -425,6 +425,10 @@
     #define NEX_HAS_BUILTIN_FLOAT128 0
 #endif  // ^^NEX_HAS_BUILTIN_FLOAT128
 
+#if defined(__CHAR_BIT__)
+    #define NEX_COMPILER_PROVIDED_CHAR_BIT __CHAR_BIT__
+#endif  // ^^NEX_COMPILER_PROVIDED_CHAR_BIT
+
 // ================================================================================
 // Extern "C" macros for C++ code that needs to be callable from C
 // =================================================================================

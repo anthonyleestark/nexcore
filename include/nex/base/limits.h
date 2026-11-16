@@ -21,6 +21,10 @@
 #include "nex/base/namespace.h"
 #include "nex/base/types.h"
 
+#if !defined(NEX_COMPILER_PROVIDED_CHAR_BIT)
+    #include <limits.h>  // for retrieiving CHAR_BIT
+#endif  // !defined(NEX_COMPILER_PROVIDED_CHAR_BIT)
+
 NEX_NAMESPACE_BEGIN
 
 // =================================================================================
@@ -58,8 +62,8 @@ struct NumericLimitConstants {
     static constexpr uint64 u64max          = ~static_cast<uint64>(0);
 
 #if NEX_HAS_BUILTIN_INT128
-    static constexpr int128  i128min        = (static_cast<int128>(-1) << 127_i128);
-    static constexpr int128  i128max        = ~(static_cast<int128>(-1) << 127_i128);
+    static constexpr int128  i128min        = (static_cast<int128>(1) << 127_i128);
+    static constexpr int128  i128max        = ~i128min;
     static constexpr uint128 u128max        = ~static_cast<uint128>(0);
 #endif  // ^^NEX_HAS_BUILTIN_INT128
 
@@ -559,6 +563,12 @@ struct NumericLimitConstants {
 // =================================================================================
 // Macro definitions for native narrow & wide character limits (C-style)
 // =================================================================================
+
+#if defined(NEX_COMPILER_PROVIDED_CHAR_BIT)
+    #define NEX_CHAR_BIT            NEX_COMPILER_PROVIDED_CHAR_BIT
+#else  // Fallback to standard CHAR_BIT if compiler did not provide one
+    #define NEX_CHAR_BIT            CHAR_BIT
+#endif  // ^^NEX_COMPILER_PROVIDED_CHAR_BIT
 
 #define NEX_NCHAR_MIN               NEX_PREPEND_NAMESPACE(NumericLimitConstants::ncharmin)
 #define NEX_NCHAR_MAX               NEX_PREPEND_NAMESPACE(NumericLimitConstants::ncharmax)

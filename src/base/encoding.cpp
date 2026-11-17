@@ -19,6 +19,8 @@
 
 #if NEX_PLATFORM_IS_WINDOWS
     #include <windows.h>
+#else
+    #include <__wctype.h>
 #endif
 
 NEX_NAMESPACE_BEGIN
@@ -27,17 +29,17 @@ NEX_NAMESPACE_BEGIN
 // Implementation of character classification functions
 // ========================================================================================
 
-// Check if a character is a high surrogate character (used in UTF-16 encoding)
+// Checks if a character is a high surrogate character (used in UTF-16 encoding)
 bool encoding::isHighSurrogate(char16 codeUnit) noexcept {
     return codeUnit >= 0xD800 && codeUnit <= 0xDBFF;
 }
 
-// Check if a character is a low surrogate character (used in UTF-16 encoding)
+// Checks if a character is a low surrogate character (used in UTF-16 encoding)
 bool encoding::isLowSurrogate(char16 codeUnit) noexcept {
     return codeUnit >= 0xDC00 && codeUnit <= 0xDFFF;
 }
 
-// Check if a character is a Unicode whitespace character based on its code point
+// Checks if a character is a Unicode whitespace character based on its code point
 bool encoding::isUnicodeWhitespace(uint32 cp) noexcept {
     // 1. ASCII & Control characters (0009 - 000D, 0020)
     if (cp < 0x00A0) {
@@ -65,13 +67,13 @@ bool encoding::isUnicodeWhitespace(uint32 cp) noexcept {
     return false;
 }
 
-// Check if a character is a valid Unicode code point
+// Checks if a character is a valid Unicode code point
 bool encoding::isValidCodePoint(char32 codePoint) noexcept {
     // Valid code points are in the range U+0000 to U+10FFFF, and must not be in the surrogate range (U+D800 to U+DFFF)
     return codePoint <= 0x10FFFF && !(codePoint >= 0xD800 && codePoint <= 0xDFFF);
 }
 
-// Check if a character is a whitespace character (e.g., space, tab, newline)
+// Checks if a character is a whitespace character (e.g., space, tab, newline)
 // This function checks if the given character is a whitespace character, which includes spaces, tabs, newlines, 
 // and other characters that are considered whitespace in Unicode
 bool encoding::isWhitespace(char16 ch) noexcept {
@@ -81,12 +83,12 @@ bool encoding::isWhitespace(char16 ch) noexcept {
     return isUnicodeWhitespace(static_cast<uint32>(ch));
 }
 
-// Check if a character is a digit character (for any Unicode digit)
+// Checks if a character is a digit character (for any Unicode digit)
 bool encoding::isUnicodeDigit(char16 ch) noexcept {
-    // Check for ASCII digits
+    // Checks for ASCII digits
     if (isAsciiDigit(ch)) return true;
 
-    // Check for other Unicode digit characters
+    // Checks for other Unicode digit characters
     // This is a simplified check and may not cover all Unicode digit characters
     return (ch >= u'\u0660' && ch <= u'\u0669') || // Arabic-Indic digits
            (ch >= u'\u06F0' && ch <= u'\u06F9') || // Extended Arabic-Indic digits
@@ -94,12 +96,12 @@ bool encoding::isUnicodeDigit(char16 ch) noexcept {
            (ch >= u'\uFF10' && ch <= u'\uFF19');   // Fullwidth digits
 }
 
-// Check if a character is an alphabetic character (for any Unicode letter)
+// Checks if a character is an alphabetic character (for any Unicode letter)
 bool encoding::isUnicodeAlpha(char16 ch) noexcept {
-    // Check for ASCII alphabetic characters
+    // Checks for ASCII alphabetic characters
     if (isAsciiAlpha(ch)) return true;
 
-    // Check for other Unicode alphabetic characters
+    // Checks for other Unicode alphabetic characters
     // This is a simplified check and may not cover all Unicode alphabetic characters
     if ((ch >= u'\u00C0' && ch <= u'\u00D6') ||   // Latin-1 uppercase letters
         (ch >= u'\u00D8' && ch <= u'\u00F6') ||   // Latin-1 letters
@@ -110,25 +112,20 @@ bool encoding::isUnicodeAlpha(char16 ch) noexcept {
     // For languages with large character sets, such as Vietnamese, Chinese, Japanese, Korean, etc., 
     // we can use the OS-provided functions to check for alphabetic characters based on Unicode properties,
     // which will be more comprehensive and accurate than hardcoding specific ranges.
-#if NEX_PLATFORM_IS_WINDOWS
     return iswalpha(static_cast<wint>(ch)) != 0;
-#else
-    // On non-Windows platforms, we can use the standard library function to check for alphabetic characters
-    return NEX_STD iswalpha(static_cast<wint>(ch)) != 0;
-#endif
 }
 
 // ========================================================================================
 // Implementation of UTF-8 encoding utility functions
 // ========================================================================================
 
-// Check if a UTF-8 string contains invalid sequences
+// Checks if a UTF-8 string contains invalid sequences
 bool encoding::containsInvalidUtf8Sequences(Utf8StringView input) noexcept {
     u8cstring ptr = input.data();
     u8cstring end = ptr + input.size();
 
     while (ptr < end) {
-        // Get the first byte to determine the length of the UTF-8 sequence
+        // Gets the first byte to determine the length of the UTF-8 sequence
         char8 byte = static_cast<char8>(*ptr);
         usize expectedLength = utf8SequenceLength(byte);
 
@@ -136,7 +133,7 @@ bool encoding::containsInvalidUtf8Sequences(Utf8StringView input) noexcept {
             return true; // Invalid UTF-8 sequence found
         }
 
-        // Validate continuation bytes
+        // Validates continuation bytes
         for (usize i = 1; i < expectedLength; ++i) {
             if ((static_cast<char8>(ptr[i]) & 0xC0) != 0x80) {
                 return true; // Invalid continuation byte found
@@ -149,25 +146,25 @@ bool encoding::containsInvalidUtf8Sequences(Utf8StringView input) noexcept {
     return false; // No invalid sequences found
 }
 
-// Check if a UTF-8 string is valid
+// Checks if a UTF-8 string is valid
 bool encoding::isValidUtf8(Utf8StringView input) noexcept {
     return !containsInvalidUtf8Sequences(input);
 }
 
-// Check if a UTF-8 sequence is valid
+// Checks if a UTF-8 sequence is valid
 bool encoding::isValidUtf8Sequence(Utf8StringView input) noexcept {
     if (input.empty()) {
         return false; // Empty input is not a valid UTF-8 sequence
     }
 
-    // Get the first byte to determine the length of the UTF-8 sequence
+    // Gets the first byte to determine the length of the UTF-8 sequence
     char8 firstByte = static_cast<char8>(input[0]);
     usize expectedLength = utf8SequenceLength(firstByte);
     if (expectedLength == 0 || expectedLength > input.size()) {
         return false; // Invalid first byte or not enough bytes in the input
     }
 
-    // Check continuation bytes
+    // Checks continuation bytes
     for (usize i = 1; i < expectedLength; ++i) {
         if ((static_cast<char8>(input[i]) & 0xC0) != 0x80) {
             return false; // Invalid continuation byte
@@ -177,7 +174,7 @@ bool encoding::isValidUtf8Sequence(Utf8StringView input) noexcept {
     return true; // Valid UTF-8 sequence
 }
 
-// Decode a UTF-8 code point
+// Decodes a UTF-8 code point
 Result<char32> encoding::decodeUtf8CodePoint(Utf8StringView input, usize& advance) {
     advance = 0;
 
@@ -187,13 +184,13 @@ Result<char32> encoding::decodeUtf8CodePoint(Utf8StringView input, usize& advanc
         );
     }
 
-    // Get the first byte to determine the length of the UTF-8 sequence
+    // Gets the first byte to determine the length of the UTF-8 sequence
     char8 b0 = static_cast<char8>(input[0]);
     usize len = utf8SequenceLength(b0);
 
     if (len == 0 || len > input.size()) {
         return error(
-            ErrorCode::InvalidFormat, "Invalid lead byte" 
+            ErrorCode::InvalidFormat, "Invalid lead byte"
         );
     }
     
@@ -203,17 +200,17 @@ Result<char32> encoding::decodeUtf8CodePoint(Utf8StringView input, usize& advanc
     if (len == 1) {
         cp = b0;
     } else {
-        // First, validate the continuation bytes before decoding 
+        // First, validates the continuation bytes before decoding 
         // to prevent invalid memory access and ensure the sequence is well-formed.
         for (usize i = 1; i < len; ++i) {
             if ((static_cast<char8>(input[i]) & 0xC0) != 0x80) {
                 return error(
-                    ErrorCode::InvalidFormat, "Invalid continuation byte" 
+                    ErrorCode::InvalidFormat, "Invalid continuation byte"
                 );
             }
         }
 
-        // Decode the code point from the UTF-8 sequence based on the length determined by the first byte
+        // Decodes the code point from the UTF-8 sequence based on the length determined by the first byte
 
         if (len == 2) {
             cp = ((b0 & 0x1F) << 6) | (static_cast<char8>(input[1]) & 0x3F);
@@ -233,17 +230,17 @@ Result<char32> encoding::decodeUtf8CodePoint(Utf8StringView input, usize& advanc
 
     if (cp < min_cp) {
         return error(
-            ErrorCode::InvalidFormat, "Overlong encoding" 
+            ErrorCode::InvalidFormat, "Overlong encoding"
         );
     }
     if (cp >= 0xD800 && cp <= 0xDFFF) {
         return error(
-            ErrorCode::InvalidFormat, "Surrogate range" 
+            ErrorCode::InvalidFormat, "Surrogate range"
         );
     }
     if (cp > 0x10FFFF) {
         return error(
-            ErrorCode::InvalidFormat, "Out of Unicode range" 
+            ErrorCode::InvalidFormat, "Out of Unicode range"
         );
     }
 
@@ -253,7 +250,7 @@ Result<char32> encoding::decodeUtf8CodePoint(Utf8StringView input, usize& advanc
     return ok(cp);
 }
 
-// Get the byte number of a UTF-8 code point
+// Gets the byte number of a UTF-8 code point
 usize encoding::utf8SequenceLength(char8 firstByte) {
     char8 byte = static_cast<char8>(firstByte);
     if (byte <= 0x7F) {
@@ -305,7 +302,7 @@ Result<usize> encoding::countUtf8CodePoints(Utf8StringView input) noexcept {
         usize expectedLength = utf8SequenceLength(byte);
         if (expectedLength == 0 || ptr + expectedLength > end) {
             return error( 
-                ErrorCode::InvalidFormat, "Invalid UTF-8 sequence" 
+                ErrorCode::InvalidFormat, "Invalid UTF-8 sequence"
             );
         }
         ptr += expectedLength;
@@ -326,7 +323,7 @@ Result<char32> encoding::decodeUtf16CodePoint(Utf16StringView input, usize& adva
 
     if (input.empty()) {
         return error( 
-            ErrorCode::InvalidFormat, "Input string is empty" 
+            ErrorCode::InvalidFormat, "Input string is empty"
         );
     }
 
@@ -334,13 +331,13 @@ Result<char32> encoding::decodeUtf16CodePoint(Utf16StringView input, usize& adva
     if (isHighSurrogate(firstUnit)) {
         if (input.size() < 2) {
             return error( 
-                ErrorCode::InvalidFormat, "Unpaired high surrogate" 
+                ErrorCode::InvalidFormat, "Unpaired high surrogate"
             );
         }
         char16 secondUnit = input[1];
         if (!isLowSurrogate(secondUnit)) {
             return error(
-                ErrorCode::InvalidFormat, "Expected low surrogate after high surrogate" 
+                ErrorCode::InvalidFormat, "Expected low surrogate after high surrogate"
             );
         }
         char32 cp = ((static_cast<char32>(firstUnit - 0xD800) << 10) | (secondUnit - 0xDC00)) + 0x10000;
@@ -348,7 +345,7 @@ Result<char32> encoding::decodeUtf16CodePoint(Utf16StringView input, usize& adva
         return ok(cp);
     } else if (isLowSurrogate(firstUnit)) {
         return error(
-            ErrorCode::InvalidFormat, "Unpaired low surrogate" 
+            ErrorCode::InvalidFormat, "Unpaired low surrogate"
         );
     } else {
         advance = 1;
@@ -356,7 +353,7 @@ Result<char32> encoding::decodeUtf16CodePoint(Utf16StringView input, usize& adva
     }
 }
 
-// Encode a UTF-16 code point
+// Encodes a UTF-16 code point
 usize encoding::encodeUtf16CodePoint(char32 cp, char16* out) {
     if (cp <= 0xFFFF) {
         if (cp >= 0xD800 && cp <= 0xDFFF) {
@@ -373,7 +370,7 @@ usize encoding::encodeUtf16CodePoint(char32 cp, char16* out) {
     return 0; // Invalid code point
 }
 
-// Count the number of Unicode code points in a UTF-16 string
+// Counts the number of Unicode code points in a UTF-16 string
 Result<usize> encoding::countUtf16CodePoints(Utf16StringView input) noexcept {
     usize count = 0;
     usize i = 0;
@@ -383,7 +380,7 @@ Result<usize> encoding::countUtf16CodePoints(Utf16StringView input) noexcept {
         if (isHighSurrogate(codeUnit)) {
             if (i + 1 < input.size() && isLowSurrogate(input[i + 1])) {
                 ++count; // Valid surrogate pair counts as one code point
-                i += 2; // Skip both high and low surrogate
+                i += 2;  // Skips both high and low surrogate
             } else {
                 // Invalid surrogate pair (high surrogate not followed by low surrogate)
                 return error(
@@ -393,11 +390,11 @@ Result<usize> encoding::countUtf16CodePoints(Utf16StringView input) noexcept {
         } else if (isLowSurrogate(codeUnit)) {
             // Invalid surrogate pair (low surrogate without preceding high surrogate)
             return error(
-                ErrorCode::InvalidFormat, "Unpaired low surrogate" 
+                ErrorCode::InvalidFormat, "Unpaired low surrogate"
             );
         } else {
-            ++count; // BMP character counts as one code point
-            ++i; // Move to the next code unit
+            ++count;   // Counts BMP character as one code point
+            ++i;       // Moves to the next code unit
         }
     }
 
@@ -409,7 +406,7 @@ Result<usize> encoding::countUtf16CodePoints(Utf16StringView input) noexcept {
 // Implementation of UTF-32 encoding utility functions
 // ========================================================================================
 
-// Check if a UTF-32 string is valid
+// Checks if a UTF-32 string is valid
 bool encoding::isValidUtf32Sequence(Utf32StringView input) noexcept {
     for (char32 cp : input) {
         if (!isValidCodePoint(cp)) {
@@ -419,7 +416,7 @@ bool encoding::isValidUtf32Sequence(Utf32StringView input) noexcept {
     return true; // No invalid code points found
 }
 
-// Count the number of Unicode code points in a UTF-32 string
+// Counts the number of Unicode code points in a UTF-32 string
 Result<usize> encoding::countUtf32CodePoints(Utf32StringView input) noexcept {
     if (input.empty()) {
         return ok(0); // Empty string has 0 code points
@@ -484,7 +481,7 @@ Result<Utf8String> encoding::ansiToUtf8(AnsiStringView ansi) {
 
     int32 utf8Size = 
         WideCharToMultiByte(
-            CP_UTF8, 0, reinterpret_cast<LPCWCH>(utf16.data()), 
+            CP_UTF8, 0, reinterpret_cast<LPCWCH>(utf16.data()),
             utf16Size, nullptr, 0, nullptr, nullptr
         );
     if (utf8Size <= 0) {
@@ -497,7 +494,7 @@ Result<Utf8String> encoding::ansiToUtf8(AnsiStringView ansi) {
     Utf8String utf8(utf8Size, '\0');
     if (
         WideCharToMultiByte(
-            CP_UTF8, 0, reinterpret_cast<LPCWCH>(utf16.data())
+            CP_UTF8, 0, reinterpret_cast<LPCWCH>(utf16.data()),
             utf16Size, reinterpret_cast<char*>(utf8.data()), utf8Size, nullptr, nullptr) <= 0
         ) {
         return error(
@@ -613,19 +610,19 @@ Result<Utf16String> encoding::ansiToUtf16(AnsiStringView ansi) {
     if (len < 0) {
         // Input size is too large to fit in an int32, return an error result
         return error(
-                ErrorCode::InvalidFormat, "Input string is too large" 
+                ErrorCode::InvalidFormat, "Input string is too large"
             );
     }
     int32 requiredSize = MultiByteToWideChar(CP_ACP, 0, ansi.data(), len, nullptr, 0);
     if (requiredSize <= 0) {
         // Failed to convert ANSI to UTF-16, return an error result
         return error(
-                ErrorCode::OperationFailed, "Failed to convert ANSI to UTF-16" 
+                ErrorCode::OperationFailed, "Failed to convert ANSI to UTF-16"
             );
     }
     Utf16String utf16(requiredSize, '\0');
-    MultiByteToWideChar(CP_ACP, 0, ansi.data(), len, 
-                        reinterpret_cast<wchar*>(utf16.data()), 
+    MultiByteToWideChar(CP_ACP, 0, ansi.data(), len,
+                        reinterpret_cast<wchar*>(utf16.data()),
                         requiredSize);
 
     // Successfully converted ANSI to UTF-16, return the result
@@ -655,31 +652,31 @@ Result<AnsiString> encoding::utf16ToAnsi(Utf16StringView utf16) {
     if (len < 0) {
         // Input size is too large to fit in an int32, return an error result
         return error(
-                ErrorCode::InvalidFormat, "Input string is too large" 
+                ErrorCode::InvalidFormat, "Input string is too large"
             );
     }
-    int32 requiredSize = WideCharToMultiByte(CP_ACP, 0, reinterpret_cast<LPCWCH>(utf16.data()), 
+    int32 requiredSize = WideCharToMultiByte(CP_ACP, 0, reinterpret_cast<LPCWCH>(utf16.data()),
                             len, nullptr, 0, nullptr, nullptr);
     if (requiredSize <= 0) {
         // Failed to convert UTF-16 to ANSI, return an error result
         return error(
-                ErrorCode::OperationFailed, "Failed to convert UTF-16 to ANSI" 
+                ErrorCode::OperationFailed, "Failed to convert UTF-16 to ANSI"
             );
     }
 
     BOOL usedDefaultChar = FALSE;
     AnsiString ansi(requiredSize, '\0');
-    WideCharToMultiByte(CP_ACP, 0, 
-                        reinterpret_cast<LPCWCH>(utf16.data()), 
-                        len, 
-                        ansi.data(), 
-                        requiredSize, 
-                        nullptr, 
+    WideCharToMultiByte(CP_ACP, 0,
+                        reinterpret_cast<LPCWCH>(utf16.data()),
+                        len,
+                        ansi.data(),
+                        requiredSize,
+                        nullptr,
                         &usedDefaultChar);
     if (usedDefaultChar) {
         // The conversion used a default character, which means some characters could not be represented in ANSI
         return error(
-                ErrorCode::OperationFailed, "Some characters could not be represented in ANSI encoding" 
+                ErrorCode::OperationFailed, "Some characters could not be represented in ANSI encoding"
             );
     }
 
@@ -688,7 +685,7 @@ Result<AnsiString> encoding::utf16ToAnsi(Utf16StringView utf16) {
 
 #else
     // On POSIX platforms, NexCore treats ANSI strings as UTF-8 by convention.
-    // Convert to UTF-8 first, then bridge char8 -> nchar (char) explicitly.
+    // Converts to UTF-8 first, then bridges char8 -> nchar (char) explicitly.
     auto result = utf16ToUtf8(utf16);
     if (!result.isOk()) {
         return error(result.error());
@@ -848,19 +845,19 @@ Result<Utf16String> encoding::utf8ToUtf16(Utf8StringView utf8) {
     if (len < 0) {
         // Input size is too large to fit in an int32, return an error result
         return error(
-                ErrorCode::InvalidFormat, "Input string is too large" 
+                ErrorCode::InvalidFormat, "Input string is too large"
             );
     }
     int32 requiredSize = MultiByteToWideChar(CP_UTF8, 0, utf8.data(), len, nullptr, 0);
     if (requiredSize <= 0) {
         // Failed to convert UTF-8 to UTF-16, return an error result
         return error(
-                ErrorCode::OperationFailed, "Failed to convert UTF-8 to UTF-16" 
+                ErrorCode::OperationFailed, "Failed to convert UTF-8 to UTF-16"
             );
     }
     Utf16String utf16(requiredSize, '\0');
-    MultiByteToWideChar(CP_UTF8, 0, utf8.data(), len, 
-                        reinterpret_cast<wchar*>(utf16.data()), 
+    MultiByteToWideChar(CP_UTF8, 0, utf8.data(), len,
+                        reinterpret_cast<wchar*>(utf16.data()),
                         requiredSize);
 
     // Successfully converted UTF-8 to UTF-16, return the result
@@ -870,25 +867,25 @@ Result<Utf16String> encoding::utf8ToUtf16(Utf8StringView utf8) {
     // On POSIX platforms, we can assume UTF-8 is already in the correct encoding and convert to UTF-16
     Utf16String result;
 
-    // Reserve enough space to avoid multiple reallocations (worst case: all ASCII characters)
+    // Reserves enough space to avoid multiple reallocations (worst case: all ASCII characters)
     result.reserve(utf8.size());
-    
+
     u8cstring ptr = utf8.data();
     u8cstring end = ptr + utf8.size();
-    
+
     while (ptr < end) {
         usize advance = 0;
         auto decodeRes = decodeUtf8CodePoint(Utf8StringView(ptr, end - ptr), advance);
         
         if (!decodeRes.isOk()) {
-            // Failed to decode a UTF-8 code point, return an error result
+            // Failed to decode a UTF-8 code point, returns an error result
             return error(decodeRes.error());
         }
-        
+
         char16 utf16Buf[2];
         usize u16Len = encodeUtf16CodePoint(decodeRes.value(), utf16Buf);
         result.append(utf16Buf, u16Len);
-        
+
         ptr += advance;
     }
 
@@ -903,36 +900,36 @@ Result<Utf8String> encoding::utf16ToUtf8(Utf16StringView utf16) {
     // Windows-specific implementation using WideCharToMultiByte
     int32 len = safeStaticCastInt(utf16.size());
     if (len < 0) {
-        // Input size is too large to fit in an int32, return an error result
+        // Input size is too large to fit in an int32, returns an error result
         return error(
-                ErrorCode::InvalidFormat, "Input string is too large" 
+                ErrorCode::InvalidFormat, "Input string is too large"
             );
     }
-    int32 requiredSize = WideCharToMultiByte(CP_UTF8, 0, reinterpret_cast<LPCWCH>(utf16.data()), 
+    int32 requiredSize = WideCharToMultiByte(CP_UTF8, 0, reinterpret_cast<LPCWCH>(utf16.data()),
                             len, nullptr, 0, nullptr, nullptr);
     if (requiredSize <= 0) {
-        // Failed to convert UTF-16 to UTF-8, return an error result
+        // Failed to convert UTF-16 to UTF-8, returns an error result
         return error(
-                ErrorCode::OperationFailed, "Failed to convert UTF-16 to UTF-8" 
+                ErrorCode::OperationFailed, "Failed to convert UTF-16 to UTF-8"
             );
     }
 
     Utf8String utf8(requiredSize, '\0');
-    WideCharToMultiByte(CP_UTF8, 0, 
-                        reinterpret_cast<LPCWCH>(utf16.data()), 
-                        len, 
-                        utf8.data(), 
-                        requiredSize, 
-                        nullptr, 
+    WideCharToMultiByte(CP_UTF8, 0,
+                        reinterpret_cast<LPCWCH>(utf16.data()),
+                        len,
+                        utf8.data(),
+                        requiredSize,
+                        nullptr,
                         nullptr);
 
-    // Successfully converted UTF-16 to UTF-8, return the result
+    // Successfully converted UTF-16 to UTF-8, returns the result
     return ok(NEX_MOVE(utf8));
 #else
     // On POSIX platforms, we can assume UTF-16 is already in the correct encoding and convert to UTF-8
     Utf8String result;
 
-    // Reserve enough space to avoid multiple reallocations (worst case: all characters are 4-byte code points)
+    // Reserves enough space to avoid multiple reallocations (worst case: all characters are 4-byte code points)
     result.reserve(utf16.size() * 3 / 2); 
 
     usize i = 0;
@@ -941,16 +938,16 @@ Result<Utf8String> encoding::utf16ToUtf8(Utf16StringView utf16) {
         auto decodeRes = decodeUtf16CodePoint(utf16.subview(i), advance);
 
         if (!decodeRes.isOk()) { 
-            // Failed to decode a UTF-16 code point, return an error result
+            // Failed to decode a UTF-16 code point, returns an error result
             return error(decodeRes.error());
         }
 
         char8 u8buf[4];
         usize u8len = encodeUtf8CodePoint(decodeRes.value(), u8buf);
         if (u8len == 0) {
-            // Failed to encode a UTF-8 code point, return an error result
+            // Failed to encode a UTF-8 code point, returns an error result
             return error(
-                ErrorCode::InvalidFormat, "Failed to encode UTF-8" 
+                ErrorCode::InvalidFormat, "Failed to encode UTF-8"
             );
         }
 
@@ -958,7 +955,7 @@ Result<Utf8String> encoding::utf16ToUtf8(Utf16StringView utf16) {
         i += advance;
     }
 
-    // Successfully converted UTF-16 to UTF-8, return the result
+    // Successfully converted UTF-16 to UTF-8, returns the result
     return ok(NEX_MOVE(result));
 
 #endif
@@ -968,38 +965,38 @@ Result<Utf8String> encoding::utf16ToUtf8(Utf16StringView utf16) {
 Result<Utf8String> encoding::utf32ToUtf8(Utf32StringView utf32) {
     Utf8String result;
 
-    // Reserve enough space to avoid multiple reallocations,
+    // Reserves enough space to avoid multiple reallocations,
     // worst case: all characters are 4-byte code points, which would require 4 bytes each
     result.reserve(utf32.size() * 4);
 
     for (char32 cp : utf32) {
         if (!isValidCodePoint(cp)) {
-            // Found an invalid code point, return an error result
+            // Found an invalid code point, returns an error result
             return error(
-                ErrorCode::InvalidFormat, "Invalid Unicode code point in input" 
+                ErrorCode::InvalidFormat, "Invalid Unicode code point in input"
             );
         }
 
         char8 u8buf[4];
         usize u8len = encodeUtf8CodePoint(cp, u8buf);
         if (u8len == 0) {
-            // Failed to encode a UTF-8 code point, return an error result
+            // Failed to encode a UTF-8 code point, returns an error result
             return error(
-                ErrorCode::InvalidFormat, "Failed to encode UTF-8" 
+                ErrorCode::InvalidFormat, "Failed to encode UTF-8"
             );
         }
 
         result.append(reinterpret_cast<u8cstring>(u8buf), u8len);
     }
 
-    // Successfully converted UTF-32 to UTF-8, return the result
+    // Successfully converted UTF-32 to UTF-8, returns the result
     return ok(NEX_MOVE(result));
 }
 
 // Converts a UTF-8 string to a UTF-32 string
 Result<Utf32String> encoding::utf8ToUtf32(Utf8StringView utf8) {
     Utf32String result;
-    result.reserve(utf8.size()); // Reserve enough space to avoid multiple reallocations
+    result.reserve(utf8.size()); // Reserves enough space to avoid multiple reallocations
 
     u8cstring ptr = utf8.data();
     u8cstring end = ptr + utf8.size();
@@ -1009,7 +1006,7 @@ Result<Utf32String> encoding::utf8ToUtf32(Utf8StringView utf8) {
         auto decodeRes = decodeUtf8CodePoint(Utf8StringView(ptr, end - ptr), advance);
 
         if (!decodeRes.isOk()) { 
-            // Failed to decode a UTF-8 code point, return an error result
+            // Failed to decode a UTF-8 code point, returns an error result
             return error(decodeRes.error());
         }
 
@@ -1017,7 +1014,7 @@ Result<Utf32String> encoding::utf8ToUtf32(Utf8StringView utf8) {
         ptr += advance;
     }
 
-    // Successfully converted UTF-8 to UTF-32, return the result
+    // Successfully converted UTF-8 to UTF-32, returns the result
     return ok(NEX_MOVE(result));
 }
 
@@ -1025,38 +1022,38 @@ Result<Utf32String> encoding::utf8ToUtf32(Utf8StringView utf8) {
 Result<Utf16String> encoding::utf32ToUtf16(Utf32StringView utf32) {
     Utf16String result;
 
-    // Reserve enough space to avoid multiple reallocations, 
+    // Reserves enough space to avoid multiple reallocations, 
     // worst case: all characters are 4-byte code points, which would require 2 UTF-16 code units each
     result.reserve(utf32.size() * 2);
 
     for (char32 cp : utf32) {
         if (!isValidCodePoint(cp)) {
-            // Found an invalid code point, return an error result
+            // Found an invalid code point, returns an error result
             return error(
-                ErrorCode::InvalidFormat, "Invalid Unicode code point in input" 
+                ErrorCode::InvalidFormat, "Invalid Unicode code point in input"
             );
         }
 
         char16 utf16Buf[2];
         usize u16Len = encodeUtf16CodePoint(cp, utf16Buf);
         if (u16Len == 0) {
-            // Failed to encode a UTF-16 code point, return an error result
+            // Failed to encode a UTF-16 code point, returns an error result
             return error(
-                ErrorCode::InvalidFormat, "Failed to encode UTF-16" 
+                ErrorCode::InvalidFormat, "Failed to encode UTF-16"
             );
         }
 
         result.append(utf16Buf, u16Len);
     }
 
-    // Successfully converted UTF-32 to UTF-16, return the result
+    // Successfully converted UTF-32 to UTF-16, returns the result
     return ok(NEX_MOVE(result));
 }
 
 // Converts a UTF-16 string to a UTF-32 string
 Result<Utf32String> encoding::utf16ToUtf32(Utf16StringView utf16) {
     Utf32String result;
-    result.reserve(utf16.size()); // Reserve enough space to avoid multiple reallocations
+    result.reserve(utf16.size()); // Reserves enough space to avoid multiple reallocations
 
     usize i = 0;
     while (i < utf16.size()) {
@@ -1064,7 +1061,7 @@ Result<Utf32String> encoding::utf16ToUtf32(Utf16StringView utf16) {
         auto decodeRes = decodeUtf16CodePoint(utf16.subview(i), advance);
 
         if (!decodeRes.isOk()) { 
-            // Failed to decode a UTF-16 code point, return an error result
+            // Failed to decode a UTF-16 code point, returns an error result
             return error(decodeRes.error());
         }
 
@@ -1072,7 +1069,7 @@ Result<Utf32String> encoding::utf16ToUtf32(Utf16StringView utf16) {
         i += advance;
     }
 
-    // Successfully converted UTF-16 to UTF-32, return the result
+    // Successfully converted UTF-16 to UTF-32, returns the result
     return ok(NEX_MOVE(result));
 }
 

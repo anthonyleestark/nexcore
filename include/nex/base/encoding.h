@@ -60,7 +60,7 @@ NEX_NODISCARD NEX_API
 bool isLowSurrogate(char16 codeUnit) noexcept;
 
 /**
- * @brief Check if a character is a surrogate character (either high or low)
+ * @brief Checks if a character is a surrogate character (either high or low)
  * 
  * @details
  * A surrogate character is any UTF-16 code unit that falls within the ranges of high surrogates (0xD800 to 0xDBFF) 
@@ -76,7 +76,7 @@ bool isSurrogate(char16 codeUnit) noexcept {
 }
 
 /**
- * @brief Check if a character is a Unicode whitespace character based on its code point
+ * @brief Checks if a character is a Unicode whitespace character based on its code point
  * @param codePoint The Unicode code point of the character to check
  * @return `true` if the character is a Unicode whitespace character, `false` otherwise
  * 
@@ -92,7 +92,7 @@ NEX_NODISCARD NEX_API
 bool isUnicodeWhitespace(uint32 codePoint) noexcept;
 
 /**
- * @brief Check if a UTF-32 code point is valid
+ * @brief Checks if a UTF-32 code point is valid
  * 
  * @details
  * A valid UTF-32 code point must be in the range U+0000 to U+10FFFF, and must not be in the surrogate range 
@@ -106,7 +106,7 @@ NEX_NODISCARD NEX_API
 bool isValidCodePoint(char32 codePoint) noexcept;
 
 /**
- * @brief Check if a character is a whitespace character (e.g., space, tab, newline)
+ * @brief Checks if a character is a whitespace character (e.g., space, tab, newline)
  * @param ch The character to check
  * @return `true` if the character is a whitespace character, `false` otherwise
  * 
@@ -121,7 +121,7 @@ NEX_NODISCARD NEX_API
 bool isWhitespace(char16 ch) noexcept;
 
 /**
- * @brief Check if a character is an ASCII digit (0-9)
+ * @brief Checks if a character is an ASCII digit (0-9)
  * @param ch The character to check
  * @return `true` if the character is an ASCII digit, `false` otherwise
  */
@@ -131,7 +131,7 @@ constexpr bool isAsciiDigit(char16 ch) noexcept {
 }
 
 /**
- * @brief Check if a character is an ASCII alphabetic character (A-Z, a-z)
+ * @brief Checks if a character is an ASCII alphabetic character (A-Z, a-z)
  * @param ch The character to check
  * @return `true` if the character is an ASCII alphabetic character, `false` otherwise
  */
@@ -141,7 +141,7 @@ constexpr bool isAsciiAlpha(char16 ch) noexcept {
 }
 
 /**
- * @brief Check if a character is a digit character (for any Unicode digit)
+ * @brief Checks if a character is a digit character (for any Unicode digit)
  * @param ch The character to check
  * @return `true` if the character is a digit character, `false` otherwise
  */
@@ -149,7 +149,7 @@ NEX_NODISCARD NEX_API
 bool isUnicodeDigit(char16 ch) noexcept;
 
 /**
- * @brief Check if a character is an alphabetic character (for any Unicode letter)
+ * @brief Checks if a character is an alphabetic character (for any Unicode letter)
  * @param ch The character to check
  * @return `true` if the character is an alphabetic character, `false` otherwise
  */
@@ -161,7 +161,7 @@ bool isUnicodeAlpha(char16 ch) noexcept;
 // =================================================================================
 
 /**
- * @brief Check if a UTF-8 string contains invalid sequences
+ * @brief Checks if a UTF-8 string contains invalid sequences
  *
  * This function checks if the given UTF-8 string contains any invalid sequences.
  * It returns true if any invalid sequences are found, or false if the string is valid.
@@ -173,7 +173,7 @@ NEX_NODISCARD NEX_API
 bool containsInvalidUtf8Sequences(Utf8StringView input) noexcept;
 
 /** 
- * @brief Check if a UTF-8 string is valid
+ * @brief Checks if a UTF-8 string is valid
  * 
  * A valid UTF-8 string must consist of valid UTF-8 sequences 
  * and must not contain any invalid byte patterns.
@@ -187,7 +187,7 @@ NEX_NODISCARD NEX_API
 bool isValidUtf8(Utf8StringView input) noexcept;
 
 /** 
- * @brief Check if a UTF-8 sequence is valid
+ * @brief Checks if a UTF-8 sequence is valid
  * 
  * A valid UTF-8 sequence must start with a valid leading byte, 
  * followed by the correct number of valid continuation bytes.
@@ -201,7 +201,7 @@ NEX_NODISCARD NEX_API
 bool isValidUtf8Sequence(Utf8StringView input) noexcept;
 
 /** 
- * @brief Decode a UTF-8 code point
+ * @brief Decodes a UTF-8 code point
  * 
  * This function decodes a single UTF-8 code point from the input string,
  * updating the advance parameter to indicate the number of bytes consumed.
@@ -217,7 +217,7 @@ NEX_NODISCARD NEX_API
 Result<char32> decodeUtf8CodePoint(Utf8StringView input, usize& advance);
 
 /** 
- * @brief Get the byte number of a UTF-8 code point
+ * @brief Gets the byte number of a UTF-8 code point
  * 
  * This function determines the number of bytes that make up 
  * a UTF-8 code point based on the value of the first byte.
@@ -244,7 +244,7 @@ NEX_NODISCARD NEX_API
 usize utf8SequenceLength(char8 firstByte);
 
 /** 
- * @brief Encode a UTF-8 code point
+ * @brief Encodes a UTF-8 code point
  *
  * This function encodes a single Unicode code point (char32) into a UTF-8 sequence.
  * The encoded bytes are written to the provided output buffer.
@@ -258,7 +258,7 @@ NEX_NODISCARD NEX_API
 usize encodeUtf8CodePoint(char32 cp, char8* out);
 
 /**
- * @brief Count the number of Unicode code points in a UTF-8 string
+ * @brief Counts the number of Unicode code points in a UTF-8 string
  *
  * This function counts the number of Unicode code points in the given UTF-8 string.
  * It iterates through the string, decoding each code point and incrementing the count.
@@ -276,7 +276,7 @@ Result<usize> countUtf8CodePoints(Utf8StringView input) noexcept;
 // =================================================================================
 
 /** 
- * @brief Decode a UTF-16 code point
+ * @brief Decodes a UTF-16 code point
  * 
  * This function decodes a single Unicode code point from the input UTF-16 string,
  * updating the advance parameter to indicate the number of code units consumed.
@@ -292,7 +292,7 @@ NEX_NODISCARD NEX_API
 Result<char32> decodeUtf16CodePoint(Utf16StringView input, usize& advance);
 
 /**
-* @brief Encode a Unicode code point into UTF-16
+* @brief Encodes a Unicode code point into UTF-16
 * 
 * This function encodes a single Unicode code point (char32) into a UTF-16 sequence.
 * The encoded code units are written to the provided output buffer.
@@ -306,7 +306,7 @@ NEX_NODISCARD NEX_API
 usize encodeUtf16CodePoint(char32 cp, char16* out);
 
 /**
- * @brief Count the number of Unicode code points in a UTF-16 string
+ * @brief Counts the number of Unicode code points in a UTF-16 string
  * 
  * This function counts the number of Unicode code points in the input UTF-16 string,
  * correctly handling surrogate pairs to ensure that each pair is counted as a single code point.
@@ -325,7 +325,7 @@ Result<usize> countUtf16CodePoints(Utf16StringView input) noexcept;
 // =================================================================================
 
 /**
- * @brief Check if a UTF-32 string is valid
+ * @brief Checks if a UTF-32 string is valid
  * 
  * @details
  * A valid UTF-32 string must consist of valid UTF-32 code points, and must not contain any invalid code points 
@@ -339,7 +339,7 @@ NEX_NODISCARD NEX_API
 bool isValidUtf32Sequence(Utf32StringView input) noexcept;
 
 /**
- * @brief Count the number of Unicode code points in a UTF-32 string
+ * @brief Counts the number of Unicode code points in a UTF-32 string
  * 
  * @details
  * This function counts the number of Unicode code points in the given UTF-32 string.
@@ -507,7 +507,7 @@ Utf8StringView narrowToUtf8(NStringView narrow) noexcept {
 // =================================================================================
 
 /**
- * @brief Convert ANSI string to UTF-8 string
+ * @brief Converts ANSI string to UTF-8 string
  * @param ansi The input ANSI string to convert
  * @return Result containing the converted UTF-8 string if successful, or an error if the conversion fails
  */
@@ -515,7 +515,7 @@ NEX_NODISCARD NEX_API
 Result<Utf8String> ansiToUtf8(AnsiStringView ansi);
 
 /**
- * @brief Convert UTF-8 string to ANSI string
+ * @brief Converts UTF-8 string to ANSI string
  * @param utf8 The input UTF-8 string to convert
  * @return Result containing the converted ANSI string if successful, or an error if the conversion fails
  */
@@ -523,7 +523,7 @@ NEX_NODISCARD NEX_API
 Result<AnsiString> utf8ToAnsi(Utf8StringView utf8);
 
 /**
- * @brief Convert ANSI string to UTF-16 string
+ * @brief Converts ANSI string to UTF-16 string
  * @param ansi The input ANSI string to convert
  * @return Result containing the converted UTF-16 string if successful, or an error if the conversion fails
  */
@@ -531,7 +531,7 @@ NEX_NODISCARD NEX_API
 Result<Utf16String> ansiToUtf16(AnsiStringView ansi);
 
 /**
- * @brief Convert UTF-16 string to ANSI string
+ * @brief Converts UTF-16 string to ANSI string
  * @param utf16 The input UTF-16 string to convert
  * @return Result containing the converted ANSI string if successful, 
  *         or an error if the conversion fails
@@ -540,7 +540,7 @@ NEX_NODISCARD NEX_API
 Result<AnsiString> utf16ToAnsi(Utf16StringView utf16);
 
 /**
- * @brief Convert local string to UTF-8 string
+ * @brief Converts local string to UTF-8 string
  * @param local The input local string to convert
  * @return Result containing the converted UTF-8 string if successful, or an error if the conversion fails
  */
@@ -548,7 +548,7 @@ NEX_NODISCARD NEX_API
 Result<Utf8String> localToUtf8(LocalStringView local);
 
 /**
- * @brief Convert UTF-8 string to local string
+ * @brief Converts UTF-8 string to local string
  * @param utf8 The input UTF-8 string to convert
  * @return Result containing the converted local string if successful, or an error if the conversion fails
  */
@@ -556,7 +556,7 @@ NEX_NODISCARD NEX_API
 Result<LocalString> utf8ToLocal(Utf8StringView utf8);
 
 /**
- * @brief Convert local string to UTF-16 string
+ * @brief Converts local string to UTF-16 string
  * @param local The input local string to convert
  * @return Result containing the converted UTF-16 string if successful, 
  *         or an error if the conversion fails
@@ -565,7 +565,7 @@ NEX_NODISCARD NEX_API
 Result<Utf16String> localToUtf16(LocalStringView local);
 
 /**
- * @brief Convert UTF-16 string to local string
+ * @brief Converts UTF-16 string to local string
  * @param utf16 The input UTF-16 string to convert
  * @return Result containing the converted local string if successful, or an error if the conversion fails
  */
@@ -573,7 +573,7 @@ NEX_NODISCARD NEX_API
 Result<LocalString> utf16ToLocal(Utf16StringView utf16);
 
 /**
- * @brief Convert UTF-8 string to UTF-16 string
+ * @brief Converts UTF-8 string to UTF-16 string
  * @param utf8 The input UTF-8 string to convert
  * @return Result containing the converted UTF-16 string if successful, or an error if the conversion fails
  */
@@ -581,7 +581,7 @@ NEX_NODISCARD NEX_API
 Result<Utf16String> utf8ToUtf16(Utf8StringView utf8);
 
 /**
- * @brief Convert UTF-16 string to UTF-8 string
+ * @brief Converts UTF-16 string to UTF-8 string
  * @param utf16 The input UTF-16 string to convert
  * @return Result containing the converted UTF-8 string if successful, or an error if the conversion fails
  */
@@ -589,7 +589,7 @@ NEX_NODISCARD NEX_API
 Result<Utf8String> utf16ToUtf8(Utf16StringView utf16);
 
 /**
- * @brief Convert UTF-32 string to UTF-8 string
+ * @brief Converts UTF-32 string to UTF-8 string
  * @param utf32 The input UTF-32 string to convert
  * @return Result containing the converted UTF-8 string if successful, or an error if the conversion fails
  */
@@ -597,7 +597,7 @@ NEX_NODISCARD NEX_API
 Result<Utf8String> utf32ToUtf8(Utf32StringView utf32);
 
 /**
- * @brief Convert UTF-8 string to UTF-32 string
+ * @brief Converts UTF-8 string to UTF-32 string
  * @param utf8 The input UTF-8 string to convert
  * @return Result containing the converted UTF-32 string if successful, or an error if the conversion fails
  */
@@ -605,7 +605,7 @@ NEX_NODISCARD NEX_API
 Result<Utf32String> utf8ToUtf32(Utf8StringView utf8);
 
 /**
- * @brief Convert UTF-32 string to UTF-16 string
+ * @brief Converts UTF-32 string to UTF-16 string
  * @param utf32 The input UTF-32 string to convert
  * @return Result containing the converted UTF-16 string if successful, or an error if the conversion fails
  */
@@ -613,7 +613,7 @@ NEX_NODISCARD NEX_API
 Result<Utf16String> utf32ToUtf16(Utf32StringView utf32);
 
 /**
- * @brief Convert UTF-16 string to UTF-32 string
+ * @brief Converts UTF-16 string to UTF-32 string
  * @param utf16 The input UTF-16 string to convert
  * @return Result containing the converted UTF-32 string if successful, or an error if the conversion fails
  */

@@ -15,6 +15,7 @@
 #include "nex/base/meta.h"
 #include "nex/base/types.h"
 #include "nex/base/casts.h"
+#include "nex/base/limits.h"
 #include "nex/base/pointer_traits.h"
 
 NEX_NAMESPACE_BEGIN
@@ -373,29 +374,48 @@ struct AllocatorTraits {
     template <class Type>
     using rebind_traits = AllocatorTraits<rebind_alloc<Type> >;
 
-    // Allocate memory using the allocator's allocate function
+    // Allocates memory using the allocator's allocate function
     NEX_NODISCARD NEX_HIDDEN_FROM_ABI constexpr
     static pointer allocate(allocator_type& alloc, size_type n) {
         return alloc.allocate(n);
     }
 
-    // Deallocate memory using the allocator's deallocate function
+    // Deallocates memory using the allocator's deallocate function
     NEX_NODISCARD NEX_HIDDEN_FROM_ABI constexpr
     static void deallocate(allocator_type& alloc, pointer ptr, size_type n) noexcept {
         return alloc.deallocate(ptr, n);
     }
 
-    // Construct an object of the given type at the given pointer using the provided arguments
+    // Constructs an object of the given type at the given pointer using the provided arguments
     template <class Type, class... Args>
     NEX_HIDDEN_FROM_ABI constexpr
     static void construct(allocator_type&, pointer ptr, Args&&... args) {
         NEX_CONSTRUCT_AT(ptr, NEX_FORWARD<Args>(args)...);
     }
 
-    // Destroy the object of the given type at the given pointer
+    // Destroys the object of the given type at the given pointer
     template <class Type>
     NEX_HIDDEN_FROM_ABI constexpr static void destroy(allocator_type&, pointer ptr) {
         NEX_DESTROY_AT(ptr);
+    }
+
+private:
+    template <class Alloc>
+    struct HasMaxAllocationSize {
+        static constexpr bool value = requires(Alloc& alloc) {
+            { alloc.maxAllocationSize() } -> meta::ConvertibleTo<usize>;
+        };
+    };
+
+public:
+    // Returns the maximum allocation size supported by the allocator
+    NEX_NODISCARD NEX_HIDDEN_FROM_ABI constexpr
+    static size_type maxAllocationSize(const allocator_type& alloc) noexcept {
+        if constexpr (HasMaxAllocationSize<const allocator_type>::value) {
+            return alloc.maxAllocationSize();
+        } else {
+            return NumericLimits<size_type>::max() / sizeof(value_type);
+        }
     }
 };
 

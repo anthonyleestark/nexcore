@@ -384,7 +384,7 @@ NEX_INLINE_NAMESPACE_END(literals)
 
 #if NEX_HAS_BUILTIN_FLOAT16
     // Compilers with native 16-bit floating-point type support
-    using float16   = __float16_t;      // 16-bit half-precision IEEE 754 (binary16)
+    using float16   = _nex_float16_t;   // 16-bit half-precision IEEE 754 (binary16)
 #endif  // ^^NEX_HAS_BUILTIN_FLOAT16
 
 using float32       = float;            // 32-bit single-precision IEEE 754 (binary32)
@@ -613,10 +613,11 @@ using fflags32   = uint32;                  // 32-bit flags (bitfield storage, a
 using fflags64   = uint64;                  // 64-bit flags (bitfield storage, alternative name)
 
 // =================================================================================
-// Standard pointer types and address types
+// Standard integral and pointer-related types
 // =================================================================================
 
 using null = decltype(nullptr);             // Null pointer type
+enum class element_count : usize {};        // Element count type for arrays and collections
 enum class byte : uint8 {};                 // Single-byte object-representation type
 
 /**

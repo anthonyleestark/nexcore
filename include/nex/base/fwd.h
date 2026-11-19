@@ -7,9 +7,56 @@
 
 #include "nex/base/namespace.h"
 #include "nex/base/attributes.h"
+#include "nex/base/macros.h"
 #include "nex/base/types.h"
 
 NEX_NAMESPACE_BEGIN
+
+// =================================================================================
+// Forward declarations for memory and allocation-related types.
+// =================================================================================
+
+// Forward declaration of the DefaultAllocator class template.
+template <class Type>
+class DefaultAllocator;
+
+/**
+ * @brief Allocates memory for a specific type with the given element count and alignment.
+ * @tparam Type The type of elements to allocate.
+ * @param elementCount The number of elements to allocate.
+ * @param alignment The alignment requirement for the allocation.
+ * @return A pointer to the allocated memory of the specified type.
+ */
+template <class Type>
+inline NEX_HIDDEN_FROM_ABI NEX_NO_CFI
+Type* allocate(element_count elementCount, NEX_MAYBE_UNUSED usize alignment = NEX_ALIGNOF(Type));
+
+/**
+ * @brief Deallocates memory for a specific type with the given element count and alignment.
+ * @tparam Type The type of elements to deallocate.
+ * @param ptr The pointer to the memory to deallocate.
+ * @param elementCount The number of elements to deallocate.
+ * @param alignment The alignment requirement for the allocation.
+ */
+template <class Type>
+inline NEX_HIDDEN_FROM_ABI void deallocate(
+    meta::TypeIdentityT<Type>* ptr,
+    element_count elementCount,
+    NEX_MAYBE_UNUSED usize alignment = NEX_ALIGNOF(Type)
+) noexcept;
+
+/**
+ * @brief Deallocates memory for a specific type without specifying the element count.
+ * @tparam Type The type of elements to deallocate.
+ * @param ptr The pointer to the memory to deallocate.
+ * @param alignment The alignment requirement for the allocation.
+ */
+template <class Type>
+inline NEX_HIDDEN_FROM_ABI
+void deallocateUnsized(
+    meta::TypeIdentityT<Type>* ptr,
+    NEX_MAYBE_UNUSED usize alignment = NEX_ALIGNOF(Type)
+) noexcept;
 
 // =================================================================================
 // Forward declarations for functional classes

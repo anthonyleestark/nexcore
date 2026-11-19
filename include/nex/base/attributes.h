@@ -1188,3 +1188,22 @@
         #define NEX_NO_SANITIZE(...)
     #endif  // ^^NEX_NO_SANITIZE
 #endif  // ^^!defined(NEX_NO_SANITIZE)
+
+/**
+ * @def NEX_NO_CFI
+ * @brief Disables Control Flow Integrity (CFI) checks for a function.
+ *
+ * @details
+ * The @c no_sanitize("cfi") attribute instructs the compiler to omit CFI instrumentation
+ * for the annotated function. This is useful in low-level system code or when dealing
+ * with deliberate exceptions where CFI checks may cause false positives or performance issues.
+ *
+ * @note Not supported on GCC.
+ *
+ * @see https://clang.llvm.org/docs/AttributeReference.html#no_sanitize
+ */
+#if NEX_HAS_ATTRIBUTE(no_sanitize) && !NEX_COMPILER_IS_GCC
+    #define NEX_NO_CFI NEX_NO_SANITIZE("cfi")
+#else  // Compiler is GCC or does not support CFI
+    #define NEX_NO_CFI
+#endif  // ^^NEX_NO_CFI

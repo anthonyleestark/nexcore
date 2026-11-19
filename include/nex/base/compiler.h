@@ -394,6 +394,36 @@
 // Language/compiler-specific type definitions and feature detection
 // =================================================================================
 
+// If we are getting operator new from the MSVC CRT, then allocation overloads
+// for align_val type were added in MSVC v19.12, a.k.a Visual Studio 2017 version 15.3.
+#if defined(NEX_MSVCRT) && NEX_COMPILER_MSVC_COMPATIBLE && NEX_COMPILER_MSVC_VER < 1912
+    #define NEX_HAS_LIBRARY_ALIGNED_ALLOCATION 0
+#elif defined(NEX_ABI_VCRUNTIME) && !defined(__cpp_aligned_new)
+    // We're deferring to Microsoft's STL to provide aligned new et al.
+    // We don't have it unless the language feature test macro is defined.
+    #define NEX_HAS_LIBRARY_ALIGNED_ALLOCATION 0
+#elif defined(__MVS__)
+    #define NEX_HAS_LIBRARY_ALIGNED_ALLOCATION 0
+#else
+    #define NEX_HAS_LIBRARY_ALIGNED_ALLOCATION 1
+#endif  // ^^NEX_HAS_LIBRARY_ALIGNED_ALLOCATION
+
+#if !NEX_HAS_LIBRARY_ALIGNED_ALLOCATION
+    #define NEX_HAS_ALIGNED_ALLOCATION 0
+#elif defined(__cpp_aligned_new) /* && __cpp_aligned_new >= 201606 */
+    #define NEX_HAS_ALIGNED_ALLOCATION 1
+#else  // Compiler does not support aligned allocation
+    #define NEX_HAS_ALIGNED_ALLOCATION 0
+#endif  // ^^NEX_HAS_ALIGNED_ALLOCATION
+
+#if defined(__cpp_sized_deallocation) /* && __cpp_sized_deallocation >= 201309L */
+    #define NEX_HAS_SIZED_DEALLOCATION 1
+    #define NEX_ONLY_IF_SIZED_DEALLOCATION(...) __VA_OPT__(, ) __VA_ARGS__
+#else
+    #define NEX_HAS_SIZED_DEALLOCATION 0
+    #define NEX_ONLY_IF_SIZED_DEALLOCATION(...) /* expand to nothing */
+#endif  // ^^NEX_HAS_SIZED_DEALLOCATION
+
 #if NEX_HAS_CXX20 && defined(__cpp_char8_t)
     #define NEX_HAS_BUILTIN_CHAR8_T 1
 #else  // Compiler does not support char8_t
@@ -411,11 +441,11 @@
     #if defined(__fp16) && (NEX_COMPILER_GCC_COMPATIBLE || NEX_COMPILER_IS_CLANG_BASED)
         // Clang and GCC support __fp16 as a native 16-bit floating-point type, 
         // but only as a storage-only format and only on certain targets (e.g., ARM)
-        using __float16_t = __fp16;
+        using _nex_float16_t = __fp16;
     #else  // _Float16 
-        using __float16_t = _Float16;
+        using _nex_float16_t = _Float16;
     #endif
-#else  // Compiler does not support __float16_t
+#else  // Compiler does not support 16-bit floating-point
     #define NEX_HAS_BUILTIN_FLOAT16 0
 #endif  // ^^NEX_HAS_BUILTIN_FLOAT16
 

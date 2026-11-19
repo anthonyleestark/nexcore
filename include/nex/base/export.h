@@ -52,6 +52,15 @@
 #endif  // !defined(NEX_API)
 
 /**
+ * @def NEX_EXPORTED_FROM_ABI
+ * @brief Marks a symbol as exported from the shared library.
+ * @note
+ * This macro should be used for symbols whose definitions are hidden within the shared library
+ * but need to be accessible externally, while NEX_API is used for general symbol export/import.
+ */
+#define NEX_EXPORTED_FROM_ABI NEX_API
+
+/**
  * @def NEX_UNEXPORTED
  * @brief Marks a symbol as not exported from the shared library.
  */

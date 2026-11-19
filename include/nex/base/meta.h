@@ -484,7 +484,7 @@ NEX_NODISCARD constexpr bool IsConstantEvaluated() noexcept {
     template <class Type>
     constexpr bool IsFloatingPointV = IsAnyOfV<RemoveCvT<Type>, 
     #if NEX_HAS_BUILTIN_FLOAT16
-        __float16_t,                        // 16-bit half-precision IEEE 754 (binary16)
+        _nex_float16_t,                     // 16-bit half-precision IEEE 754 (binary16)
     #endif  // ^^NEX_HAS_BUILTIN_FLOAT16
         float,                              // 32-bit single-precision IEEE 754 (binary32)
         double,                             // 64-bit double-precision IEEE 754 (binary64)

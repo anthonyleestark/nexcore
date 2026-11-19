@@ -50,6 +50,17 @@
     NEX_EXPAND(NEX_VA_ARG_COUNT_IMPL(__VA_ARGS__, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1))
 
 // =================================================================================
+// Defines macros for working with types
+// =================================================================================
+
+/**
+ * @def NEX_ALIGNOF(type)
+ * @brief Returns the alignment requirement of the specified types in bytes.
+ * @return The alignment requirement of the type in bytes.
+ */
+#define NEX_ALIGNOF(...) alignof(__VA_ARGS__)
+
+// =================================================================================
 // Defines macros for default and deleted copy and move semantics for classes
 // =================================================================================
 

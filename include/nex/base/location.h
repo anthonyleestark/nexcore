@@ -19,7 +19,9 @@
  */
 
 #include "nex/base/compiler.h"
+#include "nex/base/compiler_features.h"
 #include "nex/base/attributes.h"
+#include "nex/base/visibility.h"
 #include "nex/base/namespace.h"
 
 // ================================================================================================

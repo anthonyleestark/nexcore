@@ -6,17 +6,19 @@
 #pragma once
 
 /**
- * @file      namespace.h
- * @brief     Defines macros for the Nex-ecosystem global namespace and helper macros for namespace usage.
- * 
- * @details 
- * This file defines macros for the Nex-ecosystem global namespace and helper macros for namespace usage.
- * The macros include the namespace declaration, the namespace end, and a using directive for the global namespace 
- * and for each sub-module/layer namespace. The macros can be used throughout the Nex-ecosystem codebases to ensure 
- * consistent namespace usage and to simplify the declaration of namespaces and using directives.
- * 
- * @note When using the NEX_PREPEND_NAMESPACE macro, it is recommended to use it in a way that clearly indicates 
- * the namespace being prepended, to avoid confusion and to improve readability.
+ * @file  namespace.h
+ * @brief Defines namespace declaration macros for NexCore.
+ *
+ * @details
+ * This header provides macros for opening and closing NexCore namespaces and for declaring
+ * namespace-related constructs consistently.
+ *
+ * These macros help maintain a uniform namespace structure throughout the codebase
+ * and simplify namespace declarations in source files.
+ *
+ * @note
+ * This header is intentionally lightweight and does not depend on platform, compiler,
+ * or build configuration headers.
  */
 
 /**

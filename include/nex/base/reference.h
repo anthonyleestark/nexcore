@@ -8,6 +8,7 @@
 #include "nex/base/compiler.h"
 #include "nex/base/export.h"
 #include "nex/base/namespace.h"
+#include "nex/base/visibility.h"
 #include "nex/base/meta.h"
 #include "nex/base/casts.h"
 #include "nex/base/memory.h"

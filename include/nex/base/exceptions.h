@@ -11,7 +11,9 @@
     #include <stdexcept>
 #endif  // !defined(NEX_NO_STL)
 
-#include "nex/base/macros.h"
+#include "nex/base/namespace.h"
+#include "nex/base/visibility.h"
+#include "nex/base/export.h"
 #include "nex/base/types.h"
 
 NEX_NAMESPACE_BEGIN

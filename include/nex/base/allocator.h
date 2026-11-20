@@ -6,9 +6,11 @@
 #pragma once
 
 #include "nex/base/namespace.h"
+#include "nex/base/compiler_features.h"
 #include "nex/base/attributes.h"
+#include "nex/base/visibility.h"
 #include "nex/base/export.h"
-#include "nex/base/macros.h"
+#include "nex/base/preprocessor.h"
 #include "nex/base/allocator_traits.h"
 #include "nex/base/type_concepts.h"
 #include "nex/base/type_traits.h"

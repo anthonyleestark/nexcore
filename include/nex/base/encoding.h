@@ -5,7 +5,10 @@
 
 #pragma once
 
-#include "nex/base/macros.h"
+#include "nex/base/platform.h"
+#include "nex/base/namespace.h"
+#include "nex/base/export.h"
+#include "nex/base/attributes.h"
 #include "nex/base/types.h"
 #include "nex/base/string.h"
 #include "nex/base/result.h"

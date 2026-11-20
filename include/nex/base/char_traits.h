@@ -6,7 +6,10 @@
 #pragma once
 
 #include "nex/base/namespace.h"
+#include "nex/base/compiler_features.h"
+#include "nex/base/language.h"
 #include "nex/base/attributes.h"
+#include "nex/base/visibility.h"
 #include "nex/base/meta.h"
 #include "nex/base/types.h"
 #include "nex/base/memory.h"

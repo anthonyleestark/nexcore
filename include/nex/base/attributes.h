@@ -6,142 +6,30 @@
 #pragma once
 
 /**
- * @file   attributes.h
- * @brief  Defines macros for common attributes and annotations used in the codebase, such as deprecation,
- *         nodiscard, noinline, and noreturn.
- * 
+ * @file    attributes.h
+ * @brief   Defines portable compiler and language annotation macros.
+ *
  * @details
- * This header centralizes compiler- and language-level annotation helpers and exposes them as a consistent
- * set of macros.
- * It covers feature detection for attributes and builtins, compiler-specific attribute wrappers, and common
- * annotations such as deprecation, nodiscard, noinline, always-inline, and noreturn.
- * The goal is to keep attribute usage uniform across the codebase while still adapting to the compiler in use.
- * 
+ * This header provides a consistent set of annotation macros for use throughout NexCore.
+ *
+ * It abstracts compiler-specific and language-level attributes into a common interface,
+ * including annotations related to deprecation, return-value usage, function inlining,
+ * optimization hints, and other code-generation or diagnostic behaviors.
+ *
+ * The implementation adapts these annotations to the capabilities of the active compiler
+ * and language mode.
+ *
  * @note
- * When using the NEX_DEPRECATED macro, it is recommended to provide a message that explains why the function
- * or class is deprecated and what should be used instead.
+ * Compiler feature detection and low-level attribute syntax abstractions are provided
+ * by compiler_features.h.
+ *
+ * @see compiler_features.h
  */
 
 #include "nex/base/compiler.h"
+#include "nex/base/language.h"
+#include "nex/base/compiler_features.h"
 #include "nex/base/build.h"
-
-/**
- * @def NEX_HAS_CLANG_ATTRIBUTE(x)
- * @brief Checks if a Clang-specific attribute is supported by the compiler.
- * 
- * @details
- * This macro checks for the presence of a Clang-specific attribute using `__has_cpp_attribute`.
- * It evaluates to 1 if the attribute is supported and the compiler is Clang, otherwise it evaluates to 0.
- */
-#if NEX_COMPILER_IS_CLANG_BASED
-    #define NEX_HAS_CLANG_ATTRIBUTE(x) NEX_HAS_CPP_ATTRIBUTE(clang::x)
-#else
-    #define NEX_HAS_CLANG_ATTRIBUTE(x) 0
-#endif  // ^^NEX_HAS_CLANG_ATTRIBUTE
-
-/**
- * @def NEX_CLANG_ATTRIBUTE(x)
- * @brief Annotates code with a Clang-specific attribute.
- * 
- * @details
- * This macro allows you to annotate code with a Clang-specific attribute.
- * It expands to the appropriate Clang attribute syntax if the compiler is Clang,
- * and expands to nothing on other compilers.
- */
-#if NEX_COMPILER_IS_CLANG_BASED
-    #define NEX_CLANG_ATTRIBUTE(x) [[clang::x]]
-#else
-    #define NEX_CLANG_ATTRIBUTE(x)
-#endif  // ^^NEX_CLANG_ATTRIBUTE
-
-/**
- * @def NEX_HAS_GCC_ATTRIBUTE(x)
- * @brief Checks if a GCC-specific attribute is supported by the compiler.
- * 
- * @details
- * This macro checks for the presence of a GCC-specific attribute using `__has_cpp_attribute`.
- * It evaluates to 1 if the attribute is supported and the compiler is GCC-compatible, and 0 otherwise.
- */
-#if NEX_COMPILER_GCC_COMPATIBLE
-    #define NEX_HAS_GCC_ATTRIBUTE(x) NEX_HAS_CPP_ATTRIBUTE(gnu::x)
-#else
-    #define NEX_HAS_GCC_ATTRIBUTE(x) 0
-#endif  // ^^NEX_HAS_GCC_ATTRIBUTE
-
-/**
- * @def NEX_GCC_ATTRIBUTE(x)
- * @brief Annotates code with a GCC-specific attribute.
- * 
- * @details
- * This macro allows you to annotate code with a GCC-specific attribute.
- * It expands to the appropriate attribute syntax if the compiler is GCC-compatible,
- * and expands to nothing on other compilers.
- */
-#if NEX_COMPILER_GCC_COMPATIBLE
-    #define NEX_GCC_ATTRIBUTE(x) [[gnu::x]]
-#else
-    #define NEX_GCC_ATTRIBUTE(x)
-#endif  // ^^NEX_GCC_ATTRIBUTE
-
-/**
- * @def NEX_GCC_OR_CLANG_ATTRIBUTE(x)
- * @brief Annotates code with a GCC or Clang-specific attribute using older syntax.
- * 
- * @details
- * This macro allows you to annotate code with a GCC or Clang-specific attribute using
- * the older `__attribute__((x))` syntax.
- * It expands to the appropriate attribute syntax if the compiler is GCC-compatible or Clang,
- * and expands to nothing on other compilers.
- */
-#if NEX_COMPILER_IS_CLANG_BASED || NEX_COMPILER_GCC_COMPATIBLE
-    #define NEX_GCC_OR_CLANG_ATTRIBUTE(x) __attribute__((x))
-#else
-    #define NEX_GCC_OR_CLANG_ATTRIBUTE(x)
-#endif  // ^^NEX_GCC_OR_CLANG_ATTRIBUTE
-
-/**
- * @def NEX_HAS_MSVC_ATTRIBUTE(x)
- * @brief Checks if a Microsoft-specific attribute is supported by the compiler.
- * 
- * @details
- * This macro checks for the presence of a Microsoft-specific attribute using `__has_cpp_attribute`.
- * It evaluates to 1 if the attribute is supported and the compiler is MSVC-compatible, and 0 otherwise.
- */
-#if NEX_COMPILER_MSVC_COMPATIBLE
-    #define NEX_HAS_MSVC_ATTRIBUTE(x) NEX_HAS_CPP_ATTRIBUTE(msvc::x)
-#else
-    #define NEX_HAS_MSVC_ATTRIBUTE(x) 0
-#endif  // ^^NEX_HAS_MSVC_ATTRIBUTE
-
-/**
- * @def NEX_MSVC_ATTRIBUTE(x)
- * @brief Annotates code with a Microsoft-specific attribute.
- * 
- * @details
- * This macro allows you to annotate code with a Microsoft-specific attribute.
- * It expands to the appropriate attribute syntax if the compiler is MSVC-compatible,
- * and expands to nothing on other compilers.
- */
-#if NEX_COMPILER_MSVC_COMPATIBLE
-    #define NEX_MSVC_ATTRIBUTE(x) [[msvc::x]]
-#else
-    #define NEX_MSVC_ATTRIBUTE(x)
-#endif  // ^^NEX_MSVC_ATTRIBUTE
-
-/**
- * @def NEX_MSVC_DECLSPEC
- * @brief Annotates a symbol with a Microsoft-specific __declspec attribute.
- * 
- * @details
- * This macro allows you to annotate a symbol with a Microsoft-specific __declspec attribute.
- * It expands to the appropriate attribute syntax if the compiler is MSVC-compatible,
- * and expands to nothing on other compilers.
- */
-#if NEX_COMPILER_MSVC_COMPATIBLE
-    #define NEX_MSVC_DECLSPEC(x) __declspec(x)
-#else
-    #define NEX_MSVC_DECLSPEC(x)
-#endif  // ^^NEX_MSVC_DECLSPEC
 
 /**
  * @def NEX_NOINLINE
@@ -212,72 +100,6 @@
     // to preserve function boundaries for better debugging experience
     #define NEX_ALWAYS_INLINE inline
 #endif  // ^^NEX_ALWAYS_INLINE
-
-/**
- * @def NEX_EXCLUDE_FROM_EXPLICIT_INSTANTIATION
- * @brief Marks a symbol to be excluded from explicit template instantiation.
- *
- * @details
- * This macro expands to the appropriate compiler-specific attribute to exclude a symbol
- * from explicit template instantiation.
- * If the compiler does not support this attribute, it falls back to always inlining the symbol
- * to approximate the effect.
- */
-#if NEX_HAS_ATTRIBUTE(exclude_from_explicit_instantiation)
-    #define NEX_EXCLUDE_FROM_EXPLICIT_INSTANTIATION \
-        NEX_GCC_OR_CLANG_ATTRIBUTE(__exclude_from_explicit_instantiation__)
-#else
-    // Try to approximate the effect of exclude_from_explicit_instantiation
-    // (which is that entities are not assumed to be provided by explicit
-    // template instantiations in the dylib) by always inlining those entities.
-    #define NEX_EXCLUDE_FROM_EXPLICIT_INSTANTIATION NEX_ALWAYS_INLINE
-#endif  // ^^NEX_EXCLUDE_FROM_EXPLICIT_INSTANTIATION
-
-/**
- * @def NEX_VISIBILITY
- * @brief Annotates a symbol with a specific visibility for shared libraries.
- * 
- * @details
- * This macro can be used to control the visibility of symbols in shared libraries.
- * It expands to the appropriate compiler-specific attribute based on the detected compiler.
- */
-#if NEX_COMPILER_IS_CLANG_BASED || NEX_COMPILER_GCC_COMPATIBLE
-    // On Clang and GCC, we can use the visibility attribute to control symbol export.
-    #define NEX_VISIBILITY(vis) NEX_GCC_OR_CLANG_ATTRIBUTE(visibility(#vis))
-#else
-    // On MSVC, there is no direct equivalent to GCC's visibility attribute,
-    // so we define it as a no-op.
-    #define NEX_VISIBILITY(vis)
-#endif  // ^^NEX_VISIBILITY
-
-#if !defined(NEX_HIDDEN)
-    // Marks a symbol as hidden from the public API using the visibility attribute.
-    #define NEX_HIDDEN NEX_VISIBILITY(hidden)
-#endif  // ^^NEX_HIDDEN
-
-#if !defined(NEX_HIDDEN_FROM_ABI)
-    // Marks a symbol as hidden from the public ABI,
-    // which can help reduce symbol collisions and improve load times in shared libraries.
-    #define NEX_HIDDEN_FROM_ABI \
-        NEX_HIDDEN NEX_EXCLUDE_FROM_EXPLICIT_INSTANTIATION
-#endif  // ^^NEX_HIDDEN_FROM_ABI
-
-/**
- * @def NEX_INTERNAL
- * @brief Marks a symbol as internal and not recommended for public use.
- *
- * @details
- * This macro ensures that the annotated symbol is only used internally and is not recommended for use in public APIs.
- * It helps prevent accidental usage of internal symbols in public-facing code and can improve encapsulation
- * and maintainability.
- *
- * @note
- * This macro won't make the symbol completely inaccessible, but it signals that it is intended for internal use only.
- * Users can still access the symbol if necessary, but it is strongly discouraged and should be done with caution.
- */
-#if !defined(NEX_INTERNAL)
-    #define NEX_INTERNAL NEX_VISIBILITY(hidden)
-#endif  // ^^NEX_INTERNAL
 
 /**
  * @def NEX_WEAK_SYMBOL

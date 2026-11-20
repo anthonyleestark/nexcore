@@ -5,7 +5,7 @@
 
 #pragma once
 
-#include "nex/base/macros.h"
+#include "nex/base/namespace.h"
 #include "nex/base/meta.h"
 #include "nex/base/fwd.h"
 #include "nex/base/casts.h"

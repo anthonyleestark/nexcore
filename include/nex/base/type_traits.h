@@ -17,7 +17,7 @@
  * instantiations based on type properties.
  */
 
-#include "nex/base/macros.h"
+#include "nex/base/namespace.h"
 #include "nex/base/meta.h"
 #include "nex/base/casts.h"
 #include "nex/base/invoke.h"

@@ -6,18 +6,19 @@
 #pragma once
 
 /**
- * @file    platform.h
- * @brief   Detects the target platform and defines macros accordingly for conditional compilation.
- * 
+ * @file  platform.h
+ * @brief Detects the target operating system and platform family.
+ *
  * @details
- * This header centralizes compile-time platform detection and exposes the result as a small set of boolean macros.
- * It distinguishes between specific targets such as Windows, Linux, and macOS, broader families such as Apple, BSD, 
- * and POSIX, and the detected libc implementation where applicable.
- * Detection is based on compiler- and OS-provided predefined macros so the rest of the codebase can use a single,
- * consistent interface for platform-specific compilation.
+ * This header centralizes compile-time detection of the target operating system and its broader platform family.
+ * It identifies supported platforms such as Windows, Linux, and macOS, together with platform families such as
+ * Apple, BSD, and POSIX.
+ *
+ * Detection is based on compiler- and platform-provided predefined macros and exposes the results through
+ * a consistent set of configuration macros.
  *
  * @note
- * Only Windows, Linux, and macOS are currently supported; unsupported targets fail fast at compile time.
+ * Platform-family detection does not imply that the corresponding platform is supported by NexCore.
  */
 
 // ======================================================================================
@@ -33,9 +34,6 @@
 #define NEX_PLATFORM_IS_MACOSX         0
 #define NEX_PLATFORM_IS_LINUX          0
 #define NEX_PLATFORM_IS_WINDOWS        0
-
-#define NEX_LIBC_IS_GLIBC              0
-#define NEX_LIBC_IS_UCLIBC             0
 
 /**
  * Below is a list of flags that are defined for each platform family. 
@@ -79,34 +77,12 @@
     #else
         #error Nex-ecosystem does not support Chrome OS for now.
     #endif  // !defined(NEX_PLATFORM_CHROMEOS)
-    // Include a system header to pull in features.h for glibc/uclibc macros.
-    #include <unistd.h>
-    #if defined(__GLIBC__) && !defined(__UCLIBC__)
-        // We really are using glibc, not uClibc pretending to be glibc.
-        #undef NEX_LIBC_IS_GLIBC
-        #define NEX_LIBC_IS_GLIBC 1
-    #elif defined(__UCLIBC__)
-        #undef NEX_LIBC_IS_UCLIBC
-        #define NEX_LIBC_IS_UCLIBC 1
-    #endif
 #elif defined(_WIN32) || defined(_WIN64)
     #define NEX_PLATFORM_WINDOWS 1
     #undef NEX_PLATFORM_IS_WINDOWS
     #define NEX_PLATFORM_IS_WINDOWS 1
 #else
     #error Platform is not supported or not detected.
-#endif
-
-// Detects which libc we're using if we're on Linux.
-#if (defined(NEX_PLATFORM_LINUX) || defined(__AMDGPU__) || defined(__NVPTX__)) && __has_include(<features.h>)
-    #include <features.h>
-    #if NEX_LIBC_IS_GLIBC && defined(__GLIBC_PREREQ)
-        #define NEX_LIBC_GLIBC_PREREQ(major, minor) __GLIBC_PREREQ(major, minor)
-    #else
-        #define NEX_LIBC_GLIBC_PREREQ(major, minor) 0
-    #endif
-#else
-    #define NEX_LIBC_GLIBC_PREREQ(major, minor) 0
 #endif
 
 // ======================================================================================

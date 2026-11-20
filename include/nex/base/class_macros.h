@@ -5,60 +5,23 @@
 
 #pragma once
 
-#include "nex/base/platform.h"
-#include "nex/base/architecture.h"
-#include "nex/base/compiler.h"
-#include "nex/base/attributes.h"
-#include "nex/base/build.h"
-#include "nex/base/export.h"
-#include "nex/base/namespace.h"
-
-// =================================================================================
-// Define macros for compilation and preprocessor utilities
-// =================================================================================
-
-#define NEX_STRINGIFY_IMPL(x)       #x
-#define NEX_CONCAT_IMPL(a, b)       a##b
-#define NEX_EXPAND(x)               x
-
-// Stringify a macro argument
-#define NEX_STRINGIFY(x) \
-    NEX_STRINGIFY_IMPL(x)
-
-// Concatenate two macro arguments into a single token
-#define NEX_CONCAT(a, b) \
-    NEX_CONCAT_IMPL(a, b)
-
-// Concatenate three macro arguments into a single token
-#define NEX_CONCAT3(a, b, c) \
-    NEX_CONCAT(NEX_CONCAT(a, b), c)
-
-// Concatenate four macro arguments into a single token
-#define NEX_CONCAT4(a, b, c, d) \
-    NEX_CONCAT(NEX_CONCAT3(a, b, c), d)
-
-#define NEX_MAKE_UNIQUE_NAME_IMPL(prefix, line) NEX_CONCAT(prefix, line)
-
-// Generates a unique name by concatenating a prefix with the current line number
-#define NEX_MAKE_UNIQUE_NAME(prefix) \
-    NEX_MAKE_UNIQUE_NAME_IMPL(prefix, __LINE__)
-
-#define NEX_VA_ARG_COUNT_IMPL(_1,_2,_3,_4,_5,_6,_7,_8,_9,_10, N, ...) N
-
-// Counts the number of arguments passed to a variadic macro
-#define NEX_VA_ARG_COUNT(...) \
-    NEX_EXPAND(NEX_VA_ARG_COUNT_IMPL(__VA_ARGS__, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1))
-
-// =================================================================================
-// Defines macros for working with types
-// =================================================================================
-
 /**
- * @def NEX_ALIGNOF(type)
- * @brief Returns the alignment requirement of the specified types in bytes.
- * @return The alignment requirement of the type in bytes.
+ * @file  class_macros.h
+ * @brief Provides macros for common class special member function declarations.
+ *
+ * @details
+ * This header defines convenience macros for declaring or deleting common special member functions
+ * in C++ classes.
+ *
+ * It provides reusable definitions for copy and move constructors, copy and move assignment operators,
+ * and destructor-related declarations.
+ *
+ * These macros help reduce repetitive declarations while keeping class semantics explicit and consistent
+ * throughout NexCore.
+ *
+ * @note
+ * These macros are intended as declaration conveniences and do not introduce additional runtime behavior.
  */
-#define NEX_ALIGNOF(...) alignof(__VA_ARGS__)
 
 // =================================================================================
 // Defines macros for default and deleted copy and move semantics for classes

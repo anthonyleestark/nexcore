@@ -5,7 +5,8 @@
 
 #pragma once
 
-#include "nex/base/macros.h"
+#include "nex/base/export.h"
+#include "nex/base/namespace.h"
 #include "nex/base/types.h"
 
 NEX_NAMESPACE_BEGIN

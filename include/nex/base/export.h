@@ -6,14 +6,31 @@
 #pragma once
 
 /**
- * @file   export.h
- * @brief  Define macros for marking symbols for export or import in shared libraries
- *         and for specifying calling conventions for callback functions.
+ * @file  export.h
+ * @brief Defines shared-library symbol export and import macros.
+ *
+ * @details
+ * This header provides a consistent interface for marking symbols that are exported from
+ * or imported into shared libraries.
+ *
+ * It adapts symbol export and import declarations according to the active compiler, platform,
+ * and build configuration.
+ *
+ * These macros allow public APIs to be declared consistently regardless of whether NexCore
+ * is built as a shared library or consumed by another binary.
+ *
+ * @note
+ * Low-level symbol visibility annotations are provided separately by visibility.h.
+ *
+ * @see visibility.h
+ * @see build.h
  */
 
 #include "nex/base/platform.h"
 #include "nex/base/compiler.h"
+#include "nex/base/compiler_features.h"
 #include "nex/base/build.h"
+#include "nex/base/visibility.h"
 
 // ======================================================================================
 // Shared Library Export/Import Macros

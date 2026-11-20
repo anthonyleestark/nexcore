@@ -132,28 +132,6 @@
 #endif  // ^^^ Architecture detection
 
 /**
- * @section arch_endianness Endianness Detection
- * @brief Endianness detection for the target CPU architecture.
- * 
- * @details
- * The following preprocessor conditionals detect the endianness of the target CPU architecture.
- * The endianness is determined based on the architecture macros defined above.
- * If the endianness cannot be determined, a compilation error will be raised.
- * 
- * @see Compiler endian detection macros in include/nex/base/compiler.h
- */
-
-#if defined(NEX_ARCH_CPU_LITTLE_ENDIAN) && NEX_ARCH_CPU_LITTLE_ENDIAN
-    #define NEX_ARCH_CPU_IS_LITTLE_ENDIAN 1
-    #define NEX_ARCH_CPU_IS_BIG_ENDIAN 0
-#elif defined(NEX_ARCH_CPU_BIG_ENDIAN) && NEX_ARCH_CPU_BIG_ENDIAN
-    #define NEX_ARCH_CPU_IS_BIG_ENDIAN 1
-    #define NEX_ARCH_CPU_IS_LITTLE_ENDIAN 0
-#else
-    #error Unable to detect endianness of the target architecture.
-#endif  // ^^^ Endianness detection
-
-/**
  * @brief Detect the size of the long double type for x86 architectures.
  * 
  * @details

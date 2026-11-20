@@ -5,7 +5,9 @@
 
 #pragma once
 
-#include "nex/base/macros.h"
+#include "nex/base/compiler_features.h"
+#include "nex/base/namespace.h"
+#include "nex/base/export.h"
 #include "nex/base/types.h"
 #include "nex/base/location.h"
 #include "nex/base/buffer.h"

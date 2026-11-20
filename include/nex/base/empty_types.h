@@ -11,6 +11,7 @@
  */
 
 #include "nex/base/attributes.h"
+#include "nex/base/visibility.h"
 #include "nex/base/namespace.h"
 
 NEX_NAMESPACE_BEGIN

@@ -16,6 +16,8 @@
 
 #include "nex/base/platform.h"
 #include "nex/base/compiler.h"
+#include "nex/base/compiler_features.h"
+#include "nex/base/language.h"
 #include "nex/base/build.h"
 #include "nex/base/attributes.h"
 #include "nex/base/namespace.h"

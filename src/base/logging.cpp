@@ -3,6 +3,7 @@
  * Copyright (c) 2026 Anthony Lee Stark. All rights reserved.
  */
 
+#include "nex/base/libc.h"
 #include "nex/base/casts.h"
 #include "nex/base/charconv.h"
 #include "nex/base/encoding.h"

@@ -7,7 +7,8 @@
 
 #include "nex/base/namespace.h"
 #include "nex/base/attributes.h"
-#include "nex/base/macros.h"
+#include "nex/base/visibility.h"
+#include "nex/base/preprocessor.h"
 #include "nex/base/types.h"
 
 NEX_NAMESPACE_BEGIN

@@ -6,6 +6,7 @@
 #pragma once
 
 #include "nex/base/platform.h"
+#include "nex/base/export.h"
 #include "nex/base/logging.h"
 
 NEX_LAYER_NAMESPACE_BEGIN(logging)

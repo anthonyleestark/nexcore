@@ -450,7 +450,7 @@ struct NEX_INTERNAL HashImpl<ldouble> : hashing_impl::ScalarHash<ldouble> {
         if (value == 0.0L) {
             return 0;
         } else {
-#if defined(NEX_ARCH_CPU_X86_LONG_DOUBLE_SIZE) && NEX_ARCH_CPU_X86_LONG_DOUBLE_SIZE == 12
+#if NEX_SIZEOF_LONG_DOUBLE == 12
             // Zero out padding bits
             union {
                 ldouble t;
@@ -467,7 +467,7 @@ struct NEX_INTERNAL HashImpl<ldouble> : hashing_impl::ScalarHash<ldouble> {
             u.s.d = 0;
             u.t   = value;
             return u.s.a ^ u.s.b ^ u.s.c ^ u.s.d;
-#elif defined(NEX_ARCH_CPU_X86_LONG_DOUBLE_SIZE) && NEX_ARCH_CPU_X86_LONG_DOUBLE_SIZE == 16
+#elif NEX_SIZEOF_LONG_DOUBLE == 16
             // Zero out padding bits
             union {
                 ldouble t;

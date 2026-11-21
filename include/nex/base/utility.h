@@ -475,7 +475,7 @@ using IndexSequence = IntegerSequence<usize, Values...>;
     template <class Type, Type SequenceSize>
     using MakeIntegerSequence = IntegerSequence<Type, __integer_pack(SequenceSize)...>;
 #else
-    #error "No known way to get an integer pack from the compiler"
+    #error No known way to get an integer pack from the compiler.
 #endif
 
 /**

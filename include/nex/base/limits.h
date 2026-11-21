@@ -10,7 +10,7 @@
  * @brief Custom, zero-dependency compile-time numerical limits and type traits.
  * 
  * @details 
- * Portable alternative to platform-specific system headers. Designed for freestanding, bare-metal, 
+ * Portable alternative to platform-specific system headers. Designed for freestanding, bare-metal,
  * and multi-platform environments.Guaranteed zero runtime overhead via `constexpr` evaluations.
  */
 
@@ -18,6 +18,7 @@
 #include "nex/base/compiler.h"
 #include "nex/base/compiler_features.h"
 #include "nex/base/language.h"
+#include "nex/base/data_model.h"
 #include "nex/base/build.h"
 #include "nex/base/attributes.h"
 #include "nex/base/namespace.h"
@@ -41,10 +42,10 @@ struct NumericLimitConstants {
 
     /**
      * @note
-     * The minimum value of a signed integer type is defined as -(2^(N-1)) where N is the number 
-     * of bits in the type. This is because one bit is used for the sign, and the remaining bits 
+     * The minimum value of a signed integer type is defined as -(2^(N-1)) where N is the number
+     * of bits in the type. This is because one bit is used for the sign, and the remaining bits
      * represent the magnitude. 
-     * The maximum value of a signed integer type is defined as 2^(N-1) - 1, which accounts for 
+     * The maximum value of a signed integer type is defined as 2^(N-1) - 1, which accounts for
      * the fact that zero is included in the range of representable values.
      */
 
@@ -82,11 +83,11 @@ struct NumericLimitConstants {
     static constexpr longlong llmax         = i64max;  // no cast needed since longlong is int64
     static constexpr ulonglong ullmax       = u64max;  // no cast needed since ulonglong is uint64
 
-#if NEX_BUILD_ENV_IS_64_BIT
+#if NEX_DATA_MODEL_IS_64_BIT
     static constexpr sizetype sizemax       = static_cast<sizetype>(u64max);
     static constexpr ptrdiff ptrdiffmin     = static_cast<ptrdiff>(i64min);
     static constexpr ptrdiff ptrdiffmax     = static_cast<ptrdiff>(i64max);
-#else  // Non-64-bit environment, assume 32-bit
+#else  // Non-64-bit data model, assume 32-bit
     static constexpr sizetype sizemax       = static_cast<sizetype>(u32max);
     static constexpr ptrdiff ptrdiffmin     = static_cast<ptrdiff>(i32min);
     static constexpr ptrdiff ptrdiffmax     = static_cast<ptrdiff>(i32max);
@@ -383,40 +384,40 @@ struct NumericLimitConstants {
     /**
      * @note
      * The limits for nchar depend on the platform and ABI.
-     * On most platforms, char is signed and has a range of -128 to 127. 
-     * However, on some platforms (especially embedded or older ones), char may be unsigned 
+     * On most platforms, char is signed and has a range of -128 to 127.
+     * However, on some platforms (especially embedded or older ones), char may be unsigned
      * with a range of 0 to 255.
-     * To ensure our constants are correct regardless of the platform's signedness for char, 
+     * To ensure our constants are correct regardless of the platform's signedness for char,
      * we use a conditional expression that checks the signedness of char at compile time,
      * and computes the limits accordingly.
      */
-    static constexpr nchar ncharmin     = (static_cast<nchar>(-1) < 0) 
+    static constexpr nchar ncharmin     = (static_cast<nchar>(-1) < 0)
                                             ? static_cast<nchar>(-128) : static_cast<nchar>(0);
-    static constexpr nchar ncharmax     = (static_cast<nchar>(-1) < 0) 
+    static constexpr nchar ncharmax     = (static_cast<nchar>(-1) < 0)
                                             ? static_cast<nchar>(127)  : static_cast<nchar>(255);
 
-#if NEX_PLATFORM_IS_WINDOWS
-    // Windows ABI defines wchar_t/wint_t as 16-bit unsigned shorts
+#if NEX_SHORT_WCHAR
+    // Short wchar (16-bit) limits for platforms where wchar/wint is 2 bytes.
     static constexpr wchar wcharmin     = static_cast<wchar>(0x0000_u16);
     static constexpr wchar wcharmax     = static_cast<wchar>(0xffff_u16);
     static constexpr wint wintmin       = static_cast<wint>(0x0000_u16);
     static constexpr wint wintmax       = static_cast<wint>(0xffff_u16);
-#else  // Non-Windows ABIs
+#else  // Non-short wchar (32-bit) limits for platforms where wchar/wint is 4 bytes.
     /**
      * @note
-     * Unix/Linux/macOS/Android ABIs define wchar_t/wint_t as 32-bit (usually signed or unsigned 
-     * depending on the OS). To be absolutely safe for all distributions, we use bit shifting 
-     * and static casting to compute the limits based on the actual size of wchar and wint, 
+     * Unix/Linux/macOS/Android ABIs define wchar/wint as 32-bit (usually signed or unsigned
+     * depending on the OS). To be absolutely safe for all distributions, we use bit shifting
+     * and static casting to compute the limits based on the actual size of wchar and wint,
      * rather than assuming signedness.
      */
-    static constexpr wchar wcharmin     = (static_cast<wchar>(-1) < 0) 
+    static constexpr wchar wcharmin     = (static_cast<wchar>(-1) < 0)
                                             ? static_cast<wchar>(-2147483647_u32 - 1) : static_cast<wchar>(0);
-    static constexpr wchar wcharmax     = (static_cast<wchar>(-1) < 0) 
+    static constexpr wchar wcharmax     = (static_cast<wchar>(-1) < 0)
                                             ? static_cast<wchar>(2147483647_u32) : static_cast<wchar>(0xffffffff_u32);
     
-    static constexpr wint wintmin       = (static_cast<wint>(-1) < 0) 
+    static constexpr wint wintmin       = (static_cast<wint>(-1) < 0)
                                             ? static_cast<wint>(-2147483647_u32 - 1)  : static_cast<wint>(0);
-    static constexpr wint wintmax       = (static_cast<wint>(-1) < 0) 
+    static constexpr wint wintmax       = (static_cast<wint>(-1) < 0)
                                             ? static_cast<wint>(2147483647_u32) : static_cast<wint>(0xffffffff_u32);
 #endif  // ^^wchar/wint limits
 
@@ -489,11 +490,11 @@ struct NumericLimitConstants {
     #define NEX_UINT_FAST128_MAX    NEX_UINT128_MAX
 #endif  // ^^NEX_HAS_BUILTIN_INT128
 
-#if NEX_BUILD_ENV_IS_64_BIT
+#if NEX_DATA_MODEL_IS_64_BIT
     #define NEX_INTPTR_MIN          NEX_INT64_MIN
     #define NEX_INTPTR_MAX          NEX_INT64_MAX
     #define NEX_UINTPTR_MAX         NEX_UINT64_MAX
-#else  // Non-64-bit environment, assume 32-bit
+#else  // Non-64-bit data model, assume 32-bit
     #define NEX_INTPTR_MIN          NEX_INT32_MIN
     #define NEX_INTPTR_MAX          NEX_INT32_MAX
     #define NEX_UINTPTR_MAX         NEX_UINT32_MAX
@@ -565,12 +566,6 @@ struct NumericLimitConstants {
 // =================================================================================
 // Macro definitions for native narrow & wide character limits (C-style)
 // =================================================================================
-
-#if defined(NEX_COMPILER_PROVIDED_CHAR_BIT)
-    #define NEX_CHAR_BIT            NEX_COMPILER_PROVIDED_CHAR_BIT
-#else  // Fallback to standard CHAR_BIT if compiler did not provide one
-    #define NEX_CHAR_BIT            CHAR_BIT
-#endif  // ^^NEX_COMPILER_PROVIDED_CHAR_BIT
 
 #define NEX_NCHAR_MIN               NEX_PREPEND_NAMESPACE(NumericLimitConstants::ncharmin)
 #define NEX_NCHAR_MAX               NEX_PREPEND_NAMESPACE(NumericLimitConstants::ncharmax)
@@ -650,13 +645,13 @@ struct NumericLimitsBase {
     // It is false by default in the base struct and set to true for specific types (like int, float, etc.) 
     // to signal that the rest of the values are valid.
     static constexpr bool isSpecialized             = false;
-    // Identifies if the type can represent both positive and negative values. 
+    // Identifies if the type can represent both positive and negative values.
     // For example, it is true for int and float, but false for uint32.
     static constexpr bool isSigned                  = false;
-    // Specifies whether the type is an integer type (e.g., int, char, long). 
+    // Specifies whether the type is an integer type (e.g., int, char, long).
     // It is false for floating-point types like float or double.
     static constexpr bool isInteger                 = false;
-    // Indicates if the type uses an exact representation without rounding errors. 
+    // Indicates if the type uses an exact representation without rounding errors.
     // This is true for all integer types and false for floating-point types due to precision limits.
     static constexpr bool isExact                   = false;
     // Determines whether the type is a boolean type (bool).
@@ -664,14 +659,14 @@ struct NumericLimitsBase {
 
     /**
      * @brief Standards & Hardware Behavior
-     * @note False or zero by default; specializations for floating-point types will set them 
+     * @note False or zero by default; specializations for floating-point types will set them
      * according to IEC 60559 / IEEE 754 compliance.
      */
 
-    // Specifies if the type adheres to the IEC 60559 / IEEE 754 standard for floating-point arithmetic. 
+    // Specifies if the type adheres to the IEC 60559 / IEEE 754 standard for floating-point arithmetic.
     // Most modern systems set this to true for standard float and double.
     static constexpr bool isIEC559                  = false;
-    // Indicates whether an arithmetic operation that causes an error (like division by zero or overflow) 
+    // Indicates whether an arithmetic operation that causes an error (like division by zero or overflow)
     // will trap, causing a hardware signal or terminating the program.
     static constexpr bool traps                     = false;
 
@@ -681,10 +676,10 @@ struct NumericLimitsBase {
      * supports these special values according to the IEC 60559 / IEEE 754 standard.
      */
 
-    // Identifies whether the type has a special representation for positive infinity (+∞). 
+    // Identifies whether the type has a special representation for positive infinity (+∞).
     // Generally true for IEEE 754 floating-point numbers.
     static constexpr bool hasInfinity               = false;
-    // Determines if the type can represent a Quiet NaN (Not-a-Number). 
+    // Determines if the type can represent a Quiet NaN (Not-a-Number).
     // Quiet NaNs propagate through arithmetic operations without raising hardware exceptions.
     static constexpr bool hasQuietNaN               = false;
     // Determines if the type can represent a Signaling NaN. 
@@ -697,13 +692,13 @@ struct NumericLimitsBase {
      * supports subnormal or denormalized numbers according to the IEC 60559 / IEEE 754 standard.
      */
 
-    // Indicates whether the floating-point type supports subnormal (denormalized) numbers, 
+    // Indicates whether the floating-point type supports subnormal (denormalized) numbers,
     // which are numbers closer to zero than the smallest normal representation allows.
     static constexpr bool hasDenorm                 = false;
-    // Indicates if a loss of precision is detected as a "denormalization loss" 
+    // Indicates if a loss of precision is detected as a "denormalization loss"
     // rather than an inexact result error.
     static constexpr bool hasDenormLoss             = false;
-    // Determines whether a floating-point type detects "tinyness" (underflow) 
+    // Determines whether a floating-point type detects "tinyness" (underflow)
     // before or after rounding the result.
     static constexpr bool tinynessBefore            = false;
 
@@ -712,11 +707,11 @@ struct NumericLimitsBase {
      * @note False by default; specializations for integer types will set them according to the type's limits.
      */
 
-    // Specifies whether the set of values representable by the type is finite. 
-    // Practically all built-in types are bounded (true), while an arbitrary-precision BigInt class 
+    // Specifies whether the set of values representable by the type is finite.
+    // Practically all built-in types are bounded (true), while an arbitrary-precision BigInt class
     // would be unbounded (false).
     static constexpr bool isBounded                 = false;
-    // Indicates if mathematically overflowing an operation rolls over to the opposite end of the spectrum 
+    // Indicates if mathematically overflowing an operation rolls over to the opposite end of the spectrum
     // (modulo arithmetic). This is traditionally true for unsigned integers (e.g., MAX_UINT + 1 == 0).
     static constexpr bool isModulo                  = false;
 
@@ -729,29 +724,29 @@ struct NumericLimitsBase {
     // The base of the representation system for the type. 
     // For integers and typical floating-point numbers, this is 2 (binary), but it could be 10 for decimal types.
     static constexpr int32 radix                    = 0;
-    // The number of radix digits that the type can represent without losing precision. 
+    // The number of radix digits that the type can represent without losing precision.
     // For integers, this is the number of non-sign bits. 
     // For floating-point numbers, it's the number of bits in the mantissa.
     static constexpr int32 digits                   = 0;
-    // The number of base-10 (decimal) digits that can be represented by the type without alteration. 
+    // The number of base-10 (decimal) digits that can be represented by the type without alteration.
     // For example, any 5-digit decimal number can fit perfectly into a type whose digits10 is >= 5.
     static constexpr int32 digits10                 = 0;
-    // The number of base-10 digits required to uniquely identify every possible distinct value of this type. 
+    // The number of base-10 digits required to uniquely identify every possible distinct value of this type.
     // This is highly useful when serializing floating-point numbers to text and back without losing data.
     static constexpr int32 maxDigits10              = 0;
 
     /**
      * @brief Exponent Limits (Floating-Point Only)
-     * @note Zero by default; specializations for floating-point types will set them according to 
+     * @note Zero by default; specializations for floating-point types will set them according to
      * the type's characteristics.
      */
 
-    // The maximum positive integer power that the radix can be raised to such that the type can still represent 
+    // The maximum positive integer power that the radix can be raised to such that the type can still represent
     // a finite floating-point number without overflowing.
     static constexpr int32 maxExponent              = 0;
     // The maximum positive integer power of 10 that can be represented as a finite floating-point number.
     static constexpr int32 maxExponent10            = 0;
-    // The minimum negative integer power that the radix can be raised to such that the type can still represent 
+    // The minimum negative integer power that the radix can be raised to such that the type can still represent
     // a normalized floating-point number.
     static constexpr int32 minExponent              = 0;
     // The minimum negative integer power of 10 that can be represented as a normalized floating-point number.
@@ -759,11 +754,11 @@ struct NumericLimitsBase {
 
     /**
      * @brief Rounding Behavior
-     * @note RoundTowardZero by default; specializations for floating-point types will set to 
+     * @note RoundTowardZero by default; specializations for floating-point types will set to
      * the appropriate rounding style according to the IEC 60559 / IEEE 754 standard.
      */
 
-    // Identifies the default rounding mode used by the type 
+    // Identifies the default rounding mode used by the type
     // when a real number cannot fit into its precision constraints.
     static constexpr NumericRoundStyle roundStyle   = NumericRoundStyle::RoundTowardZero;
 };
@@ -774,7 +769,7 @@ struct NumericLimitsBase {
 
 template<typename Type>
 struct IntegerLimitsBase : public NumericLimitsBase<Type> {
-    static_assert(meta::IsIntegralV<Type>, 
+    static_assert(meta::IsIntegralV<Type>,
         "Error: IntegerLimitsBase is only specialized for integral types");
 
     static constexpr bool isSpecialized     = true;
@@ -786,7 +781,7 @@ struct IntegerLimitsBase : public NumericLimitsBase<Type> {
 
 template<typename Type>
 struct SignedIntegerLimitsBase : public IntegerLimitsBase<Type> {
-    static_assert(meta::IsSignedIntegralV<Type>, 
+    static_assert(meta::IsSignedIntegralV<Type>,
         "Error: SignedIntegerLimits is only specialized for signed integral types");
 
     static constexpr bool isSigned          = true;
@@ -799,7 +794,7 @@ struct SignedIntegerLimitsBase : public IntegerLimitsBase<Type> {
 
 template<typename Type>
 struct UnsignedIntegerLimitsBase : public IntegerLimitsBase<Type> {
-    static_assert(meta::IsUnsignedIntegralV<Type>, 
+    static_assert(meta::IsUnsignedIntegralV<Type>,
         "Error: UnsignedIntegerLimits is only specialized for unsigned integral types");
 
     static constexpr bool isModulo          = true;
@@ -812,6 +807,7 @@ struct UnsignedIntegerLimitsBase : public IntegerLimitsBase<Type> {
 
 struct NCharLimitsBase 
     : public meta::ConditionalT<
+        // Here we use `char` instead of our-own `nchar` type for defining character limits.
         meta::IsSignedIntegralV<char>, 
         SignedIntegerLimitsBase<char>, 
         UnsignedIntegerLimitsBase<char>
@@ -824,6 +820,7 @@ struct NCharLimitsBase
 
 struct WCharLimitsBase 
     : public meta::ConditionalT<
+        // Here we use `wchar_t` instead of our-own `wchar` type for defining character limits.
         meta::IsSignedIntegralV<wchar_t>, 
         SignedIntegerLimitsBase<wchar_t>, 
         UnsignedIntegerLimitsBase<wchar_t>
@@ -862,8 +859,8 @@ struct FloatingPointLimitsBase : public NumericLimitsBase<Type> {
 /**
  * @note
  * Undefine min/max macros if defined (to avoid conflicts with NumericLimits::min/max)
- * This is necessary because some platforms (notably Windows) define min and max as macros, 
- * which can interfere with our constexpr functions and constants. By undefining them here, 
+ * This is necessary because some platforms (notably Windows) define min and max as macros,
+ * which can interfere with our constexpr functions and constants. By undefining them here,
  * we ensure that our code can use min and max as identifiers without issues.
  */
 
@@ -1472,12 +1469,12 @@ public:
     // Maximum decimal precision: number of decimal digits required to uniquely identify a distinct value
     static constexpr int32 maxDigits10      = static_cast<int32>(NumericLimitConstants::f32maxDecimalDigits);
 
-    // The maximum positive integer power that the radix can be raised to such that the type can still represent 
+    // The maximum positive integer power that the radix can be raised to such that the type can still represent
     // a finite floating-point number without overflowing.
     static constexpr int32 maxExponent      = static_cast<int32>(NumericLimitConstants::f32maxExponent);
     // The maximum positive integer power of 10 that can be represented as a finite floating-point number.
     static constexpr int32 maxExponent10    = static_cast<int32>(NumericLimitConstants::f32maxDecimalExponent);
-    // The minimum negative integer power that the radix can be raised to such that the type can still represent 
+    // The minimum negative integer power that the radix can be raised to such that the type can still represent
     // a normalized floating-point number.
     static constexpr int32 minExponent      = static_cast<int32>(NumericLimitConstants::f32minExponent);
     // The minimum negative integer power of 10 that can be represented as a normalized floating-point number.
@@ -1517,12 +1514,12 @@ public:
     // Maximum decimal precision: number of decimal digits required to uniquely identify a distinct value
     static constexpr int32 maxDigits10      = static_cast<int32>(NumericLimitConstants::f64maxDecimalDigits);
 
-    // The maximum positive integer power that the radix can be raised to such that the type can still represent 
+    // The maximum positive integer power that the radix can be raised to such that the type can still represent
     // a finite floating-point number without overflowing.
     static constexpr int32 maxExponent      = static_cast<int32>(NumericLimitConstants::f64maxExponent);
     // The maximum positive integer power of 10 that can be represented as a finite floating-point number.
     static constexpr int32 maxExponent10    = static_cast<int32>(NumericLimitConstants::f64maxDecimalExponent);
-    // The minimum negative integer power that the radix can be raised to such that the type can still represent 
+    // The minimum negative integer power that the radix can be raised to such that the type can still represent
     // a normalized floating-point number.
     static constexpr int32 minExponent      = static_cast<int32>(NumericLimitConstants::f64minExponent);
     // The minimum negative integer power of 10 that can be represented as a normalized floating-point number.
@@ -1562,12 +1559,12 @@ public:
     // Maximum decimal precision: number of decimal digits required to uniquely identify a distinct value
     static constexpr int32 maxDigits10      = static_cast<int32>(NumericLimitConstants::ldmaxDecimalDigits);
 
-    // The maximum positive integer power that the radix can be raised to such that the type can still represent 
+    // The maximum positive integer power that the radix can be raised to such that the type can still represent
     // a finite floating-point number without overflowing.
     static constexpr int32 maxExponent      = static_cast<int32>(NumericLimitConstants::ldmaxExponent);
     // The maximum positive integer power of 10 that can be represented as a finite floating-point number.
     static constexpr int32 maxExponent10    = static_cast<int32>(NumericLimitConstants::ldmaxDecimalExponent);
-    // The minimum negative integer power that the radix can be raised to such that the type can still represent 
+    // The minimum negative integer power that the radix can be raised to such that the type can still represent
     // a normalized floating-point number.
     static constexpr int32 minExponent      = static_cast<int32>(NumericLimitConstants::ldminExponent);
     // The minimum negative integer power of 10 that can be represented as a normalized floating-point number.
@@ -1608,12 +1605,12 @@ public:
         // Maximum decimal precision: number of decimal digits required to uniquely identify a distinct value
         static constexpr int32 maxDigits10      = static_cast<int32>(NumericLimitConstants::f128maxDecimalDigits);
 
-        // The maximum positive integer power that the radix can be raised to such that the type can still represent 
+        // The maximum positive integer power that the radix can be raised to such that the type can still represent
         // a finite floating-point number without overflowing.
         static constexpr int32 maxExponent      = static_cast<int32>(NumericLimitConstants::f128maxExponent);
         // The maximum positive integer power of 10 that can be represented as a finite floating-point number.
         static constexpr int32 maxExponent10    = static_cast<int32>(NumericLimitConstants::f128maxDecimalExponent);
-        // The minimum negative integer power that the radix can be raised to such that the type can still represent 
+        // The minimum negative integer power that the radix can be raised to such that the type can still represent
         // a normalized floating-point number.
         static constexpr int32 minExponent      = static_cast<int32>(NumericLimitConstants::f128minExponent);
         // The minimum negative integer power of 10 that can be represented as a normalized floating-point number.

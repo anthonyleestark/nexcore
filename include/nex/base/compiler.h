@@ -35,6 +35,7 @@
 #define NEX_COMPILER_IS_CLANG_BASED   0   // Compiler is Clang-based (LLVM or Apple Clang)
 #define NEX_COMPILER_IS_GCC           0   // Compiler is GCC (GNU Compiler Collection)
 #define NEX_COMPILER_IS_MSVC          0   // Compiler is MSVC (Microsoft Visual C++)
+#define NEX_COMPILER_IS_INTEL         0   // Compiler is Intel (ICC/ICX)
 
 /**
  * Clang masquerades as GCC on POSIX and as MSVC on Windows, so we define compatibility macros to detect 
@@ -69,6 +70,7 @@
     #define NEX_COMPILER_MSVC_VER _MSC_VER
 #else
     #error Compiler is not supported or not detected.
+    #error Please add support for your compiler in include/nex/base/compiler.h
 #endif
 
 /**

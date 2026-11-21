@@ -30,19 +30,39 @@
  * Each platform has a corresponding flag that is set to 1 if the target platform is detected, and 0 otherwise.
  */
 
-#define NEX_PLATFORM_IS_MAC            0
-#define NEX_PLATFORM_IS_MACOSX         0
-#define NEX_PLATFORM_IS_LINUX          0
-#define NEX_PLATFORM_IS_WINDOWS        0
+#define NEX_PLATFORM_IS_MAC                 0
+#define NEX_PLATFORM_IS_MACOSX              0
+#define NEX_PLATFORM_IS_LINUX               0
+#define NEX_PLATFORM_IS_WINDOWS             0
+
+#define NEX_PLATFORM_IS_ANDROID             0
+#define NEX_PLATFORM_IS_IOS                 0
+
+#define NEX_PLATFORM_IS_CHROMEOS            0
+#define NEX_PLATFORM_IS_UNIX                0
+#define NEX_PLATFORM_IS_AIX                 0
+#define NEX_PLATFORM_IS_SOLARIS             0
+#define NEX_PLATFORM_IS_FREEBSD             0
+#define NEX_PLATFORM_IS_NETBSD              0
+#define NEX_PLATFORM_IS_OPENBSD             0
+#define NEX_PLATFORM_IS_QNX                 0
+#define NEX_PLATFORM_IS_ASMJS               0
+#define NEX_PLATFORM_IS_WASM                0
+#define NEX_PLATFORM_IS_NACL                0
+#define NEX_PLATFORM_IS_HURD                0
+#define NEX_PLATFORM_IS_HAIKU               0
+#define NEX_PLATFORM_IS_BEOS                0
 
 /**
  * Below is a list of flags that are defined for each platform family. 
  * Each family has a corresponding flag that is set to 1 if the target platform belongs to that family, and 0 otherwise.
  */
 
-#define NEX_PLATFORM_FAMILY_IS_APPLE   0
-#define NEX_PLATFORM_FAMILY_IS_BSD     0
-#define NEX_PLATFORM_FAMILY_IS_POSIX   0
+#define NEX_PLATFORM_FAMILY_IS_APPLE        0
+#define NEX_PLATFORM_FAMILY_IS_BSD          0
+#define NEX_PLATFORM_FAMILY_IS_POSIX        0
+#define NEX_PLATFORM_FAMILY_IS_UNIX         0
+#define NEX_PLATFORM_FAMILY_IS_MICROSOFT    0
 
 // ======================================================================================
 // Platform detection
@@ -81,13 +101,26 @@
     #define NEX_PLATFORM_WINDOWS 1
     #undef NEX_PLATFORM_IS_WINDOWS
     #define NEX_PLATFORM_IS_WINDOWS 1
+    #if defined(_WIN64)
+        #define NEX_PLATFORM_WINDOWS_64 1
+    #else  // Windows 32-bit
+        #define NEX_PLATFORM_WINDOWS_32 1
+    #endif
 #else
     #error Platform is not supported or not detected.
+    #error Please add support for your platform in include/nex/base/platform.h
 #endif
 
 // ======================================================================================
 // Platform family detection
 // ======================================================================================
+
+// For Microsoft ecosystem
+#if defined(NEX_PLATFORM_WINDOWS)
+    #define NEX_PLATFORM_MICROSOFT 1
+    #undef NEX_PLATFORM_FAMILY_IS_MICROSOFT
+    #define NEX_PLATFORM_FAMILY_IS_MICROSOFT 1
+#endif
 
 // For Apple ecosystem
 #if defined(NEX_PLATFORM_MAC) || defined(NEX_PLATFORM_IOS)
@@ -112,4 +145,11 @@
     #define NEX_PLATFORM_POSIX 1
     #undef NEX_PLATFORM_FAMILY_IS_POSIX
     #define NEX_PLATFORM_FAMILY_IS_POSIX 1
+#endif
+
+// For Unix-like platforms
+#if defined(NEX_PLATFORM_APPLE) || defined(NEX_PLATFORM_BSD) || defined(NEX_PLATFORM_POSIX)
+    #define NEX_PLATFORM_FAMILY_UNIX 1
+    #undef NEX_PLATFORM_FAMILY_IS_UNIX
+    #define NEX_PLATFORM_FAMILY_IS_UNIX 1
 #endif

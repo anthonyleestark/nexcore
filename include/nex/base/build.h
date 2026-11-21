@@ -97,26 +97,6 @@
 // Build environment detection (e.g., target environment (x86/x64), CI/CD, etc.)
 // ======================================================================================
 
-// Detect if we are building for a 64-bit or 32-bit environment based on common macros 
-// defined by compilers and build systems, using a combination of predefined macros that 
-// indicate the target environment, such as __LP64__, _WIN64, and size of pointer.
-#if defined(__LP64__) || defined(_WIN64) || \
-    (defined(__SIZEOF_POINTER__) && __SIZEOF_POINTER__ == 8)
-    // We are building for a 64-bit environment (x64)
-    #define NEX_BUILD_ENV_64_BIT
-    #undef NEX_BUILD_ENV_IS_64_BIT
-    #define NEX_BUILD_ENV_IS_64_BIT 1
-    #undef NEX_BUILD_ENV_32_BIT
-    #define NEX_BUILD_ENV_IS_32_BIT 0
-#else
-    // We are building for a 32-bit environment (x86)
-    #define NEX_BUILD_ENV_32_BIT
-    #undef NEX_BUILD_ENV_IS_64_BIT
-    #define NEX_BUILD_ENV_IS_64_BIT 0
-    #undef NEX_BUILD_ENV_IS_32_BIT
-    #define NEX_BUILD_ENV_IS_32_BIT 1
-#endif
-
 // Detect if we are building in a CI/CD environment based on common macros defined by CI/CD systems, 
 // such as CI, BUILD_NUMBER, and GITHUB_ACTIONS.
 #if defined(CI) || defined(BUILD_NUMBER) || defined(GITHUB_ACTIONS)

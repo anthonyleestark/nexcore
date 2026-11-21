@@ -23,6 +23,7 @@
 #include "nex/base/compiler.h"
 #include "nex/base/compiler_features.h"
 #include "nex/base/language.h"
+#include "nex/base/data_model.h"
 #include "nex/base/build.h"
 #include "nex/base/attributes.h"
 #include "nex/base/namespace.h"
@@ -149,22 +150,22 @@ NEX_INLINE_NAMESPACE_END(literals)
 // =================================================================================
 
 #if NEX_COMPILER_IS_MSVC
-    #if NEX_BUILD_ENV_IS_64_BIT
+    #if NEX_DATA_MODEL_IS_64_BIT
         using intptr  = __int64;            // Pointer-sized signed integer (64-bit)
         using uintptr = unsigned __int64;   // Pointer-sized unsigned integer (64-bit)
-    #else  // Non-64-bit environment, assume 32-bit
+    #else  // Non-64-bit data model, assume 32-bit
         using intptr  = int;                // Pointer-sized signed integer (32-bit)
         using uintptr = unsigned int;       // Pointer-sized unsigned integer (32-bit)
-    #endif  // ^^NEX_BUILD_ENV_IS_64_BIT
+    #endif  // ^^NEX_DATA_MODEL_IS_64_BIT
 #elif defined(__INTPTR_TYPE__) && defined(__UINTPTR_TYPE__)
     // GCC, Clang, and other compatible compilers provide these types as built-in typedefs
     using intptr  = __INTPTR_TYPE__;        // Pointer-sized signed integer
     using uintptr = __UINTPTR_TYPE__;       // Pointer-sized unsigned integer
-#elif NEX_BUILD_ENV_IS_64_BIT
+#elif NEX_DATA_MODEL_IS_64_BIT
     // 64-bit LP64 platforms (most Unix-like systems)
     using intptr  = long;                   // Pointer-sized signed integer
     using uintptr = unsigned long;          // Pointer-sized unsigned integer
-#else  // Non-64-bit environment, assume 32-bit
+#else  // Non-64-bit data model, assume 32-bit
     using intptr  = int;                    // Pointer-sized signed integer
     using uintptr = unsigned int;           // Pointer-sized unsigned integer
 #endif  // ^^intptr/uintptr
@@ -173,8 +174,9 @@ NEX_INLINE_NAMESPACE_END(literals)
 // Compile-time assertions to verify pointer-sized integer type sizes
 // =================================================================================
 
-static_assert(sizeof(void*) == sizeof(intptr),  "Error: intptr must be the same size as a pointer");
-static_assert(sizeof(void*) == sizeof(uintptr), "Error: uintptr must be the same size as a pointer");
+static_assert(NEX_SIZEOF_POINTER == sizeof(void*),   "Error: Detected pointer size does not match sizeof(void*)");
+static_assert(NEX_SIZEOF_POINTER == sizeof(intptr),  "Error: intptr must be the same size as a pointer");
+static_assert(NEX_SIZEOF_POINTER == sizeof(uintptr), "Error: uintptr must be the same size as a pointer");
 
 // =================================================================================
 // Short aliases for standard pointer-sized integer types (Rust-style)
@@ -254,23 +256,23 @@ using uint_fast64   = uint64;               // Fastest minimum 64-bit unsigned i
 // =================================================================================
 
 #if NEX_COMPILER_IS_MSVC
-    #if NEX_BUILD_ENV_IS_64_BIT
+    #if NEX_DATA_MODEL_IS_64_BIT
         using sizetype  = unsigned __int64;  // Represents sizes of objects in bytes, array lengths, etc.
         using ptrdiff   = __int64;           // Represents the difference between pointers in terms of array indexing
-    #else  // Non-64-bit environment, assume 32-bit
+    #else  // Non-64-bit data model, assume 32-bit
         using sizetype  = unsigned int;      // Represents sizes of objects in bytes, array lengths, etc.
         using ptrdiff   = int;               // Represents the difference between pointers in terms of array indexing
-    #endif  // ^^NEX_BUILD_ENV_IS_64_BIT
+    #endif  // ^^NEX_DATA_MODEL_IS_64_BIT
     using max_align = double;                // A POD type with the strictest alignment requirements
 #else  // Non-MSVC compilers
     #if defined(__SIZE_TYPE__) && defined(__PTRDIFF_TYPE__)
         // GCC, Clang, and other compatible compilers provide these types as built-in typedefs
         using sizetype  = __SIZE_TYPE__;     // Represents sizes of objects in bytes, array lengths, etc.
         using ptrdiff   = __PTRDIFF_TYPE__;  // Represents the difference between pointers in terms of array indexing
-    #elif NEX_BUILD_ENV_IS_64_BIT
+    #elif NEX_DATA_MODEL_IS_64_BIT
         using sizetype  = unsigned long;     // Represents sizes of objects in bytes, array lengths, etc.
         using ptrdiff   = long;              // Represents the difference between pointers in terms of array indexing
-    #else  // Non-64-bit environment, assume 32-bit
+    #else  // Non-64-bit data model, assume 32-bit
         using sizetype  = unsigned int;      // Represents sizes of objects in bytes, array lengths, etc.
         using ptrdiff   = int;               // Represents the difference between pointers in terms of array indexing
     #endif  // ^^sizetype/ptrdiff
@@ -416,17 +418,6 @@ static_assert(sizeof(float64) == 8, "Error: float64 must be 8 bytes");
 #if NEX_HAS_BUILTIN_FLOAT128
     static_assert(sizeof(float128) == 16, "Error: float128 must be 16 bytes");
 #endif  // ^^NEX_HAS_BUILTIN_FLOAT128
-
-#if NEX_COMPILER_IS_MSVC
-    #define NEX_SIZEOF_LONG_DOUBLE 8
-#elif defined(NEX_ARCH_CPU_X86_LONG_DOUBLE_SIZE)
-    #define NEX_SIZEOF_LONG_DOUBLE NEX_ARCH_CPU_X86_LONG_DOUBLE_SIZE
-#elif defined(__SIZEOF_LONG_DOUBLE__)
-    // GCC and Clang provide this exact size macro in bytes
-    #define NEX_SIZEOF_LONG_DOUBLE __SIZEOF_LONG_DOUBLE__
-#else  // Last resort fallback
-    #define NEX_SIZEOF_LONG_DOUBLE  sizeof(long double)
-#endif  // ^^NEX_SIZEOF_LONG_DOUBLE
 
 static_assert(NEX_SIZEOF_LONG_DOUBLE == sizeof(ldouble), "Error: Size of long double mismatch");
 

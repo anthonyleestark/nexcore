@@ -6,8 +6,8 @@
 #pragma once
 
 /**
- * @file    architecture.h
- * @brief   CPU architecture detection and feature macros
+ * @file  architecture.h
+ * @brief CPU architecture detection and feature macros
  * 
  * @details
  * This header centralizes compile-time CPU architecture detection and exposes the result as a small set of macros.
@@ -130,18 +130,3 @@
     #error CPU architecture is not supported or not detected
     #error Please add support for your architecture in include/nex/base/architecture.h
 #endif  // ^^^ Architecture detection
-
-/**
- * @brief Detect the size of the long double type for x86 architectures.
- * 
- * @details
- * The size of the long double type varies depending on the specific x86 architecture.
- * For 32-bit x86 and x86_64 with ILP32, the size is typically 12 bytes.
- * For 64-bit x86_64, the size is typically 16 bytes.
- * This section defines the macro NEX_ARCH_CPU_LONG_DOUBLE_SIZE accordingly.
- */
-#if defined(__i386__) || (defined(__x86_64__) && defined(__ILP32__))
-    #define NEX_ARCH_CPU_X86_LONG_DOUBLE_SIZE 12
-#elif defined(__x86_64__)
-    #define NEX_ARCH_CPU_X86_LONG_DOUBLE_SIZE 16
-#endif  // ^^Size of long double for x86 architectures

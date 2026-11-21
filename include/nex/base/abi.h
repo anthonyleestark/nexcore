@@ -46,7 +46,7 @@
  * and allow the user to explicitly specify the ABI to handle cases where this heuristic falls short.
  */
 #if NEX_ABI_FORCE_ITANIUM && NEX_ABI_FORCE_MICROSOFT
-    #error "Cannot force both Itanium and Microsoft ABIs simultaneously."
+    #error Cannot force both Itanium and Microsoft ABIs simultaneously.
 #elif NEX_ABI_FORCE_ITANIUM
     #define NEX_ABI_ITANIUM
 #elif NEX_ABI_FORCE_MICROSOFT
@@ -63,7 +63,7 @@
     #elif defined(NEX_ARCH_CPU_ARM64)
         #define NEX_ABI_ITANIUM
     #else
-        #error "Unsupported architecture for ABI detection."
+        #error Unsupported architecture for ABI detection.
     #endif
 #endif  // ^^ABI detection
 

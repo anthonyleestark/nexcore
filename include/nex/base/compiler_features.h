@@ -30,6 +30,7 @@
 
 #include "nex/base/compiler.h"
 #include "nex/base/abi.h"
+#include "nex/base/runtime.h"
 
 // ================================================================================
 // Compiler-specific preprocessor macros for feature detection
@@ -359,9 +360,9 @@
 
 // If we are getting operator new from the MSVC CRT, then allocation overloads
 // for align_val type were added in MSVC v19.12, a.k.a Visual Studio 2017 version 15.3.
-#if defined(NEX_MSVCRT) && NEX_COMPILER_MSVC_COMPATIBLE && NEX_COMPILER_MSVC_VER < 1912
+#if defined(NEX_CRT_MSVCRT) && NEX_COMPILER_MSVC_COMPATIBLE && NEX_COMPILER_MSVC_VER < 1912
     #define NEX_HAS_LIBRARY_ALIGNED_ALLOCATION 0
-#elif defined(NEX_ABI_VCRUNTIME) && !defined(__cpp_aligned_new)
+#elif defined(NEX_RUNTIME_VCRUNTIME) && !defined(__cpp_aligned_new)
     // We're deferring to Microsoft's STL to provide aligned new et al.
     // We don't have it unless the language feature test macro is defined.
     #define NEX_HAS_LIBRARY_ALIGNED_ALLOCATION 0

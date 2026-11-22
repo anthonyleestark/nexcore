@@ -4,6 +4,7 @@
  */
 
 #pragma once
+
 /**
  * @file  endian.h
  * @brief Provides byte-order detection and endianness utilities.
@@ -30,39 +31,22 @@
 #include "nex/base/visibility.h"
 
 /**
- * @section arch_endianness Endianness Detection
- * @brief Endianness detection for the target CPU architecture.
- * 
- * @details
- * The following preprocessor conditionals detect the endianness of the target CPU architecture.
- * The endianness is determined based on the architecture macros defined above.
- * If the endianness cannot be determined, a compilation error will be raised.
- */
-
-#if defined(NEX_ARCH_CPU_LITTLE_ENDIAN) && NEX_ARCH_CPU_LITTLE_ENDIAN
-    #define NEX_ARCH_CPU_IS_LITTLE_ENDIAN 1
-    #define NEX_ARCH_CPU_IS_BIG_ENDIAN 0
-#elif defined(NEX_ARCH_CPU_BIG_ENDIAN) && NEX_ARCH_CPU_BIG_ENDIAN
-    #define NEX_ARCH_CPU_IS_BIG_ENDIAN 1
-    #define NEX_ARCH_CPU_IS_LITTLE_ENDIAN 0
-#else
-    #error Unable to detect endianness of the target architecture.
-#endif  // ^^^ Endianness detection
-
-/**
  * @section compiler_endianness Compiler Endianness Detection
  * @brief Endianness detection using compiler predefined macros.
  * 
  * @details
  * The following preprocessor conditionals detect the endianness based on compiler-defined macros.
- * This is particularly useful for GCC and Clang compilers.
+ * This detection is primarily relevant for GCC and Clang compilers.
+ *  - `NEX_COMPILER_HAS_LITTLE_ENDIAN_MACRO` indicates the compiler detects little-endian.
+ *  - `NEX_COMPILER_HAS_BIG_ENDIAN_MACRO` indicates the compiler detects big-endian.
+ *  - If neither macro is defined, the compiler's endianness is considered unknown.
  */
 
 #if NEX_COMPILER_IS_CLANG_BASED || NEX_COMPILER_GCC_COMPATIBLE
     #if !defined(__BYTE_ORDER__)
         #error Compiler does not define __BYTE_ORDER__ macro for endian detection.
     #endif
-#endif  // ^^NEX_COMPILER_IS_CLANG_BASED || NEX_COMPILER_GCC_COMPATIBLE
+#endif
 
 #if defined(__BYTE_ORDER__) && defined(__ORDER_LITTLE_ENDIAN__) && defined(__ORDER_BIG_ENDIAN__)
     #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
@@ -80,21 +64,63 @@
 #elif defined(__BIG_ENDIAN__) || defined(_BIG_ENDIAN)
     #define NEX_COMPILER_HAS_LITTLE_ENDIAN_MACRO 0
     #define NEX_COMPILER_HAS_BIG_ENDIAN_MACRO 1
-#endif  // ^^Endianness detection
+#else
+    #define NEX_COMPILER_HAS_LITTLE_ENDIAN_MACRO 0
+    #define NEX_COMPILER_HAS_BIG_ENDIAN_MACRO 0
+#endif  // ^^Compiler endianness detection
 
 /**
- * @note
- * The endianness detection relies on predefined macros that are set by the compiler or the build environment. 
- * If the endianness cannot be determined, a compilation error will be raised.
+ * @section arch_endianness CPU Architecture Endianness Detection
+ * @brief Endianness detection for the target CPU architecture.
+ * 
+ * @details
+ * The following preprocessor conditionals detect the endianness of the target CPU architecture:
+ *  - `NEX_ARCH_CPU_LITTLE_ENDIAN` indicates a little-endian CPU architecture.
+ *  - `NEX_ARCH_CPU_BIG_ENDIAN` indicates a big-endian CPU architecture.
+ *  - If neither macro is defined, the endianness is considered unknown.
  */
 
-#if NEX_ARCH_CPU_IS_LITTLE_ENDIAN || NEX_COMPILER_HAS_LITTLE_ENDIAN_MACRO
-    #define NEX_LITTLE_ENDIAN   // Little Endian
-#elif NEX_ARCH_CPU_IS_BIG_ENDIAN || NEX_COMPILER_HAS_BIG_ENDIAN_MACRO
-    #define NEX_BIG_ENDIAN      // Big Endian
+#if defined(NEX_ARCH_CPU_LITTLE_ENDIAN) && NEX_ARCH_CPU_LITTLE_ENDIAN
+    #define NEX_ARCH_CPU_IS_LITTLE_ENDIAN 1
+    #define NEX_ARCH_CPU_IS_BIG_ENDIAN 0
+#elif defined(NEX_ARCH_CPU_BIG_ENDIAN) && NEX_ARCH_CPU_BIG_ENDIAN
+    #define NEX_ARCH_CPU_IS_BIG_ENDIAN 1
+    #define NEX_ARCH_CPU_IS_LITTLE_ENDIAN 0
 #else
-    #error Unable to detect endianness of the target architecture.
-#endif  // ^^ Endianness detection
+    #define NEX_ARCH_CPU_IS_LITTLE_ENDIAN 0
+    #define NEX_ARCH_CPU_IS_BIG_ENDIAN 0
+#endif  // ^^CPU architecture endianness detection
+
+/**
+ * @section endianess_detection Endianness Detection
+ * @brief Detects the endianness of the target system based on compiler-provided macros and CPU architecture.
+ * 
+ * @note
+ * This section combines the results of compiler and CPU architecture endianness detection
+ * to determine the overall endianness of the target system:
+ *  - If the compiler provides explicit endianness macros, they take precedence.
+ *  - Otherwise, the CPU architecture endianness is used as a fallback.
+ *  - If neither can be determined or if there is a conflict between compiler and CPU architecture macros,
+ *    a compilation error will be raised.
+ */
+
+#if NEX_COMPILER_HAS_LITTLE_ENDIAN_MACRO
+    #define NEX_LITTLE_ENDIAN
+#elif NEX_COMPILER_HAS_BIG_ENDIAN_MACRO
+    #define NEX_BIG_ENDIAN
+#elif NEX_ARCH_CPU_IS_LITTLE_ENDIAN
+    #define NEX_LITTLE_ENDIAN
+#elif NEX_ARCH_CPU_IS_BIG_ENDIAN
+    #define NEX_BIG_ENDIAN
+#else
+    #error Unable to determine the endianness of the target system.
+#endif  // ^^Endianness detection
+
+// Check for conflicts between compiler and CPU architecture endianness macros
+#if (NEX_COMPILER_HAS_LITTLE_ENDIAN_MACRO && NEX_ARCH_CPU_IS_BIG_ENDIAN) || \
+    (NEX_COMPILER_HAS_BIG_ENDIAN_MACRO && NEX_ARCH_CPU_IS_LITTLE_ENDIAN)
+    #error Conflict between compiler and CPU architecture endianness macros.
+#endif  // Endianness conflict check
 
 NEX_NAMESPACE_BEGIN
 
@@ -104,15 +130,13 @@ NEX_NAMESPACE_BEGIN
  * 
  * @details
  * This enum class defines three possible values for endianness:
- * - `Little`: Represents little-endian byte order.
- * - `Big`: Represents big-endian byte order.
- * - `Native`: Represents the native byte order of the system, determined at compile time.
+ *  - `Little`: Represents little-endian byte order.
+ *  - `Big`: Represents big-endian byte order.
+ *  - `Native`: Represents the native byte order of the system, determined at compile time.
  * 
  * @note
  * The enum values are only symbolic and implementation-defined;
  * use them strictly for semantic comparisons, never cast to raw integers.
- * 
- * @see libc++'s `std::endian` for a similar implementation in the C++ standard library.
  */
 enum class Endian {
     Little = 0xDEAD,

@@ -6,15 +6,20 @@
 #pragma once
 
 /**
- * @file   build.h
- * @brief  Defines macros for build configuration, such as build mode (debug/release), source location information,
- *         build linkage detection (shared/static), and build environment detection (target architecture, CI/CD).
- * 
+ * @file  build.h
+ * @brief Provides build configuration and linkage macros.
+ *
  * @details
- * This header centralizes macros related to build configuration and environment detection.
- * It includes macros for detecting build mode (debug or release), capturing source location information 
- * (file, line, function), detecting whether we are building or using a shared library, and detecting 
- * the target architecture (x86/x64), as well as integration with CI/CD environments.
+ * This header centralizes compile-time configuration related to how NexCore and its consuming code are built.
+ *
+ * It provides macros for identifying the active build mode, such as debug or release, and for determining
+ * whether NexCore is being built as a shared library or consumed as a shared library.
+ *
+ * The resulting macros allow source files to adapt their behavior according to the active build configuration.
+ *
+ * @note
+ * Build configuration should preferably be supplied explicitly by the build system.
+ * Compiler-provided macros may be used as fallbacks where appropriate.
  */
 
 #include "nex/base/compiler.h"
@@ -24,7 +29,7 @@
 // ======================================================================================
 
 // Check if we are in a debug build mode or release build mode and define a macro accordingly
-// The logic for auto-detecting the build mode is based on common macros defined by compilers and build systems, 
+// The logic for auto-detecting the build mode is based on common macros defined by compilers and build systems,
 // such as NDEBUG, _DEBUG, and optimization flags.
 
 // First we check if user has explicitly defined the build mode macros
@@ -40,7 +45,7 @@
     // Next priority: check for optimization flags, which are commonly defined in release builds on GCC and Clang
     #elif (NEX_COMPILER_GCC_COMPATIBLE || NEX_COMPILER_IS_CLANG_BASED) && defined(__OPTIMIZE__)
         #define NEX_BUILD_MODE_RELEASE
-    // If we cannot detect the build mode, we can default to release mode, 
+    // If we cannot detect the build mode, we can default to release mode,
     // but this should not happen in a properly configured build environment.
     #else
         #define NEX_BUILD_MODE_RELEASE 
@@ -62,7 +67,7 @@
     #define NEX_BUILD_MODE_IS_DEBUG 0
     #define NEX_BUILD_MODE_IS_RELEASE 1
 #else 
-    // Fallback: if we cannot detect the build configuration, define both as 0 to avoid compilation errors, 
+    // Fallback: if we cannot detect the build configuration, define both as 0 to avoid compilation errors,
     // but this should not happen in a properly configured build environment.
     #define NEX_BUILD_MODE_IS_DEBUG 0
     #define NEX_BUILD_MODE_IS_RELEASE 0
@@ -94,10 +99,10 @@
 #endif
 
 // ======================================================================================
-// Build environment detection (e.g., target environment (x86/x64), CI/CD, etc.)
+// Build environment detection (e.g., CI/CD, etc.)
 // ======================================================================================
 
-// Detect if we are building in a CI/CD environment based on common macros defined by CI/CD systems, 
+// Detect if we are building in a CI/CD environment based on common macros defined by CI/CD systems,
 // such as CI, BUILD_NUMBER, and GITHUB_ACTIONS.
 #if defined(CI) || defined(BUILD_NUMBER) || defined(GITHUB_ACTIONS)
     // We are building in a CI/CD environment

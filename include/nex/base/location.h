@@ -6,16 +6,17 @@
 #pragma once
 
 /**
- * @file    location.h
- * @brief   Define macros and utilities for capturing source code location information (file, line, function, etc.) 
- *          for debugging, logging, analysis, and error reporting purposes.
+ * @file  location.h
+ * @brief Provides macros and utilities for capturing source location information (file, line, function, etc.)
+ *        for debugging, logging, analysis, and error reporting purposes.
  * 
  * @details
- * This header defines macros and utilities for capturing source code location information, such as file name, line 
- * number, and function name. This information can be used for debugging, logging, analysis, and error reporting purposes
- * to provide more context about where in the source code an event occurred. The macros defined in this header are designed
- * to be easy to use and provide consistent source location information across different compilers and platforms,
- * making it easier to maintain and debug code in a cross-platform environment.
+ * This header defines macros and utilities for capturing source code location information, such as
+ * file name, line number, and function name. This information can be used for debugging, logging,
+ * analysis, and error reporting purposes to provide more context about where in the source code
+ * an event occurred. The macros defined in this header are designed to be easy to use and provide
+ * consistent source location information across different compilers and platforms, making it easier
+ * to maintain and debug code in a cross-platform environment.
  */
 
 #include "nex/base/compiler.h"
@@ -25,69 +26,32 @@
 #include "nex/base/namespace.h"
 
 // ================================================================================================
-// Compiler built-in attribute detection
+// Configuration for source location utilities
 // ================================================================================================
 
-// Check for support of compiler built-ins for capturing source location information 
-// (e.g., __builtin_FILE(), __builtin_LINE(), __builtin_FUNCTION()) and define a macro accordingly.
-#if !defined(NEX_HAS_BUILTIN_SOURCE_LOCATION)
-    #if NEX_COMPILER_IS_CLANG_BASED || NEX_COMPILER_GCC_COMPATIBLE || NEX_COMPILER_MSVC_COMPATIBLE
-        #define NEX_HAS_BUILTIN_SOURCE_LOCATION 1
-    #else  // Compiler does not support __builtin_FILE/LINE/FUNCTION()
-        #define NEX_HAS_BUILTIN_SOURCE_LOCATION 0
-    #endif  // NEX_COMPILER_IS_CLANG_BASED || NEX_COMPILER_GCC_COMPATIBLE || NEX_COMPILER_MSVC_COMPATIBLE
-#endif  // !defined(NEX_HAS_BUILTIN_SOURCE_LOCATION)
-
-// User-configurable macro to enable/disable the use of compiler built-ins for capturing source location information.
-#if !defined(NEX_USE_BUILTIN_SOURCE_LOCATION)
-    #if NEX_HAS_BUILTIN_SOURCE_LOCATION
-        #define NEX_USE_BUILTIN_SOURCE_LOCATION 1
-    #else  // Compiler does not support built-in source location
-        #define NEX_USE_BUILTIN_SOURCE_LOCATION 0
-    #endif  // NEX_HAS_BUILTIN_SOURCE_LOCATION
-#else
-    /**
-     * @note
-     * If the user has already defined NEX_USE_BUILTIN_SOURCE_LOCATION, we use their definition, 
-     * but we also check if it's set to 1 while the compiler does not support it, in which case 
-     * we disable it to avoid compilation errors. 
-     * This ensures that the code remains portable and compatible with different compilers, while still 
-     * allowing the user to enable or disable the use of compiler built-ins for capturing source location 
-     * information based on their preferences and the capabilities of the compiler being used. 
-     * By providing this flexibility, we can ensure that the code can be compiled and run correctly across 
-     * different platforms and compilers, while still providing the benefits of capturing source location 
-     * information when supported by the compiler.
-     */
-    #if NEX_USE_BUILTIN_SOURCE_LOCATION && !NEX_HAS_BUILTIN_SOURCE_LOCATION
-        #undef NEX_USE_BUILTIN_SOURCE_LOCATION
-        #define NEX_USE_BUILTIN_SOURCE_LOCATION 0
-    #endif  // NEX_USE_BUILTIN_SOURCE_LOCATION && !NEX_HAS_BUILTIN_SOURCE_LOCATION
-#endif  // !defined(NEX_USE_BUILTIN_SOURCE_LOCATION)
-
-// User-configurable macro to enable/disable the use of compiler built-ins for capturing detailed function signatures 
-// (e.g., __PRETTY_FUNCTION__, __FUNCSIG__), which can provide more detailed information about the function, such as 
-// parameter types and template arguments, but may be less readable than just the function name, so we allow the user 
-// to choose whether to use the detailed function signature or just the function name for source location information.
-#if !defined(NEX_USE_DETAILED_FUNCTION_SIGNATURE)
-    #define NEX_USE_DETAILED_FUNCTION_SIGNATURE 1
-#else
-    /**
-     * @note
-     * If the user has already defined NEX_USE_DETAILED_FUNCTION_SIGNATURE, we use their definition, 
-     * but we redefine it into a boolean value (1 or 0) to ensure consistent usage in the codebase. 
-     * This allows the user to choose whether to use the detailed function signature or just the 
-     * function name for source location information, while still ensuring that the code remains 
-     * portable and compatible with different compilers. 
-     */
-    #undef NEX_USE_DETAILED_FUNCTION_SIGNATURE
-    #define NEX_USE_DETAILED_FUNCTION_SIGNATURE 1
-#endif  // !defined(NEX_USE_DETAILED_FUNCTION_SIGNATURE)
+// User-configurable macro to enable/disable the use of compiler built-ins for capturing
+// detailed function signatures (e.g., __PRETTY_FUNCTION__, __FUNCSIG__), which can provide
+// more detailed information about the function, such as parameter types and template arguments,
+// but may be less readable than just the function name, so we allow the user to choose whether
+// to use the detailed function signature or just the function name for source location information.
+#if !defined(NEX_USE_DETAILED_FUNCSIG)
+    #define NEX_USE_DETAILED_FUNCSIG 0
+#elif NEX_USE_DETAILED_FUNCSIG
+    #undef NEX_USE_DETAILED_FUNCSIG
+    #define NEX_USE_DETAILED_FUNCSIG 1
+#endif  // ^^NEX_USE_DETAILED_FUNCSIG
 
 // ================================================================================================
 // Source location utility class and macros
 // ================================================================================================
 
 #if NEX_COMPILER_IS_CLANG_BASED && NEX_HAS_BUILTIN(__builtin_source_location)
+    #define NEX_HAS_BUILTIN_SOURCE_LOCATION 1
+#else  // Compiler does not support __builtin_source_location()
+    #define NEX_HAS_BUILTIN_SOURCE_LOCATION 0
+#endif  // ^^NEX_HAS_BUILTIN_SOURCE_LOCATION
+
+#if NEX_HAS_BUILTIN_SOURCE_LOCATION
     #if defined(NEX_NO_STL)
         NEX_STD_BEGIN
 
@@ -106,11 +70,21 @@
                 unsigned _M_line;
                 unsigned _M_column;
             };
+            using __bsl_ty NEX_NODEBUG = decltype(__builtin_source_location());
+
+        private:
+            const __impl* __ptr_ = nullptr;
         };
 
         NEX_STD_END
     #else
-        #include <source_location>
+        #include <version>
+        #if defined(__cpp_lib_source_location) && __cpp_lib_source_location >= 201907L
+            #include <source_location>
+            #define NEX_HAS_STD_SOURCE_LOCATION 1
+        #else
+            #define NEX_HAS_STD_SOURCE_LOCATION 0
+        #endif
     #endif
 #endif
 
@@ -118,27 +92,50 @@ NEX_NAMESPACE_BEGIN
 
 /**
  * @class SourceLocation
- * @brief A utility class for capturing source code location information (file, line, function, etc.) 
+ * @brief A utility class for capturing source code location information (file, line, function, etc.)
  *        for debugging, logging, analysis, and error reporting purposes.
  * 
  * @details
  * The SourceLocation class provides a convenient way to capture and store source code location information,
- * such as file name, line number, and function name. This information can be used for debugging, logging, 
+ * such as file name, line number, and function name. This information can be used for debugging, logging,
  * analysis, and error reporting purposes to provide more context about where in the source code an event occurred.
  * 
  * @note
- * The SourceLocation class is designed to be lightweight and efficient, with minimal overhead, making it suitable 
+ * The SourceLocation class is designed to be lightweight and efficient, with minimal overhead, making it suitable
  * for use in performance-critical code.
  */
 class NEX_HIDDEN_FROM_ABI SourceLocation {
 public:
-    using FilePathType = const char*;
-    using FunctionNameType = const char*;
-    using LineNumberType = unsigned int;
-    using ColumnNumberType = unsigned int;
+#if NEX_HAS_BUILTIN_SOURCE_LOCATION
+    /**
+     * @note
+     * The following type should match the Clang/GCC built-in source location's
+     * internal representation. It is important to ensure that these types align
+     * with the compiler's expectations to avoid undefined behavior.
+     */
+    using FilePathType      = const char*;
+    using FunctionNameType  = const char*;
+    using LineNumberType    = unsigned;
+    using ColumnNumberType  = unsigned;
+#else
+    using FilePathType                      = const char*;
+    using FunctionNameType                  = const char*;
 
-    // Strip the path from a file path, returning only the file name, which can be used for various purposes 
-    // such as improving the readability of error messages and logs by showing only the file name instead of 
+    #if NEX_HAS_BUILTIN(__builtin_LINE)
+        using LineNumberType NEX_NODEBUG    = decltype(__builtin_LINE());
+    #else
+        using LineNumberType                = int;
+    #endif
+
+    #if NEX_HAS_BUILTIN(__builtin_COLUMN)
+        using ColumnNumberType NEX_NODEBUG  = decltype(__builtin_COLUMN());
+    #else
+        using ColumnNumberType              = int;
+    #endif
+#endif
+
+    // Strip the path from a file path, returning only the file name, which can be used for various purposes
+    // such as improving the readability of error messages and logs by showing only the file name instead of
     // the full file path.
     NEX_HIDDEN_FROM_ABI static constexpr 
     FilePathType stripFilePath(FilePathType filePath) {
@@ -186,7 +183,7 @@ public:
         return f;
     }
 
-    // Get the function name from a function signature, which can be used for various purposes such as improving the 
+    // Get the function name from a function signature, which can be used for various purposes such as improving the
     // readability of error messages and logs by showing only the function name instead of the full function signature.
     NEX_HIDDEN_FROM_ABI static constexpr 
     FunctionNameType stripFunctionSignature(FunctionNameType funcSignature) {
@@ -230,162 +227,221 @@ public:
 // ================================================================================================
 
 /**
- * @brief Get the file path for source location
+ * @brief Gets the file path for source location
  * @note
- * Whether the returned string is a full path or a relative path depends entirely on how the 
- * file path was supplied to the compiler during the build process (e.g., via CMake or CLI). 
- * To enforce short file names across all build environments, consider using compiler flags 
+ * Whether the returned string is a full path or a relative path depends entirely on how the
+ * file path was supplied to the compiler during the build process (e.g., via CMake or CLI).
+ * To enforce short file names across all build environments, consider using compiler flags
  * like `-fmacro-prefix-map` or `-ffile-prefix-map`.
  */
-#if NEX_USE_BUILTIN_SOURCE_LOCATION
+#if NEX_HAS_BUILTIN(__builtin_FILE)
     #define NEX_SOURCE_FILE_PATH __builtin_FILE()
 #else  // Compiler does not support __builtin_FILE()
     #define NEX_SOURCE_FILE_PATH __FILE__
-#endif  // NEX_USE_BUILTIN_SOURCE_LOCATION
+#endif  // ^^NEX_SOURCE_FILE_PATH
 
-/** @brief Get the line number for source location */
-#if NEX_USE_BUILTIN_SOURCE_LOCATION
+/** @brief Gets the line number for source location */
+#if NEX_HAS_BUILTIN(__builtin_LINE)
     #define NEX_SOURCE_LINE_NUMBER  \
         static_cast<NEX_PREPEND_NAMESPACE(SourceLocation::LineNumberType)>(__builtin_LINE())
 #else  // Compiler does not support __builtin_LINE()
     #define NEX_SOURCE_LINE_NUMBER  \
         static_cast<NEX_PREPEND_NAMESPACE(SourceLocation::LineNumberType)>(__LINE__)
-#endif  // NEX_USE_BUILTIN_SOURCE_LOCATION
+#endif  // ^^NEX_SOURCE_LINE_NUMBER
 
 /**
- * @brief Get the column number for source location
+ * @brief Gets the column number for source location
  * @note
- * The column number might be difference between compilers, especially if you are using Tab ('\t') characters 
+ * The column number might be different between compilers, especially if you are using Tab ('\t') characters
  * in your source code, as different compilers may interpret the width of a Tab character differently.
  */
-#if NEX_USE_BUILTIN_SOURCE_LOCATION
+#if NEX_HAS_BUILTIN(__builtin_COLUMN)
     #define NEX_SOURCE_COLUMN_NUMBER  \
         static_cast<NEX_PREPEND_NAMESPACE(SourceLocation::ColumnNumberType)>(__builtin_COLUMN())
 #else  // Compiler does not support __builtin_COLUMN()
     #define NEX_SOURCE_COLUMN_NUMBER  \
         static_cast<NEX_PREPEND_NAMESPACE(SourceLocation::ColumnNumberType)>(0)
-#endif  // NEX_USE_BUILTIN_SOURCE_LOCATION
+#endif  // ^^NEX_SOURCE_COLUMN_NUMBER
 
-/** @brief Get the function name for source location */
-#if NEX_USE_BUILTIN_SOURCE_LOCATION
-    #if NEX_USE_DETAILED_FUNCTION_SIGNATURE
-        #if NEX_COMPILER_IS_CLANG_BASED || NEX_COMPILER_GCC_COMPATIBLE
-            #define NEX_SOURCE_FUNCTION_NAME __builtin_FUNCTION()
-        #elif NEX_COMPILER_IS_MSVC
-            #define NEX_SOURCE_FUNCTION_NAME __builtin_FUNCSIG()
-        #elif NEX_COMPILER_MSVC_COMPATIBLE
-            /**
-             * @note
-             * Clang on MSVC supports __builtin_FUNCTION() and provides more detailed function signatures 
-             * than __builtin_FUNCSIG(), so we use __builtin_FUNCTION() for better readability and consistency 
-             * with other compilers and across platforms.
-             */
-            #define NEX_SOURCE_FUNCTION_NAME __builtin_FUNCTION()
-        #endif
-    #else  // User prefers short function names, so we strip the function signature to get only the function name
-        #if NEX_COMPILER_IS_MSVC
-            /**
-             * @note
-             * The corresponding built-in for short-signature on MSVC is __builtin_FUNCTION(), 
-             * but for safety and consistency with other compilers, we use __builtin_FUNCSIG() instead 
-             * and then strip the function signature to get only the function name.
-             */
-            #define NEX_SOURCE_FUNCTION_NAME  \
-                NEX_PREPEND_NAMESPACE(SourceLocation::stripFunctionSignature)(__builtin_FUNCSIG())
-        #else
-            #define NEX_SOURCE_FUNCTION_NAME  \
-                NEX_PREPEND_NAMESPACE(SourceLocation::stripFunctionSignature)(__builtin_FUNCTION())
-        #endif
-    #endif  // !NEX_USE_DETAILED_FUNCTION_SIGNATURE
-#else  // Compiler does not support __builtin_FUNCTION()
-    #if NEX_USE_DETAILED_FUNCTION_SIGNATURE
-        #if NEX_COMPILER_IS_CLANG_BASED || NEX_COMPILER_GCC_COMPATIBLE
-            #define NEX_SOURCE_FUNCTION_NAME __PRETTY_FUNCTION__
-        #elif NEX_COMPILER_IS_MSVC
-            #define NEX_SOURCE_FUNCTION_NAME __FUNCSIG__
-        #elif NEX_COMPILER_MSVC_COMPATIBLE
-            /**
-             * @note
-             * Clang on MSVC supports __PRETTY_FUNCTION__ and provides more detailed function signatures 
-             * than __FUNCSIG__, so we use __PRETTY_FUNCTION__ for better readability and consistency with 
-             * other compilers and across platforms.
-             */
-            #define NEX_SOURCE_FUNCTION_NAME __PRETTY_FUNCTION__
-        #else
-            // See: https://en.cppreference.com/w/c/language/function_definition#func
-            #define NEX_SOURCE_FUNCTION_NAME __func__
-        #endif
-    #else  // User prefers short function names
-        // See also: https://en.cppreference.com/w/c/language/function_definition#func
+/** @brief Gets the function name for source location */
+#if NEX_USE_DETAILED_FUNCSIG
+    #if NEX_HAS_BUILTIN(__builtin_FUNCSIG)
+        /**
+         * @note
+         * Prefer __builtin_FUNCSIG() when available because it provides the full function signature,
+         * including parameter types, calling convention, and other compiler-specific details.
+         * This is particularly useful for MSVC and Clang in MSVC compatibility mode.
+         */
+        #define NEX_SOURCE_FUNCTION_NAME __builtin_FUNCSIG()
+    #elif NEX_COMPILER_IS_MSVC
+        /**
+         * @note
+         * MSVC provides __FUNCSIG__ as a predefined macro containing the full function signature.
+         * Use it as a fallback when __builtin_FUNCSIG() is unavailable.
+         */
+        #define NEX_SOURCE_FUNCTION_NAME __FUNCSIG__
+    #elif NEX_COMPILER_IS_CLANG_BASED || NEX_COMPILER_GCC_COMPATIBLE
+        /**
+         * @note
+         * Clang and GCC provide __PRETTY_FUNCTION__ as a predefined identifier containing
+         * the function signature, including parameter types and template information.
+         * Prefer it over __builtin_FUNCTION(), which only provides the function name.
+         */
+        #define NEX_SOURCE_FUNCTION_NAME __PRETTY_FUNCTION__
+    #else
+        /**
+         * @note
+         * Use the standard __func__ identifier as a portable fallback.
+         * Unlike compiler-specific alternatives, it provides only the function name,
+         * without parameter types or other signature details.
+         * @see https://en.cppreference.com/w/c/language/function_definition#func
+         */
         #define NEX_SOURCE_FUNCTION_NAME __func__
     #endif
-#endif  // NEX_USE_BUILTIN_SOURCE_LOCATION
+#else  // User prefers short function names
+    #if NEX_HAS_BUILTIN(__builtin_FUNCTION)
+        /**
+         * @note
+         * Prefer __builtin_FUNCTION() when available because it directly provides the function name
+         * without requiring additional processing to strip the signature.
+         */
+        #define NEX_SOURCE_FUNCTION_NAME __builtin_FUNCTION()
+    #else
+        /**
+         * @note
+         * Use the standard __func__ identifier as a portable fallback.
+         * It provides the function name without the full signature.
+         * @see https://en.cppreference.com/w/c/language/function_definition#func
+         */
+        #define NEX_SOURCE_FUNCTION_NAME __func__
+    #endif
+#endif  // ^^NEX_SOURCE_FUNCTION_NAME
 
 // ================================================================================================
 // Source location class implementation
 // ================================================================================================
 
-#if NEX_COMPILER_IS_CLANG_BASED && NEX_HAS_BUILTIN(__builtin_source_location)
+#if NEX_HAS_BUILTIN_SOURCE_LOCATION && defined(NEX_NO_STL)
 
 private:
-    using BuiltinSourceLocationPtr = decltype(__builtin_source_location());
+    // Here we use our own source_location's implementation struct.
+    using Impl NEX_NODEBUG = NEX_STD source_location::__impl;
+    const Impl* __ptr_ = nullptr;
 
-    // Pointer to the implementation struct that holds the source location information
-    BuiltinSourceLocationPtr __ptr_ = nullptr;
+    using BuiltinSourceLocationPtr NEX_NODEBUG = decltype(__builtin_source_location());
 
 public:
-    // The defaulted `ptr` argument ensures that the builtin is evaluated within the context of the caller.
-    // An explicit value should never be provided, as it would defeat the purpose of capturing the caller's
-    // source location.
+    /**
+     * @brief Captures the current source location.
+     * @note
+     * The defaulted `ptr` argument is necessary here, so it ensures that the builtin is evaluated
+     * within the context of the caller. An explicit value should never be provided, as it would defeat
+     * the purpose of capturing the caller's source location.
+     */
     static consteval SourceLocation current(
         BuiltinSourceLocationPtr ptr = __builtin_source_location()
     ) noexcept {
         SourceLocation loc;
-        loc.__ptr_ = ptr;
+        // The cast ensures that the pointer is of the correct type for the implementation struct.
+        loc.__ptr_ = static_cast<const Impl*>(ptr);
         return loc;
     }
 
-    // Default constructor for SourceLocation, 
+    // Default constructor for SourceLocation,
     // which initializes the source location to an empty state (no file, no function, line 0, column 0).
     NEX_HIDDEN_FROM_ABI constexpr SourceLocation() noexcept = default;
 
-    // Get the line number for the source location
+    // Returns the line number for the source location
     NEX_HIDDEN_FROM_ABI constexpr LineNumberType line() const noexcept {
         return __ptr_ != nullptr ? __ptr_->_M_line : 0;
     }
 
-    // Get the column number for the source location
+    // Returns the column number for the source location
     NEX_HIDDEN_FROM_ABI constexpr ColumnNumberType column() const noexcept {
         return __ptr_ != nullptr ? __ptr_->_M_column : 0;
     }
 
-    // Get the file name for the source location
+    // Returns the file name for the source location
     NEX_HIDDEN_FROM_ABI constexpr FilePathType fileName() const noexcept {
         return __ptr_ != nullptr ? __ptr_->_M_file_name : "";
     }
 
-#if NEX_USE_DETAILED_FUNCTION_SIGNATURE
-    // Get the full function signature for the source location
+#if NEX_USE_DETAILED_FUNCSIG
+    // Returns the full function signature for the source location
     NEX_HIDDEN_FROM_ABI constexpr FunctionNameType functionName() const noexcept {
         return __ptr_ != nullptr ? __ptr_->_M_function_name : "";
     }
 #else  // User prefers short function names, so we strip the function signature to get only the function name
-    // Get the function name for the source location
+    // Returns the function name for the source location
     NEX_HIDDEN_FROM_ABI constexpr FunctionNameType functionName() const noexcept {
         return __ptr_ != nullptr
             ? stripFunctionSignature(__ptr_->_M_function_name)
             : "";
     }
-#endif  // !NEX_USE_DETAILED_FUNCTION_SIGNATURE
+#endif  // !NEX_USE_DETAILED_FUNCSIG
 
-#else  // ^^NEX_COMPILER_IS_CLANG_BASED && NEX_HAS_BUILTIN(__builtin_source_location)
+#elif NEX_HAS_BUILTIN_SOURCE_LOCATION && NEX_HAS_STD_SOURCE_LOCATION
+
+private:
+    // Here we use the C++ standard library's source_location as the underlying representation.
+    using Repr NEX_NODEBUG = NEX_STD source_location;
+    Repr location_;
+
+    // Private constructor that initializes the SourceLocation with a given source_location object.
+    explicit constexpr SourceLocation(Repr loc) noexcept
+        : location_(loc) {}
+
+public:
+    /**
+     * @brief Captures the current source location.
+     * @note
+     * The defaulted `loc` argument is necessary here, so it ensures that the builtin is evaluated
+     * within the context of the caller. An explicit value should never be provided, as it would defeat
+     * the purpose of capturing the caller's source location.
+     */
+    static consteval SourceLocation current(Repr loc = Repr::current()) noexcept {
+        return SourceLocation(loc);
+    }
+
+    // Default constructor for SourceLocation,
+    // which initializes the source location to an empty state (no file, no function, line 0, column 0).
+    NEX_HIDDEN_FROM_ABI constexpr SourceLocation() noexcept = default;
+
+    // Returns the line number for the source location
+    NEX_HIDDEN_FROM_ABI constexpr LineNumberType line() const noexcept {
+        return static_cast<LineNumberType>(location_.line());
+    }
+
+    // Returns the column number for the source location
+    NEX_HIDDEN_FROM_ABI constexpr ColumnNumberType column() const noexcept {
+        return static_cast<ColumnNumberType>(location_.column());
+    }
+
+    // Returns the file name for the source location
+    NEX_HIDDEN_FROM_ABI constexpr FilePathType fileName() const noexcept {
+        return location_.file_name();
+    }
+
+#if NEX_USE_DETAILED_FUNCSIG
+    // Returns the full function signature for the source location
+    NEX_HIDDEN_FROM_ABI constexpr FunctionNameType functionName() const noexcept {
+        return location_.function_name();
+    }
+#else  // User prefers short function names, so we strip the function signature to get only the function name
+    // Returns the function name for the source location
+    NEX_HIDDEN_FROM_ABI constexpr FunctionNameType functionName() const noexcept {
+        return stripFunctionSignature(location_.function_name());
+    }
+#endif  // !NEX_USE_DETAILED_FUNCSIG
+
+#else  // ^^Non-clang/GCC compilers may not support __builtin_source_location() and related built-ins
 
 private:
     /**
      * @note
-     * For non-Clang/GCC compilers, we store the source location information directly in member variables 
+     * For non-Clang/GCC compilers, we store the source location information directly in member variables
      * instead of using a pointer to an implementation struct.
-     * There's also no strict requirement for the names of these member variables, but we use a similar 
+     * There's also no strict requirement for the names of these member variables, but we use a similar
      * naming convention to maintain consistency with the Clang/GCC implementation.
      */
     FilePathType        file_name_;
@@ -394,17 +450,28 @@ private:
     ColumnNumberType    column_;
 
 public:
-    // Create a SourceLocation object representing the current source location using compiler built-ins
-    static consteval SourceLocation current() noexcept {
+    /**
+     * @brief Captures the current source location.
+     * @note
+     * The defaulted `ptr` arguments are necessary here, so that the builtins are evaluated
+     * within the context of the caller. Explicit values should never be provided, as it would defeat
+     * the purpose of capturing the caller's source location.
+     */
+    static consteval SourceLocation current(
+        FilePathType fileName         = NEX_SOURCE_FILE_PATH,
+        FunctionNameType functionName = NEX_SOURCE_FUNCTION_NAME,
+        LineNumberType lineNumber     = NEX_SOURCE_LINE_NUMBER,
+        ColumnNumberType columnNumber = NEX_SOURCE_COLUMN_NUMBER
+    ) noexcept {
         return {
-            NEX_SOURCE_FILE_PATH,
-            NEX_SOURCE_FUNCTION_NAME,   // Detailed function signature or short function name based on user preference
-            NEX_SOURCE_LINE_NUMBER,     // Already casted by the macro definition
-            NEX_SOURCE_COLUMN_NUMBER    // Already casted by the macro definition
+            fileName,
+            functionName,   // Detailed func. signature or short func. name based on user preference
+            lineNumber,     // Already casted by the macro definition
+            columnNumber    // Already casted by the macro definition
         };
     }
 
-    // Default constructor for SourceLocation, 
+    // Default constructor for SourceLocation,
     // which initializes the source location to an empty state (no file, no function, line 0, column 0).
     NEX_HIDDEN_FROM_ABI constexpr SourceLocation() noexcept
         : file_name_(""), function_name_(""), line_(0), column_(0) {}
@@ -412,36 +479,36 @@ public:
     // Explicit constructor for SourceLocation, which allows the user to create a SourceLocation object with
     // specific file name, function name, line number, and column number
     NEX_HIDDEN_FROM_ABI constexpr 
-    SourceLocation(FilePathType fileName, FunctionNameType functionName, 
+    SourceLocation(FilePathType fileName, FunctionNameType functionName,
                    LineNumberType lineNumber, ColumnNumberType columnNumber) noexcept
-        : file_name_(fileName), function_name_(functionName), 
+        : file_name_(fileName), function_name_(functionName),
           line_(lineNumber), column_(columnNumber) {}
 
-    // Get the line number for the source location
+    // Returns the line number for the source location
     NEX_HIDDEN_FROM_ABI constexpr LineNumberType line() const noexcept {
         return line_;
     }
 
-    // Get the column number for the source location
+    // Returns the column number for the source location
     NEX_HIDDEN_FROM_ABI constexpr ColumnNumberType column() const noexcept {
         return column_;
     }
 
-    // Get the file name for the source location
+    // Returns the file name for the source location
     NEX_HIDDEN_FROM_ABI constexpr FilePathType fileName() const noexcept {
         return file_name_;
     }
 
-    // Get the function name for the source location
+    // Returns the function name for the source location
     NEX_HIDDEN_FROM_ABI constexpr FunctionNameType functionName() const noexcept {
         return function_name_;
     }
 
-#endif  // ^^Non-clang/GCC compilers may not support __builtin_source_location() and related built-ins
+#endif
 
 };
 
-// Define macro for capturing the current source location, which can be used for logging, error reporting, 
+// Define macro for capturing the current source location, which can be used for logging, error reporting,
 // debugging, and other purposes where information about the source location is valuable.
 #define NEX_SOURCE_LOCATION \
     NEX_PREPEND_NAMESPACE(SourceLocation::current())

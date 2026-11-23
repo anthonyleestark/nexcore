@@ -1029,3 +1029,21 @@
 #else  // Compiler is GCC or does not support CFI
     #define NEX_NO_CFI
 #endif  // ^^NEX_NO_CFI
+
+/**
+ * @def NEX_NO_PTRAUTH_VTABLE_POINTER
+ * @brief Disables pointer authentication for vtable pointers.
+ *
+ * @details
+ * The @c __ptrauth_vtable_pointer__ attribute instructs the compiler to omit pointer authentication
+ * for vtable pointers in the annotated function or class. This is useful in low-level system code
+ * or when dealing with deliberate exceptions where pointer authentication may cause false positives
+ * or performance issues.
+ *
+ * @note Only supported on Clang.
+ */
+#if NEX_HAS_CLANG_ATTRIBUTE(__ptrauth_vtable_pointer__)
+    #define NEX_NO_PTRAUTH_VTABLE_POINTER(...) NEX_CLANG_ATTRIBUTE(__ptrauth_vtable_pointer__(__VA_ARGS__))
+#else  // Compiler is not Clang or does not support __ptrauth_vtable_pointer__
+    #define NEX_NO_PTRAUTH_VTABLE_POINTER(...)
+#endif  // ^^NEX_NO_PTRAUTH_VTABLE_POINTER

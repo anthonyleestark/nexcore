@@ -318,7 +318,7 @@
 #endif  // ^^NEX_CONSTEXPR23
 
 /**
- * @def NEX_EXPLICIT23
+ * @def NEX_EXPLICIT23 / NEX_EXPLICIT23_IF(...)
  * @brief Specifies `explicit` for constructors when compiling with C++23 support.
  *
  * @details
@@ -330,14 +330,110 @@
  * @code
  * struct Foo {
  *     NEX_EXPLICIT23 Foo(int x) {}
+ *     NEX_EXPLICIT23_IF(sizeof(int) > 4) Foo(double ptr) {}
  * };
  * @endcode
  */
 #if NEX_HAS_CXX23
     #define NEX_EXPLICIT23 explicit
+    #define NEX_EXPLICIT23_IF(...) explicit(__VA_ARGS__)
 #else  // For C++20 and earlier
     #define NEX_EXPLICIT23
-#endif  // ^^NEX_EXPLICIT23
+    #define NEX_EXPLICIT23_IF(...)
+#endif  // ^^NEX_EXPLICIT23 / NEX_EXPLICIT23_IF
+
+/**
+ * @def NEX_NOEXCEPT23 / NEX_NOEXCEPT23_IF(...)
+ * @brief Specifies `noexcept` for functions when compiling with C++23 support.
+ *
+ * @details
+ * Use this to annotate functions that can be `noexcept` in C++23 but not in earlier standards.
+ * This allows the same codebase to take advantage of C++23 features when available without
+ * breaking compatibility with earlier C++ standards.
+ *
+ * @par Example usage:
+ * @code
+ *   void foo() NEX_NOEXCEPT23 {}
+ *   void bar() NEX_NOEXCEPT23_IF(sizeof(int) > 4) {}
+ * @endcode
+ */
+#if NEX_HAS_CXX23
+    #define NEX_NOEXCEPT23 noexcept
+    #define NEX_NOEXCEPT23_IF(...) noexcept(__VA_ARGS__)
+#else  // For C++20 and earlier
+    #define NEX_NOEXCEPT23
+    #define NEX_NOEXCEPT23_IF(...)
+#endif  // ^^NEX_NOEXCEPT23 / NEX_NOEXCEPT23_IF
+
+/**
+ * @def NEX_CONSTEXPR26
+ * @brief Specifies `constexpr` for functions when compiling with C++26 support.
+ *
+ * @details
+ * Use this to annotate functions that can be `constexpr` in C++26 but not in earlier standards.
+ * This allows the same codebase to take advantage of C++26 features when available without
+ * breaking compatibility with earlier C++ standards.
+ *
+ * @par Example usage:
+ * @code
+ * NEX_CONSTEXPR26 int Multiply(int a, int b) {
+ *     return a * b;
+ * }
+ * @endcode
+ */
+#if NEX_HAS_CXX26
+    #define NEX_CONSTEXPR26 constexpr
+#else  // For C++23 and earlier
+    #define NEX_CONSTEXPR26
+#endif  // ^^NEX_CONSTEXPR26
+
+/**
+ * @def NEX_EXPLICIT26 / NEX_EXPLICIT26_IF(...)
+ * @brief Specifies `explicit` for constructors when compiling with C++26 support.
+ *
+ * @details
+ * Use this to annotate constructors that should be `explicit` in C++26 but may not be in earlier standards.
+ * This allows the same codebase to take advantage of C++26 features when available without breaking compatibility
+ * with earlier C++ standards.
+ *
+ * @par Example usage:
+ * @code
+ * struct Foo {
+ *     NEX_EXPLICIT26 Foo(int x) {}
+ *     NEX_EXPLICIT26_IF(sizeof(int) > 4) Foo(double x) {}
+ * };
+ * @endcode
+ */
+#if NEX_HAS_CXX26
+    #define NEX_EXPLICIT26 explicit
+    #define NEX_EXPLICIT26_IF(...) explicit(__VA_ARGS__)
+#else  // For C++23 and earlier
+    #define NEX_EXPLICIT26
+    #define NEX_EXPLICIT26_IF(...)
+#endif  // ^^NEX_EXPLICIT26 / NEX_EXPLICIT26_IF
+
+/**
+ * @def NEX_NOEXCEPT26 / NEX_NOEXCEPT26_IF(...)
+ * @brief Specifies `noexcept` for functions when compiling with C++26 support.
+ *
+ * @details
+ * Use this to annotate functions that can be `noexcept` in C++26 but not in earlier standards.
+ * This allows the same codebase to take advantage of C++26 features when available without
+ * breaking compatibility with earlier C++ standards.
+ *
+ * @par Example usage:
+ * @code
+ *   void foo() NEX_NOEXCEPT26 {}
+ *   void bar() NEX_NOEXCEPT26_IF(sizeof(int) > 4) {}
+ * @endcode
+ */
+#if NEX_HAS_CXX26
+    #define NEX_NOEXCEPT26 noexcept
+    #define NEX_NOEXCEPT26_IF(...) noexcept(__VA_ARGS__)
+#else  // For C++23 and earlier
+    #define NEX_NOEXCEPT26
+    #define NEX_NOEXCEPT26_IF(...)
+#endif  // ^^NEX_NOEXCEPT26 / NEX_NOEXCEPT26_IF
 
 /**
  * @def NEX_CLANG_ENABLE_IF(...)

@@ -11,6 +11,7 @@
 #include "nex/base/visibility.h"
 #include "nex/base/export.h"
 #include "nex/base/preprocessor.h"
+#include "nex/base/class_macros.h"
 #include "nex/base/allocator_traits.h"
 #include "nex/base/type_concepts.h"
 #include "nex/base/type_traits.h"
@@ -258,5 +259,131 @@ inline NEX_HIDDEN_FROM_ABI void deallocateUnsized(
     deallocateRaw(static_cast<void_ptr>(ptr), 0, alignment);
 #endif
 }
+
+/**
+ * @class AllocatorDestructor
+ * @brief Functor that deallocates a buffer using an allocator and element count.
+ * @tparam Alloc Allocator type providing the pointer and size types used for deallocation.
+ *
+ * @details
+ * Stores a reference to an allocator and an element count so it can be invoked as a callable
+ * (such as a custom deleter) to release memory via `AllocatorTraits<Alloc>::deallocate`.
+ */
+template <class Alloc>
+class NEX_INTERNAL AllocatorDestructor {
+    using trait_type NEX_NODEBUG = AllocatorTraits<Alloc>;
+
+public:
+    using pointer NEX_NODEBUG = typename trait_type::pointer;
+    using size_type NEX_NODEBUG = typename trait_type::size_type;
+
+private:
+    Alloc& alloc_;      // Reference to the allocator instance.
+    size_type count_;   // The number of elements to deallocate.
+
+public:
+    // Constructor that initializes the allocator reference and element count.
+    NEX_HIDDEN_FROM_ABI AllocatorDestructor(Alloc& alloc, size_type elementCount) noexcept
+        : alloc_(alloc), count_(elementCount) {}
+
+    // Functor call operator that deallocates the memory using the allocator.
+    NEX_HIDDEN_FROM_ABI void operator()(pointer ptr) noexcept { trait_type::deallocate(alloc_, ptr, count_); }
+};
+
+/**
+ * @class AllocationGuard
+ * @brief A guard class that manages the lifetime of an allocated memory block.
+ * @tparam Alloc The type of the allocator used for memory allocation.
+ *
+ * @details
+ * The AllocationGuard ensures that the allocated memory is properly deallocated
+ * when the guard goes out of scope, preventing memory leaks.
+ *
+ * @par Example usage:
+ * @code
+ * void allocateMemory() {
+ *    // 1. First, we initialize the guard with the allocator and element count.
+ *    AllocationGuard<MyAllocator> guard(myAllocator, 10);
+ *    {
+ *        // 2. Then we do something with the allocated memory.
+ *        initializeMemoryThatMayThrowExceptions(guard.get());
+ *        // 3. If an exception is thrown, the guard will automatically deallocate the memory.
+ *        //    The C++ exception handling mechanism itself will continue to propagate the exception
+ *        //    after the guard has deallocated the memory.
+ *    }
+ *    // 4. If it reaches this point without exceptions, the pointer can be safely released
+ *    //    in an operation that can't throw exceptions.
+ *    saveMemoryStateWhenNoExceptions(guard.release());
+ *    // 5. Finally, after this point, the guard is no longer responsible for the memory anymore.
+ * }
+ * @endcode
+ */
+template <class Alloc>
+class NEX_INTERNAL AllocationGuard {
+    using trait_type NEX_NODEBUG = AllocatorTraits<Alloc>;
+    using pointer NEX_NODEBUG    = typename trait_type::pointer;
+    using size NEX_NODEBUG       = typename trait_type::size_type;
+
+private:
+    Alloc alloc_;   // The allocator instance used for memory allocation.
+    size count_;    // The number of elements allocated.
+    pointer ptr_;   // The pointer to the allocated memory.
+
+public:
+    /**
+     * @brief Constructs an AllocationGuard with the given allocator and element count.
+     * @tparam OtherAlloc The type of the allocator (potentially different).
+     * @param otherAlloc The allocator instance to use for allocation.
+     * @param count The number of elements to allocate.
+     * @note The conversion of the allocator type is performed inside the constructor.
+     */
+    template <class OtherAlloc>
+    NEX_HIDDEN_FROM_ABI NEX_CONSTEXPR26 explicit AllocationGuard(OtherAlloc&& otherAlloc, size count)
+        : alloc_(NEX_MOVE(otherAlloc)), count_(count),
+          ptr_(trait_type::allocate(alloc_, count_)) {}
+
+    // Destructor that destroys the allocated memory if it hasn't been released.
+    NEX_HIDDEN_FROM_ABI NEX_CONSTEXPR26 ~AllocationGuard() noexcept { destroy(); }
+
+    // No copy semantics allowed for AllocationGuard.
+    NEX_DISALLOW_COPY(AllocationGuard);
+
+    // Move constructor that transfers ownership of the allocated memory from another guard.
+    NEX_HIDDEN_FROM_ABI NEX_CONSTEXPR26 AllocationGuard(AllocationGuard&& other) noexcept
+        : alloc_(NEX_MOVE(other.alloc_)), count_(other.count_), ptr_(other.ptr_) {
+        other.ptr_ = nullptr;
+    }
+
+    // Move assignment operator that transfers ownership of the allocated memory from another guard.
+    NEX_HIDDEN_FROM_ABI NEX_CONSTEXPR26 AllocationGuard& operator=(AllocationGuard&& other) noexcept {
+        if (NEX_ADDRESS_OF(other) != this) {
+            destroy();
+            alloc_ = NEX_MOVE(other.alloc_);
+            count_ = other.count_;
+            ptr_ = other.ptr_;
+            other.ptr_ = nullptr;
+        }
+        return *this;
+    }
+
+    // Releases ownership of the allocated memory and returns the pointer.
+    NEX_HIDDEN_FROM_ABI NEX_CONSTEXPR26 pointer release() noexcept {
+        pointer temp = ptr_;
+        ptr_ = nullptr;
+        return temp;
+    }
+
+    // Returns the pointer to the allocated memory without releasing ownership.
+    NEX_NODISCARD NEX_HIDDEN_FROM_ABI NEX_CONSTEXPR26 pointer get() const noexcept { return ptr_; }
+    
+private:
+    // Destroys the allocated memory if it hasn't been released.
+    NEX_HIDDEN_FROM_ABI NEX_CONSTEXPR26 void destroy() noexcept {
+        if (ptr_ != nullptr) {
+            trait_type::deallocate(alloc_, ptr_, count_);
+            ptr_ = nullptr;
+        }
+    }
+};
 
 NEX_NAMESPACE_END
